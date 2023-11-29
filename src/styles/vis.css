@@ -1,0 +1,7 @@
+canvas {
+    position: absolute;
+    z-index: 1;
+    /* temporary dimensions, will break on mobile */
+    width: 100vw;
+    height: 100vh;
+}
