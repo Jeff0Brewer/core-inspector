@@ -85,7 +85,7 @@ class FullCoreRenderer {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
 
-        this.shapeT = this.shapeT * 0.9 + this.targetShape * 0.1
+        this.shapeT = this.shapeT * 0.95 + this.targetShape * 0.05
         this.setShapeT(this.shapeT)
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
@@ -114,8 +114,7 @@ const getFullCoreVerts = (
         const segmentT = segmentInd / numSegment
         const angle = maxAngle * segmentT
         const radius = (maxRadius - minRadius) * segmentT + minRadius
-        const columnInd = coord[0] / metadata.width
-        const columnX = columnInd * bandWidth - 1.0
+        const columnX = ((coord[0] - 0.5) / metadata.width) * bandWidth
         const columnY = ((1.0 - coord[1]) - 0.5) * 2.0
         verts.push(
             Math.cos(angle) * (radius - width * 0.5),
