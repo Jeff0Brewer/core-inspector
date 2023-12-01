@@ -41,6 +41,10 @@ const App: FC = () => {
             if (!Number.isNaN(val)) {
                 visRef.current?.fullCore.setCurrMineral(val)
             }
+            if (e.key === ' ' && visRef.current) {
+                visRef.current.fullCore.targetShape += 1
+                visRef.current.fullCore.targetShape %= 2
+            }
         }
         window.addEventListener('resize', resize)
         window.addEventListener('keydown', setMineral)
