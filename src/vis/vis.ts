@@ -28,7 +28,9 @@ class VisRenderer {
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
 
-        this.fullCore = new FullCoreRenderer(this.gl, mineralMaps, mineralMetadata, 10000, 5)
+        this.fullCore = new FullCoreRenderer(this.gl, mineralMaps, mineralMetadata, 10000, 25)
+        this.fullCore.setProj(this.proj)
+        this.fullCore.setView(this.view)
     }
 
     resize (): void {
@@ -45,6 +47,8 @@ class VisRenderer {
 
     draw (): void {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
+
+        this.fullCore.draw(this.gl)
     }
 }
 
