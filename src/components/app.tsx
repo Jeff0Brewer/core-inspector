@@ -34,9 +34,19 @@ const App: FC = () => {
 
     useEffect(() => {
         const resize = (): void => { visRef.current?.resize() }
+
+        // temporary mineral interaction for testing
+        const setMineral = (e: KeyboardEvent): void => {
+            const val = parseInt(e.key)
+            if (!Number.isNaN(val)) {
+                visRef.current?.fullCore.setCurrMineral(val)
+            }
+        }
         window.addEventListener('resize', resize)
+        window.addEventListener('keydown', setMineral)
         return () => {
             window.removeEventListener('resize', resize)
+            window.removeEventListener('keydown', setMineral)
         }
     }, [])
 

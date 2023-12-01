@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute, initTexture, getTextureAttachments } from '../lib/gl-wrap'
+import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
 import ColumnTextureMapper, { ColumnTextureMetadata } from '../lib/column-texture'
 import vertSource from '../shaders/full-core-vert.glsl?raw'
 import fragSource from '../shaders/full-core-frag.glsl?raw'
@@ -63,10 +63,10 @@ class FullCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
     textures: Array<WebGLTexture>
-    texAttachments: Array<number>
     bindAttrib: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
+    currMineral: number
     numVertex: number
 
     constructor (
@@ -84,18 +84,13 @@ class FullCoreRenderer {
         this.buffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW)
 
-        this.texAttachments = getTextureAttachments(gl, mineralMaps.length)
         this.textures = []
         for (let i = 0; i < mineralMaps.length; i++) {
-            gl.activeTexture(this.texAttachments[i])
-
             const texture = initTexture(gl)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, mineralMaps[i])
             this.textures.push(texture)
-
-            const textureLoc = gl.getUniformLocation(this.program, `mineral${i}`)
-            gl.uniform1i(textureLoc, i)
         }
+        this.currMineral = 0
 
         const bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, STRIDE, 0)
         const bindTexCoord = initAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
@@ -117,13 +112,14 @@ class FullCoreRenderer {
         }
     }
 
+    setCurrMineral (i: number): void {
+        this.currMineral = Math.min(Math.max(0, i), this.textures.length - 1)
+    }
+
     draw (gl: WebGLRenderingContext): void {
         gl.useProgram(this.program)
 
-        for (let i = 0; i < this.textures.length; i++) {
-            gl.activeTexture(this.texAttachments[i])
-            gl.bindTexture(gl.TEXTURE_2D, this.textures[i])
-        }
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[this.currMineral])
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
 
