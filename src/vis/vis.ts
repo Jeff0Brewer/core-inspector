@@ -1,13 +1,20 @@
 import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
+import { ColumnTextureMetadata } from '../lib/column-texture'
+import FullCoreRenderer from '../vis/full-core'
 
 class VisRenderer {
     canvas: HTMLCanvasElement
     gl: WebGLRenderingContext
     view: mat4
     proj: mat4
+    fullCore: FullCoreRenderer
 
-    constructor (canvas: HTMLCanvasElement) {
+    constructor (
+        canvas: HTMLCanvasElement,
+        mineralMaps: Array<HTMLImageElement>,
+        mineralMetadata: ColumnTextureMetadata
+    ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
 
@@ -20,6 +27,8 @@ class VisRenderer {
 
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
+
+        this.fullCore = new FullCoreRenderer(this.gl, mineralMaps, mineralMetadata, 10000, 5)
     }
 
     resize (): void {

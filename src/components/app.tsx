@@ -1,4 +1,5 @@
 import { FC, useEffect, useRef } from 'react'
+import { loadImageAsync } from '../lib/load'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -7,15 +8,32 @@ const App: FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
 
-    // init vis renderer, setup resizing
+    const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+        const mineralPaths = [
+            './data/gt1/full-mineral-00.png',
+            './data/gt1/full-mineral-01.png',
+            './data/gt1/full-mineral-02.png',
+            './data/gt1/full-mineral-03.png',
+            './data/gt1/full-mineral-04.png',
+            './data/gt1/full-mineral-05.png',
+            './data/gt1/full-mineral-06.png'
+        ]
+        const mineralPromises = mineralPaths.map(p => loadImageAsync(p))
+        const minerals = await Promise.all(mineralPromises)
+        const metadata = await fetch('./data/gt1/metadata.json').then(res => res.json())
+
+        visRef.current = new VisRenderer(canvas, minerals, metadata)
+    }
+
     useEffect(() => {
         if (!canvasRef.current) {
             throw new Error('No reference to canvas')
         }
+        initVisRenderer(canvasRef.current)
+    }, [])
 
-        visRef.current = new VisRenderer(canvasRef.current)
+    useEffect(() => {
         const resize = (): void => { visRef.current?.resize() }
-
         window.addEventListener('resize', resize)
         return () => {
             window.removeEventListener('resize', resize)
