@@ -32,7 +32,8 @@ class FullCoreRenderer {
     ) {
         this.program = initProgram(gl, vertSource, fragSource)
 
-        const verts = getFullCoreVerts(metadata, numSegment, numRotation)
+        const mineralMapAspect = mineralMaps[0].height / mineralMaps[0].width
+        const verts = getFullCoreVerts(metadata, mineralMapAspect, numSegment, numRotation)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
@@ -97,6 +98,7 @@ class FullCoreRenderer {
 
 const getFullCoreVerts = (
     metadata: ColumnTextureMetadata,
+    texAspect: number,
     numSegment: number,
     numRotation: number
 ): Float32Array => {
@@ -108,6 +110,8 @@ const getFullCoreVerts = (
     const minRadius = bandWidth * 5
     const maxRadius = 1
 
+    const coordToCol = bandWidth / metadata.width
+
     const verts: Array<number> = []
     const addVertRow = (
         segmentInd: number,
@@ -117,8 +121,8 @@ const getFullCoreVerts = (
         const segmentT = segmentInd / numSegment
         const angle = maxAngle * segmentT
         const radius = (maxRadius - minRadius) * segmentT + minRadius
-        const columnX = ((coord[0] - 0.5) / metadata.width) * bandWidth
-        const columnY = ((1.0 - coord[1]) - 0.5) * 2.0
+        const columnX = (coord[0] - 0.5) * coordToCol
+        const columnY = ((1.0 - coord[1]) - 0.5) * coordToCol * texAspect
         verts.push(
             Math.cos(angle) * (radius - width * 0.5),
             Math.sin(angle) * (radius - width * 0.5),
