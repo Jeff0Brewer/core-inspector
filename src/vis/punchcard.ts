@@ -119,8 +119,9 @@ const getPunchcardVerts = (
         coord: [number, number]
     ): void => {
         const rowT = rowInd / numRow
-        const angle = maxAngle * rowT
-        const radius = (maxRadius - minRadius) * rowT + minRadius
+        const spiralT = Math.pow(rowT, 0.7)
+        const angle = maxAngle * spiralT
+        const radius = (maxRadius - minRadius) * spiralT + minRadius
         const columnCoord = [
             (coord[0] - 0.5) * coordToCol * (1 + spacing),
             (-coord[1] + 0.5) * coordToCol * texAspect

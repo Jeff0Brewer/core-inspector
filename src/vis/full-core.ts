@@ -118,8 +118,9 @@ const getFullCoreVerts = (
         width: number
     ): void => {
         const segmentT = segmentInd / numSegment
-        const angle = maxAngle * segmentT
-        const radius = (maxRadius - minRadius) * segmentT + minRadius
+        const spiralT = Math.pow(segmentT, 0.7)
+        const angle = maxAngle * spiralT
+        const radius = (maxRadius - minRadius) * spiralT + minRadius
         const columnCoord = [coord[0] - 0.5, -coord[1] + 0.5]
         const columnX = columnCoord[0] * coordToCol * (1 + spacing)
         const columnY = columnCoord[1] * coordToCol * texAspect
