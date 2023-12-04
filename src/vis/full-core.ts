@@ -102,16 +102,15 @@ const getFullCoreVerts = (
     numSegment: number,
     spacing: number
 ): Float32Array => {
-    const breakEpsilon = 0.00001
-    const bandWidth = 0.025
     const texMapper = new ColumnTextureMapper(metadata)
 
+    const bandWidth = 0.025
     const minRadius = bandWidth * 5
     const maxRadius = 1
     const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
     const maxAngle = Math.PI * 2 * numRotation
-
     const coordToCol = bandWidth / metadata.width
+    const breakEpsilon = 0.00001
 
     const verts: Array<number> = []
     const addVertRow = (
