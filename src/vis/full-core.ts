@@ -159,7 +159,6 @@ const getFullCoreVerts = (
 }
 
 const ease = (t: number): number => {
-    // return t * t * (3 - 2 * t)
     const t2 = t * t
     return t2 / (2 * (t2 - t) + 1)
 }
