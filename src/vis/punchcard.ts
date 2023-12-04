@@ -1,17 +1,16 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
 import ColumnTextureMapper, { ColumnTextureMetadata } from '../lib/column-texture'
-import vertSource from '../shaders/full-core-vert.glsl?raw'
-import fragSource from '../shaders/full-core-frag.glsl?raw'
+import vertSource from '../shaders/punchcard-vert.glsl?raw'
+import fragSource from '../shaders/punchcard-frag.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 const TRANSFORM_SPEED = 1
-const NUM_SEGMENT = 10000
 
-class FullCoreRenderer {
+class PunchcardRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
     minerals: Array<WebGLTexture>
@@ -31,8 +30,7 @@ class FullCoreRenderer {
     ) {
         this.program = initProgram(gl, vertSource, fragSource)
 
-        const mineralMapAspect = mineralMaps[0].height / mineralMaps[0].width
-        const verts = getFullCoreVerts(metadata, mineralMapAspect, NUM_SEGMENT, 0.3)
+        const verts = getPunchcardVerts(metadata, mineralMaps[0].width, mineralMaps[0].height, 0.3)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
@@ -91,17 +89,22 @@ class FullCoreRenderer {
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
         this.setShapeT(ease(this.shapeT))
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
+        gl.drawArrays(gl.POINTS, 0, this.numVertex)
     }
 }
 
-const getFullCoreVerts = (
+const getPunchcardVerts = (
     metadata: ColumnTextureMetadata,
-    texAspect: number,
-    numSegment: number,
+    texWidth: number,
+    texHeight: number,
     spacing: number
 ): Float32Array => {
     const texMapper = new ColumnTextureMapper(metadata)
+    const numRow = metadata.heights.reduce((total, height) =>
+        total + Math.round(height * texHeight),
+    0
+    )
+    const texAspect = texHeight / texWidth
 
     const bandWidth = 0.025
     const minRadius = bandWidth * 5
@@ -109,54 +112,36 @@ const getFullCoreVerts = (
     const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
     const maxAngle = Math.PI * 2 * numRotation
     const coordToCol = bandWidth / metadata.width
-    const breakEpsilon = 0.00001
 
     const verts: Array<number> = []
-    const addVertRow = (
-        segmentInd: number,
-        coord: [number, number],
-        width: number
+    const addPointRow = (
+        rowInd: number,
+        coord: [number, number]
     ): void => {
-        const segmentT = segmentInd / numSegment
-        const angle = maxAngle * segmentT
-        const radius = (maxRadius - minRadius) * segmentT + minRadius
-        const columnCoord = [coord[0] - 0.5, -coord[1] + 0.5]
-        const columnX = columnCoord[0] * coordToCol * (1 + spacing)
-        const columnY = columnCoord[1] * coordToCol * texAspect
-        verts.push(
-            Math.cos(angle) * (radius - width * 0.5),
-            Math.sin(angle) * (radius - width * 0.5),
-            columnX - width * 0.5,
-            columnY,
-            coord[0],
-            coord[1],
-            Math.cos(angle) * (radius + width * 0.5),
-            Math.sin(angle) * (radius + width * 0.5),
-            columnX + width * 0.5,
-            columnY,
-            coord[0] + metadata.width,
-            coord[1]
-        )
+        const rowT = rowInd / numRow
+        const angle = maxAngle * rowT
+        const radius = (maxRadius - minRadius) * rowT + minRadius
+        const columnCoord = [
+            (coord[0] - 0.5) * coordToCol * (1 + spacing),
+            (-coord[1] + 0.5) * coordToCol * texAspect
+        ]
+        const columnInc = bandWidth / 3
+        const coordInc = metadata.width / 3
+        for (let i = 0; i < 3; i++) {
+            verts.push(
+                Math.cos(angle) * (radius - bandWidth * 0.5 + columnInc * i),
+                Math.sin(angle) * (radius - bandWidth * 0.5 + columnInc * i),
+                columnCoord[0] - bandWidth * 0.5 + columnInc * i,
+                columnCoord[1],
+                coord[0] + coordInc * i,
+                coord[1]
+            )
+        }
     }
 
-    for (let i = 0; i < numSegment; i++) {
-        const thisT = i / numSegment
-        const nextT = (i + 1) / numSegment
-        const { coord, breakPercentage } = texMapper.get(thisT, nextT)
-        addVertRow(i, coord, bandWidth)
-
-        if (breakPercentage !== null) {
-            const breakT = thisT * (1 - breakPercentage) + nextT * breakPercentage
-            const { coord: lowCoord } = texMapper.get(breakT - breakEpsilon)
-            const { coord: highCoord } = texMapper.get(breakT + breakEpsilon)
-
-            // add two sets of verts at same position with different tex coords
-            // so interpolation between end / start of columns doesn't break
-            addVertRow(i + breakPercentage, lowCoord, bandWidth)
-            addVertRow(i + breakPercentage, lowCoord, 0)
-            addVertRow(i + breakPercentage, highCoord, 0)
-            addVertRow(i + breakPercentage, highCoord, bandWidth)
-        }
+    for (let i = 0; i < numRow; i++) {
+        const { coord } = texMapper.get(i / numRow)
+        addPointRow(i, coord)
     }
 
     return new Float32Array(verts)
@@ -171,4 +156,4 @@ const clamp = (v: number, min: number, max: number): number => {
     return Math.max(Math.min(v, max), min)
 }
 
-export default FullCoreRenderer
+export default PunchcardRenderer

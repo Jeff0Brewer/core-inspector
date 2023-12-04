@@ -9,21 +9,41 @@ const App: FC = () => {
     const frameIdRef = useRef<number>(-1)
 
     const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
-        const basePath = './data/gt1/downscaled/'
-        const mineralPaths = [
-            basePath + '00.png',
-            basePath + '01.png',
-            basePath + '02.png',
-            basePath + '03.png',
-            basePath + '04.png',
-            basePath + '05.png',
-            basePath + '06.png'
+        const basePath = './data/gt1/'
+        const downscaledPaths = [
+            basePath + 'downscaled/00.png',
+            basePath + 'downscaled/01.png',
+            basePath + 'downscaled/02.png',
+            basePath + 'downscaled/03.png',
+            basePath + 'downscaled/04.png',
+            basePath + 'downscaled/05.png',
+            basePath + 'downscaled/06.png'
         ]
-        const mineralPromises = mineralPaths.map(p => loadImageAsync(p))
-        const minerals = await Promise.all(mineralPromises)
-        const metadata = await fetch(basePath + 'metadata.json').then(res => res.json())
+        const downscaledPromises = downscaledPaths.map(p => loadImageAsync(p))
+        const punchcardPaths = [
+            basePath + 'punchcard/00.png',
+            basePath + 'punchcard/01.png',
+            basePath + 'punchcard/02.png',
+            basePath + 'punchcard/03.png',
+            basePath + 'punchcard/04.png',
+            basePath + 'punchcard/05.png',
+            basePath + 'punchcard/06.png'
+        ]
+        const punchcardPromises = punchcardPaths.map(p => loadImageAsync(p))
 
-        visRef.current = new VisRenderer(canvas, minerals, metadata)
+        const downscaledTextures = await Promise.all(downscaledPromises)
+        const downscaledMetadata = await fetch(basePath + 'downscaled/metadata.json').then(res => res.json())
+
+        const punchcardTextures = await Promise.all(punchcardPromises)
+        const punchcardMetadata = await fetch(basePath + 'punchcard/metadata.json').then(res => res.json())
+
+        visRef.current = new VisRenderer(
+            canvas,
+            downscaledTextures,
+            downscaledMetadata,
+            punchcardTextures,
+            punchcardMetadata
+        )
     }
 
     useEffect(() => {
@@ -41,10 +61,13 @@ const App: FC = () => {
             const val = parseInt(e.key)
             if (!Number.isNaN(val)) {
                 visRef.current?.fullCore.setCurrMineral(val)
+                visRef.current?.punchcard.setCurrMineral(val)
             }
             if (e.key === ' ' && visRef.current) {
                 visRef.current.fullCore.targetShape += 1
                 visRef.current.fullCore.targetShape %= 2
+                visRef.current.punchcard.targetShape += 1
+                visRef.current.punchcard.targetShape %= 2
             }
         }
         window.addEventListener('resize', resize)
