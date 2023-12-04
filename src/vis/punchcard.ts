@@ -129,9 +129,9 @@ const getPunchcardVerts = (
         const coordInc = metadata.width / 3
         for (let i = 0; i < 3; i++) {
             verts.push(
-                Math.cos(angle) * (radius - bandWidth * 0.5 + columnInc * i),
-                Math.sin(angle) * (radius - bandWidth * 0.5 + columnInc * i),
-                columnCoord[0] - bandWidth * 0.5 + columnInc * i,
+                Math.cos(angle) * (radius - bandWidth * 0.5 + columnInc * (i + 0.5)),
+                Math.sin(angle) * (radius - bandWidth * 0.5 + columnInc * (i + 0.5)),
+                columnCoord[0] - bandWidth + columnInc * i,
                 columnCoord[1],
                 coord[0] + coordInc * i,
                 coord[1]
