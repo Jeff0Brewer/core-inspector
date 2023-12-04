@@ -8,6 +8,8 @@ const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
+const TRANSFORM_SPEED = 1
+
 class FullCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
@@ -78,15 +80,16 @@ class FullCoreRenderer {
         this.currMineral = Math.min(Math.max(0, i), this.minerals.length - 1)
     }
 
-    draw (gl: WebGLRenderingContext): void {
+    draw (gl: WebGLRenderingContext, elapsed: number): void {
         gl.useProgram(this.program)
 
         gl.bindTexture(gl.TEXTURE_2D, this.minerals[this.currMineral])
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
 
-        this.shapeT = this.shapeT * 0.95 + this.targetShape * 0.05
-        this.setShapeT(this.shapeT)
+        const incSign = Math.sign(this.targetShape - this.shapeT)
+        this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
+        this.setShapeT(ease(this.shapeT))
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
     }
@@ -153,6 +156,16 @@ const getFullCoreVerts = (
     }
 
     return new Float32Array(verts)
+}
+
+const ease = (t: number): number => {
+    // return t * t * (3 - 2 * t)
+    const t2 = t * t
+    return t2 / (2 * (t2 - t) + 1)
+}
+
+const clamp = (v: number, min: number, max: number): number => {
+    return Math.max(Math.min(v, max), min)
 }
 
 export default FullCoreRenderer

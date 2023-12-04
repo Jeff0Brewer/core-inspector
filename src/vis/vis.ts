@@ -45,10 +45,10 @@ class VisRenderer {
         mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
     }
 
-    draw (): void {
+    draw (elapsed: number): void {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
-        this.fullCore.draw(this.gl)
+        this.fullCore.draw(this.gl, elapsed)
     }
 }
 

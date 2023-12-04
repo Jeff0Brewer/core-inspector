@@ -56,8 +56,12 @@ const App: FC = () => {
 
     // start draw loop
     useEffect(() => {
-        const tick = (): void => {
-            visRef.current?.draw()
+        let lastT = 0
+        const tick = (t: number): void => {
+            const elapsed = (t - lastT) * 0.001
+            lastT = t
+
+            visRef.current?.draw(elapsed)
             frameIdRef.current = window.requestAnimationFrame(tick)
         }
 
