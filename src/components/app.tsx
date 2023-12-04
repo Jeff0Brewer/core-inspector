@@ -9,18 +9,19 @@ const App: FC = () => {
     const frameIdRef = useRef<number>(-1)
 
     const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+        const basePath = './data/gt1/downscaled/'
         const mineralPaths = [
-            './data/gt1/full-mineral-00.png',
-            './data/gt1/full-mineral-01.png',
-            './data/gt1/full-mineral-02.png',
-            './data/gt1/full-mineral-03.png',
-            './data/gt1/full-mineral-04.png',
-            './data/gt1/full-mineral-05.png',
-            './data/gt1/full-mineral-06.png'
+            basePath + '00.png',
+            basePath + '01.png',
+            basePath + '02.png',
+            basePath + '03.png',
+            basePath + '04.png',
+            basePath + '05.png',
+            basePath + '06.png'
         ]
         const mineralPromises = mineralPaths.map(p => loadImageAsync(p))
         const minerals = await Promise.all(mineralPromises)
-        const metadata = await fetch('./data/gt1/metadata.json').then(res => res.json())
+        const metadata = await fetch(basePath + 'metadata.json').then(res => res.json())
 
         visRef.current = new VisRenderer(canvas, minerals, metadata)
     }
