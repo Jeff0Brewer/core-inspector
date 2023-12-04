@@ -9,6 +9,7 @@ const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 const TRANSFORM_SPEED = 1
+const NUM_SEGMENT = 10000
 
 class FullCoreRenderer {
     program: WebGLProgram
@@ -26,14 +27,12 @@ class FullCoreRenderer {
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
-        metadata: ColumnTextureMetadata,
-        numSegment: number,
-        numRotation: number
+        metadata: ColumnTextureMetadata
     ) {
         this.program = initProgram(gl, vertSource, fragSource)
 
         const mineralMapAspect = mineralMaps[0].height / mineralMaps[0].width
-        const verts = getFullCoreVerts(metadata, mineralMapAspect, numSegment, 0.3)
+        const verts = getFullCoreVerts(metadata, mineralMapAspect, NUM_SEGMENT, 0.3)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
