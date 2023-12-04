@@ -33,7 +33,7 @@ class FullCoreRenderer {
         this.program = initProgram(gl, vertSource, fragSource)
 
         const mineralMapAspect = mineralMaps[0].height / mineralMaps[0].width
-        const verts = getFullCoreVerts(metadata, mineralMapAspect, numSegment, numRotation)
+        const verts = getFullCoreVerts(metadata, mineralMapAspect, numSegment, 0.3)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
@@ -100,15 +100,16 @@ const getFullCoreVerts = (
     metadata: ColumnTextureMetadata,
     texAspect: number,
     numSegment: number,
-    numRotation: number
+    spacing: number
 ): Float32Array => {
     const breakEpsilon = 0.00001
     const bandWidth = 0.025
     const texMapper = new ColumnTextureMapper(metadata)
 
-    const maxAngle = Math.PI * 2 * numRotation
     const minRadius = bandWidth * 5
     const maxRadius = 1
+    const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
+    const maxAngle = Math.PI * 2 * numRotation
 
     const coordToCol = bandWidth / metadata.width
 
@@ -121,8 +122,9 @@ const getFullCoreVerts = (
         const segmentT = segmentInd / numSegment
         const angle = maxAngle * segmentT
         const radius = (maxRadius - minRadius) * segmentT + minRadius
-        const columnX = (coord[0] - 0.5) * coordToCol
-        const columnY = ((1.0 - coord[1]) - 0.5) * coordToCol * texAspect
+        const columnCoord = [coord[0] - 0.5, -coord[1] + 0.5]
+        const columnX = columnCoord[0] * coordToCol * (1 + spacing)
+        const columnY = columnCoord[1] * coordToCol * texAspect
         verts.push(
             Math.cos(angle) * (radius - width * 0.5),
             Math.sin(angle) * (radius - width * 0.5),
