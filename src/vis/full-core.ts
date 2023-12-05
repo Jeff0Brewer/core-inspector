@@ -153,7 +153,7 @@ class FullCoreRenderer {
         this.currMineral = 0
         this.numMinerals = texMineralMaps.length
 
-        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.2, 0.3, punchMineralMaps[0].height)
+        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.6, punchMineralMaps[0].height)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
 
