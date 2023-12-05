@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
-import ColumnTextureMapper, { ColumnTextureMetadata } from '../lib/column-texture'
+import { TileTextureMetadata, TileCoords } from '../lib/tile-texture'
 import vertSource from '../shaders/full-core-vert.glsl?raw'
 import fragSource from '../shaders/full-core-frag.glsl?raw'
 
@@ -9,7 +9,6 @@ const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 const TRANSFORM_SPEED = 1
-const NUM_SEGMENT = 10000
 
 class FullCoreRenderer {
     program: WebGLProgram
@@ -27,12 +26,11 @@ class FullCoreRenderer {
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
-        metadata: ColumnTextureMetadata
+        metadata: TileTextureMetadata
     ) {
         this.program = initProgram(gl, vertSource, fragSource)
 
-        const mineralMapAspect = mineralMaps[0].height / mineralMaps[0].width
-        const verts = getFullCoreVerts(metadata, mineralMapAspect, NUM_SEGMENT, 0.3)
+        const verts = getFullCoreVerts(metadata, 20, 0.3)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
@@ -67,8 +65,8 @@ class FullCoreRenderer {
             gl.uniformMatrix4fv(viewLoc, false, m)
         }
 
-        this.targetShape = 0
-        this.shapeT = 0
+        this.targetShape = 1
+        this.shapeT = 1
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
         this.setShapeT = (t: number): void => {
             gl.useProgram(this.program)
@@ -91,73 +89,92 @@ class FullCoreRenderer {
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
         this.setShapeT(ease(this.shapeT))
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
+        gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
 }
 
 const getFullCoreVerts = (
-    metadata: ColumnTextureMetadata,
-    texAspect: number,
-    numSegment: number,
+    metadata: TileTextureMetadata,
+    segmentDetail: number,
     spacing: number
 ): Float32Array => {
-    const texMapper = new ColumnTextureMapper(metadata)
-
     const bandWidth = 0.025
     const minRadius = bandWidth * 5
     const maxRadius = 1
-    const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
+    let radius = minRadius
+
+    const numRotation = Math.ceil((maxRadius - radius) / (bandWidth * (1 + spacing)))
+    let angle = 0
     const maxAngle = Math.PI * 2 * numRotation
-    const coordToCol = bandWidth / metadata.width
-    const breakEpsilon = 0.00001
+
+    const totalHeight = metadata.tiles
+        .map(coord => coord.bottom - coord.top)
+        .reduce((t, c) => t + c, 0)
+    const heightToAngle = maxAngle / totalHeight
+    const heightToRadius = (maxRadius - minRadius) / totalHeight
 
     const verts: Array<number> = []
-    const addVertRow = (
-        segmentInd: number,
-        coord: [number, number],
-        width: number
-    ): void => {
-        const segmentT = segmentInd / numSegment
-        const spiralT = Math.pow(segmentT, 0.7)
-        const angle = maxAngle * spiralT
-        const radius = (maxRadius - minRadius) * spiralT + minRadius
-        const columnCoord = [coord[0] - 0.5, -coord[1] + 0.5]
-        const columnX = columnCoord[0] * coordToCol * (1 + spacing)
-        const columnY = columnCoord[1] * coordToCol * texAspect
-        verts.push(
-            Math.cos(angle) * (radius - width * 0.5),
-            Math.sin(angle) * (radius - width * 0.5),
-            columnX - width * 0.5,
-            columnY,
-            coord[0],
-            coord[1],
-            Math.cos(angle) * (radius + width * 0.5),
-            Math.sin(angle) * (radius + width * 0.5),
-            columnX + width * 0.5,
-            columnY,
-            coord[0] + metadata.width,
-            coord[1]
-        )
+    const addSegment = (coords: TileCoords): void => {
+        const segmentHeight = (coords.bottom - coords.top)
+        const heightInc = segmentHeight / segmentDetail
+
+        const segmentAngle = segmentHeight * heightToAngle
+        const angleInc = segmentAngle / segmentDetail
+
+        const segmentRadius = segmentHeight * heightToRadius
+        const radiusInc = segmentRadius / segmentDetail
+        for (let i = 0; i < segmentDetail - 1; i++, angle += angleInc, radius += radiusInc) {
+            const currCos = Math.cos(angle)
+            const currSin = Math.sin(angle)
+            const currIR = radius - bandWidth * 0.5
+            const currOR = radius + bandWidth * 0.5
+            const nextCos = Math.cos(angle + angleInc)
+            const nextSin = Math.sin(angle + angleInc)
+            const nextIR = currIR + radiusInc
+            const nextOR = currOR + radiusInc
+
+            const empty = [0, 0]
+
+            const posInner = [currCos * currIR, currSin * currIR]
+            const posOuter = [currCos * currOR, currSin * currOR]
+            const coordInner = [coords.left, coords.top + heightInc * i]
+            const coordOuter = [coords.right, coords.top + heightInc * i]
+
+            const nextPosInner = [nextCos * nextIR, nextSin * nextIR]
+            const nextPosOuter = [nextCos * nextOR, nextSin * nextOR]
+            const nextCoordInner = [coords.left, coords.top + heightInc * (i + 1)]
+            const nextCoordOuter = [coords.right, coords.top + heightInc * (i + 1)]
+
+            verts.push(
+                ...posInner,
+                ...empty,
+                ...coordInner,
+
+                ...posOuter,
+                ...empty,
+                ...coordOuter,
+
+                ...nextPosOuter,
+                ...empty,
+                ...nextCoordOuter,
+
+                ...nextPosOuter,
+                ...empty,
+                ...nextCoordOuter,
+
+                ...nextPosInner,
+                ...empty,
+                ...nextCoordInner,
+
+                ...posInner,
+                ...empty,
+                ...coordInner
+            )
+        }
     }
 
-    for (let i = 0; i < numSegment; i++) {
-        const thisT = i / numSegment
-        const nextT = (i + 1) / numSegment
-        const { coord, breakPercentage } = texMapper.get(thisT, nextT)
-        addVertRow(i, coord, bandWidth)
-
-        if (breakPercentage !== null) {
-            const breakT = thisT * (1 - breakPercentage) + nextT * breakPercentage
-            const { coord: lowCoord } = texMapper.get(breakT - breakEpsilon)
-            const { coord: highCoord } = texMapper.get(breakT + breakEpsilon)
-
-            // add two sets of verts at same position with different tex coords
-            // so interpolation between end / start of columns doesn't break
-            addVertRow(i + breakPercentage, lowCoord, bandWidth)
-            addVertRow(i + breakPercentage, lowCoord, 0)
-            addVertRow(i + breakPercentage, highCoord, 0)
-            addVertRow(i + breakPercentage, highCoord, bandWidth)
-        }
+    for (const coords of metadata.tiles) {
+        addSegment(coords)
     }
 
     return new Float32Array(verts)
