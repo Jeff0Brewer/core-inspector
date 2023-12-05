@@ -126,7 +126,7 @@ class PunchcardCoreRenderer {
         this.bindAttrib()
         this.setShapeT(ease(shapeT))
 
-        gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
+        gl.drawArrays(gl.POINTS, 0, this.numVertex)
     }
 }
 
@@ -153,7 +153,7 @@ class FullCoreRenderer {
         this.currMineral = 0
         this.numMinerals = texMineralMaps.length
 
-        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.2, 0.3)
+        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.2, 0.3, punchMineralMaps[0].height)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
 
@@ -184,6 +184,7 @@ class FullCoreRenderer {
         this.currShape = clamp(this.currShape + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
         this.texRenderer.draw(gl, this.currMineral, this.currShape)
+        this.punchRenderer.draw(gl, this.currMineral, this.currShape)
     }
 }
 
@@ -193,11 +194,131 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
+const addTexTile = (
+    out: Array<number>,
+    coords: TileCoords,
+    currRadius: number,
+    currAngle: number,
+    currColX: number,
+    currColY: number,
+    tileRadius: number,
+    tileAngle: number,
+    tileHeight: number,
+    tileX: number,
+    tileY: number
+): void => {
+    const angleInc = tileAngle / TILE_DETAIL
+    const radiusInc = tileRadius / TILE_DETAIL
+    const yInc = tileY / TILE_DETAIL
+    const colYInc = BAND_WIDTH * (tileY / tileX) / TILE_DETAIL
+
+    let angle = currAngle
+    let radius = currRadius
+    const colX = currColX
+    let colY = currColY
+
+    let i = 0
+    while (i < TILE_DETAIL) {
+        const inner = [
+            Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
+            Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
+            colX,
+            colY,
+            coords.left,
+            coords.top + yInc * i
+        ]
+
+        const outer = [
+            Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
+            Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
+            colX + BAND_WIDTH,
+            colY,
+            coords.right,
+            coords.top + yInc * i
+        ]
+
+        i += 1
+        radius += radiusInc
+        angle += angleInc
+        colY -= colYInc
+
+        const nextInner = [
+            Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
+            Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
+            colX,
+            colY,
+            coords.left,
+            coords.top + yInc * i
+        ]
+
+        const nextOuter = [
+            Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
+            Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
+            colX + BAND_WIDTH,
+            colY,
+            coords.right,
+            coords.top + yInc * i
+        ]
+
+        out.push(
+            ...inner,
+            ...outer,
+            ...nextOuter,
+            ...nextOuter,
+            ...nextInner,
+            ...inner
+        )
+    }
+}
+
+const addPunchTile = (
+    out: Array<number>,
+    coords: TileCoords,
+    currRadius: number,
+    currAngle: number,
+    currColX: number,
+    currColY: number,
+    tileRadius: number,
+    tileAngle: number,
+    tileHeight: number,
+    tileX: number,
+    tileY: number,
+    textureHeight: number
+): void => {
+    const numRows = Math.round(tileY * textureHeight)
+    const angleInc = tileAngle / numRows
+    const radiusInc = tileRadius / numRows
+    const colYInc = tileHeight / numRows
+
+    const colX = currColX
+    let colY = currColY
+
+    let radius = currRadius
+    let angle = currAngle
+    for (let i = 0; i < numRows; i++, radius += radiusInc, angle += angleInc, colY -= colYInc) {
+        const cos = Math.cos(angle)
+        const sin = Math.sin(angle)
+        const startRadius = radius - BAND_WIDTH * 0.5
+        for (let p = 0; p < 3; p++) {
+            const bandAcross = BAND_WIDTH * (p + 0.5) / 3
+            out.push(
+                cos * startRadius + bandAcross,
+                sin * startRadius + bandAcross,
+                colX + bandAcross,
+                colY,
+                coords.left + tileX * p / 3,
+                coords.top + tileY * i / numRows
+            )
+        }
+    }
+}
+
 const getFullCoreVerts = (
     texMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
     verticalSpacing: number,
-    horizontalSpacing: number
+    horizontalSpacing: number,
+    tempTextureHeight: number
 ): {
     texVerts: Float32Array,
     punchVerts: Float32Array
@@ -218,90 +339,18 @@ const getFullCoreVerts = (
     let colY = 1
 
     const texVerts: Array<number> = []
-    const addTexTile = (
-        coords: TileCoords,
-        currRadius: number,
-        currAngle: number,
-        tileRadius: number,
-        tileAngle: number,
-        currX: number,
-        currY: number,
-        tileX: number,
-        tileY: number
-    ): void => {
-        const angleInc = tileAngle / TILE_DETAIL
-        const radiusInc = tileRadius / TILE_DETAIL
-        const yInc = tileY / TILE_DETAIL
-        const colYInc = BAND_WIDTH * (tileY / tileX) / TILE_DETAIL
-
-        let angle = currAngle
-        let radius = currRadius
-        const colX = currX
-        let colY = currY
-
-        let i = 0
-        while (i < TILE_DETAIL) {
-            const inner = [
-                Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
-                Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
-                colX,
-                colY,
-                coords.left,
-                coords.top + yInc * i
-            ]
-
-            const outer = [
-                Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
-                Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
-                colX + BAND_WIDTH,
-                colY,
-                coords.right,
-                coords.top + yInc * i
-            ]
-
-            i += 1
-            radius += radiusInc
-            angle += angleInc
-            colY -= colYInc
-
-            const nextInner = [
-                Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
-                Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
-                colX,
-                colY,
-                coords.left,
-                coords.top + yInc * i
-            ]
-
-            const nextOuter = [
-                Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
-                Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
-                colX + BAND_WIDTH,
-                colY,
-                coords.right,
-                coords.top + yInc * i
-            ]
-
-            texVerts.push(
-                ...inner,
-                ...outer,
-                ...nextOuter,
-                ...nextOuter,
-                ...nextInner,
-                ...inner
-            )
-        }
-    }
-
     const punchVerts: Array<number> = []
 
     for (let i = 0; i < numTiles; i++) {
         const texCoords = texMetadata.tiles[i]
-        // const punchCoords = punchMetadata.tiles[i]
+        const punchCoords = punchMetadata.tiles[i]
 
         // TODO: add tile height / width to metadata
         const texHeight = texCoords.bottom - texCoords.top
         const texWidth = texCoords.right - texCoords.left
+        const punchHeight = texCoords.bottom - texCoords.top
+        const punchWidth = punchCoords.right - punchCoords.left
+
         const heightPer = texHeight / texTotalHeight
         const tileRadius = heightPer * RADIUS_RANGE
         const tileAngle = heightPer * maxAngle
@@ -313,7 +362,35 @@ const getFullCoreVerts = (
             colY = 1
         }
 
-        addTexTile(texCoords, radius, angle, tileRadius, tileAngle, colX, colY, texWidth, texHeight)
+        addTexTile(
+            texVerts,
+            texCoords,
+            radius,
+            angle,
+            colX,
+            colY,
+            tileRadius,
+            tileAngle,
+            tileHeight,
+            texWidth,
+            texHeight
+        )
+
+        addPunchTile(
+            punchVerts,
+            punchCoords,
+            radius,
+            angle,
+            colX,
+            colY,
+            tileRadius,
+            tileAngle,
+            tileHeight,
+            punchWidth,
+            punchHeight,
+            tempTextureHeight
+        )
+
         colY -= tileHeight + BAND_WIDTH * verticalSpacing
         angle += tileAngle + BAND_WIDTH * verticalSpacing
         radius += tileRadius
