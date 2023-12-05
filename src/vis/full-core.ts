@@ -101,10 +101,7 @@ const getFullCoreVerts = (
     const bandWidth = 0.025
     const minRadius = bandWidth * 5
     const maxRadius = 1
-    let radius = minRadius
-
-    const numRotation = Math.ceil((maxRadius - radius) / (bandWidth * (1 + spacing)))
-    let angle = 0
+    const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
     const maxAngle = Math.PI * 2 * numRotation
 
     const totalHeight = metadata.tiles
@@ -113,16 +110,31 @@ const getFullCoreVerts = (
     const heightToAngle = maxAngle / totalHeight
     const heightToRadius = (maxRadius - minRadius) / totalHeight
 
+    let radius = minRadius
+    let angle = 0
+    let colX = -1
+    let colY = 1
+
     const verts: Array<number> = []
     const addSegment = (coords: TileCoords): void => {
         const segmentHeight = (coords.bottom - coords.top)
         const heightInc = segmentHeight / segmentDetail
+
+        const segmentWidth = (coords.right - coords.left)
+        const colHeight = bandWidth * (segmentHeight / segmentWidth)
+        const colHeightInc = colHeight / segmentDetail
+
+        if (colY - colHeight <= -1) {
+            colX += bandWidth * (1 + spacing)
+            colY = 1
+        }
 
         const segmentAngle = segmentHeight * heightToAngle
         const angleInc = segmentAngle / segmentDetail
 
         const segmentRadius = segmentHeight * heightToRadius
         const radiusInc = segmentRadius / segmentDetail
+
         for (let i = 0; i < segmentDetail - 1; i++, angle += angleInc, radius += radiusInc) {
             const currCos = Math.cos(angle)
             const currSin = Math.sin(angle)
@@ -133,12 +145,16 @@ const getFullCoreVerts = (
             const nextIR = currIR + radiusInc
             const nextOR = currOR + radiusInc
 
-            const empty = [0, 0]
-
             const posInner = [currCos * currIR, currSin * currIR]
             const posOuter = [currCos * currOR, currSin * currOR]
             const coordInner = [coords.left, coords.top + heightInc * i]
             const coordOuter = [coords.right, coords.top + heightInc * i]
+
+            const colInner = [colX, colY]
+            const colOuter = [colX + bandWidth, colY]
+            const nextColInner = [colX, colY - colHeightInc]
+            const nextColOuter = [colX + bandWidth, colY - colHeightInc]
+            colY -= colHeightInc
 
             const nextPosInner = [nextCos * nextIR, nextSin * nextIR]
             const nextPosOuter = [nextCos * nextOR, nextSin * nextOR]
@@ -147,27 +163,27 @@ const getFullCoreVerts = (
 
             verts.push(
                 ...posInner,
-                ...empty,
+                ...colInner,
                 ...coordInner,
 
                 ...posOuter,
-                ...empty,
+                ...colOuter,
                 ...coordOuter,
 
                 ...nextPosOuter,
-                ...empty,
+                ...nextColOuter,
                 ...nextCoordOuter,
 
                 ...nextPosOuter,
-                ...empty,
+                ...nextColOuter,
                 ...nextCoordOuter,
 
                 ...nextPosInner,
-                ...empty,
+                ...nextColInner,
                 ...nextCoordInner,
 
                 ...posInner,
-                ...empty,
+                ...colInner,
                 ...coordInner
             )
         }
