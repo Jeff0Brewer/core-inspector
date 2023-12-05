@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
-import { TileTextureMetadata, TileCoords } from '../lib/tile-texture'
+import { TileTextureMetadata } from '../lib/tile-texture'
 import vertSource from '../shaders/full-core-vert.glsl?raw'
 import fragSource from '../shaders/full-core-frag.glsl?raw'
 
