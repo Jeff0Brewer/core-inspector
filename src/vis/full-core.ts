@@ -1,8 +1,10 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
-import { TileTextureMetadata } from '../lib/tile-texture'
-import vertSource from '../shaders/full-core-vert.glsl?raw'
-import fragSource from '../shaders/full-core-frag.glsl?raw'
+import { TileTextureMetadata, TileCoords } from '../lib/tile-texture'
+import texVert from '../shaders/full-core-vert.glsl?raw'
+import texFrag from '../shaders/full-core-frag.glsl?raw'
+import punchVert from '../shaders/punchcard-vert.glsl?raw'
+import punchFrag from '../shaders/punchcard-frag.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
@@ -10,39 +12,33 @@ const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 const TRANSFORM_SPEED = 1
 
-class FullCoreRenderer {
+class TexMappedCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
     minerals: Array<WebGLTexture>
+    numVertex: number
     bindAttrib: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
-    targetShape: number
-    shapeT: number
-    currMineral: number
-    numVertex: number
 
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata
+        vertices: Float32Array
     ) {
-        this.program = initProgram(gl, vertSource, fragSource)
+        this.program = initProgram(gl, texVert, texFrag)
 
-        const verts = getFullCoreVerts(metadata, 20, 0.3)
-        this.numVertex = verts.length / STRIDE
-
+        this.numVertex = vertices.length / STRIDE
         this.buffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW)
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
 
         this.minerals = []
-        for (let i = 0; i < mineralMaps.length; i++) {
+        for (const img of mineralMaps) {
             const texture = initTexture(gl)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, mineralMaps[i])
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, img)
             this.minerals.push(texture)
         }
-        this.currMineral = 0
 
         const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, STRIDE, 0)
         const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, STRIDE, POS_FPV)
@@ -54,142 +50,279 @@ class FullCoreRenderer {
         }
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
-        this.setProj = (m: mat4): void => {
-            gl.useProgram(this.program)
-            gl.uniformMatrix4fv(projLoc, false, m)
-        }
+        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
 
         const viewLoc = gl.getUniformLocation(this.program, 'view')
-        this.setView = (m: mat4): void => {
-            gl.useProgram(this.program)
-            gl.uniformMatrix4fv(viewLoc, false, m)
-        }
+        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
 
-        this.targetShape = 0
-        this.shapeT = 0
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
-        this.setShapeT = (t: number): void => {
-            gl.useProgram(this.program)
-            gl.uniform1f(shapeTLoc, t)
-        }
+        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
 
-    setCurrMineral (i: number): void {
-        this.currMineral = clamp(i, 0, this.minerals.length - 1)
-    }
-
-    draw (gl: WebGLRenderingContext, elapsed: number): void {
+    draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
         gl.useProgram(this.program)
 
-        gl.bindTexture(gl.TEXTURE_2D, this.minerals[this.currMineral])
+        gl.bindTexture(gl.TEXTURE_2D, this.minerals[currMineral])
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
-
-        const incSign = Math.sign(this.targetShape - this.shapeT)
-        this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
-        this.setShapeT(ease(this.shapeT))
+        this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
 }
 
-const getFullCoreVerts = (
-    metadata: TileTextureMetadata,
-    segmentDetail: number,
-    spacing: number
-): Float32Array => {
-    const bandWidth = 0.025
-    const minRadius = bandWidth * 5
-    const maxRadius = 1
-    const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
-    const maxAngle = Math.PI * 2 * numRotation
+class PunchcardCoreRenderer {
+    program: WebGLProgram
+    buffer: WebGLBuffer
+    numVertex: number
+    minerals: Array<WebGLTexture>
+    bindAttrib: () => void
+    setProj: (m: mat4) => void
+    setView: (m: mat4) => void
+    setShapeT: (t: number) => void
 
-    const totalHeight = metadata.tiles
+    constructor (
+        gl: WebGLRenderingContext,
+        mineralMaps: Array<HTMLImageElement>,
+        vertices: Float32Array
+    ) {
+        this.program = initProgram(gl, punchVert, punchFrag)
+
+        this.numVertex = vertices.length / STRIDE
+        this.buffer = initBuffer(gl)
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+
+        this.minerals = []
+        for (const img of mineralMaps) {
+            const texture = initTexture(gl)
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, img)
+            this.minerals.push(texture)
+        }
+
+        const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, STRIDE, 0)
+        const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, STRIDE, POS_FPV)
+        const bindTexCoord = initAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, 2 * POS_FPV)
+        this.bindAttrib = (): void => {
+            bindSpiralPos()
+            bindColumnPos()
+            bindTexCoord()
+        }
+
+        const projLoc = gl.getUniformLocation(this.program, 'proj')
+        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+
+        const viewLoc = gl.getUniformLocation(this.program, 'view')
+        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
+
+        const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
+        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
+    }
+
+    draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
+        gl.useProgram(this.program)
+
+        gl.bindTexture(gl.TEXTURE_2D, this.minerals[currMineral])
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+        this.bindAttrib()
+        this.setShapeT(ease(shapeT))
+
+        gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
+    }
+}
+
+class FullCoreRenderer {
+    texRenderer: TexMappedCoreRenderer
+    punchRenderer: PunchcardCoreRenderer
+    setProj: (m: mat4) => void
+    setView: (m: mat4) => void
+    currMineral: number
+    numMinerals: number
+    targetShape: number
+    currShape: number
+
+    constructor (
+        gl: WebGLRenderingContext,
+        texMineralMaps: Array<HTMLImageElement>,
+        texMetadata: TileTextureMetadata,
+        punchMineralMaps: Array<HTMLImageElement>,
+        punchMetadata: TileTextureMetadata
+    ) {
+        if (texMetadata.tiles.length !== punchMetadata.tiles.length) {
+            throw new Error('Texture mapped and punchcard tile textures contain different tiles')
+        }
+        this.currMineral = 0
+        this.numMinerals = texMineralMaps.length
+
+        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.2, 0.3)
+        this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
+        this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
+
+        this.setProj = (m: mat4): void => {
+            gl.useProgram(this.texRenderer.program)
+            this.texRenderer.setProj(m)
+            gl.useProgram(this.punchRenderer.program)
+            this.punchRenderer.setProj(m)
+        }
+
+        this.setView = (m: mat4): void => {
+            gl.useProgram(this.texRenderer.program)
+            this.texRenderer.setView(m)
+            gl.useProgram(this.punchRenderer.program)
+            this.punchRenderer.setView(m)
+        }
+
+        this.targetShape = 1
+        this.currShape = 1
+    }
+
+    setCurrMineral (i: number): void {
+        this.currMineral = clamp(i, 0, this.numMinerals)
+    }
+
+    draw (gl: WebGLRenderingContext, elapsed: number): void {
+        const incSign = Math.sign(this.targetShape - this.currShape)
+        this.currShape = clamp(this.currShape + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
+
+        this.texRenderer.draw(gl, this.currMineral, this.currShape)
+    }
+}
+
+const TILE_DETAIL = 20
+const BAND_WIDTH = 0.025
+const MIN_RADIUS = BAND_WIDTH * 5
+const MAX_RADIUS = 1
+const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
+
+const getFullCoreVerts = (
+    texMetadata: TileTextureMetadata,
+    punchMetadata: TileTextureMetadata,
+    verticalSpacing: number,
+    horizontalSpacing: number
+): {
+    texVerts: Float32Array,
+    punchVerts: Float32Array
+} => {
+    const numTiles = texMetadata.tiles.length
+
+    const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
+    const maxAngle = numRotation * Math.PI * 2
+
+    // TODO: add total height to metadata
+    const texTotalHeight = texMetadata.tiles
         .map(coord => coord.bottom - coord.top)
         .reduce((t, c) => t + c, 0)
-    const heightToAngle = maxAngle / totalHeight
-    const heightToRadius = (maxRadius - minRadius) / totalHeight
 
-    let radius = minRadius
+    let radius = MIN_RADIUS
     let angle = 0
     let colX = -1
     let colY = 1
 
-    const verts: Array<number> = []
-    for (const coords of metadata.tiles) {
-        const segmentHeight = (coords.bottom - coords.top)
-        const heightInc = segmentHeight / segmentDetail
+    const texVerts: Array<number> = []
+    const addTexTile = (
+        coords: TileCoords,
+        currRadius: number,
+        currAngle: number,
+        tileRadius: number,
+        tileAngle: number,
+        currX: number,
+        currY: number,
+        tileX: number,
+        tileY: number
+    ): void => {
+        const angleInc = tileAngle / TILE_DETAIL
+        const radiusInc = tileRadius / TILE_DETAIL
+        const yInc = tileY / TILE_DETAIL
+        const colYInc = BAND_WIDTH * (tileY / tileX) / TILE_DETAIL
 
-        const segmentWidth = (coords.right - coords.left)
-        const colHeight = bandWidth * (segmentHeight / segmentWidth)
-        const colHeightInc = colHeight / segmentDetail
+        let angle = currAngle
+        let radius = currRadius
+        const colX = currX
+        let colY = currY
 
-        if (colY - colHeight <= -1) {
-            colX += bandWidth * (1 + spacing)
-            colY = 1
-        }
+        let i = 0
+        while (i < TILE_DETAIL) {
+            const inner = [
+                Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
+                Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
+                colX,
+                colY,
+                coords.left,
+                coords.top + yInc * i
+            ]
 
-        const segmentAngle = segmentHeight * heightToAngle
-        const angleInc = segmentAngle / segmentDetail
+            const outer = [
+                Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
+                Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
+                colX + BAND_WIDTH,
+                colY,
+                coords.right,
+                coords.top + yInc * i
+            ]
 
-        const segmentRadius = segmentHeight * heightToRadius
-        const radiusInc = segmentRadius / segmentDetail
+            i += 1
+            radius += radiusInc
+            angle += angleInc
+            colY -= colYInc
 
-        for (let i = 0; i < segmentDetail - 1; i++, angle += angleInc, radius += radiusInc) {
-            const currCos = Math.cos(angle)
-            const currSin = Math.sin(angle)
-            const currIR = radius - bandWidth * 0.5
-            const currOR = radius + bandWidth * 0.5
-            const nextCos = Math.cos(angle + angleInc)
-            const nextSin = Math.sin(angle + angleInc)
-            const nextIR = currIR + radiusInc
-            const nextOR = currOR + radiusInc
+            const nextInner = [
+                Math.cos(angle) * (radius - BAND_WIDTH * 0.5),
+                Math.sin(angle) * (radius - BAND_WIDTH * 0.5),
+                colX,
+                colY,
+                coords.left,
+                coords.top + yInc * i
+            ]
 
-            const posInner = [currCos * currIR, currSin * currIR]
-            const posOuter = [currCos * currOR, currSin * currOR]
-            const coordInner = [coords.left, coords.top + heightInc * i]
-            const coordOuter = [coords.right, coords.top + heightInc * i]
+            const nextOuter = [
+                Math.cos(angle) * (radius + BAND_WIDTH * 0.5),
+                Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
+                colX + BAND_WIDTH,
+                colY,
+                coords.right,
+                coords.top + yInc * i
+            ]
 
-            const colInner = [colX, colY]
-            const colOuter = [colX + bandWidth, colY]
-            const nextColInner = [colX, colY - colHeightInc]
-            const nextColOuter = [colX + bandWidth, colY - colHeightInc]
-            colY -= colHeightInc
-
-            const nextPosInner = [nextCos * nextIR, nextSin * nextIR]
-            const nextPosOuter = [nextCos * nextOR, nextSin * nextOR]
-            const nextCoordInner = [coords.left, coords.top + heightInc * (i + 1)]
-            const nextCoordOuter = [coords.right, coords.top + heightInc * (i + 1)]
-
-            verts.push(
-                ...posInner,
-                ...colInner,
-                ...coordInner,
-
-                ...posOuter,
-                ...colOuter,
-                ...coordOuter,
-
-                ...nextPosOuter,
-                ...nextColOuter,
-                ...nextCoordOuter,
-
-                ...nextPosOuter,
-                ...nextColOuter,
-                ...nextCoordOuter,
-
-                ...nextPosInner,
-                ...nextColInner,
-                ...nextCoordInner,
-
-                ...posInner,
-                ...colInner,
-                ...coordInner
+            texVerts.push(
+                ...inner,
+                ...outer,
+                ...nextOuter,
+                ...nextOuter,
+                ...nextInner,
+                ...inner
             )
         }
     }
 
-    return new Float32Array(verts)
+    const punchVerts: Array<number> = []
+
+    for (let i = 0; i < numTiles; i++) {
+        const texCoords = texMetadata.tiles[i]
+        // const punchCoords = punchMetadata.tiles[i]
+
+        // TODO: add tile height / width to metadata
+        const texHeight = texCoords.bottom - texCoords.top
+        const texWidth = texCoords.right - texCoords.left
+        const heightPer = texHeight / texTotalHeight
+        const tileRadius = heightPer * RADIUS_RANGE
+        const tileAngle = heightPer * maxAngle
+
+        const tileHeight = BAND_WIDTH * (texHeight / texWidth)
+
+        if (colY - tileHeight <= -1) {
+            colX += BAND_WIDTH * (1 + horizontalSpacing)
+            colY = 1
+        }
+
+        addTexTile(texCoords, radius, angle, tileRadius, tileAngle, colX, colY, texWidth, texHeight)
+        colY -= tileHeight + BAND_WIDTH * verticalSpacing
+        angle += tileAngle + BAND_WIDTH * verticalSpacing
+        radius += tileRadius
+    }
+
+    return {
+        texVerts: new Float32Array(texVerts),
+        punchVerts: new Float32Array(punchVerts)
+    }
 }
 
 const ease = (t: number): number => {

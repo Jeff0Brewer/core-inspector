@@ -61,13 +61,10 @@ const App: FC = () => {
             const val = parseInt(e.key)
             if (!Number.isNaN(val)) {
                 visRef.current?.fullCore.setCurrMineral(val)
-                visRef.current?.punchcard.setCurrMineral(val)
             }
             if (e.key === ' ' && visRef.current) {
                 visRef.current.fullCore.targetShape += 1
                 visRef.current.fullCore.targetShape %= 2
-                visRef.current.punchcard.targetShape += 1
-                visRef.current.punchcard.targetShape %= 2
             }
         }
         window.addEventListener('resize', resize)

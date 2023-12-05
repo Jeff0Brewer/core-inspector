@@ -2,7 +2,7 @@ import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import FullCoreRenderer from '../vis/full-core'
-import PunchcardRenderer from '../vis/punchcard'
+// import PunchcardRenderer from '../vis/punchcard'
 
 class VisRenderer {
     canvas: HTMLCanvasElement
@@ -10,7 +10,6 @@ class VisRenderer {
     view: mat4
     proj: mat4
     fullCore: FullCoreRenderer
-    punchcard: PunchcardRenderer
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -29,11 +28,17 @@ class VisRenderer {
             [0, 1, 0]
         )
 
-        this.fullCore = new FullCoreRenderer(this.gl, downscaledMaps, downscaledMetadata)
+        this.fullCore = new FullCoreRenderer(
+            this.gl,
+            downscaledMaps,
+            downscaledMetadata,
+            punchcardMaps,
+            punchcardMetadata
+        )
         this.fullCore.setView(this.view)
 
-        this.punchcard = new PunchcardRenderer(this.gl, punchcardMaps, punchcardMetadata)
-        this.punchcard.setView(this.view)
+        // this.punchcard = new PunchcardRenderer(this.gl, punchcardMaps, punchcardMetadata)
+        // this.punchcard.setView(this.view)
 
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -50,14 +55,14 @@ class VisRenderer {
 
         mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
         this.fullCore.setProj(this.proj)
-        this.punchcard.setProj(this.proj)
+        // this.punchcard.setProj(this.proj)
     }
 
     draw (elapsed: number): void {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.fullCore.draw(this.gl, elapsed)
-        this.punchcard.draw(this.gl, elapsed)
+        // this.punchcard.draw(this.gl, elapsed)
     }
 }
 
