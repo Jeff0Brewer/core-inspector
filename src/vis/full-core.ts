@@ -116,7 +116,7 @@ const getFullCoreVerts = (
     let colY = 1
 
     const verts: Array<number> = []
-    const addSegment = (coords: TileCoords): void => {
+    for (const coords of metadata.tiles) {
         const segmentHeight = (coords.bottom - coords.top)
         const heightInc = segmentHeight / segmentDetail
 
@@ -187,10 +187,6 @@ const getFullCoreVerts = (
                 ...coordInner
             )
         }
-    }
-
-    for (const coords of metadata.tiles) {
-        addSegment(coords)
     }
 
     return new Float32Array(verts)
