@@ -30,16 +30,14 @@ class VisRenderer {
             [0, 1, 0]
         )
 
-        this.proj = mat4.create()
-        this.resize() // init canvas size, gl viewport, proj matrix
-
         this.fullCore = new FullCoreRenderer(this.gl, downscaledMaps, downscaledMetadata)
-        this.fullCore.setProj(this.proj)
         this.fullCore.setView(this.view)
 
         this.punchcard = new PunchcardRenderer(this.gl, punchcardMaps, punchcardMetadata)
-        this.punchcard.setProj(this.proj)
         this.punchcard.setView(this.view)
+
+        this.proj = mat4.create()
+        this.resize() // init canvas size, gl viewport, proj matrix
     }
 
     resize (): void {
@@ -52,6 +50,8 @@ class VisRenderer {
         this.gl.viewport(0, 0, w, h)
 
         mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
+        this.fullCore.setProj(this.proj)
+        this.punchcard.setProj(this.proj)
     }
 
     draw (elapsed: number): void {
