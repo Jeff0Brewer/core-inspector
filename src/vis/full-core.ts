@@ -65,8 +65,8 @@ class FullCoreRenderer {
             gl.uniformMatrix4fv(viewLoc, false, m)
         }
 
-        this.targetShape = 1
-        this.shapeT = 1
+        this.targetShape = 0
+        this.shapeT = 0
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
         this.setShapeT = (t: number): void => {
             gl.useProgram(this.program)

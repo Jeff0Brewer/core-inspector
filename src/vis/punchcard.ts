@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
-import ColumnTextureMapper, { ColumnTextureMetadata } from '../lib/column-texture'
+import { TileTextureMetadata } from '../lib/tile-texture'
 import vertSource from '../shaders/punchcard-vert.glsl?raw'
 import fragSource from '../shaders/punchcard-frag.glsl?raw'
 
@@ -26,11 +26,11 @@ class PunchcardRenderer {
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
-        metadata: ColumnTextureMetadata
+        metadata: TileTextureMetadata
     ) {
         this.program = initProgram(gl, vertSource, fragSource)
 
-        const verts = getPunchcardVerts(metadata, mineralMaps[0].width, mineralMaps[0].height, 0.3)
+        const verts = getPunchcardVerts(metadata, mineralMaps[0].height, 0.3)
         this.numVertex = verts.length / STRIDE
 
         this.buffer = initBuffer(gl)
@@ -94,55 +94,73 @@ class PunchcardRenderer {
 }
 
 const getPunchcardVerts = (
-    metadata: ColumnTextureMetadata,
-    texWidth: number,
+    metadata: TileTextureMetadata,
     texHeight: number,
     spacing: number
 ): Float32Array => {
-    const texMapper = new ColumnTextureMapper(metadata)
-    const numRow = metadata.heights.reduce((total, height) =>
-        total + Math.round(height * texHeight),
-    0
-    )
-    const texAspect = texHeight / texWidth
+    const totalHeight = metadata.tiles
+        .map(coord => coord.bottom - coord.top)
+        .reduce((t, c) => t + c, 0)
 
     const bandWidth = 0.025
     const minRadius = bandWidth * 5
     const maxRadius = 1
     const numRotation = Math.ceil((maxRadius - minRadius) / (bandWidth * (1 + spacing)))
     const maxAngle = Math.PI * 2 * numRotation
-    const coordToCol = bandWidth / metadata.width
+
+    const heightToAngle = maxAngle / totalHeight
+    const heightToRadius = (maxRadius - minRadius) / totalHeight
+
+    let radius = minRadius
+    let angle = 0
+    let colX = -1
+    let colY = 1
 
     const verts: Array<number> = []
-    const addPointRow = (
-        rowInd: number,
-        coord: [number, number]
-    ): void => {
-        const rowT = rowInd / numRow
-        const spiralT = Math.pow(rowT, 0.7)
-        const angle = maxAngle * spiralT
-        const radius = (maxRadius - minRadius) * spiralT + minRadius
-        const columnCoord = [
-            (coord[0] - 0.5) * coordToCol * (1 + spacing),
-            (-coord[1] + 0.5) * coordToCol * texAspect
-        ]
-        const columnInc = bandWidth / 3
-        const coordInc = metadata.width / 3
-        for (let i = 0; i < 3; i++) {
-            verts.push(
-                Math.cos(angle) * (radius - bandWidth * 0.5 + columnInc * (i + 0.5)),
-                Math.sin(angle) * (radius - bandWidth * 0.5 + columnInc * (i + 0.5)),
-                columnCoord[0] - bandWidth + columnInc * i,
-                columnCoord[1],
-                coord[0] + coordInc * i,
-                coord[1]
-            )
-        }
-    }
+    for (const coords of metadata.tiles) {
+        const segmentWidth = coords.right - coords.left
+        const segmentHeight = coords.bottom - coords.top
 
-    for (let i = 0; i < numRow; i++) {
-        const { coord } = texMapper.get(i / numRow)
-        addPointRow(i, coord)
+        const numRows = Math.round(segmentHeight * texHeight)
+
+        const colHeight = bandWidth * (segmentHeight / segmentWidth)
+        const colHeightInc = colHeight / numRows
+
+        const segmentAngle = segmentHeight * heightToAngle
+        const angleInc = segmentAngle / numRows
+
+        const segmentRadius = segmentHeight * heightToRadius
+        const radiusInc = segmentRadius / numRows
+
+        if (colY - colHeight <= -1) {
+            colX += bandWidth * (1 + spacing)
+            colY = 1
+        }
+
+        for (let i = 0; i <= numRows; i++, angle += angleInc, radius += radiusInc, colY -= colHeightInc) {
+            const cos = Math.cos(angle)
+            const sin = Math.sin(angle)
+            const ir = radius - bandWidth * 0.5
+            for (let p = 0; p < 3; p++) {
+                const pos = [
+                    cos * (ir + bandWidth * p / 3),
+                    sin * (ir + bandWidth * p / 3)
+                ]
+                const col = [
+                    colX + bandWidth * p / 3,
+                    colY
+                ]
+                const coord = [
+                    coords.left + segmentWidth * p / 3,
+                    coords.top + segmentHeight * i / numRows
+                ]
+                verts.push(
+                    ...pos,
+                    ...col,
+                    ...coord
+                )
+            }
+        }
     }
 
     return new Float32Array(verts)

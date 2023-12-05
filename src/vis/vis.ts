@@ -1,6 +1,5 @@
 import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
-import { ColumnTextureMetadata } from '../lib/column-texture'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import FullCoreRenderer from '../vis/full-core'
 import PunchcardRenderer from '../vis/punchcard'
@@ -18,7 +17,7 @@ class VisRenderer {
         downscaledMaps: Array<HTMLImageElement>,
         downscaledMetadata: TileTextureMetadata,
         punchcardMaps: Array<HTMLImageElement>,
-        punchcardMetadata: ColumnTextureMetadata
+        punchcardMetadata: TileTextureMetadata
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -58,7 +57,7 @@ class VisRenderer {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.fullCore.draw(this.gl, elapsed)
-        // this.punchcard.draw(this.gl, elapsed)
+        this.punchcard.draw(this.gl, elapsed)
     }
 }
 
