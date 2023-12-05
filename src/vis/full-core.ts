@@ -210,7 +210,7 @@ const addTexTile = (
     const angleInc = tileAngle / TILE_DETAIL
     const radiusInc = tileRadius / TILE_DETAIL
     const yInc = tileY / TILE_DETAIL
-    const colYInc = BAND_WIDTH * (tileY / tileX) / TILE_DETAIL
+    const colYInc = tileHeight / TILE_DETAIL
 
     let angle = currAngle
     let radius = currRadius
@@ -302,8 +302,8 @@ const addPunchTile = (
         for (let p = 0; p < 3; p++) {
             const bandAcross = BAND_WIDTH * (p + 0.5) / 3
             out.push(
-                cos * startRadius + bandAcross,
-                sin * startRadius + bandAcross,
+                cos * (startRadius + bandAcross),
+                sin * (startRadius + bandAcross),
                 colX + bandAcross,
                 colY,
                 coords.left + tileX * p / 3,
