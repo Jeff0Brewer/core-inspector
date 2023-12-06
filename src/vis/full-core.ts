@@ -31,7 +31,7 @@ class FullCoreRenderer {
             throw new Error('Texture mapped and punchcard tile textures contain different tiles')
         }
         this.currMineral = 0
-        this.numMinerals = texMineralMaps.length
+        this.numMinerals = texMineralMaps.length - 1
 
         const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.5)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
