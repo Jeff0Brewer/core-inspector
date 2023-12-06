@@ -9,7 +9,6 @@ import punchFrag from '../shaders/punchcard-frag.glsl?raw'
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
-
 const TRANSFORM_SPEED = 1
 
 class TexMappedCoreRenderer {
@@ -153,7 +152,7 @@ class FullCoreRenderer {
         this.currMineral = 0
         this.numMinerals = texMineralMaps.length
 
-        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.6, punchMineralMaps[0].height)
+        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.6)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
 
@@ -313,8 +312,7 @@ const getFullCoreVerts = (
     texMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
     verticalSpacing: number,
-    horizontalSpacing: number,
-    tempTextureHeight: number
+    horizontalSpacing: number
 ): {
     texVerts: Float32Array,
     punchVerts: Float32Array
@@ -369,7 +367,7 @@ const getFullCoreVerts = (
             tileRadius,
             tileAngle,
             tileHeight,
-            tempTextureHeight
+            punchMetadata.textureHeight
         )
 
         colY -= tileHeight + BAND_WIDTH * verticalSpacing

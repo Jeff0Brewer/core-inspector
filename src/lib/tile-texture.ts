@@ -8,7 +8,9 @@ type TileCoords = {
 type TileTextureMetadata = {
     tiles: Array<TileCoords>,
     numTiles: number,
-    totalHeight: number
+    totalHeight: number,
+    textureWidth: number,
+    textureHeight: number
 }
 
 export type {
