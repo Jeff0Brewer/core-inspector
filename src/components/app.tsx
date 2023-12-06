@@ -16,6 +16,7 @@ const MINERALS = [
 
 const App: FC = () => {
     const [currMineral, setCurrMineral] = useState<number>(0)
+    const [currShape, setCurrShape] = useState<number>(0)
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
@@ -53,6 +54,8 @@ const App: FC = () => {
                 punchcardTextures,
                 punchcardMetadata
             )
+            setCurrMineral(visRef.current.fullCore.currMineral)
+            setCurrShape(visRef.current.fullCore.targetShape)
         }
 
         initVisRenderer(canvasRef.current)
@@ -60,23 +63,9 @@ const App: FC = () => {
 
     useEffect(() => {
         const resize = (): void => { visRef.current?.resize() }
-
-        // temporary mineral interaction for testing
-        const setMineral = (e: KeyboardEvent): void => {
-            const val = parseInt(e.key)
-            if (!Number.isNaN(val)) {
-                visRef.current?.fullCore.setCurrMineral(val)
-            }
-            if (e.key === ' ' && visRef.current) {
-                visRef.current.fullCore.targetShape += 1
-                visRef.current.fullCore.targetShape %= 2
-            }
-        }
         window.addEventListener('resize', resize)
-        window.addEventListener('keydown', setMineral)
         return () => {
             window.removeEventListener('resize', resize)
-            window.removeEventListener('keydown', setMineral)
         }
     }, [])
 
@@ -97,17 +86,14 @@ const App: FC = () => {
         }
     }, [])
 
-    const setSpiralView = (): void => {
-        visRef.current?.fullCore.setShape(SPIRAL_SHAPE)
-    }
-
-    const setColumnView = (): void => {
-        visRef.current?.fullCore.setShape(COLUMN_SHAPE)
-    }
-
     useEffect(() => {
         visRef.current?.setCurrMineral(currMineral)
     }, [currMineral])
+
+    const setShape = (t: number): void => {
+        visRef.current?.fullCore.setShape(t)
+        setCurrShape(t)
+    }
 
     return (
         <main>
@@ -116,9 +102,9 @@ const App: FC = () => {
             ></canvas>
             <div>
                 <div className={'top-bar'}>
-                    <ViewSelect
-                        setColumn={setColumnView}
-                        setSpiral={setSpiralView}
+                    <ShapeSelect
+                        setShape={setShape}
+                        currShape={currShape}
                     />
                 </div>
                 <MineralSelect
@@ -131,18 +117,24 @@ const App: FC = () => {
     )
 }
 
-type ViewSelectProps = {
-    setSpiral: () => void,
-    setColumn: () => void
+type ShapeSelectProps = {
+    setShape: (t: number) => void
+    currShape: number
 }
 
-const ViewSelect: FC<ViewSelectProps> = ({ setSpiral, setColumn }) => {
+const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
     return (
         <div className={'view-select'}>
-            <button onClick={setColumn}>
+            <button
+                data-active={currShape === COLUMN_SHAPE}
+                onClick={(): void => setShape(COLUMN_SHAPE)}
+            >
                 {'column'}
             </button>
-            <button onClick={setSpiral}>
+            <button
+                data-active={currShape === SPIRAL_SHAPE}
+                onClick={(): void => setShape(SPIRAL_SHAPE)}
+            >
                 {'spiral'}
             </button>
         </div>

@@ -53,6 +53,6 @@ canvas {
     border-radius: var(--border-radius);
 }
 
-.mineral-select button[data-active="true"] {
+.mineral-select button[data-active="true"], .view-select button[data-active="true"] {
     background-color: var(--active-color);
 }
