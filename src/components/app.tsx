@@ -8,48 +8,41 @@ const App: FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
 
-    const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
-        const basePath = './data/gt1/'
-        const downscaledPaths = [
-            basePath + 'downscaled/00.png',
-            basePath + 'downscaled/01.png',
-            basePath + 'downscaled/02.png',
-            basePath + 'downscaled/03.png',
-            basePath + 'downscaled/04.png',
-            basePath + 'downscaled/05.png',
-            basePath + 'downscaled/06.png'
-        ]
-        const downscaledPromises = downscaledPaths.map(p => loadImageAsync(p))
-        const punchcardPaths = [
-            basePath + 'punchcard/00.png',
-            basePath + 'punchcard/01.png',
-            basePath + 'punchcard/02.png',
-            basePath + 'punchcard/03.png',
-            basePath + 'punchcard/04.png',
-            basePath + 'punchcard/05.png',
-            basePath + 'punchcard/06.png'
-        ]
-        const punchcardPromises = punchcardPaths.map(p => loadImageAsync(p))
-
-        const downscaledTextures = await Promise.all(downscaledPromises)
-        const downscaledMetadata = await fetch(basePath + 'downscaled/metadata.json').then(res => res.json())
-
-        const punchcardTextures = await Promise.all(punchcardPromises)
-        const punchcardMetadata = await fetch(basePath + 'punchcard/metadata.json').then(res => res.json())
-
-        visRef.current = new VisRenderer(
-            canvas,
-            downscaledTextures,
-            downscaledMetadata,
-            punchcardTextures,
-            punchcardMetadata
-        )
-    }
-
     useEffect(() => {
         if (!canvasRef.current) {
             throw new Error('No reference to canvas')
         }
+
+        const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+            const basePath = './data/gt1'
+            const numMinerals = 7
+
+            // fetch visualization textures / metadata
+            const downscaledPaths = []
+            const punchcardPaths = []
+            for (let i = 0; i < numMinerals; i++) {
+                downscaledPaths.push(`${basePath}/downscaled/0${i}.png`)
+                punchcardPaths.push(`${basePath}/punchcard/0${i}.png`)
+            }
+            const [downscaledTextures, punchcardTextures] = await Promise.all([
+                Promise.all(downscaledPaths.map(p => loadImageAsync(p))),
+                Promise.all(punchcardPaths.map(p => loadImageAsync(p)))
+            ])
+            const [downscaledMetadata, punchcardMetadata] = await Promise.all([
+                fetch(`${basePath}/downscaled/metadata.json`).then(res => res.json()),
+                fetch(`${basePath}/punchcard/metadata.json`).then(res => res.json())
+            ])
+
+            // initialize visualization
+            visRef.current = new VisRenderer(
+                canvas,
+                downscaledTextures,
+                downscaledMetadata,
+                punchcardTextures,
+                punchcardMetadata
+            )
+        }
+
         initVisRenderer(canvasRef.current)
     }, [])
 
