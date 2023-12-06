@@ -147,7 +147,7 @@ class FullCoreRenderer {
         punchMineralMaps: Array<HTMLImageElement>,
         punchMetadata: TileTextureMetadata
     ) {
-        if (texMetadata.tiles.length !== punchMetadata.tiles.length) {
+        if (texMetadata.numTiles !== punchMetadata.numTiles) {
             throw new Error('Texture mapped and punchcard tile textures contain different tiles')
         }
         this.currMineral = 0
@@ -203,13 +203,11 @@ const addTexTile = (
     currColY: number,
     tileRadius: number,
     tileAngle: number,
-    tileHeight: number,
-    tileX: number,
-    tileY: number
+    tileHeight: number
 ): void => {
     const angleInc = tileAngle / TILE_DETAIL
     const radiusInc = tileRadius / TILE_DETAIL
-    const yInc = tileY / TILE_DETAIL
+    const yInc = coords.height / TILE_DETAIL
     const colYInc = tileHeight / TILE_DETAIL
 
     let angle = currAngle
@@ -233,7 +231,7 @@ const addTexTile = (
             Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
             colX + BAND_WIDTH,
             colY,
-            coords.right,
+            coords.left + coords.width,
             coords.top + yInc * i
         ]
 
@@ -256,7 +254,7 @@ const addTexTile = (
             Math.sin(angle) * (radius + BAND_WIDTH * 0.5),
             colX + BAND_WIDTH,
             colY,
-            coords.right,
+            coords.left + coords.width,
             coords.top + yInc * i
         ]
 
@@ -281,11 +279,9 @@ const addPunchTile = (
     tileRadius: number,
     tileAngle: number,
     tileHeight: number,
-    tileX: number,
-    tileY: number,
     textureHeight: number
 ): void => {
-    const numRows = Math.round(tileY * textureHeight)
+    const numRows = Math.round(coords.height * textureHeight)
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
     const colYInc = tileHeight / numRows
@@ -306,8 +302,8 @@ const addPunchTile = (
                 sin * (startRadius + bandAcross),
                 colX + bandAcross,
                 colY,
-                coords.left + tileX * p / 3,
-                coords.top + tileY * i / numRows
+                coords.left + coords.width * p / 3,
+                coords.top + coords.height * i / numRows
             )
         }
     }
@@ -328,11 +324,6 @@ const getFullCoreVerts = (
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
     const maxAngle = numRotation * Math.PI * 2
 
-    // TODO: add total height to metadata
-    const texTotalHeight = texMetadata.tiles
-        .map(coord => coord.bottom - coord.top)
-        .reduce((t, c) => t + c, 0)
-
     let radius = MIN_RADIUS
     let angle = 0
     let colX = -1
@@ -345,17 +336,11 @@ const getFullCoreVerts = (
         const texCoords = texMetadata.tiles[i]
         const punchCoords = punchMetadata.tiles[i]
 
-        // TODO: add tile height / width to metadata
-        const texHeight = texCoords.bottom - texCoords.top
-        const texWidth = texCoords.right - texCoords.left
-        const punchHeight = texCoords.bottom - texCoords.top
-        const punchWidth = punchCoords.right - punchCoords.left
-
-        const heightPer = texHeight / texTotalHeight
+        const heightPer = texCoords.height / texMetadata.totalHeight
         const tileRadius = heightPer * RADIUS_RANGE
         const tileAngle = heightPer * maxAngle
 
-        const tileHeight = BAND_WIDTH * (texHeight / texWidth)
+        const tileHeight = BAND_WIDTH * (texCoords.height / texCoords.width)
 
         if (colY - tileHeight <= -1) {
             colX += BAND_WIDTH * (1 + horizontalSpacing)
@@ -371,9 +356,7 @@ const getFullCoreVerts = (
             colY,
             tileRadius,
             tileAngle,
-            tileHeight,
-            texWidth,
-            texHeight
+            tileHeight
         )
 
         addPunchTile(
@@ -386,8 +369,6 @@ const getFullCoreVerts = (
             tileRadius,
             tileAngle,
             tileHeight,
-            punchWidth,
-            punchHeight,
             tempTextureHeight
         )
 
