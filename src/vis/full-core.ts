@@ -18,6 +18,8 @@ type FullCoreViewMode = 'punchcard' | 'downscaled'
 class FullCoreRenderer {
     texRenderer: TexMappedCoreRenderer
     punchRenderer: PunchcardCoreRenderer
+    texMetadata: TileTextureMetadata
+    punchMetadata: TileTextureMetadata
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     numMinerals: number
@@ -36,12 +38,12 @@ class FullCoreRenderer {
         if (texMetadata.numTiles !== punchMetadata.numTiles) {
             throw new Error('Texture mapped and punchcard tile textures contain different tiles')
         }
-        this.currMineral = 0
-        this.numMinerals = texMineralMaps.length - 1
 
         const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.5)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
+        this.texMetadata = texMetadata
+        this.punchMetadata = punchMetadata
 
         this.setProj = (m: mat4): void => {
             gl.useProgram(this.texRenderer.program)
@@ -57,10 +59,24 @@ class FullCoreRenderer {
             this.punchRenderer.setView(m)
         }
 
+        this.currMineral = 0
+        this.numMinerals = texMineralMaps.length - 1
+
         this.targetShape = COLUMN_SHAPE
         this.currShape = COLUMN_SHAPE
 
         this.viewMode = 'downscaled'
+    }
+
+    setSpacing (gl: WebGLRenderingContext, horizontal: number, vertical: number): void {
+        const { texVerts, punchVerts } = getFullCoreVerts(
+            this.texMetadata,
+            this.punchMetadata,
+            horizontal,
+            vertical
+        )
+        this.texRenderer.setVerts(gl, texVerts)
+        this.punchRenderer.setVerts(gl, punchVerts)
     }
 
     setShape (t: number): void {

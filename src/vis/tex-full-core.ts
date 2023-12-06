@@ -58,6 +58,12 @@ class TexMappedCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
 
+    setVerts (gl: WebGLRenderingContext, vertices: Float32Array): void {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+        this.numVertex = vertices.length / STRIDE
+    }
+
     draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
         gl.useProgram(this.program)
 
