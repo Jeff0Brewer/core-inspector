@@ -44,6 +44,10 @@ class VisRenderer {
         this.fullCore.setCurrMineral(i)
     }
 
+    setFullCoreSpacing (horizontal: number, vertical: number): void {
+        this.fullCore.setSpacing(this.gl, horizontal, vertical)
+    }
+
     resize (): void {
         const w = window.innerWidth * window.devicePixelRatio
         const h = window.innerHeight * window.devicePixelRatio

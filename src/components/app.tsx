@@ -4,20 +4,12 @@ import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
-const MINERALS = [
-    'chlorite',
-    'epidote',
-    'prehnite',
-    'zeolite',
-    'amphibole',
-    'pyroxene',
-    'gypsum'
-]
-
 const App: FC = () => {
     const [currMineral, setCurrMineral] = useState<number>(0)
     const [currShape, setCurrShape] = useState<number>(0)
     const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
+    const [horizontalSpacing, setHorizontalSpacing] = useState<number>(0.5)
+    const [verticalSpacing, setVerticalSpacing] = useState<number>(0.5)
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
@@ -103,6 +95,16 @@ const App: FC = () => {
         setCurrView(v)
     }
 
+    const setSpacingHorizontal = (s: number): void => {
+        visRef.current?.setFullCoreSpacing(s, verticalSpacing)
+        setHorizontalSpacing(s)
+    }
+
+    const setSpacingVertical = (s: number): void => {
+        visRef.current?.setFullCoreSpacing(horizontalSpacing, s)
+        setVerticalSpacing(s)
+    }
+
     return (
         <main>
             <canvas
@@ -112,6 +114,24 @@ const App: FC = () => {
                 <div className={'top-bar'}>
                     <ShapeSelect setShape={setShape} currShape={currShape} />
                     <ViewSelect setView={setView} currView={currView} />
+                </div>
+                <div className={'side-bar'}>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.5"
+                        onChange={e => setSpacingHorizontal(e.target.valueAsNumber)}
+                    />
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value="0.5"
+                        onChange={e => setSpacingVertical(e.target.valueAsNumber)}
+                    />
                 </div>
                 <MineralSelect
                     minerals={MINERALS}
@@ -192,5 +212,15 @@ const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMiner
         </div>
     )
 }
+
+const MINERALS = [
+    'chlorite',
+    'epidote',
+    'prehnite',
+    'zeolite',
+    'amphibole',
+    'pyroxene',
+    'gypsum'
+]
 
 export default App

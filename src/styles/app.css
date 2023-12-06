@@ -17,6 +17,12 @@ canvas {
     background-color: var(--menu-bg-color);
 }
 
+.side-bar {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+}
+
 .toggle-input {
     display: flex;
     gap: 1px;
