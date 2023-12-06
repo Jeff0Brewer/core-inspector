@@ -1,4 +1,4 @@
-type TileCoords = {
+type TileRect = {
     left: number,
     top: number,
     width: number,
@@ -6,7 +6,7 @@ type TileCoords = {
 }
 
 type TileTextureMetadata = {
-    tiles: Array<TileCoords>,
+    tiles: Array<TileRect>,
     numTiles: number,
     totalHeight: number,
     textureWidth: number,
@@ -15,5 +15,5 @@ type TileTextureMetadata = {
 
 export type {
     TileTextureMetadata,
-    TileCoords
+    TileRect
 }
