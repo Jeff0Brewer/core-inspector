@@ -8,10 +8,25 @@ canvas {
 
 .top-bar {
     position: absolute;
+    padding: 8px;
     z-index: 2;
     top: 0;
     width: 100%;
-    background-color: rgba(65, 65, 65, 0.85);
+    background-color: var(--menu-bg-color);
+}
+
+.view-select {
+    display: flex;
+    gap: 1px;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    width: fit-content;
+}
+
+.view-select button {
+    width: 35px;
+    height: 30px;
+    background-color: var(--inactive-color);
 }
 
 .mineral-select {
@@ -21,7 +36,7 @@ canvas {
     z-index: 2;
     bottom: 0;
     width: 100%;
-    background-color: rgba(65, 65, 65, 0.85);
+    background-color: var(--menu-bg-color);
 }
 
 .mineral-select button {
@@ -34,10 +49,10 @@ canvas {
     margin: 6px;
     font-size: 10px;
     text-align: left;
-    background-color: #606060;
+    background-color: var(--inactive-color);
     border-radius: var(--border-radius);
 }
 
 .mineral-select button[data-active="true"] {
-    background-color: #202020;
+    background-color: var(--active-color);
 }

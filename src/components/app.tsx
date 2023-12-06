@@ -138,7 +138,7 @@ type ViewSelectProps = {
 
 const ViewSelect: FC<ViewSelectProps> = ({ setSpiral, setColumn }) => {
     return (
-        <div>
+        <div className={'view-select'}>
             <button onClick={setColumn}>
                 {'column'}
             </button>

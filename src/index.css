@@ -1,5 +1,8 @@
 :root {
-    --border-radius: 2px;
+    --inactive-color: #606060;
+    --active-color: #202020;
+    --menu-bg-color: rgba(65, 65, 65, 0.85);
+    --border-radius: 3px;
 }
 
 * {
