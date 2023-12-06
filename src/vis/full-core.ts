@@ -33,7 +33,7 @@ class FullCoreRenderer {
         this.currMineral = 0
         this.numMinerals = texMineralMaps.length
 
-        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.6)
+        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.5)
         this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
 
@@ -71,16 +71,15 @@ class FullCoreRenderer {
 const getFullCoreVerts = (
     texMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
-    verticalSpacing: number,
-    horizontalSpacing: number
+    horizontalSpacing: number,
+    verticalSpacing: number
 ): {
     texVerts: Float32Array,
     punchVerts: Float32Array
 } => {
-    const numTiles = texMetadata.tiles.length
-
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
-    const maxAngle = numRotation * Math.PI * 2
+    const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
+    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * texMetadata.numTiles
 
     let radius = MIN_RADIUS
     let angle = 0
@@ -90,15 +89,13 @@ const getFullCoreVerts = (
     const texVerts: Array<number> = []
     const punchVerts: Array<number> = []
 
-    for (let i = 0; i < numTiles; i++) {
+    for (let i = 0; i < texMetadata.numTiles; i++) {
         const texRect = texMetadata.tiles[i]
         const punchRect = punchMetadata.tiles[i]
 
-        const heightPer = texRect.height / texMetadata.totalHeight
-        const tileRadius = heightPer * RADIUS_RANGE
-        const tileAngle = heightPer * maxAngle
-
         const tileHeight = BAND_WIDTH * (texRect.height / texRect.width)
+        const tileAngle = tileHeight / radius
+        const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
         if (colY - tileHeight <= -1) {
             colX += BAND_WIDTH * (1 + horizontalSpacing)
@@ -133,7 +130,7 @@ const getFullCoreVerts = (
         )
 
         colY -= tileHeight + BAND_WIDTH * verticalSpacing
-        angle += tileAngle + BAND_WIDTH * verticalSpacing
+        angle += tileAngle + (BAND_WIDTH * verticalSpacing) / radius
         radius += tileRadius
     }
 
