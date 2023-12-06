@@ -86,9 +86,10 @@ const App: FC = () => {
         }
     }, [])
 
-    useEffect(() => {
-        visRef.current?.setCurrMineral(currMineral)
-    }, [currMineral])
+    const setMineral = (i: number): void => {
+        visRef.current?.fullCore.setCurrMineral(i)
+        setCurrMineral(i)
+    }
 
     const setShape = (t: number): void => {
         visRef.current?.fullCore.setShape(t)
@@ -110,7 +111,7 @@ const App: FC = () => {
                 <MineralSelect
                     minerals={MINERALS}
                     currMineral={currMineral}
-                    setMineral={setCurrMineral}
+                    setMineral={setMineral}
                 />
             </div>
         </main>
