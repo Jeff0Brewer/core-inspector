@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react'
 import { loadImageAsync } from '../lib/load'
-import { COLUMN_SHAPE, SPIRAL_SHAPE } from '../vis/full-core'
+import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -17,6 +17,7 @@ const MINERALS = [
 const App: FC = () => {
     const [currMineral, setCurrMineral] = useState<number>(0)
     const [currShape, setCurrShape] = useState<number>(0)
+    const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
@@ -56,6 +57,7 @@ const App: FC = () => {
             )
             setCurrMineral(visRef.current.fullCore.currMineral)
             setCurrShape(visRef.current.fullCore.targetShape)
+            setCurrView(visRef.current.fullCore.viewMode)
         }
 
         initVisRenderer(canvasRef.current)
@@ -96,6 +98,11 @@ const App: FC = () => {
         setCurrShape(t)
     }
 
+    const setView = (v: FullCoreViewMode): void => {
+        visRef.current?.fullCore.setViewMode(v)
+        setCurrView(v)
+    }
+
     return (
         <main>
             <canvas
@@ -103,10 +110,8 @@ const App: FC = () => {
             ></canvas>
             <div>
                 <div className={'top-bar'}>
-                    <ShapeSelect
-                        setShape={setShape}
-                        currShape={currShape}
-                    />
+                    <ShapeSelect setShape={setShape} currShape={currShape} />
+                    <ViewSelect setView={setView} currView={currView} />
                 </div>
                 <MineralSelect
                     minerals={MINERALS}
@@ -125,7 +130,7 @@ type ShapeSelectProps = {
 
 const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
     return (
-        <div className={'view-select'}>
+        <div className={'toggle-input'}>
             <button
                 data-active={currShape === COLUMN_SHAPE}
                 onClick={(): void => setShape(COLUMN_SHAPE)}
@@ -137,6 +142,30 @@ const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
                 onClick={(): void => setShape(SPIRAL_SHAPE)}
             >
                 {'spiral'}
+            </button>
+        </div>
+    )
+}
+
+type ViewSelectProps = {
+    setView: (v: FullCoreViewMode) => void,
+    currView: FullCoreViewMode
+}
+
+const ViewSelect: FC<ViewSelectProps> = ({ setView, currView }) => {
+    return (
+        <div className={'toggle-input'}>
+            <button
+                data-active={currView === 'downscaled'}
+                onClick={(): void => setView('downscaled')}
+            >
+                {'down'}
+            </button>
+            <button
+                data-active={currView === 'punchcard'}
+                onClick={(): void => setView('punchcard')}
+            >
+                {'punch'}
             </button>
         </div>
     )

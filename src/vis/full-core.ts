@@ -13,15 +13,18 @@ const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 const COLUMN_SHAPE = 0
 const SPIRAL_SHAPE = 1
 
+type FullCoreViewMode = 'punchcard' | 'downscaled'
+
 class FullCoreRenderer {
     texRenderer: TexMappedCoreRenderer
     punchRenderer: PunchcardCoreRenderer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
-    currMineral: number
     numMinerals: number
+    currMineral: number
     targetShape: number
     currShape: number
+    viewMode: FullCoreViewMode
 
     constructor (
         gl: WebGLRenderingContext,
@@ -56,6 +59,8 @@ class FullCoreRenderer {
 
         this.targetShape = COLUMN_SHAPE
         this.currShape = COLUMN_SHAPE
+
+        this.viewMode = 'downscaled'
     }
 
     setShape (t: number): void {
@@ -66,12 +71,19 @@ class FullCoreRenderer {
         this.currMineral = clamp(i, 0, this.numMinerals)
     }
 
+    setViewMode (v: FullCoreViewMode): void {
+        this.viewMode = v
+    }
+
     draw (gl: WebGLRenderingContext, elapsed: number): void {
         const incSign = Math.sign(this.targetShape - this.currShape)
         this.currShape = clamp(this.currShape + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
-        this.texRenderer.draw(gl, this.currMineral, this.currShape)
-        this.punchRenderer.draw(gl, this.currMineral, this.currShape)
+        if (this.viewMode === 'downscaled') {
+            this.texRenderer.draw(gl, this.currMineral, this.currShape)
+        } else {
+            this.punchRenderer.draw(gl, this.currMineral, this.currShape)
+        }
     }
 }
 
@@ -148,6 +160,7 @@ const getFullCoreVerts = (
 }
 
 export default FullCoreRenderer
+export type { FullCoreViewMode }
 export {
     COLUMN_SHAPE,
     SPIRAL_SHAPE

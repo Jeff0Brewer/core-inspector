@@ -8,6 +8,8 @@ canvas {
 
 .top-bar {
     position: absolute;
+    display: flex;
+    gap: 30px;
     padding: 8px;
     z-index: 2;
     top: 0;
@@ -15,7 +17,7 @@ canvas {
     background-color: var(--menu-bg-color);
 }
 
-.view-select {
+.toggle-input {
     display: flex;
     gap: 1px;
     overflow: hidden;
@@ -23,7 +25,7 @@ canvas {
     width: fit-content;
 }
 
-.view-select button {
+.toggle-input button {
     width: 35px;
     height: 30px;
     background-color: var(--inactive-color);
@@ -53,6 +55,6 @@ canvas {
     border-radius: var(--border-radius);
 }
 
-.mineral-select button[data-active="true"], .view-select button[data-active="true"] {
+.mineral-select button[data-active="true"], .toggle-input button[data-active="true"] {
     background-color: var(--active-color);
 }
