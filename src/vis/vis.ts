@@ -40,6 +40,10 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
+    setCurrMineral (i: number): void {
+        this.fullCore.setCurrMineral(i)
+    }
+
     resize (): void {
         const w = window.innerWidth * window.devicePixelRatio
         const h = window.innerHeight * window.devicePixelRatio

@@ -1,12 +1,27 @@
-import { FC, useEffect, useRef } from 'react'
+import { FC, useState, useEffect, useRef } from 'react'
 import { loadImageAsync } from '../lib/load'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
+const MINERALS = [
+    'chlorite',
+    'epidote',
+    'prehnite',
+    'zeolite',
+    'amphibole',
+    'pyroxene',
+    'gypsum'
+]
+
 const App: FC = () => {
+    const [currMineral, setCurrMineral] = useState<number>(0)
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
+
+    useEffect(() => {
+        visRef.current?.setCurrMineral(currMineral)
+    }, [currMineral])
 
     useEffect(() => {
         if (!canvasRef.current) {
@@ -86,9 +101,40 @@ const App: FC = () => {
     }, [])
 
     return (
-        <canvas
-            ref={canvasRef}
-        ></canvas>
+        <main>
+            <canvas
+                ref={canvasRef}
+            ></canvas>
+            <div>
+                <MineralSelect
+                    minerals={MINERALS}
+                    currMineral={currMineral}
+                    setMineral={setCurrMineral}
+                />
+            </div>
+        </main>
+    )
+}
+
+type MineralSelectProps = {
+    minerals: Array<string>,
+    currMineral: number,
+    setMineral: (i: number) => void
+}
+
+const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMineral }) => {
+    return (
+        <div className={'mineral-select'}>
+            { minerals.map((name, i) => (
+                <button
+                    key={i}
+                    data-active={i === currMineral}
+                    onClick={(): void => setMineral(i)}
+                >
+                    {name}
+                </button>
+            ))}
+        </div>
     )
 }
 

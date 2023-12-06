@@ -5,3 +5,31 @@ canvas {
     width: 100vw;
     height: 100vh;
 }
+
+.mineral-select {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    z-index: 2;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(65, 65, 65, 0.85);
+}
+
+.mineral-select button {
+    display: flex;
+    text-transform: uppercase;
+    align-items: center;
+    min-width: 100px;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+    font-size: 10px;
+    text-align: left;
+    background-color: #606060;
+    border-radius: var(--border-radius);
+}
+
+.mineral-select button[data-active="true"] {
+    background-color: #202020;
+}
