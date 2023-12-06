@@ -110,27 +110,27 @@ const App: FC = () => {
             <canvas
                 ref={canvasRef}
             ></canvas>
-            <div>
+            <div className={'interface'}>
                 <div className={'top-bar'}>
                     <ShapeSelect setShape={setShape} currShape={currShape} />
                     <ViewSelect setView={setView} currView={currView} />
                 </div>
                 <div className={'side-bar'}>
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value="0.5"
-                        onChange={e => setSpacingHorizontal(e.target.valueAsNumber)}
+                    <VertSlider
+                        label={'horizontal distance'}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={0.5}
+                        setValue={v => setSpacingHorizontal(v)}
                     />
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value="0.5"
-                        onChange={e => setSpacingVertical(e.target.valueAsNumber)}
+                    <VertSlider
+                        label={'vertical distance'}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={0.5}
+                        setValue={v => setSpacingVertical(v)}
                     />
                 </div>
                 <MineralSelect
@@ -140,6 +140,31 @@ const App: FC = () => {
                 />
             </div>
         </main>
+    )
+}
+
+type VertSliderProps = {
+    label: string,
+    min: number,
+    max: number,
+    step?: number,
+    value: number,
+    setValue: (v: number) => void
+}
+
+const VertSlider: FC<VertSliderProps> = ({ label, min, max, step, value, setValue }) => {
+    return (
+        <div className={'vertical-slider'}>
+            <input
+                type={'range'}
+                min={min}
+                max={max}
+                step={step || 0.1}
+                defaultValue={value}
+                onChange={e => setValue(e.target.valueAsNumber)}
+            />
+            <p>{label}</p>
+        </div>
     )
 }
 
