@@ -9,7 +9,7 @@ const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
-const TILE_DETAIL = 20
+const TILE_DETAIL = 8
 
 class TexMappedCoreRenderer {
     program: WebGLProgram
