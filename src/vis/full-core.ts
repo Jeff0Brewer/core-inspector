@@ -81,13 +81,13 @@ const getFullCoreVerts = (
     const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
     const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * texMetadata.numTiles
 
+    const texVerts: Array<number> = []
+    const punchVerts: Array<number> = []
+
     let radius = MIN_RADIUS
     let angle = 0
     let colX = -1
     let colY = 1
-
-    const texVerts: Array<number> = []
-    const punchVerts: Array<number> = []
 
     for (let i = 0; i < texMetadata.numTiles; i++) {
         const texRect = texMetadata.tiles[i]
