@@ -6,6 +6,14 @@ canvas {
     height: 100vh;
 }
 
+.top-bar {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    width: 100%;
+    background-color: rgba(65, 65, 65, 0.85);
+}
+
 .mineral-select {
     position: absolute;
     display: flex;

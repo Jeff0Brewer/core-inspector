@@ -10,6 +10,9 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
+const COLUMN_SHAPE = 0
+const SPIRAL_SHAPE = 1
+
 class FullCoreRenderer {
     texRenderer: TexMappedCoreRenderer
     punchRenderer: PunchcardCoreRenderer
@@ -51,8 +54,12 @@ class FullCoreRenderer {
             this.punchRenderer.setView(m)
         }
 
-        this.targetShape = 1
-        this.currShape = 1
+        this.targetShape = COLUMN_SHAPE
+        this.currShape = COLUMN_SHAPE
+    }
+
+    setShape (t: number): void {
+        this.targetShape = clamp(Math.round(t), 0, 1)
     }
 
     setCurrMineral (i: number): void {
@@ -141,3 +148,7 @@ const getFullCoreVerts = (
 }
 
 export default FullCoreRenderer
+export {
+    COLUMN_SHAPE,
+    SPIRAL_SHAPE
+}

@@ -1,5 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react'
 import { loadImageAsync } from '../lib/load'
+import { COLUMN_SHAPE, SPIRAL_SHAPE } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -18,10 +19,6 @@ const App: FC = () => {
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
-
-    useEffect(() => {
-        visRef.current?.setCurrMineral(currMineral)
-    }, [currMineral])
 
     useEffect(() => {
         if (!canvasRef.current) {
@@ -100,12 +97,30 @@ const App: FC = () => {
         }
     }, [])
 
+    const setSpiralView = (): void => {
+        visRef.current?.fullCore.setShape(SPIRAL_SHAPE)
+    }
+
+    const setColumnView = (): void => {
+        visRef.current?.fullCore.setShape(COLUMN_SHAPE)
+    }
+
+    useEffect(() => {
+        visRef.current?.setCurrMineral(currMineral)
+    }, [currMineral])
+
     return (
         <main>
             <canvas
                 ref={canvasRef}
             ></canvas>
             <div>
+                <div className={'top-bar'}>
+                    <ViewSelect
+                        setColumn={setColumnView}
+                        setSpiral={setSpiralView}
+                    />
+                </div>
                 <MineralSelect
                     minerals={MINERALS}
                     currMineral={currMineral}
@@ -113,6 +128,24 @@ const App: FC = () => {
                 />
             </div>
         </main>
+    )
+}
+
+type ViewSelectProps = {
+    setSpiral: () => void,
+    setColumn: () => void
+}
+
+const ViewSelect: FC<ViewSelectProps> = ({ setSpiral, setColumn }) => {
+    return (
+        <div>
+            <button onClick={setColumn}>
+                {'column'}
+            </button>
+            <button onClick={setSpiral}>
+                {'spiral'}
+            </button>
+        </div>
     )
 }
 
