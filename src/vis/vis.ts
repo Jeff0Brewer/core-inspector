@@ -54,7 +54,7 @@ class VisRenderer {
         element.addEventListener('mouseup', mouseup)
         element.addEventListener('mouseleave', mouseleave)
         element.addEventListener('mousemove', mousemove)
-        element.addEventListener('wheel', wheel)
+        element.addEventListener('wheel', wheel, { passive: true })
         return (): void => {
             element.removeEventListener('mousedown', mousedown)
             element.removeEventListener('mouseup', mouseup)

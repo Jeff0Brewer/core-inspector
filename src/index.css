@@ -16,6 +16,7 @@ body {
     color: #fff;
     font-size: 10px;
     font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    overscroll-behavior-y: none;
 }
 
 button {
