@@ -62,10 +62,10 @@ const App: FC = () => {
 
     useEffect(() => {
         if (!initialized) { return }
-        if (!visRef.current) {
+        if (!visRef.current || !canvasRef.current) {
             throw new Error('Visualization renderer initialization failed')
         }
-        return visRef.current.setupEventListeners()
+        return visRef.current.setupEventListeners(canvasRef.current)
     }, [initialized])
 
     useEffect(() => {
