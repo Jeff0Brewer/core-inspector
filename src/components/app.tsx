@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useRef, ReactElement } from 'react'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
+import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
@@ -135,6 +136,7 @@ const App: FC = () => {
                 <div className={'side-bar'}>
                     <VertSlider
                         label={'zoom'}
+                        icon={<IoSearch style={{ fontSize: '16px' }} />}
                         min={0}
                         max={1}
                         step={0.01}
@@ -210,16 +212,14 @@ const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
             <button
                 data-active={currShape === COLUMN_SHAPE}
                 onClick={(): void => setShape(COLUMN_SHAPE)}
-                style={{ fontSize: '20px' }}
             >
-                {<RxColumns />}
+                {<RxColumns style={{ fontSize: '20px' }} />}
             </button>
             <button
                 data-active={currShape === SPIRAL_SHAPE}
                 onClick={(): void => setShape(SPIRAL_SHAPE)}
-                style={{ fontSize: '25px' }}
             >
-                {<PiSpiralLight />}
+                {<PiSpiralLight style={{ fontSize: '25px' }} />}
             </button>
         </div>
     )
@@ -242,10 +242,8 @@ const ViewSelect: FC<ViewSelectProps> = ({ setView, currView }) => {
             <button
                 data-active={currView === 'punchcard'}
                 onClick={(): void => setView('punchcard')}
-                style={{ fontSize: '25px' }}
-
             >
-                {<RxDragHandleDots1 />}
+                {<RxDragHandleDots1 style={{ fontSize: '25px' }} />}
             </button>
         </div>
     )
