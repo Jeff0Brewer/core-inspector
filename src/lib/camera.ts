@@ -31,6 +31,10 @@ class Camera2D {
         this.currZoom = vec3.dist(eye, focus)
     }
 
+    getZoom (): number {
+        return (this.currZoom - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM)
+    }
+
     setZoom (t: number): void {
         this.currZoom = clamp(t, 0, 1) * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
 

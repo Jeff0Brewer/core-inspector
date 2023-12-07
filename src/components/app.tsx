@@ -12,6 +12,7 @@ const App: FC = () => {
     const [currMineral, setCurrMineral] = useState<number>(0)
     const [currShape, setCurrShape] = useState<number>(0)
     const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
+    const [currZoom, setCurrZoom] = useState<number>(0.7)
     const [horizontalSpacing, setHorizontalSpacing] = useState<number>(0.5)
     const [verticalSpacing, setVerticalSpacing] = useState<number>(0.5)
     const [initialized, setInitialized] = useState<boolean>(false)
@@ -67,7 +68,7 @@ const App: FC = () => {
         if (!visRef.current || !canvasRef.current) {
             throw new Error('Visualization renderer initialization failed')
         }
-        return visRef.current.setupEventListeners(canvasRef.current)
+        return visRef.current.setupEventListeners(canvasRef.current, setCurrZoom)
     }, [initialized])
 
     useEffect(() => {
@@ -122,6 +123,7 @@ const App: FC = () => {
 
     const setZoom = (t: number): void => {
         visRef.current?.setZoom(t)
+        setCurrZoom(t)
     }
 
     const setBlending = (mags: Array<number>): void => {
@@ -145,7 +147,7 @@ const App: FC = () => {
                         min={0}
                         max={1}
                         step={0.01}
-                        value={0.7}
+                        value={currZoom}
                         setValue={v => setZoom(v)}
                     />
                     <VertSlider
@@ -189,9 +191,17 @@ type VertSliderProps = {
 }
 
 const VertSlider: FC<VertSliderProps> = ({ label, icon, min, max, step, value, setValue }) => {
+    const inputRef = useRef<HTMLInputElement>(null)
+    useEffect(() => {
+        if (!inputRef.current) { return }
+        if (value !== inputRef.current.valueAsNumber) {
+            inputRef.current.valueAsNumber = value
+        }
+    }, [value])
     return (
         <div className={'vertical-slider'}>
             <input
+                ref={inputRef}
                 type={'range'}
                 min={min}
                 max={max}
