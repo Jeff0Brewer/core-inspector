@@ -12,6 +12,8 @@ const App: FC = () => {
     const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
     const [horizontalSpacing, setHorizontalSpacing] = useState<number>(0.5)
     const [verticalSpacing, setVerticalSpacing] = useState<number>(0.5)
+    const [initialized, setInitialized] = useState<boolean>(false)
+
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
@@ -52,10 +54,19 @@ const App: FC = () => {
             setCurrMineral(visRef.current.fullCore.currMineral)
             setCurrShape(visRef.current.fullCore.targetShape)
             setCurrView(visRef.current.fullCore.viewMode)
+            setInitialized(true)
         }
 
         initVisRenderer(canvasRef.current)
     }, [])
+
+    useEffect(() => {
+        if (!initialized) { return }
+        if (!visRef.current) {
+            throw new Error('Visualization renderer initialization failed')
+        }
+        return visRef.current.setupEventListeners()
+    }, [initialized])
 
     useEffect(() => {
         const resize = (): void => { visRef.current?.resize() }

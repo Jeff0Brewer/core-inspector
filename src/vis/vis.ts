@@ -36,6 +36,29 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
+    setupEventListeners (): (() => void) {
+        let dragging = false
+        const mousedown = (): void => { dragging = true }
+        const mouseup = (): void => { dragging = false }
+        const mouseleave = (): void => { dragging = false }
+        const mousemove = (e: MouseEvent): void => {
+            if (dragging) {
+                this.camera.pan(e.movementX, e.movementY)
+            }
+        }
+
+        window.addEventListener('mousedown', mousedown)
+        window.addEventListener('mouseup', mouseup)
+        window.addEventListener('mouseleave', mouseleave)
+        window.addEventListener('mousemove', mousemove)
+        return (): void => {
+            window.removeEventListener('mousedown', mousedown)
+            window.removeEventListener('mouseup', mouseup)
+            window.removeEventListener('mouseleave', mouseleave)
+            window.removeEventListener('mousemove', mousemove)
+        }
+    }
+
     setZoom (t: number): void {
         this.camera.setZoom(t)
     }
