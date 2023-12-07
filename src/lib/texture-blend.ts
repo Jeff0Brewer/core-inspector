@@ -52,7 +52,7 @@ class TextureBlender {
             gl.uniform3fv(colorLoc, COLORS[i])
 
             const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
-            gl.uniform1f(magnitudeLoc, 0.5)
+            gl.uniform1f(magnitudeLoc, 1)
             this.magnitudeSetters.push((v: number) => {
                 gl.uniform1f(magnitudeLoc, v)
             })
