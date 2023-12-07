@@ -34,7 +34,7 @@ class TexMappedCoreRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
 
         this.textureBlender = new TextureBlender(gl, mineralMaps)
-        this.textureBlender.update(gl)
+        this.textureBlender.update(gl, Array(mineralMaps.length).fill(1))
 
         const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, STRIDE, 0)
         const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, STRIDE, POS_FPV)

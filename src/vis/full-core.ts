@@ -69,6 +69,11 @@ class FullCoreRenderer {
         this.viewMode = 'downscaled'
     }
 
+    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
+        this.texRenderer.textureBlender.update(gl, magnitudes)
+        this.punchRenderer.textureBlender.update(gl, magnitudes)
+    }
+
     setSpacing (gl: WebGLRenderingContext, horizontal: number, vertical: number): void {
         const { texVerts, punchVerts } = getFullCoreVerts(
             this.texMetadata,

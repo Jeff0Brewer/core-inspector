@@ -95,7 +95,11 @@ class TextureBlender {
         gl.bindTexture(gl.TEXTURE_2D, this.texture)
     }
 
-    update (gl: WebGLRenderingContext): void {
+    update (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
+        if (magnitudes.length < this.sourceTextures.length) {
+            throw new Error('Not enough magnitudes for all source textures')
+        }
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
 
         gl.useProgram(this.program)
@@ -107,6 +111,9 @@ class TextureBlender {
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
+        for (let i = 0; i < this.sourceTextures.length; i++) {
+            this.magnitudeSetters[i](magnitudes[i])
+        }
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
 
