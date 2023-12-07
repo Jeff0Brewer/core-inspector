@@ -124,6 +124,10 @@ const App: FC = () => {
         visRef.current?.setZoom(t)
     }
 
+    const setBlending = (mags: Array<number>): void => {
+        visRef.current?.setBlending(mags)
+    }
+
     return (
         <main>
             <canvas
@@ -167,6 +171,7 @@ const App: FC = () => {
                     minerals={MINERALS}
                     currMineral={currMineral}
                     setMineral={setMineral}
+                    setBlending={setBlending}
                 />
             </div>
         </main>
@@ -253,10 +258,13 @@ const ViewSelect: FC<ViewSelectProps> = ({ setView, currView }) => {
 type MineralSelectProps = {
     minerals: Array<string>,
     currMineral: number,
-    setMineral: (i: number) => void
+    setMineral: (i: number) => void,
+    setBlending: (m: Array<number>) => void
 }
 
-const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMineral }) => {
+const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMineral, setBlending }) => {
+    const [blendMags, setBlendMags] = useState<Array<number>>(Array(minerals.length).fill(1))
+
     return (
         <div className={'mineral-select'}>
             { minerals.map((name, i) => (
@@ -275,6 +283,25 @@ const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMiner
             >
                 <MdColorLens />
             </a>
+            { currMineral < 0 && <div className={'blend-menu'}>
+                { minerals.map((name, i) => (
+                    <div key={i}>
+                        <p>{name}</p>
+                        <input
+                            type={'range'}
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            defaultValue={blendMags[i]}
+                            onChange={e => {
+                                blendMags[i] = e.target.valueAsNumber
+                                setBlendMags([...blendMags])
+                                setBlending(blendMags)
+                            }}
+                        />
+                    </div>
+                ))}
+            </div> }
         </div>
     )
 }

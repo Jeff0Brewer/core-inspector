@@ -63,6 +63,10 @@ class VisRenderer {
         }
     }
 
+    setBlending (magnitudes: Array<number>): void {
+        this.fullCore.setBlending(this.gl, magnitudes)
+    }
+
     setZoom (t: number): void {
         this.camera.setZoom(t)
     }
@@ -89,6 +93,7 @@ class VisRenderer {
     }
 
     draw (elapsed: number): void {
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.fullCore.setView(this.camera.matrix)
