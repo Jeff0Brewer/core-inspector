@@ -9,6 +9,6 @@ void main() {
     float radius = dot(cxy, cxy);
     float alpha = 1.0 - smoothstep(0.95, 1.0, radius);
 
-    float val = texture2D(mineral, vTexCoord).x;
-    gl_FragColor = vec4(val, val, val, 1.0) * alpha;
+    vec4 color = texture2D(mineral, vTexCoord);
+    gl_FragColor = color * alpha;
 }
