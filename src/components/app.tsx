@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useRef, ReactElement } from 'react'
-import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
+import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
@@ -107,6 +107,10 @@ const App: FC = () => {
         setVerticalSpacing(s)
     }
 
+    const setZoom = (t: number): void => {
+        visRef.current?.setZoom(t)
+    }
+
     return (
         <main>
             <canvas
@@ -118,6 +122,14 @@ const App: FC = () => {
                     <ViewSelect setView={setView} currView={currView} />
                 </div>
                 <div className={'side-bar'}>
+                    <VertSlider
+                        label={'zoom'}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={0.7}
+                        setValue={v => setZoom(v)}
+                    />
                     <VertSlider
                         label={'horizontal distance'}
                         icon={horizontalIcon}

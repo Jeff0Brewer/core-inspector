@@ -2,13 +2,14 @@ import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import FullCoreRenderer from '../vis/full-core'
+import Camera2D from '../lib/camera'
 
 class VisRenderer {
     canvas: HTMLCanvasElement
     gl: WebGLRenderingContext
-    view: mat4
-    proj: mat4
     fullCore: FullCoreRenderer
+    camera: Camera2D
+    proj: mat4
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -20,13 +21,6 @@ class VisRenderer {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
 
-        this.view = mat4.lookAt(
-            mat4.create(),
-            [0, 0, 1],
-            [0, 0, 0],
-            [0, 1, 0]
-        )
-
         this.fullCore = new FullCoreRenderer(
             this.gl,
             downscaledMaps,
@@ -34,10 +28,16 @@ class VisRenderer {
             punchcardMaps,
             punchcardMetadata
         )
-        this.fullCore.setView(this.view)
+
+        this.camera = new Camera2D([0, 0, 1], [0, 0, 0], [0, 1, 0])
+        this.fullCore.setView(this.camera.matrix)
 
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
+    }
+
+    setZoom (t: number): void {
+        this.camera.setZoom(t)
     }
 
     setCurrMineral (i: number): void {
@@ -63,6 +63,8 @@ class VisRenderer {
 
     draw (elapsed: number): void {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
+
+        this.fullCore.setView(this.camera.matrix)
 
         this.fullCore.draw(this.gl, elapsed)
     }
