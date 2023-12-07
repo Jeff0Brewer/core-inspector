@@ -26,7 +26,7 @@ button {
 }
 
 input[type="range"] {
-    --thumb-size: 12px;
+    --thumb-size: 14px;
     --track-width: 2px;
     -webkit-appearance: none;
     background: transparent;
