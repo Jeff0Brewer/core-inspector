@@ -123,3 +123,17 @@ canvas {
     border-width: 0 1px;
     font-size: 12px;
 }
+
+.blend-button {
+    display: grid;
+    place-items: center;
+    margin: 6px;
+    font-size: 16px;
+    width: 30px;
+    border-radius: var(--border-radius);
+    background-color: var(--inactive-color);
+}
+
+.blend-button[data-active="true"] {
+    background-color: var(--active-color);
+}

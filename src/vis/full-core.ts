@@ -85,7 +85,7 @@ class FullCoreRenderer {
     }
 
     setCurrMineral (i: number): void {
-        this.currMineral = clamp(i, 0, this.numMinerals)
+        this.currMineral = i
     }
 
     setViewMode (v: FullCoreViewMode): void {
@@ -97,7 +97,7 @@ class FullCoreRenderer {
         this.currShape = clamp(this.currShape + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
         if (this.viewMode === 'downscaled') {
-            this.texRenderer.draw(gl, this.currShape)
+            this.texRenderer.draw(gl, this.currMineral, this.currShape)
         } else {
             this.punchRenderer.draw(gl, this.currMineral, this.currShape)
         }

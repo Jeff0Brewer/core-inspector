@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useRef, ReactElement } from 'react'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
+import { MdColorLens } from 'react-icons/md'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
@@ -267,6 +268,13 @@ const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMiner
                     {name}
                 </button>
             ))}
+            <a
+                className={'blend-button'}
+                data-active={currMineral < 0}
+                onClick={(): void => setMineral(-1)}
+            >
+                <MdColorLens />
+            </a>
         </div>
     )
 }

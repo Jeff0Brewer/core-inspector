@@ -28,7 +28,6 @@ class TextureBlender {
     framebuffer: WebGLFramebuffer
     bindAttrib: () => void
     textureAttachments: Array<number>
-    outputAttachment: number
     sourceTextures: Array<WebGLTexture>
     numVertex: number
     width: number
@@ -71,7 +70,7 @@ class TextureBlender {
         }
 
         this.textureAttachments = getTextureAttachments(gl, sources.length + 1)
-        this.outputAttachment = this.textureAttachments.shift() || -1
+        this.textureAttachments.shift() // remove texture0 attachment from source attachments
         this.sourceTextures = []
         for (let i = 0; i < sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i])
@@ -80,14 +79,19 @@ class TextureBlender {
             this.sourceTextures.push(texture)
         }
 
-        gl.activeTexture(this.outputAttachment)
+        gl.activeTexture(gl.TEXTURE0)
         const { texture, framebuffer } = initTextureFramebuffer(gl, this.width, this.height)
         this.texture = texture
         this.framebuffer = framebuffer
     }
 
-    bindTexture (gl: WebGLRenderingContext): void {
-        // gl.activeTexture(this.outputAttachment)
+    bindSource (gl: WebGLRenderingContext, i: number): void {
+        gl.activeTexture(gl.TEXTURE0)
+        gl.bindTexture(gl.TEXTURE_2D, this.sourceTextures[i])
+    }
+
+    bindBlended (gl: WebGLRenderingContext): void {
+        gl.activeTexture(gl.TEXTURE0)
         gl.bindTexture(gl.TEXTURE_2D, this.texture)
     }
 

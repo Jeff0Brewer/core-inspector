@@ -61,10 +61,14 @@ class TexMappedCoreRenderer {
         this.numVertex = vertices.length / STRIDE
     }
 
-    draw (gl: WebGLRenderingContext, shapeT: number): void {
+    draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
         gl.useProgram(this.program)
 
-        this.textureBlender.bindTexture(gl)
+        if (currMineral < 0) {
+            this.textureBlender.bindBlended(gl)
+        } else {
+            this.textureBlender.bindSource(gl, currMineral)
+        }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
         this.setShapeT(ease(shapeT))
