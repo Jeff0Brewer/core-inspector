@@ -36,7 +36,7 @@ canvas {
     font-size: 8px;
 }
 
-.vertical-slider input[type="range"] {
+.vertical-slider > input[type="range"] {
     position: absolute;
     top: -15px;
     left: calc(0.5 * var(--width));
@@ -45,9 +45,15 @@ canvas {
     transform: rotate(270deg);
 }
 
-.vertical-slider p {
+.vertical-slider > p {
     text-align: center;
     text-transform: uppercase;
+}
+.vertical-slider > div {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    margin-top: 5px;
 }
 
 .toggle-input {
@@ -105,4 +111,13 @@ canvas {
     height: 20px;
     background-color: #fff;
     border-radius: 1px;
+}
+
+.distance-icon {
+    display: grid;
+    place-content: center;
+    width: fit-content;
+    border: 1px solid #fff;
+    border-width: 0 1px;
+    font-size: 12px;
 }

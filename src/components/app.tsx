@@ -1,5 +1,5 @@
-import { FC, useState, useEffect, useRef } from 'react'
-import { PiSpiralLight, PiDotsSixVerticalBold } from 'react-icons/pi'
+import { FC, useState, useEffect, useRef, ReactElement } from 'react'
+import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
@@ -120,6 +120,7 @@ const App: FC = () => {
                 <div className={'side-bar'}>
                     <VertSlider
                         label={'horizontal distance'}
+                        icon={horizontalIcon}
                         min={0}
                         max={1}
                         step={0.01}
@@ -128,6 +129,7 @@ const App: FC = () => {
                     />
                     <VertSlider
                         label={'vertical distance'}
+                        icon={verticalIcon}
                         min={0}
                         max={1}
                         step={0.01}
@@ -147,6 +149,7 @@ const App: FC = () => {
 
 type VertSliderProps = {
     label: string,
+    icon?: ReactElement
     min: number,
     max: number,
     step?: number,
@@ -154,7 +157,7 @@ type VertSliderProps = {
     setValue: (v: number) => void
 }
 
-const VertSlider: FC<VertSliderProps> = ({ label, min, max, step, value, setValue }) => {
+const VertSlider: FC<VertSliderProps> = ({ label, icon, min, max, step, value, setValue }) => {
     return (
         <div className={'vertical-slider'}>
             <input
@@ -166,6 +169,9 @@ const VertSlider: FC<VertSliderProps> = ({ label, min, max, step, value, setValu
                 onChange={e => setValue(e.target.valueAsNumber)}
             />
             <p>{label}</p>
+            { icon && <div>
+                {icon}
+            </div> }
         </div>
     )
 }
@@ -243,6 +249,18 @@ const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMiner
         </div>
     )
 }
+
+// temporary, create new icon
+const horizontalIcon: ReactElement = (
+    <div className={'distance-icon'}>
+        <PiArrowsHorizontalBold />
+    </div>
+)
+const verticalIcon: ReactElement = (
+    <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}>
+        <PiArrowsHorizontalBold />
+    </div>
+)
 
 const MINERALS = [
     'chlorite',
