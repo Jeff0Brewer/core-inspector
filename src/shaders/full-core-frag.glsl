@@ -5,7 +5,7 @@ uniform sampler2D mineral;
 varying vec2 vTexCoord;
 
 void main() {
-    float val = texture2D(mineral, vTexCoord).x;
+    vec4 color = texture2D(mineral, vTexCoord);
 
-    gl_FragColor = vec4(val, val, val, 1.0);
+    gl_FragColor = color;
 }

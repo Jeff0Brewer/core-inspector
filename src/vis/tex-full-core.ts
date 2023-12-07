@@ -1,7 +1,8 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
+import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
+import TextureBlender from '../lib/texture-blend'
 import texVert from '../shaders/full-core-vert.glsl?raw'
 import texFrag from '../shaders/full-core-frag.glsl?raw'
 
@@ -14,7 +15,7 @@ const TILE_DETAIL = 8
 class TexMappedCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
-    minerals: Array<WebGLTexture>
+    textureBlender: TextureBlender
     numVertex: number
     bindAttrib: () => void
     setProj: (m: mat4) => void
@@ -32,12 +33,8 @@ class TexMappedCoreRenderer {
         this.buffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
 
-        this.minerals = []
-        for (const img of mineralMaps) {
-            const texture = initTexture(gl)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, img)
-            this.minerals.push(texture)
-        }
+        this.textureBlender = new TextureBlender(gl, mineralMaps)
+        this.textureBlender.update(gl)
 
         const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, STRIDE, 0)
         const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, STRIDE, POS_FPV)
@@ -64,10 +61,10 @@ class TexMappedCoreRenderer {
         this.numVertex = vertices.length / STRIDE
     }
 
-    draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
+    draw (gl: WebGLRenderingContext, shapeT: number): void {
         gl.useProgram(this.program)
 
-        gl.bindTexture(gl.TEXTURE_2D, this.minerals[currMineral])
+        this.textureBlender.bindTexture(gl)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
         this.setShapeT(ease(shapeT))

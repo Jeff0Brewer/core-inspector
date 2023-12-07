@@ -112,6 +112,46 @@ const initTexture = (gl: WebGLRenderingContext): WebGLTexture => {
     return texture
 }
 
+const initTextureFramebuffer = (
+    gl: WebGLRenderingContext,
+    width: number,
+    height: number
+): {
+    texture: WebGLTexture,
+    framebuffer: WebGLFramebuffer
+} => {
+    const texture = gl.createTexture()
+    if (!texture) {
+        throw new Error('Texture creation failed')
+    }
+
+    const framebuffer = gl.createFramebuffer()
+    if (!framebuffer) {
+        throw new Error('Framebuffer creation failed')
+    }
+
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        width,
+        height,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        null
+    )
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
+
+    return { texture, framebuffer }
+}
+
 const getTextureAttachments = (gl: WebGLRenderingContext, length: number): Array<number> => {
     const attachments = [
         gl.TEXTURE0, gl.TEXTURE1, gl.TEXTURE2, gl.TEXTURE3, gl.TEXTURE4,
@@ -129,5 +169,6 @@ export {
     initBuffer,
     initAttribute,
     initTexture,
+    initTextureFramebuffer,
     getTextureAttachments
 }
