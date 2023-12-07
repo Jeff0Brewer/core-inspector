@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute, initTexture } from '../lib/gl-wrap'
+import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
 import TextureBlender from '../lib/texture-blend'
