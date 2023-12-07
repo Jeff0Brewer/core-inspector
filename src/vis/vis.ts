@@ -50,17 +50,26 @@ class VisRenderer {
             this.camera.zoom(e.deltaY)
             setZoom(this.camera.getZoom())
         }
+        const keydown = (e: KeyboardEvent): void => {
+            if (e.key === '+') {
+                this.fullCore.punchRenderer.incPointSize(0.2)
+            } else if (e.key === '-') {
+                this.fullCore.punchRenderer.incPointSize(-0.2)
+            }
+        }
 
         element.addEventListener('mousedown', mousedown)
         element.addEventListener('mouseup', mouseup)
         element.addEventListener('mouseleave', mouseleave)
         element.addEventListener('mousemove', mousemove)
         element.addEventListener('wheel', wheel, { passive: true })
+        window.addEventListener('keydown', keydown)
         return (): void => {
             element.removeEventListener('mousedown', mousedown)
             element.removeEventListener('mouseup', mouseup)
             element.removeEventListener('mouseleave', mouseleave)
             element.removeEventListener('wheel', wheel)
+            window.removeEventListener('keydown', keydown)
         }
     }
 

@@ -14,12 +14,14 @@ class PunchcardCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
     numVertex: number
+    pointSize: number
     textureBlender: TextureBlender
     bindAttrib: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     setDpr: (r: number) => void
+    setPointSize: (s: number) => void
 
     constructor (
         gl: WebGLRenderingContext,
@@ -55,6 +57,19 @@ class PunchcardCoreRenderer {
 
         const dprLoc = gl.getUniformLocation(this.program, 'dpr')
         this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
+
+        const pointSizeLoc = gl.getUniformLocation(this.program, 'pointSize')
+        this.setPointSize = (s: number): void => {
+            gl.useProgram(this.program)
+            gl.uniform1f(pointSizeLoc, s)
+        }
+        this.pointSize = 2
+        this.setPointSize(this.pointSize)
+    }
+
+    incPointSize (delta: number): void {
+        this.pointSize = Math.max(1, this.pointSize + delta)
+        this.setPointSize(this.pointSize)
     }
 
     setVerts (gl: WebGLRenderingContext, vertices: Float32Array): void {
