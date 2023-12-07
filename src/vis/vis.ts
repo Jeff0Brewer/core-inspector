@@ -46,16 +46,20 @@ class VisRenderer {
                 this.camera.pan(e.movementX, e.movementY)
             }
         }
+        const wheel = (e: WheelEvent): void => {
+            this.camera.zoom(e.deltaY)
+        }
 
         element.addEventListener('mousedown', mousedown)
         element.addEventListener('mouseup', mouseup)
         element.addEventListener('mouseleave', mouseleave)
         element.addEventListener('mousemove', mousemove)
+        element.addEventListener('wheel', wheel)
         return (): void => {
             element.removeEventListener('mousedown', mousedown)
             element.removeEventListener('mouseup', mouseup)
             element.removeEventListener('mouseleave', mouseleave)
-            element.removeEventListener('mousemove', mousemove)
+            element.removeEventListener('wheel', wheel)
         }
     }
 
