@@ -1,4 +1,6 @@
 import { FC, useState, useEffect, useRef } from 'react'
+import { PiSpiralLight, PiDotsSixVerticalBold } from 'react-icons/pi'
+import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
@@ -179,14 +181,16 @@ const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
             <button
                 data-active={currShape === COLUMN_SHAPE}
                 onClick={(): void => setShape(COLUMN_SHAPE)}
+                style={{ fontSize: '20px' }}
             >
-                {'column'}
+                {<RxColumns />}
             </button>
             <button
                 data-active={currShape === SPIRAL_SHAPE}
                 onClick={(): void => setShape(SPIRAL_SHAPE)}
+                style={{ fontSize: '25px' }}
             >
-                {'spiral'}
+                {<PiSpiralLight />}
             </button>
         </div>
     )
@@ -204,13 +208,15 @@ const ViewSelect: FC<ViewSelectProps> = ({ setView, currView }) => {
                 data-active={currView === 'downscaled'}
                 onClick={(): void => setView('downscaled')}
             >
-                {'down'}
+                {<div className={'downscaled-icon'}></div>}
             </button>
             <button
                 data-active={currView === 'punchcard'}
                 onClick={(): void => setView('punchcard')}
+                style={{ fontSize: '25px' }}
+
             >
-                {'punch'}
+                {<RxDragHandleDots1 />}
             </button>
         </div>
     )

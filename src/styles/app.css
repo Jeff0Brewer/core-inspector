@@ -59,8 +59,12 @@ canvas {
 }
 
 .toggle-input button {
+    display: grid;
+    place-items: center;
+
     width: 35px;
     height: 30px;
+
     background-color: var(--inactive-color);
 }
 
@@ -94,4 +98,11 @@ canvas {
 
 .mineral-select button[data-active="true"], .toggle-input button[data-active="true"] {
     background-color: var(--active-color);
+}
+
+.downscaled-icon {
+    width: 12px;
+    height: 20px;
+    background-color: #fff;
+    border-radius: 1px;
 }
