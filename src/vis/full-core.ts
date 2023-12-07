@@ -50,6 +50,7 @@ class FullCoreRenderer {
             this.texRenderer.setProj(m)
             gl.useProgram(this.punchRenderer.program)
             this.punchRenderer.setProj(m)
+            this.punchRenderer.setDpr(window.devicePixelRatio)
         }
 
         this.setView = (m: mat4): void => {

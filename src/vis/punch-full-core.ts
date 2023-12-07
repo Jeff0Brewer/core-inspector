@@ -18,6 +18,7 @@ class PunchcardCoreRenderer {
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
+    setDpr: (r: number) => void
 
     constructor (
         gl: WebGLRenderingContext,
@@ -54,6 +55,9 @@ class PunchcardCoreRenderer {
 
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
+
+        const dprLoc = gl.getUniformLocation(this.program, 'dpr')
+        this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
     }
 
     setVerts (gl: WebGLRenderingContext, vertices: Float32Array): void {
