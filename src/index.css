@@ -24,3 +24,86 @@ button {
     cursor: pointer;
     font: inherit;
 }
+
+input[type="range"] {
+    --thumb-size: 12px;
+    --track-width: 2px;
+    -webkit-appearance: none;
+    background: transparent;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: calc((var(--track-width) - var(--thumb-size)) / 2);
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    border: none;
+
+    background: #fff;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    -webkit-appearance: none;
+    margin-top: calc((var(--track-width) - var(--thumb-size)) / 2);
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    border: none;
+
+    background: #fff;
+    cursor: pointer;
+}
+
+input[type="range"]::-ms-thumb {
+    -webkit-appearance: none;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    border: none;
+
+    background: #fff;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    height: var(--track-width);
+    background: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-track {
+    height: var(--track-width);
+    background: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-ms-track {
+    height: var(--track-width);
+    background: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-ms-fill-lower {
+    background: transparent;
+    border-radius: 0;
+    border: var(--border);
+}
+
+input[type="range"]::-ms-fill-upper {
+    background: transparent;
+    border-radius: 0;
+    border: var(--border);
+}
+
+input[type="range"]:focus::-ms-fill-lower {
+    background: transparent;
+}
+
+input[type="range"]:focus::-ms-fill-upper {
+    background: transparent;
+}
