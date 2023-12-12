@@ -129,8 +129,22 @@ const App: FC = () => {
             ></canvas>
             <div className={'interface'}>
                 <div className={'top-bar'}>
-                    <ShapeSelect setShape={setShape} currShape={currShape} />
-                    <ViewSelect setView={setView} currView={currView} />
+                    <ToggleSelect
+                        setValue={setShape}
+                        currValue={currShape}
+                        icon0={<RxColumns style={{ fontSize: '20px' }} />}
+                        value0={COLUMN_SHAPE}
+                        icon1={<PiSpiralLight style={{ fontSize: '25px' }} />}
+                        value1={SPIRAL_SHAPE}
+                    />
+                    <ToggleSelect
+                        setValue={setView}
+                        currValue={currView}
+                        icon0={<div className={'downscaled-icon'}></div>}
+                        value0={'downscaled'}
+                        icon1={<RxDragHandleDots1 style={{ fontSize: '25px' }} />}
+                        value1={'punchcard'}
+                    />
                 </div>
                 <div className={'side-bar'}>
                     <VertSlider
@@ -209,49 +223,25 @@ const VertSlider: FC<VertSliderProps> = ({ label, icon, min, max, step, value, s
     )
 }
 
-type ShapeSelectProps = {
-    setShape: (t: number) => void
-    currShape: number
+type ToggleSelectProps<T> = {
+    setValue: (v: T) => void,
+    currValue: T,
+    icon0: ReactElement,
+    value0: T,
+    icon1: ReactElement,
+    value1: T
 }
 
-const ShapeSelect: FC<ShapeSelectProps> = ({ setShape, currShape }) => {
+function ToggleSelect<T, > (
+    { setValue, currValue, value0, value1, icon0, icon1 }: ToggleSelectProps<T>
+): ReactElement {
     return (
         <div className={'toggle-input'}>
-            <button
-                data-active={currShape === COLUMN_SHAPE}
-                onClick={(): void => setShape(COLUMN_SHAPE)}
-            >
-                {<RxColumns style={{ fontSize: '20px' }} />}
+            <button data-active={currValue === value0} onClick={() => setValue(value0)}>
+                {icon0}
             </button>
-            <button
-                data-active={currShape === SPIRAL_SHAPE}
-                onClick={(): void => setShape(SPIRAL_SHAPE)}
-            >
-                {<PiSpiralLight style={{ fontSize: '25px' }} />}
-            </button>
-        </div>
-    )
-}
-
-type ViewSelectProps = {
-    setView: (v: FullCoreViewMode) => void,
-    currView: FullCoreViewMode
-}
-
-const ViewSelect: FC<ViewSelectProps> = ({ setView, currView }) => {
-    return (
-        <div className={'toggle-input'}>
-            <button
-                data-active={currView === 'downscaled'}
-                onClick={(): void => setView('downscaled')}
-            >
-                {<div className={'downscaled-icon'}></div>}
-            </button>
-            <button
-                data-active={currView === 'punchcard'}
-                onClick={(): void => setView('punchcard')}
-            >
-                {<RxDragHandleDots1 style={{ fontSize: '25px' }} />}
+            <button data-active={currValue === value1} onClick={() => setValue(value1)}>
+                {icon1}
             </button>
         </div>
     )
