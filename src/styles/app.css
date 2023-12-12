@@ -29,35 +29,6 @@ canvas {
     gap: 20px;
 }
 
-.vertical-slider {
-    --width: 60px;
-    --length: 80px;
-    position: relative;
-    width: var(--width);
-    margin-top: calc(var(--length) + 20px);
-    font-size: 8px;
-}
-
-.vertical-slider > input[type="range"] {
-    position: absolute;
-    top: -15px;
-    left: calc(0.5 * var(--width));
-    width: var(--length);
-    transform-origin: left center;
-    transform: rotate(270deg);
-}
-
-.vertical-slider > p {
-    text-align: center;
-    text-transform: uppercase;
-}
-.vertical-slider > div {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    margin-top: 8px;
-}
-
 .toggle-input {
     display: flex;
     gap: 1px;

@@ -5,6 +5,7 @@ import { IoSearch } from 'react-icons/io5'
 import { MdColorLens } from 'react-icons/md'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
+import VerticalSlider from '../components/vertical-slider'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -147,32 +148,32 @@ function App (): ReactElement {
                     />
                 </div>
                 <div className={'side-bar'}>
-                    <VertSlider
+                    <VerticalSlider
+                        setValue={v => setZoom(v)}
+                        currValue={currZoom}
+                        min={0}
+                        max={1}
+                        step={0.01}
                         label={'zoom'}
                         icon={<IoSearch style={{ fontSize: '16px' }} />}
+                    />
+                    <VerticalSlider
+                        setValue={v => setSpacingHorizontal(v)}
+                        currValue={0.5}
                         min={0}
                         max={1}
                         step={0.01}
-                        value={currZoom}
-                        setValue={v => setZoom(v)}
-                    />
-                    <VertSlider
                         label={'horizontal distance'}
                         icon={horizontalIcon}
+                    />
+                    <VerticalSlider
+                        setValue={v => setSpacingVertical(v)}
+                        currValue={0.5}
                         min={0}
                         max={1}
                         step={0.01}
-                        value={0.5}
-                        setValue={v => setSpacingHorizontal(v)}
-                    />
-                    <VertSlider
                         label={'vertical distance'}
                         icon={verticalIcon}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        value={0.5}
-                        setValue={v => setSpacingVertical(v)}
                     />
                 </div>
                 <MineralSelect
@@ -186,45 +187,6 @@ function App (): ReactElement {
     )
 }
 
-type VertSliderProps = {
-    label: string,
-    icon?: ReactElement
-    min: number,
-    max: number,
-    step?: number,
-    value: number,
-    setValue: (v: number) => void
-}
-
-function VertSlider (
-    { label, icon, min, max, step, value, setValue }: VertSliderProps
-): ReactElement {
-    const inputRef = useRef<HTMLInputElement>(null)
-    useEffect(() => {
-        if (!inputRef.current) { return }
-        if (value !== inputRef.current.valueAsNumber) {
-            inputRef.current.valueAsNumber = value
-        }
-    }, [value])
-    return (
-        <div className={'vertical-slider'}>
-            <input
-                ref={inputRef}
-                type={'range'}
-                min={min}
-                max={max}
-                step={step || 0.1}
-                defaultValue={value}
-                onChange={e => setValue(e.target.valueAsNumber)}
-            />
-            <p>{label}</p>
-            { icon && <div>
-                {icon}
-            </div> }
-        </div>
-    )
-}
-
 type ToggleSelectProps<T> = {
     setValue: (v: T) => void,
     currValue: T,
@@ -234,7 +196,7 @@ type ToggleSelectProps<T> = {
     value1: T
 }
 
-function ToggleSelect<T, > (
+function ToggleSelect<T> (
     { setValue, currValue, value0, value1, icon0, icon1 }: ToggleSelectProps<T>
 ): ReactElement {
     return (
