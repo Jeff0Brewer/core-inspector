@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useRef, ReactElement } from 'react'
+import { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
@@ -8,7 +8,7 @@ import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
-const App: FC = () => {
+function App (): ReactElement {
     const [currMineral, setCurrMineral] = useState<number>(0)
     const [currShape, setCurrShape] = useState<number>(0)
     const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
@@ -196,7 +196,9 @@ type VertSliderProps = {
     setValue: (v: number) => void
 }
 
-const VertSlider: FC<VertSliderProps> = ({ label, icon, min, max, step, value, setValue }) => {
+function VertSlider (
+    { label, icon, min, max, step, value, setValue }: VertSliderProps
+): ReactElement {
     const inputRef = useRef<HTMLInputElement>(null)
     useEffect(() => {
         if (!inputRef.current) { return }
@@ -254,7 +256,9 @@ type MineralSelectProps = {
     setBlending: (m: Array<number>) => void
 }
 
-const MineralSelect: FC<MineralSelectProps> = ({ minerals, currMineral, setMineral, setBlending }) => {
+function MineralSelect (
+    { minerals, currMineral, setMineral, setBlending }: MineralSelectProps
+): ReactElement {
     const [blendMags, setBlendMags] = useState<Array<number>>(Array(minerals.length).fill(1))
 
     return (
