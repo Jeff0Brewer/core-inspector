@@ -127,22 +127,20 @@ function App (): ReactElement {
 
     return (
         <main>
-            <canvas
-                ref={canvasRef}
-            ></canvas>
+            <canvas ref={canvasRef}></canvas>
             <div className={'interface'}>
                 <div className={'top-bar'}>
                     <ToggleSelect
                         currValue={currShape}
                         setValue={setShape}
-                        item0={{ value: COLUMN_SHAPE, icon: icons.column }}
-                        item1={{ value: SPIRAL_SHAPE, icon: icons.spiral }}
+                        item0={{ value: COLUMN_SHAPE, icon: ICONS.column }}
+                        item1={{ value: SPIRAL_SHAPE, icon: ICONS.spiral }}
                     />
                     <ToggleSelect
                         currValue={currView}
                         setValue={setView}
-                        item0={{ value: 'downscaled', icon: icons.downscaled }}
-                        item1={{ value: 'punchcard', icon: icons.punchcard }}
+                        item0={{ value: 'downscaled', icon: ICONS.downscaled }}
+                        item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                     />
                 </div>
                 <div className={'side-bar'}>
@@ -153,7 +151,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'zoom'}
-                        icon={icons.zoom}
+                        icon={ICONS.zoom}
                     />
                     <VerticalSlider
                         setValue={v => setSpacingHorizontal(v)}
@@ -162,7 +160,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'horizontal distance'}
-                        icon={icons.horizontalDist}
+                        icon={ICONS.horizontalDist}
                     />
                     <VerticalSlider
                         setValue={v => setSpacingVertical(v)}
@@ -171,7 +169,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'vertical distance'}
-                        icon={icons.verticalDist}
+                        icon={ICONS.verticalDist}
                     />
                 </div>
                 <div className={'bottom-bar'}>
@@ -193,7 +191,7 @@ function App (): ReactElement {
 }
 
 // TODO: get new icons for horizontal / vertical dist
-const icons = {
+const ICONS = {
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
     downscaled: <div className={'downscaled-icon'}></div>,
