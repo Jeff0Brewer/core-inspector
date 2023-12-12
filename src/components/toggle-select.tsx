@@ -7,14 +7,14 @@ type ToggleItem<T> = {
 }
 
 type ToggleSelectProps<T> = {
-    setValue: (v: T) => void,
     currValue: T,
+    setValue: (v: T) => void,
     item0: ToggleItem<T>,
     item1: ToggleItem<T>,
 }
 
 function ToggleSelect<T> (
-    { setValue, currValue, item0, item1 }: ToggleSelectProps<T>
+    { currValue, setValue, item0, item1 }: ToggleSelectProps<T>
 ): ReactElement {
     return (
         <div className={'toggle-select'}>

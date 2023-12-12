@@ -4,11 +4,11 @@ import '../styles/vertical-slider.css'
 const DEFAULT_MIN = 0
 const DEFAULT_MAX = 1
 const DEFAULT_STEP = 0.1
-const EPSILON = 0.0001
+const EPSILON = 0.00001
 
 type VerticalSliderProps = {
-    setValue: (v: number) => void,
     currValue: number,
+    setValue: (v: number) => void,
     min?: number,
     max?: number,
     step?: number,
@@ -17,7 +17,7 @@ type VerticalSliderProps = {
 }
 
 function VerticalSlider (
-    { setValue, currValue, min, max, step, label, icon }: VerticalSliderProps
+    { currValue, setValue, min, max, step, label, icon }: VerticalSliderProps
 ): ReactElement {
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -36,11 +36,11 @@ function VerticalSlider (
             <input
                 ref={inputRef}
                 type={'range'}
+                defaultValue={currValue}
+                onChange={e => setValue(e.target.valueAsNumber)}
                 min={min || DEFAULT_MIN}
                 max={max || DEFAULT_MAX}
                 step={step || DEFAULT_STEP}
-                defaultValue={currValue}
-                onChange={e => setValue(e.target.valueAsNumber)}
             />
             { label && <p>{label}</p> }
             { icon && <div>{icon}</div> }
