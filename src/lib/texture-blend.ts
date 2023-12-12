@@ -4,59 +4,27 @@ import vertSource from '../shaders/blend-vert.glsl?raw'
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
-const FULLSCREEN_RECT = new Float32Array([
-    -1, -1, 0, 0,
-    1, -1, 1, 0,
-    -1, 1, 0, 1,
-    1, 1, 1, 1
-])
-const COLORS = [
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-    [0.5, 0.5, 0],
-    [0, 0.5, 0.5],
-    [0.5, 0, 0.5],
-    [0.8, 0.8, 0.8]
-]
 
 class TextureBlender {
     program: WebGLProgram
-    magnitudeSetters: Array<(v: number) => void>
     buffer: WebGLBuffer
     texture: WebGLTexture
     framebuffer: WebGLFramebuffer
     bindAttrib: () => void
     textureAttachments: Array<number>
     sourceTextures: Array<WebGLTexture>
+    setMagUniform: Array<(v: number) => void>
     numVertex: number
     width: number
     height: number
 
-    constructor (
-        gl: WebGLRenderingContext,
-        sources: Array<HTMLImageElement>
-    ) {
+    constructor (gl: WebGLRenderingContext, sources: Array<HTMLImageElement>) {
+        // store width / height for output / viewport size
         this.width = sources[0].width
         this.height = sources[0].height
 
         const fragSource = getBlendFrag(sources.length)
         this.program = initProgram(gl, vertSource, fragSource)
-
-        this.magnitudeSetters = []
-        for (let i = 0; i < sources.length; i++) {
-            const textureLoc = gl.getUniformLocation(this.program, `texture${i}`)
-            gl.uniform1i(textureLoc, i + 1)
-
-            const colorLoc = gl.getUniformLocation(this.program, `color${i}`)
-            gl.uniform3fv(colorLoc, COLORS[i])
-
-            const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
-            gl.uniform1f(magnitudeLoc, 1)
-            this.magnitudeSetters.push((v: number) => {
-                gl.uniform1f(magnitudeLoc, v)
-            })
-        }
 
         this.buffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, FULLSCREEN_RECT, gl.STATIC_DRAW)
@@ -69,8 +37,11 @@ class TextureBlender {
             bindTexCoord()
         }
 
+        // get attachments for source textures
+        // remove attachment 0 since it's used for the output texture
         this.textureAttachments = getTextureAttachments(gl, sources.length + 1)
-        this.textureAttachments.shift() // remove texture0 attachment from source attachments
+        this.textureAttachments.shift()
+
         this.sourceTextures = []
         for (let i = 0; i < sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i])
@@ -79,10 +50,26 @@ class TextureBlender {
             this.sourceTextures.push(texture)
         }
 
-        gl.activeTexture(gl.TEXTURE0)
+        // init texture framebuffer of same size as source textures for blended output
         const { texture, framebuffer } = initTextureFramebuffer(gl, this.width, this.height)
         this.texture = texture
         this.framebuffer = framebuffer
+
+        this.setMagUniform = []
+        for (let i = 0; i < sources.length; i++) {
+            // init texture / color uniforms statically
+            const textureLoc = gl.getUniformLocation(this.program, `texture${i}`)
+            const colorLoc = gl.getUniformLocation(this.program, `color${i}`)
+            gl.uniform1i(textureLoc, i + 1) // add one since attachment 0 is reserved for output
+            gl.uniform3fv(colorLoc, COLORS[i])
+
+            // get closures to set each magnitude uniform easily on update
+            const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
+            gl.uniform1f(magnitudeLoc, 1)
+            this.setMagUniform.push((v: number) => {
+                gl.uniform1f(magnitudeLoc, v)
+            })
+        }
     }
 
     bindSource (gl: WebGLRenderingContext, i: number): void {
@@ -97,30 +84,28 @@ class TextureBlender {
 
     update (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
         if (magnitudes.length < this.sourceTextures.length) {
-            throw new Error('Not enough magnitudes for all source textures')
+            throw new Error('Not enough blend magnitudes for all source textures')
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
-
-        gl.useProgram(this.program)
         gl.viewport(0, 0, this.width, this.height)
+        gl.useProgram(this.program)
 
-        for (let i = 0; i < this.sourceTextures.length; i++) {
-            gl.activeTexture(this.textureAttachments[i])
-            gl.bindTexture(gl.TEXTURE_2D, this.sourceTextures[i])
-        }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
         for (let i = 0; i < this.sourceTextures.length; i++) {
-            this.magnitudeSetters[i](magnitudes[i])
+            gl.activeTexture(this.textureAttachments[i])
+            gl.bindTexture(gl.TEXTURE_2D, this.sourceTextures[i])
+
+            this.setMagUniform[i](magnitudes[i])
         }
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
-
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
 }
 
+// create fragment shader dynamically to blend textures based on number of input textures
 const getBlendFrag = (numTexture: number): string => {
     const uniforms = []
     const values = []
@@ -158,5 +143,22 @@ const getBlendFrag = (numTexture: number): string => {
     ]
     return fragSource.join('\n')
 }
+
+const FULLSCREEN_RECT = new Float32Array([
+    -1, -1, 0, 0,
+    1, -1, 1, 0,
+    -1, 1, 0, 1,
+    1, 1, 1, 1
+])
+
+const COLORS = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+    [0.5, 0.5, 0],
+    [0, 0.5, 0.5],
+    [0.5, 0, 0.5],
+    [0.8, 0.8, 0.8]
+]
 
 export default TextureBlender
