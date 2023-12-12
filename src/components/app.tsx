@@ -3,7 +3,7 @@ import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
-import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
+import { FullCoreViewMode, FullCoreShape } from '../vis/full-core'
 import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
@@ -13,7 +13,7 @@ import '../styles/app.css'
 
 function App (): ReactElement {
     const [currMineral, setCurrMineral] = useState<number>(0)
-    const [currShape, setCurrShape] = useState<number>(0)
+    const [currShape, setCurrShape] = useState<FullCoreShape>('column')
     const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
     const [currZoom, setCurrZoom] = useState<number>(0.7)
     const [horizontalSpacing, setHorizontalSpacing] = useState<number>(0.5)
@@ -96,9 +96,9 @@ function App (): ReactElement {
         setCurrMineral(i)
     }
 
-    const setShape = (t: number): void => {
-        visRef.current?.fullCore.setShape(t)
-        setCurrShape(t)
+    const setShape = (s: FullCoreShape): void => {
+        visRef.current?.fullCore.setShape(s)
+        setCurrShape(s)
     }
 
     const setView = (v: FullCoreViewMode): void => {
@@ -133,8 +133,8 @@ function App (): ReactElement {
                     <ToggleSelect
                         currValue={currShape}
                         setValue={setShape}
-                        item0={{ value: COLUMN_SHAPE, icon: ICONS.column }}
-                        item1={{ value: SPIRAL_SHAPE, icon: ICONS.spiral }}
+                        item0={{ value: 'column', icon: ICONS.column }}
+                        item1={{ value: 'spiral', icon: ICONS.spiral }}
                     />
                     <ToggleSelect
                         currValue={currView}

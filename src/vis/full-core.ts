@@ -10,10 +10,9 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
-const COLUMN_SHAPE = 0
-const SPIRAL_SHAPE = 1
-
 type FullCoreViewMode = 'punchcard' | 'downscaled'
+type FullCoreShape = 'column' | 'spiral'
+const SHAPE_T_MAP = { column: 0, spiral: 1 }
 
 class FullCoreRenderer {
     texRenderer: TexMappedCoreRenderer
@@ -24,9 +23,9 @@ class FullCoreRenderer {
     setView: (m: mat4) => void
     numMinerals: number
     currMineral: number
-    targetShape: number
-    currShape: number
     viewMode: FullCoreViewMode
+    targetShape: FullCoreShape
+    shapeT: number
 
     constructor (
         gl: WebGLRenderingContext,
@@ -63,10 +62,9 @@ class FullCoreRenderer {
         this.currMineral = 0
         this.numMinerals = texMineralMaps.length - 1
 
-        this.targetShape = COLUMN_SHAPE
-        this.currShape = COLUMN_SHAPE
-
         this.viewMode = 'downscaled'
+        this.targetShape = 'column'
+        this.shapeT = SHAPE_T_MAP[this.targetShape]
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
@@ -85,8 +83,8 @@ class FullCoreRenderer {
         this.punchRenderer.setVerts(gl, punchVerts)
     }
 
-    setShape (t: number): void {
-        this.targetShape = clamp(Math.round(t), 0, 1)
+    setShape (shape: FullCoreShape): void {
+        this.targetShape = shape
     }
 
     setCurrMineral (i: number): void {
@@ -98,13 +96,14 @@ class FullCoreRenderer {
     }
 
     draw (gl: WebGLRenderingContext, elapsed: number): void {
-        const incSign = Math.sign(this.targetShape - this.currShape)
-        this.currShape = clamp(this.currShape + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
+        const targetShapeT = SHAPE_T_MAP[this.targetShape]
+        const incSign = Math.sign(targetShapeT - this.shapeT)
+        this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
         if (this.viewMode === 'downscaled') {
-            this.texRenderer.draw(gl, this.currMineral, this.currShape)
+            this.texRenderer.draw(gl, this.currMineral, this.shapeT)
         } else {
-            this.punchRenderer.draw(gl, this.currMineral, this.currShape)
+            this.punchRenderer.draw(gl, this.currMineral, this.shapeT)
         }
     }
 }
@@ -182,8 +181,7 @@ const getFullCoreVerts = (
 }
 
 export default FullCoreRenderer
-export type { FullCoreViewMode }
-export {
-    COLUMN_SHAPE,
-    SPIRAL_SHAPE
+export type {
+    FullCoreViewMode,
+    FullCoreShape
 }
