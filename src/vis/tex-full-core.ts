@@ -3,31 +3,31 @@ import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
 import TextureBlender from '../lib/texture-blend'
-import texVert from '../shaders/full-core-vert.glsl?raw'
-import texFrag from '../shaders/full-core-frag.glsl?raw'
+import vertSource from '../shaders/full-core-vert.glsl?raw'
+import fragSource from '../shaders/full-core-frag.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
-const TILE_DETAIL = 8
-
 class TexMappedCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
-    textureBlender: TextureBlender
-    numVertex: number
     bindAttrib: () => void
+    textureBlender: TextureBlender
+
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
+
+    numVertex: number
 
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
         vertices: Float32Array
     ) {
-        this.program = initProgram(gl, texVert, texFrag)
+        this.program = initProgram(gl, vertSource, fragSource)
 
         this.numVertex = vertices.length / STRIDE
         this.buffer = initBuffer(gl)
@@ -46,15 +46,15 @@ class TexMappedCoreRenderer {
         }
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
-
         const viewLoc = gl.getUniformLocation(this.program, 'view')
-        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
+        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
 
+    // generate vertices externally to coordinate alignment between
+    // punchcard and downscaled representations
     setVerts (gl: WebGLRenderingContext, vertices: Float32Array): void {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
@@ -64,19 +64,23 @@ class TexMappedCoreRenderer {
     draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
         gl.useProgram(this.program)
 
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+        this.bindAttrib()
+        this.setShapeT(ease(shapeT))
+
         if (currMineral < 0) {
             this.textureBlender.bindBlended(gl)
         } else {
             this.textureBlender.bindSource(gl, currMineral)
         }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
-        this.bindAttrib()
-        this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
 }
 
+const TILE_DETAIL = 8
+
+// calculate downscaled vertices for a single tile given tile position and size
 const addTexTile = (
     out: Array<number>,
     rect: TileRect,
