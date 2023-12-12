@@ -29,24 +29,6 @@ canvas {
     gap: 20px;
 }
 
-.toggle-input {
-    display: flex;
-    gap: 1px;
-    overflow: hidden;
-    border-radius: var(--border-radius);
-    width: fit-content;
-}
-
-.toggle-input button {
-    display: grid;
-    place-items: center;
-
-    width: 35px;
-    height: 30px;
-
-    background-color: var(--inactive-color);
-}
-
 .mineral-select {
     position: absolute;
     z-index: 3;
@@ -75,7 +57,7 @@ canvas {
     background-color: var(--inactive-color);
 }
 
-.mineral-select button[data-active="true"], .toggle-input button[data-active="true"] {
+.mineral-select button[data-active="true"] {
     background-color: var(--active-color);
 }
 

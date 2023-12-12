@@ -1,0 +1,21 @@
+.toggle-select {
+    display: flex;
+    gap: 1px;
+    overflow: hidden;
+    border-radius: var(--border-radius);
+    width: fit-content;
+}
+
+.toggle-select button {
+    display: grid;
+    place-items: center;
+
+    width: 35px;
+    height: 30px;
+
+    background-color: var(--inactive-color);
+}
+
+.toggle-select button[data-active="true"] {
+    background-color: var(--active-color);
+}

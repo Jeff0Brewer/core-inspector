@@ -6,6 +6,7 @@ import { MdColorLens } from 'react-icons/md'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VerticalSlider from '../components/vertical-slider'
+import ToggleSelect from '../components/toggle-select'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -133,18 +134,26 @@ function App (): ReactElement {
                     <ToggleSelect
                         setValue={setShape}
                         currValue={currShape}
-                        icon0={<RxColumns style={{ fontSize: '20px' }} />}
-                        value0={COLUMN_SHAPE}
-                        icon1={<PiSpiralLight style={{ fontSize: '25px' }} />}
-                        value1={SPIRAL_SHAPE}
+                        item0={{
+                            value: COLUMN_SHAPE,
+                            icon: <RxColumns style={{ fontSize: '20px' }} />
+                        }}
+                        item1={{
+                            value: SPIRAL_SHAPE,
+                            icon: <PiSpiralLight style={{ fontSize: '25px' }} />
+                        }}
                     />
                     <ToggleSelect
                         setValue={setView}
                         currValue={currView}
-                        icon0={<div className={'downscaled-icon'}></div>}
-                        value0={'downscaled'}
-                        icon1={<RxDragHandleDots1 style={{ fontSize: '25px' }} />}
-                        value1={'punchcard'}
+                        item0={{
+                            value: 'downscaled',
+                            icon: <div className={'downscaled-icon'}></div>
+                        }}
+                        item1={{
+                            value: 'punchcard',
+                            icon: <RxDragHandleDots1 style={{ fontSize: '25px' }} />
+                        }}
                     />
                 </div>
                 <div className={'side-bar'}>
@@ -184,30 +193,6 @@ function App (): ReactElement {
                 />
             </div>
         </main>
-    )
-}
-
-type ToggleSelectProps<T> = {
-    setValue: (v: T) => void,
-    currValue: T,
-    icon0: ReactElement,
-    value0: T,
-    icon1: ReactElement,
-    value1: T
-}
-
-function ToggleSelect<T> (
-    { setValue, currValue, value0, value1, icon0, icon1 }: ToggleSelectProps<T>
-): ReactElement {
-    return (
-        <div className={'toggle-input'}>
-            <button data-active={currValue === value0} onClick={() => setValue(value0)}>
-                {icon0}
-            </button>
-            <button data-active={currValue === value1} onClick={() => setValue(value1)}>
-                {icon1}
-            </button>
-        </div>
     )
 }
 
