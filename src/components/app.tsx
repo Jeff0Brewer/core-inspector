@@ -135,26 +135,14 @@ function App (): ReactElement {
                     <ToggleSelect
                         currValue={currShape}
                         setValue={setShape}
-                        item0={{
-                            value: COLUMN_SHAPE,
-                            icon: <RxColumns style={{ fontSize: '20px' }} />
-                        }}
-                        item1={{
-                            value: SPIRAL_SHAPE,
-                            icon: <PiSpiralLight style={{ fontSize: '25px' }} />
-                        }}
+                        item0={{ value: COLUMN_SHAPE, icon: icons.column }}
+                        item1={{ value: SPIRAL_SHAPE, icon: icons.spiral }}
                     />
                     <ToggleSelect
                         currValue={currView}
                         setValue={setView}
-                        item0={{
-                            value: 'downscaled',
-                            icon: <div className={'downscaled-icon'}></div>
-                        }}
-                        item1={{
-                            value: 'punchcard',
-                            icon: <RxDragHandleDots1 style={{ fontSize: '25px' }} />
-                        }}
+                        item0={{ value: 'downscaled', icon: icons.downscaled }}
+                        item1={{ value: 'punchcard', icon: icons.punchcard }}
                     />
                 </div>
                 <div className={'side-bar'}>
@@ -165,7 +153,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'zoom'}
-                        icon={<IoSearch style={{ fontSize: '16px' }} />}
+                        icon={icons.zoom}
                     />
                     <VerticalSlider
                         setValue={v => setSpacingHorizontal(v)}
@@ -174,7 +162,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'horizontal distance'}
-                        icon={horizontalIcon}
+                        icon={icons.horizontalDist}
                     />
                     <VerticalSlider
                         setValue={v => setSpacingVertical(v)}
@@ -183,7 +171,7 @@ function App (): ReactElement {
                         max={1}
                         step={0.01}
                         label={'vertical distance'}
-                        icon={verticalIcon}
+                        icon={icons.verticalDist}
                     />
                 </div>
                 <div className={'bottom-bar'}>
@@ -204,17 +192,16 @@ function App (): ReactElement {
     )
 }
 
-// temporary, create new icon
-const horizontalIcon: ReactElement = (
-    <div className={'distance-icon'}>
-        <PiArrowsHorizontalBold />
-    </div>
-)
-const verticalIcon: ReactElement = (
-    <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}>
-        <PiArrowsHorizontalBold />
-    </div>
-)
+// TODO: get new icons for horizontal / vertical dist
+const icons = {
+    column: <RxColumns style={{ fontSize: '20px' }} />,
+    spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
+    downscaled: <div className={'downscaled-icon'}></div>,
+    punchcard: <RxDragHandleDots1 style={{ fontSize: '25px' }} />,
+    zoom: <IoSearch style={{ fontSize: '16px' }} />,
+    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
+    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
+}
 
 const MINERALS = [
     'chlorite',
