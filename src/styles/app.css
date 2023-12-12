@@ -11,6 +11,11 @@ canvas {
     z-index: 2;
     /* temporary dimensions, will break on mobile */
     min-height: 100vh;
+    pointer-events: none;
+}
+
+.interface * {
+    pointer-events: auto;
 }
 
 .top-bar {
