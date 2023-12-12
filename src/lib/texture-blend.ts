@@ -8,12 +8,14 @@ const STRIDE = POS_FPV + TEX_FPV
 class TextureBlender {
     program: WebGLProgram
     buffer: WebGLBuffer
-    texture: WebGLTexture
-    framebuffer: WebGLFramebuffer
     bindAttrib: () => void
     textureAttachments: Array<number>
     sourceTextures: Array<WebGLTexture>
+    texture: WebGLTexture
+    framebuffer: WebGLFramebuffer
+
     setMagUniform: Array<(v: number) => void>
+
     numVertex: number
     width: number
     height: number
