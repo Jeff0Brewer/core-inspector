@@ -122,42 +122,40 @@ class TextureBlender {
 }
 
 const getBlendFrag = (numTexture: number): string => {
-    const fragSource = [
-        'precision highp float;'
-    ]
-    // for each source texture add uniforms for
-    // texture, blend color, and blend magnitude
+    const uniforms = []
+    const values = []
+    const calcs = []
+
     for (let i = 0; i < numTexture; i++) {
-        fragSource.push(
+        // add uniform for each channel's source texture, blend color, and blend magnitude
+        uniforms.push(
             `uniform sampler2D texture${i};`,
             `uniform vec3 color${i};`,
             `uniform float magnitude${i};`
         )
-    }
-
-    fragSource.push(
-        'varying vec2 vTexCoord;',
-        'void main() {'
-    )
-    for (let i = 0; i < numTexture; i++) {
-        fragSource.push(
+        // get value from each channel's source texture
+        values.push(
             `float value${i} = texture2D(texture${i}, vTexCoord).x;`
         )
-    }
-    fragSource.push(
-        'vec3 color ='
-    )
-    for (let i = 0; i < numTexture; i++) {
+        // sum together colors based on texture value and magnitude
+        // to get final blended color
         const end = i === numTexture - 1 ? ';' : ' +'
-        fragSource.push(
-            `magnitude${i} * value${i} * color${i}${end}`
+        calcs.push(
+            `value${i} * magnitude${i} * color${i}${end}`
         )
     }
 
-    fragSource.push(
+    const fragSource = [
+        'precision highp float;',
+        ...uniforms,
+        'varying vec2 vTexCoord;',
+        'void main() {',
+        ...values,
+        'vec3 color =',
+        ...calcs,
         'gl_FragColor = vec4(color, 1.0);',
         '}'
-    )
+    ]
     return fragSource.join('\n')
 }
 
