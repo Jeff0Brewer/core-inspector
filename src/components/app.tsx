@@ -71,14 +71,6 @@ const App: FC = () => {
         return visRef.current.setupEventListeners(canvasRef.current, setCurrZoom)
     }, [initialized])
 
-    useEffect(() => {
-        const resize = (): void => { visRef.current?.resize() }
-        window.addEventListener('resize', resize)
-        return () => {
-            window.removeEventListener('resize', resize)
-        }
-    }, [])
-
     // start draw loop
     useEffect(() => {
         let lastT = 0

@@ -59,6 +59,9 @@ class VisRenderer {
                 this.fullCore.punchRenderer.incPointSize(-0.2)
             }
         }
+        const resize = (): void => {
+            this.resize()
+        }
 
         element.addEventListener('mousedown', mousedown)
         element.addEventListener('mouseup', mouseup)
@@ -66,12 +69,14 @@ class VisRenderer {
         element.addEventListener('mousemove', mousemove)
         element.addEventListener('wheel', wheel, { passive: true })
         window.addEventListener('keydown', keydown)
+        window.addEventListener('resize', resize)
         return (): void => {
             element.removeEventListener('mousedown', mousedown)
             element.removeEventListener('mouseup', mouseup)
             element.removeEventListener('mouseleave', mouseleave)
             element.removeEventListener('wheel', wheel)
             window.removeEventListener('keydown', keydown)
+            window.removeEventListener('resize', resize)
         }
     }
 
