@@ -3,8 +3,8 @@ import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
 import TextureBlender from '../lib/texture-blend'
-import punchVert from '../shaders/punchcard-vert.glsl?raw'
-import punchFrag from '../shaders/punchcard-frag.glsl?raw'
+import vertSource from '../shaders/punchcard-vert.glsl?raw'
+import fragSource from '../shaders/punchcard-frag.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
@@ -13,22 +13,23 @@ const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 class PunchcardCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
-    numVertex: number
-    pointSize: number
-    textureBlender: TextureBlender
     bindAttrib: () => void
+    textureBlender: TextureBlender
+
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     setDpr: (r: number) => void
-    setPointSize: (s: number) => void
+    incPointSize: (d: number) => void
+
+    numVertex: number
 
     constructor (
         gl: WebGLRenderingContext,
         mineralMaps: Array<HTMLImageElement>,
         vertices: Float32Array
     ) {
-        this.program = initProgram(gl, punchVert, punchFrag)
+        this.program = initProgram(gl, vertSource, fragSource)
 
         this.numVertex = vertices.length / STRIDE
         this.buffer = initBuffer(gl)
@@ -47,31 +48,26 @@ class PunchcardCoreRenderer {
         }
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
-
         const viewLoc = gl.getUniformLocation(this.program, 'view')
-        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
-        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
-
         const dprLoc = gl.getUniformLocation(this.program, 'dpr')
+        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
+        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
         this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
 
+        let pointSize = 2
         const pointSizeLoc = gl.getUniformLocation(this.program, 'pointSize')
-        this.setPointSize = (s: number): void => {
+        this.incPointSize = (delta: number): void => {
+            pointSize = Math.max(1, pointSize + delta)
             gl.useProgram(this.program)
-            gl.uniform1f(pointSizeLoc, s)
+            gl.uniform1f(pointSizeLoc, pointSize)
         }
-        this.pointSize = 2
-        this.setPointSize(this.pointSize)
+        this.incPointSize(0) // init pointSize uniform
     }
 
-    incPointSize (delta: number): void {
-        this.pointSize = Math.max(1, this.pointSize + delta)
-        this.setPointSize(this.pointSize)
-    }
-
+    // generate vertices externally to coordinate alignment between
+    // punchcard and downscaled representations
     setVerts (gl: WebGLRenderingContext, vertices: Float32Array): void {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
@@ -81,19 +77,21 @@ class PunchcardCoreRenderer {
     draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
         gl.useProgram(this.program)
 
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+        this.bindAttrib()
+        this.setShapeT(ease(shapeT))
+
         if (currMineral < 0) {
             this.textureBlender.bindBlended(gl)
         } else {
             this.textureBlender.bindSource(gl, currMineral)
         }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
-        this.bindAttrib()
-        this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.POINTS, 0, this.numVertex)
     }
 }
 
+// calculate punchcard vertices for a single tile given tile position and size
 const addPunchTile = (
     out: Array<number>,
     rect: TileRect,
