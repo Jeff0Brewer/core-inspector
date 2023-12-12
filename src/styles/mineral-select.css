@@ -1,0 +1,24 @@
+.mineral-select {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.mineral-select button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    min-width: 100px;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+
+    background-color: var(--inactive-color);
+}
+
+.mineral-select button[data-active="true"] {
+    background-color: var(--active-color);
+}

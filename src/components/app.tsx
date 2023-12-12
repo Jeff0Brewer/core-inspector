@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
-import { MdColorLens } from 'react-icons/md'
 import { loadImageAsync } from '../lib/load'
 import { COLUMN_SHAPE, SPIRAL_SHAPE, FullCoreViewMode } from '../vis/full-core'
 import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
+import MineralSelect from '../components/mineral-select'
+import MineralBlend from '../components/mineral-blend'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
@@ -132,8 +133,8 @@ function App (): ReactElement {
             <div className={'interface'}>
                 <div className={'top-bar'}>
                     <ToggleSelect
-                        setValue={setShape}
                         currValue={currShape}
+                        setValue={setShape}
                         item0={{
                             value: COLUMN_SHAPE,
                             icon: <RxColumns style={{ fontSize: '20px' }} />
@@ -144,8 +145,8 @@ function App (): ReactElement {
                         }}
                     />
                     <ToggleSelect
-                        setValue={setView}
                         currValue={currView}
+                        setValue={setView}
                         item0={{
                             value: 'downscaled',
                             icon: <div className={'downscaled-icon'}></div>
@@ -185,67 +186,21 @@ function App (): ReactElement {
                         icon={verticalIcon}
                     />
                 </div>
-                <MineralSelect
-                    minerals={MINERALS}
-                    currMineral={currMineral}
-                    setMineral={setMineral}
-                    setBlending={setBlending}
-                />
+                <div className={'bottom-bar'}>
+                    <MineralSelect
+                        minerals={MINERALS}
+                        currMineral={currMineral}
+                        setMineral={setMineral}
+                    />
+                    <MineralBlend
+                        minerals={MINERALS}
+                        currMineral={currMineral}
+                        setMineral={setMineral}
+                        setBlending={setBlending}
+                    />
+                </div>
             </div>
         </main>
-    )
-}
-
-type MineralSelectProps = {
-    minerals: Array<string>,
-    currMineral: number,
-    setMineral: (i: number) => void,
-    setBlending: (m: Array<number>) => void
-}
-
-function MineralSelect (
-    { minerals, currMineral, setMineral, setBlending }: MineralSelectProps
-): ReactElement {
-    const [blendMags, setBlendMags] = useState<Array<number>>(Array(minerals.length).fill(1))
-
-    return (
-        <div className={'mineral-select'}>
-            { minerals.map((name, i) => (
-                <button
-                    key={i}
-                    data-active={i === currMineral}
-                    onClick={(): void => setMineral(i)}
-                >
-                    {name}
-                </button>
-            ))}
-            <a
-                className={'blend-button'}
-                data-active={currMineral < 0}
-                onClick={(): void => setMineral(-1)}
-            >
-                <MdColorLens />
-            </a>
-            { currMineral < 0 && <div className={'blend-menu'}>
-                { minerals.map((name, i) => (
-                    <div key={i}>
-                        <p>{name}</p>
-                        <input
-                            type={'range'}
-                            min={0}
-                            max={1}
-                            step={0.01}
-                            defaultValue={blendMags[i]}
-                            onChange={e => {
-                                blendMags[i] = e.target.valueAsNumber
-                                setBlendMags([...blendMags])
-                                setBlending(blendMags)
-                            }}
-                        />
-                    </div>
-                ))}
-            </div> }
-        </div>
     )
 }
 
