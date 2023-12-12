@@ -1,4 +1,4 @@
-import { useState, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import '../styles/mineral-blend.css'
 
@@ -14,6 +14,13 @@ function MineralBlend (
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
     const [mags, setMags] = useState<Array<number>>(Array(minerals.length).fill(1))
+
+    // close blend menu if not currently using blended output
+    useEffect(() => {
+        if (currMineral >= 0) {
+            setOpen(false)
+        }
+    }, [currMineral])
 
     return (
         <div className={'blend-menu'}>
