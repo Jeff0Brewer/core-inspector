@@ -5,27 +5,23 @@ import TexMappedCoreRenderer, { addTexTile } from '../vis/tex-full-core'
 import PunchcardCoreRenderer, { addPunchTile } from '../vis/punch-full-core'
 
 const TRANSFORM_SPEED = 1
-const BAND_WIDTH = 0.025
-const MIN_RADIUS = BAND_WIDTH * 5
-const MAX_RADIUS = 1
-const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
-
-type FullCoreViewMode = 'punchcard' | 'downscaled'
-type FullCoreShape = 'column' | 'spiral'
 const SHAPE_T_MAP = { column: 0, spiral: 1 }
+
+type FullCoreShape = 'column' | 'spiral'
+type FullCoreViewMode = 'punchcard' | 'downscaled'
 
 class FullCoreRenderer {
     texRenderer: TexMappedCoreRenderer
     punchRenderer: PunchcardCoreRenderer
     texMetadata: TileTextureMetadata
     punchMetadata: TileTextureMetadata
-    setProj: (m: mat4) => void
-    setView: (m: mat4) => void
     numMinerals: number
     currMineral: number
     viewMode: FullCoreViewMode
     targetShape: FullCoreShape
     shapeT: number
+    setProj: (m: mat4) => void
+    setView: (m: mat4) => void
 
     constructor (
         gl: WebGLRenderingContext,
@@ -35,7 +31,7 @@ class FullCoreRenderer {
         punchMetadata: TileTextureMetadata
     ) {
         if (texMetadata.numTiles !== punchMetadata.numTiles) {
-            throw new Error('Texture mapped and punchcard tile textures contain different tiles')
+            throw new Error('Downscaled and punchcard tile textures contain different tiles')
         }
 
         const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.5)
@@ -107,6 +103,11 @@ class FullCoreRenderer {
         }
     }
 }
+
+const BAND_WIDTH = 0.025
+const MIN_RADIUS = BAND_WIDTH * 5
+const MAX_RADIUS = 1
+const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
 const getFullCoreVerts = (
     texMetadata: TileTextureMetadata,
