@@ -83,7 +83,7 @@ class CoreRenderer {
         this.targetShape = shape
     }
 
-    setCurrMineral (i: number): void {
+    setMineral (i: number): void {
         this.currMineral = i
     }
 

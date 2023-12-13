@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import CoreRenderer from '../vis/core'
+import CoreRenderer, { CoreShape, CoreViewMode } from '../vis/core'
 import Camera2D from '../lib/camera'
 
 class VisRenderer {
@@ -79,22 +79,6 @@ class VisRenderer {
         }
     }
 
-    setBlending (magnitudes: Array<number>): void {
-        this.core.setBlending(this.gl, magnitudes)
-    }
-
-    setZoom (t: number): void {
-        this.camera.setZoom(t)
-    }
-
-    setCurrMineral (i: number): void {
-        this.core.setCurrMineral(i)
-    }
-
-    setCoreSpacing (horizontal: number, vertical: number): void {
-        this.core.setSpacing(this.gl, horizontal, vertical)
-    }
-
     resize (): void {
         const w = window.innerWidth * window.devicePixelRatio
         const h = window.innerHeight * window.devicePixelRatio
@@ -108,12 +92,35 @@ class VisRenderer {
         this.core.setProj(this.proj)
     }
 
+    setBlending (magnitudes: Array<number>): void {
+        this.core.setBlending(this.gl, magnitudes)
+    }
+
+    setZoom (t: number): void {
+        this.camera.setZoom(t)
+    }
+
+    setCoreMineral (i: number): void {
+        this.core.setMineral(i)
+    }
+
+    setCoreShape (s: CoreShape): void {
+        this.core.setShape(s)
+    }
+
+    setCoreViewMode (m: CoreViewMode): void {
+        this.core.setViewMode(m)
+    }
+
+    setCoreSpacing (horizontal: number, vertical: number): void {
+        this.core.setSpacing(this.gl, horizontal, vertical)
+    }
+
     draw (elapsed: number): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.core.setView(this.camera.matrix)
-
         this.core.draw(this.gl, elapsed)
     }
 }

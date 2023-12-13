@@ -15,9 +15,9 @@ type VisProps = {
 }
 
 function Vis ({ vis }: VisProps): ReactElement {
-    const [mineral, setMineral] = useVisState<number>(0, v => vis.setCurrMineral(v))
-    const [shape, setShape] = useVisState<CoreShape>('column', v => vis.core.setShape(v))
-    const [viewMode, setViewMode] = useVisState<CoreViewMode>('downscaled', v => vis.core.setViewMode(v))
+    const [mineral, setMineral] = useVisState<number>(0, v => vis.setCoreMineral(v))
+    const [shape, setShape] = useVisState<CoreShape>('column', v => vis.setCoreShape(v))
+    const [viewMode, setViewMode] = useVisState<CoreViewMode>('downscaled', v => vis.setCoreViewMode(v))
     const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => vis.setCoreSpacing(...v))
     const [zoom, setZoom] = useVisState<number>(0.7, v => vis.setZoom(v))
     const frameIdRef = useRef<number>(-1)
