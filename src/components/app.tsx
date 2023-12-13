@@ -11,18 +11,29 @@ import MineralBlend from '../components/mineral-blend'
 import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
-function App (): ReactElement {
-    const [currMineral, setCurrMineral] = useState<number>(0)
-    const [currShape, setCurrShape] = useState<FullCoreShape>('column')
-    const [currView, setCurrView] = useState<FullCoreViewMode>('downscaled')
-    const [currZoom, setCurrZoom] = useState<number>(0.7)
-    const [horizontalSpacing, setHorizontalSpacing] = useState<number>(0.5)
-    const [verticalSpacing, setVerticalSpacing] = useState<number>(0.5)
-    const [initialized, setInitialized] = useState<boolean>(false)
+function useVisState <T> (initial: T, visUpdate: (v: T) => void): [T, (v: T) => void] {
+    const [value, setValueR] = useState<T>(initial)
 
+    const setValue = (v: T): void => {
+        setValueR(v)
+        visUpdate(v)
+    }
+
+    return [value, setValue]
+}
+
+function App (): ReactElement {
     const visRef = useRef<VisRenderer | null>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const frameIdRef = useRef<number>(-1)
+
+    const [mineral, setMineral] = useVisState<number>(0, v => visRef.current?.setCurrMineral(v))
+    const [shape, setShape] = useVisState<FullCoreShape>('column', v => visRef.current?.fullCore.setShape(v))
+    const [viewMode, setViewMode] = useVisState<FullCoreViewMode>('downscaled', v => visRef.current?.fullCore.setViewMode(v))
+    const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => visRef.current?.setFullCoreSpacing(...v))
+    const [zoom, setZoom] = useVisState<number>(0.7, v => visRef.current?.setZoom(v))
+
+    const [initialized, setInitialized] = useState<boolean>(false)
 
     useEffect(() => {
         if (!canvasRef.current) {
@@ -57,9 +68,6 @@ function App (): ReactElement {
                 punchcardTextures,
                 punchcardMetadata
             )
-            setCurrMineral(visRef.current.fullCore.currMineral)
-            setCurrShape(visRef.current.fullCore.targetShape)
-            setCurrView(visRef.current.fullCore.viewMode)
             setInitialized(true)
         }
 
@@ -71,7 +79,7 @@ function App (): ReactElement {
         if (!visRef.current || !canvasRef.current) {
             throw new Error('Visualization renderer initialization failed')
         }
-        return visRef.current.setupEventListeners(canvasRef.current, setCurrZoom)
+        return visRef.current.setupEventListeners(canvasRef.current)
     }, [initialized])
 
     // start draw loop
@@ -91,54 +99,20 @@ function App (): ReactElement {
         }
     }, [])
 
-    const setMineral = (i: number): void => {
-        visRef.current?.fullCore.setCurrMineral(i)
-        setCurrMineral(i)
-    }
-
-    const setShape = (s: FullCoreShape): void => {
-        visRef.current?.fullCore.setShape(s)
-        setCurrShape(s)
-    }
-
-    const setView = (v: FullCoreViewMode): void => {
-        visRef.current?.fullCore.setViewMode(v)
-        setCurrView(v)
-    }
-
-    const setSpacingHorizontal = (s: number): void => {
-        visRef.current?.setFullCoreSpacing(s, verticalSpacing)
-        setHorizontalSpacing(s)
-    }
-
-    const setSpacingVertical = (s: number): void => {
-        visRef.current?.setFullCoreSpacing(horizontalSpacing, s)
-        setVerticalSpacing(s)
-    }
-
-    const setZoom = (t: number): void => {
-        visRef.current?.setZoom(t)
-        setCurrZoom(t)
-    }
-
-    const setBlending = (mags: Array<number>): void => {
-        visRef.current?.setBlending(mags)
-    }
-
     return (
         <main>
             <canvas ref={canvasRef}></canvas>
             <div className={'interface'}>
                 <div className={'top-bar'}>
                     <ToggleSelect
-                        currValue={currShape}
+                        currValue={shape}
                         setValue={setShape}
                         item0={{ value: 'column', icon: ICONS.column }}
                         item1={{ value: 'spiral', icon: ICONS.spiral }}
                     />
                     <ToggleSelect
-                        currValue={currView}
-                        setValue={setView}
+                        currValue={viewMode}
+                        setValue={setViewMode}
                         item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                         item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                     />
@@ -146,7 +120,7 @@ function App (): ReactElement {
                 <div className={'side-bar'}>
                     <VerticalSlider
                         setValue={v => setZoom(v)}
-                        currValue={currZoom}
+                        currValue={zoom}
                         min={0}
                         max={1}
                         step={0.01}
@@ -154,7 +128,7 @@ function App (): ReactElement {
                         icon={ICONS.zoom}
                     />
                     <VerticalSlider
-                        setValue={v => setSpacingHorizontal(v)}
+                        setValue={v => setSpacing([v, spacing[1]])}
                         currValue={0.5}
                         min={0}
                         max={1}
@@ -163,7 +137,7 @@ function App (): ReactElement {
                         icon={ICONS.horizontalDist}
                     />
                     <VerticalSlider
-                        setValue={v => setSpacingVertical(v)}
+                        setValue={v => setSpacing([spacing[0], v])}
                         currValue={0.5}
                         min={0}
                         max={1}
@@ -175,14 +149,14 @@ function App (): ReactElement {
                 <div className={'bottom-bar'}>
                     <MineralSelect
                         minerals={MINERALS}
-                        currMineral={currMineral}
+                        currMineral={mineral}
                         setMineral={setMineral}
                     />
                     <MineralBlend
                         minerals={MINERALS}
-                        currMineral={currMineral}
+                        currMineral={mineral}
                         setMineral={setMineral}
-                        setBlending={setBlending}
+                        setBlending={v => visRef.current?.setBlending(v)}
                     />
                 </div>
             </div>
