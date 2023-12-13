@@ -1,13 +1,13 @@
 import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import FullCoreRenderer from '../vis/full-core'
+import CoreRenderer from '../vis/core'
 import Camera2D from '../lib/camera'
 
 class VisRenderer {
     canvas: HTMLCanvasElement
     gl: WebGLRenderingContext
-    fullCore: FullCoreRenderer
+    core: CoreRenderer
     camera: Camera2D
     proj: mat4
 
@@ -23,7 +23,7 @@ class VisRenderer {
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
-        this.fullCore = new FullCoreRenderer(
+        this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
             downscaledMetadata,
@@ -32,7 +32,7 @@ class VisRenderer {
         )
 
         this.camera = new Camera2D([0, 0, 1], [0, 0, 0], [0, 1, 0])
-        this.fullCore.setView(this.camera.matrix)
+        this.core.setView(this.camera.matrix)
 
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -53,9 +53,9 @@ class VisRenderer {
         }
         const keydown = (e: KeyboardEvent): void => {
             if (e.key === '+') {
-                this.fullCore.punchRenderer.incPointSize(0.2)
+                this.core.punchRenderer.incPointSize(0.2)
             } else if (e.key === '-') {
-                this.fullCore.punchRenderer.incPointSize(-0.2)
+                this.core.punchRenderer.incPointSize(-0.2)
             }
         }
         const resize = (): void => {
@@ -80,7 +80,7 @@ class VisRenderer {
     }
 
     setBlending (magnitudes: Array<number>): void {
-        this.fullCore.setBlending(this.gl, magnitudes)
+        this.core.setBlending(this.gl, magnitudes)
     }
 
     setZoom (t: number): void {
@@ -88,11 +88,11 @@ class VisRenderer {
     }
 
     setCurrMineral (i: number): void {
-        this.fullCore.setCurrMineral(i)
+        this.core.setCurrMineral(i)
     }
 
-    setFullCoreSpacing (horizontal: number, vertical: number): void {
-        this.fullCore.setSpacing(this.gl, horizontal, vertical)
+    setCoreSpacing (horizontal: number, vertical: number): void {
+        this.core.setSpacing(this.gl, horizontal, vertical)
     }
 
     resize (): void {
@@ -105,16 +105,16 @@ class VisRenderer {
         this.gl.viewport(0, 0, w, h)
 
         mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
-        this.fullCore.setProj(this.proj)
+        this.core.setProj(this.proj)
     }
 
     draw (elapsed: number): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
-        this.fullCore.setView(this.camera.matrix)
+        this.core.setView(this.camera.matrix)
 
-        this.fullCore.draw(this.gl, elapsed)
+        this.core.draw(this.gl, elapsed)
     }
 }
 

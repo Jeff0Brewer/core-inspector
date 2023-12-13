@@ -3,14 +3,14 @@ import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
 import TextureBlender from '../lib/texture-blend'
-import vertSource from '../shaders/punchcard-vert.glsl?raw'
-import fragSource from '../shaders/punchcard-frag.glsl?raw'
+import vertSource from '../shaders/full-core-vert.glsl?raw'
+import fragSource from '../shaders/full-core-frag.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
-class PunchcardCoreRenderer {
+class DownscaledCoreRenderer {
     program: WebGLProgram
     buffer: WebGLBuffer
     bindAttrib: () => void
@@ -19,8 +19,6 @@ class PunchcardCoreRenderer {
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
-    setDpr: (r: number) => void
-    incPointSize: (d: number) => void
 
     numVertex: number
 
@@ -50,20 +48,9 @@ class PunchcardCoreRenderer {
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
         const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
-        const dprLoc = gl.getUniformLocation(this.program, 'dpr')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
-        this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
-
-        let pointSize = 2
-        const pointSizeLoc = gl.getUniformLocation(this.program, 'pointSize')
-        this.incPointSize = (delta: number): void => {
-            pointSize = Math.max(1, pointSize + delta)
-            gl.useProgram(this.program)
-            gl.uniform1f(pointSizeLoc, pointSize)
-        }
-        this.incPointSize(0) // init pointSize uniform
     }
 
     // generate vertices externally to coordinate alignment between
@@ -87,12 +74,14 @@ class PunchcardCoreRenderer {
             this.textureBlender.bindSource(gl, currMineral)
         }
 
-        gl.drawArrays(gl.POINTS, 0, this.numVertex)
+        gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
 }
 
-// calculate punchcard vertices for a single tile given tile position and size
-const addPunchTile = (
+const TILE_DETAIL = 8
+
+// calculate downscaled vertices for a single tile given tile position and size
+const addDownscaledTile = (
     out: Array<number>,
     rect: TileRect,
     currRadius: number,
@@ -102,36 +91,71 @@ const addPunchTile = (
     tileRadius: number,
     tileAngle: number,
     tileHeight: number,
-    bandWidth: number,
-    textureHeight: number
+    bandWidth: number
 ): void => {
-    const numRows = Math.round(rect.height * textureHeight)
-    const angleInc = tileAngle / numRows
-    const radiusInc = tileRadius / numRows
-    const colYInc = tileHeight / numRows
+    const angleInc = tileAngle / TILE_DETAIL
+    const radiusInc = tileRadius / TILE_DETAIL
+    const yInc = rect.height / TILE_DETAIL
+    const colYInc = tileHeight / TILE_DETAIL
 
+    let angle = currAngle
+    let radius = currRadius
     const colX = currColX
     let colY = currColY
 
-    let radius = currRadius
-    let angle = currAngle
-    for (let i = 0; i < numRows; i++, radius += radiusInc, angle += angleInc, colY -= colYInc) {
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
-        const startRadius = radius - bandWidth * 0.5
-        for (let p = 0; p < 3; p++) {
-            const bandAcross = bandWidth * (p + 0.5) / 3
-            out.push(
-                cos * (startRadius + bandAcross),
-                sin * (startRadius + bandAcross),
-                colX + bandAcross,
-                colY,
-                rect.left + rect.width * p / 3,
-                rect.top + rect.height * i / numRows
-            )
-        }
+    let i = 0
+    while (i < TILE_DETAIL) {
+        const inner = [
+            Math.cos(angle) * (radius - bandWidth * 0.5),
+            Math.sin(angle) * (radius - bandWidth * 0.5),
+            colX,
+            colY,
+            rect.left,
+            rect.top + yInc * i
+        ]
+
+        const outer = [
+            Math.cos(angle) * (radius + bandWidth * 0.5),
+            Math.sin(angle) * (radius + bandWidth * 0.5),
+            colX + bandWidth,
+            colY,
+            rect.left + rect.width,
+            rect.top + yInc * i
+        ]
+
+        i += 1
+        radius += radiusInc
+        angle += angleInc
+        colY -= colYInc
+
+        const nextInner = [
+            Math.cos(angle) * (radius - bandWidth * 0.5),
+            Math.sin(angle) * (radius - bandWidth * 0.5),
+            colX,
+            colY,
+            rect.left,
+            rect.top + yInc * i
+        ]
+
+        const nextOuter = [
+            Math.cos(angle) * (radius + bandWidth * 0.5),
+            Math.sin(angle) * (radius + bandWidth * 0.5),
+            colX + bandWidth,
+            colY,
+            rect.left + rect.width,
+            rect.top + yInc * i
+        ]
+
+        out.push(
+            ...inner,
+            ...outer,
+            ...nextOuter,
+            ...nextOuter,
+            ...nextInner,
+            ...inner
+        )
     }
 }
 
-export default PunchcardCoreRenderer
-export { addPunchTile }
+export default DownscaledCoreRenderer
+export { addDownscaledTile }

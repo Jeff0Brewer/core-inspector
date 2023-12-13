@@ -1,62 +1,62 @@
 import { mat4 } from 'gl-matrix'
 import { clamp } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import TexMappedCoreRenderer, { addTexTile } from '../vis/tex-full-core'
-import PunchcardCoreRenderer, { addPunchTile } from '../vis/punch-full-core'
+import DownscaledCoreRenderer, { addDownscaledTile } from '../vis/downscaled-core'
+import PunchcardCoreRenderer, { addPunchcardTile } from '../vis/punchcard-core'
 
 const TRANSFORM_SPEED = 1
 const SHAPE_T_MAP = { column: 0, spiral: 1 }
 
-type FullCoreShape = 'column' | 'spiral'
-type FullCoreViewMode = 'punchcard' | 'downscaled'
+type CoreShape = 'column' | 'spiral'
+type CoreViewMode = 'punchcard' | 'downscaled'
 
-class FullCoreRenderer {
-    texRenderer: TexMappedCoreRenderer
+class CoreRenderer {
+    downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
-    texMetadata: TileTextureMetadata
+    downMetadata: TileTextureMetadata
     punchMetadata: TileTextureMetadata
     numMinerals: number
     currMineral: number
-    viewMode: FullCoreViewMode
-    targetShape: FullCoreShape
+    viewMode: CoreViewMode
+    targetShape: CoreShape
     shapeT: number
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
 
     constructor (
         gl: WebGLRenderingContext,
-        texMineralMaps: Array<HTMLImageElement>,
-        texMetadata: TileTextureMetadata,
+        downMineralMaps: Array<HTMLImageElement>,
+        downMetadata: TileTextureMetadata,
         punchMineralMaps: Array<HTMLImageElement>,
         punchMetadata: TileTextureMetadata
     ) {
-        if (texMetadata.numTiles !== punchMetadata.numTiles) {
+        if (downMetadata.numTiles !== punchMetadata.numTiles) {
             throw new Error('Downscaled and punchcard tile textures contain different tiles')
         }
 
-        const { texVerts, punchVerts } = getFullCoreVerts(texMetadata, punchMetadata, 0.5, 0.5)
-        this.texRenderer = new TexMappedCoreRenderer(gl, texMineralMaps, texVerts)
+        const { downVerts, punchVerts } = getCoreVerts(downMetadata, punchMetadata, 0.5, 0.5)
+        this.downRenderer = new DownscaledCoreRenderer(gl, downMineralMaps, downVerts)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
-        this.texMetadata = texMetadata
+        this.downMetadata = downMetadata
         this.punchMetadata = punchMetadata
 
         this.setProj = (m: mat4): void => {
-            gl.useProgram(this.texRenderer.program)
-            this.texRenderer.setProj(m)
+            gl.useProgram(this.downRenderer.program)
+            this.downRenderer.setProj(m)
             gl.useProgram(this.punchRenderer.program)
             this.punchRenderer.setProj(m)
             this.punchRenderer.setDpr(window.devicePixelRatio)
         }
 
         this.setView = (m: mat4): void => {
-            gl.useProgram(this.texRenderer.program)
-            this.texRenderer.setView(m)
+            gl.useProgram(this.downRenderer.program)
+            this.downRenderer.setView(m)
             gl.useProgram(this.punchRenderer.program)
             this.punchRenderer.setView(m)
         }
 
         this.currMineral = 0
-        this.numMinerals = texMineralMaps.length - 1
+        this.numMinerals = downMineralMaps.length - 1
 
         this.viewMode = 'downscaled'
         this.targetShape = 'column'
@@ -64,22 +64,22 @@ class FullCoreRenderer {
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
-        this.texRenderer.textureBlender.update(gl, magnitudes)
+        this.downRenderer.textureBlender.update(gl, magnitudes)
         this.punchRenderer.textureBlender.update(gl, magnitudes)
     }
 
     setSpacing (gl: WebGLRenderingContext, horizontal: number, vertical: number): void {
-        const { texVerts, punchVerts } = getFullCoreVerts(
-            this.texMetadata,
+        const { downVerts, punchVerts } = getCoreVerts(
+            this.downMetadata,
             this.punchMetadata,
             horizontal,
             vertical
         )
-        this.texRenderer.setVerts(gl, texVerts)
+        this.downRenderer.setVerts(gl, downVerts)
         this.punchRenderer.setVerts(gl, punchVerts)
     }
 
-    setShape (shape: FullCoreShape): void {
+    setShape (shape: CoreShape): void {
         this.targetShape = shape
     }
 
@@ -87,7 +87,7 @@ class FullCoreRenderer {
         this.currMineral = i
     }
 
-    setViewMode (v: FullCoreViewMode): void {
+    setViewMode (v: CoreViewMode): void {
         this.viewMode = v
     }
 
@@ -97,7 +97,7 @@ class FullCoreRenderer {
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
         if (this.viewMode === 'downscaled') {
-            this.texRenderer.draw(gl, this.currMineral, this.shapeT)
+            this.downRenderer.draw(gl, this.currMineral, this.shapeT)
         } else {
             this.punchRenderer.draw(gl, this.currMineral, this.shapeT)
         }
@@ -109,20 +109,20 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
-const getFullCoreVerts = (
-    texMetadata: TileTextureMetadata,
+const getCoreVerts = (
+    downMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
     horizontalSpacing: number,
     verticalSpacing: number
 ): {
-    texVerts: Float32Array,
+    downVerts: Float32Array,
     punchVerts: Float32Array
 } => {
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
     const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
-    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * texMetadata.numTiles
+    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * downMetadata.numTiles
 
-    const texVerts: Array<number> = []
+    const downVerts: Array<number> = []
     const punchVerts: Array<number> = []
 
     let radius = MIN_RADIUS
@@ -130,11 +130,11 @@ const getFullCoreVerts = (
     let colX = -1
     let colY = 1
 
-    for (let i = 0; i < texMetadata.numTiles; i++) {
-        const texRect = texMetadata.tiles[i]
+    for (let i = 0; i < downMetadata.numTiles; i++) {
+        const downRect = downMetadata.tiles[i]
         const punchRect = punchMetadata.tiles[i]
 
-        const tileHeight = BAND_WIDTH * (texRect.height / texRect.width)
+        const tileHeight = BAND_WIDTH * (downRect.height / downRect.width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
@@ -143,9 +143,9 @@ const getFullCoreVerts = (
             colY = 1
         }
 
-        addTexTile(
-            texVerts,
-            texRect,
+        addDownscaledTile(
+            downVerts,
+            downRect,
             radius,
             angle,
             colX,
@@ -156,7 +156,7 @@ const getFullCoreVerts = (
             BAND_WIDTH
         )
 
-        addPunchTile(
+        addPunchcardTile(
             punchVerts,
             punchRect,
             radius,
@@ -176,13 +176,13 @@ const getFullCoreVerts = (
     }
 
     return {
-        texVerts: new Float32Array(texVerts),
+        downVerts: new Float32Array(downVerts),
         punchVerts: new Float32Array(punchVerts)
     }
 }
 
-export default FullCoreRenderer
+export default CoreRenderer
 export type {
-    FullCoreViewMode,
-    FullCoreShape
+    CoreViewMode,
+    CoreShape
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
-import { FullCoreViewMode, FullCoreShape } from '../vis/full-core'
+import { CoreViewMode, CoreShape } from '../vis/core'
 import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
@@ -16,18 +16,16 @@ type VisProps = {
 
 function Vis ({ vis }: VisProps): ReactElement {
     const [mineral, setMineral] = useVisState<number>(0, v => vis.setCurrMineral(v))
-    const [shape, setShape] = useVisState<FullCoreShape>('column', v => vis.fullCore.setShape(v))
-    const [viewMode, setViewMode] = useVisState<FullCoreViewMode>('downscaled', v => vis.fullCore.setViewMode(v))
-    const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => vis.setFullCoreSpacing(...v))
+    const [shape, setShape] = useVisState<CoreShape>('column', v => vis.core.setShape(v))
+    const [viewMode, setViewMode] = useVisState<CoreViewMode>('downscaled', v => vis.core.setViewMode(v))
+    const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => vis.setCoreSpacing(...v))
     const [zoom, setZoom] = useVisState<number>(0.7, v => vis.setZoom(v))
-
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {
         return vis.setupEventListeners()
     }, [vis])
 
-    // start draw loop
     useEffect(() => {
         let lastT = 0
         const tick = (t: number): void => {
@@ -35,7 +33,6 @@ function Vis ({ vis }: VisProps): ReactElement {
             lastT = t
 
             vis.draw(elapsed)
-
             frameIdRef.current = window.requestAnimationFrame(tick)
         }
 
