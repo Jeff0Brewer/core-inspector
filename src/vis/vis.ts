@@ -32,7 +32,7 @@ class VisRenderer {
         )
 
         this.camera = new Camera2D([0, 0, 1], [0, 0, 0], [0, 1, 0])
-        this.core.setView(this.camera.matrix)
+        this.core.setView(this.gl, this.camera.matrix)
 
         this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -90,7 +90,7 @@ class VisRenderer {
         this.gl.viewport(0, 0, w, h)
 
         mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
-        this.core.setProj(this.proj)
+        this.core.setProj(this.gl, this.proj)
     }
 
     setBlending (magnitudes: Array<number>): void {
@@ -121,7 +121,7 @@ class VisRenderer {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
-        this.core.setView(this.camera.matrix)
+        this.core.setView(this.gl, this.camera.matrix)
         this.core.draw(this.gl, elapsed)
     }
 }

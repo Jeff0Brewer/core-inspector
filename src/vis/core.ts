@@ -20,8 +20,6 @@ class CoreRenderer {
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
-    setProj: (m: mat4) => void
-    setView: (m: mat4) => void
 
     constructor (
         gl: WebGLRenderingContext,
@@ -40,27 +38,41 @@ class CoreRenderer {
         this.downMetadata = downMetadata
         this.punchMetadata = punchMetadata
 
-        this.setProj = (m: mat4): void => {
-            gl.useProgram(this.downRenderer.program)
-            this.downRenderer.setProj(m)
-            gl.useProgram(this.punchRenderer.program)
-            this.punchRenderer.setProj(m)
-            this.punchRenderer.setDpr(window.devicePixelRatio)
-        }
-
-        this.setView = (m: mat4): void => {
-            gl.useProgram(this.downRenderer.program)
-            this.downRenderer.setView(m)
-            gl.useProgram(this.punchRenderer.program)
-            this.punchRenderer.setView(m)
-        }
-
         this.currMineral = 0
         this.numMinerals = downMineralMaps.length - 1
 
         this.viewMode = 'downscaled'
         this.targetShape = 'column'
         this.shapeT = SHAPE_T_MAP[this.targetShape]
+    }
+
+    setProj (gl: WebGLRenderingContext, m: mat4): void {
+        gl.useProgram(this.downRenderer.program)
+        this.downRenderer.setProj(m)
+
+        gl.useProgram(this.punchRenderer.program)
+        this.punchRenderer.setProj(m)
+        this.punchRenderer.setDpr(window.devicePixelRatio)
+    }
+
+    setView (gl: WebGLRenderingContext, m: mat4): void {
+        gl.useProgram(this.downRenderer.program)
+        this.downRenderer.setView(m)
+
+        gl.useProgram(this.punchRenderer.program)
+        this.punchRenderer.setView(m)
+    }
+
+    setShape (shape: CoreShape): void {
+        this.targetShape = shape
+    }
+
+    setMineral (i: number): void {
+        this.currMineral = i
+    }
+
+    setViewMode (v: CoreViewMode): void {
+        this.viewMode = v
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
@@ -77,18 +89,6 @@ class CoreRenderer {
         )
         this.downRenderer.setVerts(gl, downVerts)
         this.punchRenderer.setVerts(gl, punchVerts)
-    }
-
-    setShape (shape: CoreShape): void {
-        this.targetShape = shape
-    }
-
-    setMineral (i: number): void {
-        this.currMineral = i
-    }
-
-    setViewMode (v: CoreViewMode): void {
-        this.viewMode = v
     }
 
     draw (gl: WebGLRenderingContext, elapsed: number): void {
