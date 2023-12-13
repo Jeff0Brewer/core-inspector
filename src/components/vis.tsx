@@ -19,12 +19,14 @@ function Vis ({ vis }: VisProps): ReactElement {
     const [shape, setShape] = useVisState<CoreShape>('column', v => vis.setCoreShape(v))
     const [viewMode, setViewMode] = useVisState<CoreViewMode>('downscaled', v => vis.setCoreViewMode(v))
     const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => vis.setCoreSpacing(...v))
-    const [zoom, setZoom] = useVisState<number>(0.7, v => vis.setZoom(v))
+    const [zoom, setZoom, setZoomReact] = useVisState<number>(0.7, v => vis.setZoom(v))
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {
-        return vis.setupEventListeners()
-    }, [vis])
+        // use react only state setters since visualization state
+        // already set inside event listener
+        return vis.setupEventListeners(setZoomReact)
+    }, [vis, setZoomReact])
 
     useEffect(() => {
         let lastT = 0
@@ -107,15 +109,18 @@ function Vis ({ vis }: VisProps): ReactElement {
 // hook to coordinate react and visualization state
 // calls visUpdate closure with new state value on any call to setValue
 // ensuring that visualization is updated at same time as react state
-function useVisState <T> (initial: T, visUpdate: (v: T) => void): [T, (v: T) => void] {
-    const [value, setValueR] = useState<T>(initial)
+//
+// also provides react only state setter which is useful when mutating
+// state from inside visualization renderer
+function useVisState <T> (initial: T, visUpdate: (v: T) => void): [T, (v: T) => void, (v: T) => void] {
+    const [value, setValueReact] = useState<T>(initial)
 
     const setValue = (v: T): void => {
-        setValueR(v)
+        setValueReact(v)
         visUpdate(v)
     }
 
-    return [value, setValue]
+    return [value, setValue, setValueReact]
 }
 
 const MINERALS = [

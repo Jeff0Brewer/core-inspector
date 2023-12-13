@@ -38,7 +38,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
-    setupEventListeners (): (() => void) {
+    setupEventListeners (setZoom: (z: number) => void): (() => void) {
         let dragging = false
         const mousedown = (): void => { dragging = true }
         const mouseup = (): void => { dragging = false }
@@ -50,6 +50,7 @@ class VisRenderer {
         }
         const wheel = (e: WheelEvent): void => {
             this.camera.zoom(e.deltaY)
+            setZoom(this.camera.getZoom())
         }
         const keydown = (e: KeyboardEvent): void => {
             if (e.key === '+') {
