@@ -46,6 +46,18 @@ class CoreRenderer {
         this.shapeT = SHAPE_T_MAP[this.targetShape]
     }
 
+    setShape (shape: CoreShape): void {
+        this.targetShape = shape
+    }
+
+    setMineral (i: number): void {
+        this.currMineral = i
+    }
+
+    setViewMode (v: CoreViewMode): void {
+        this.viewMode = v
+    }
+
     setProj (gl: WebGLRenderingContext, m: mat4): void {
         gl.useProgram(this.downRenderer.program)
         this.downRenderer.setProj(m)
@@ -61,18 +73,6 @@ class CoreRenderer {
 
         gl.useProgram(this.punchRenderer.program)
         this.punchRenderer.setView(m)
-    }
-
-    setShape (shape: CoreShape): void {
-        this.targetShape = shape
-    }
-
-    setMineral (i: number): void {
-        this.currMineral = i
-    }
-
-    setViewMode (v: CoreViewMode): void {
-        this.viewMode = v
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
@@ -109,6 +109,8 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
+// calculate vertices for downsampled and punchcard
+// representations at the same time to simplify alignment
 const getCoreVerts = (
     downMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
