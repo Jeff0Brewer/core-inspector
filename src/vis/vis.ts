@@ -38,7 +38,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
-    setupEventListeners (element: HTMLElement): (() => void) {
+    setupEventListeners (): (() => void) {
         let dragging = false
         const mousedown = (): void => { dragging = true }
         const mouseup = (): void => { dragging = false }
@@ -62,18 +62,18 @@ class VisRenderer {
             this.resize()
         }
 
-        element.addEventListener('mousedown', mousedown)
-        element.addEventListener('mouseup', mouseup)
-        element.addEventListener('mouseleave', mouseleave)
-        element.addEventListener('mousemove', mousemove)
-        element.addEventListener('wheel', wheel, { passive: true })
+        this.canvas.addEventListener('mousedown', mousedown)
+        this.canvas.addEventListener('mouseup', mouseup)
+        this.canvas.addEventListener('mouseleave', mouseleave)
+        this.canvas.addEventListener('mousemove', mousemove)
+        this.canvas.addEventListener('wheel', wheel, { passive: true })
         window.addEventListener('keydown', keydown)
         window.addEventListener('resize', resize)
         return (): void => {
-            element.removeEventListener('mousedown', mousedown)
-            element.removeEventListener('mouseup', mouseup)
-            element.removeEventListener('mouseleave', mouseleave)
-            element.removeEventListener('wheel', wheel)
+            this.canvas.removeEventListener('mousedown', mousedown)
+            this.canvas.removeEventListener('mouseup', mouseup)
+            this.canvas.removeEventListener('mouseleave', mouseleave)
+            this.canvas.removeEventListener('wheel', wheel)
             window.removeEventListener('keydown', keydown)
             window.removeEventListener('resize', resize)
         }
