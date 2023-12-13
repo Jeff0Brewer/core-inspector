@@ -104,6 +104,9 @@ function Vis ({ vis }: VisProps): ReactElement {
     )
 }
 
+// hook to coordinate react and visualization state
+// calls visUpdate closure with new state value on any call to setValue
+// ensuring that visualization is updated at same time as react state
 function useVisState <T> (initial: T, visUpdate: (v: T) => void): [T, (v: T) => void] {
     const [value, setValueR] = useState<T>(initial)
 
@@ -115,6 +118,16 @@ function useVisState <T> (initial: T, visUpdate: (v: T) => void): [T, (v: T) => 
     return [value, setValue]
 }
 
+const MINERALS = [
+    'chlorite',
+    'epidote',
+    'prehnite',
+    'zeolite',
+    'amphibole',
+    'pyroxene',
+    'gypsum'
+]
+
 // TODO: get new icons for horizontal / vertical dist
 const ICONS = {
     column: <RxColumns style={{ fontSize: '20px' }} />,
@@ -125,15 +138,5 @@ const ICONS = {
     horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
     verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
-
-const MINERALS = [
-    'chlorite',
-    'epidote',
-    'prehnite',
-    'zeolite',
-    'amphibole',
-    'pyroxene',
-    'gypsum'
-]
 
 export default Vis
