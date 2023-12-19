@@ -1,4 +1,5 @@
 import { mat4 } from 'gl-matrix'
+import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { MineralSettings } from '../vis/mineral-blend'
@@ -13,8 +14,7 @@ type VisSettings = {
 
 const VIS_DEFAULTS: VisSettings = {
     core: {
-        horizontalSpacing: 0.5,
-        verticalSpacing: 0.5,
+        spacing: [0.5, 0.5],
         viewMode: 'downscaled',
         shape: 'column',
         pointSize: 2
@@ -26,6 +26,12 @@ const VIS_DEFAULTS: VisSettings = {
     camera: {
         zoom: 0.7
     }
+}
+
+const PROJECTION_PARAMS = {
+    fov: 0.5 * Math.PI,
+    near: 0.01,
+    far: 5
 }
 
 class VisRenderer {
@@ -48,20 +54,29 @@ class VisRenderer {
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
+        this.camera = new Camera2D(
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 1, 0],
+            VIS_DEFAULTS.camera.zoom
+        )
+        const aspect = window.innerWidth / window.innerHeight
+        const { fov, near, far } = PROJECTION_PARAMS
+        this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
+
+        const bounds = this.getUnprojectedViewportBounds()
         this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
             downscaledMetadata,
             punchcardMaps,
             punchcardMetadata,
+            bounds,
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral
         )
-
-        this.camera = new Camera2D([0, 0, 0], [0, 0, 1], [0, 1, 0], VIS_DEFAULTS.camera.zoom)
         this.core.setView(this.gl, this.camera.matrix)
 
-        this.proj = mat4.create()
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
@@ -85,8 +100,21 @@ class VisRenderer {
         this.core.setViewMode(m)
     }
 
-    setCoreSpacing (horizontal: number, vertical: number): void {
-        this.core.setSpacing(this.gl, horizontal, vertical)
+    setCoreSpacing (spacing: [number, number]): void {
+        const bounds = this.getUnprojectedViewportBounds()
+        this.core.setSpacing(this.gl, spacing, bounds)
+    }
+
+    getUnprojectedViewportBounds (): BoundRect {
+        const { fov } = PROJECTION_PARAMS
+        const heightBound = Math.tan(fov * 0.5) * this.camera.getFocusDistance()
+        const widthBound = this.canvas.width / this.canvas.height * heightBound
+        return {
+            top: heightBound,
+            bottom: -heightBound,
+            left: -widthBound,
+            right: widthBound
+        }
     }
 
     resize (): void {
@@ -98,7 +126,10 @@ class VisRenderer {
 
         this.gl.viewport(0, 0, w, h)
 
-        mat4.perspective(this.proj, 0.5 * Math.PI, w / h, 0.01, 5)
+        const aspect = w / h
+        const { fov, near, far } = PROJECTION_PARAMS
+        mat4.perspective(this.proj, fov, aspect, near, far)
+
         this.core.setProj(this.gl, this.proj)
     }
 

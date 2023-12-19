@@ -7,7 +7,12 @@ const clamp = (v: number, min: number, max: number): number => {
     return Math.max(Math.min(v, max), min)
 }
 
-export {
-    ease,
-    clamp
+type BoundRect = {
+    top: number,
+    bottom: number,
+    left: number,
+    right: number
 }
+
+export { ease, clamp }
+export type { BoundRect }

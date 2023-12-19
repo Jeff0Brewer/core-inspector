@@ -28,8 +28,8 @@ function Vis ({ vis }: VisProps): ReactElement {
         v => vis.setCoreViewMode(v)
     )
     const [spacing, setSpacing] = useVisState<[number, number]>(
-        [VIS_DEFAULTS.core.horizontalSpacing, VIS_DEFAULTS.core.verticalSpacing],
-        v => vis.setCoreSpacing(...v)
+        VIS_DEFAULTS.core.spacing,
+        v => vis.setCoreSpacing(v)
     )
     const [zoom, setZoom, setZoomReact] = useVisState<number>(
         VIS_DEFAULTS.camera.zoom,

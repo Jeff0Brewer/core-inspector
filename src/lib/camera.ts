@@ -35,6 +35,10 @@ class Camera2D {
         this.zoomT = zoomT
     }
 
+    getFocusDistance (): number {
+        return this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
+    }
+
     setZoom (t: number): void {
         this.zoomT = clamp(t, 0, 1)
         const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM

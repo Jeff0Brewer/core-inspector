@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { clamp } from '../lib/util'
+import { clamp, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, { addDownscaledTile } from '../vis/downscaled-core'
@@ -11,8 +11,7 @@ const SHAPE_T_MAP = { column: 0, spiral: 1 }
 type CoreShape = 'column' | 'spiral'
 type CoreViewMode = 'punchcard' | 'downscaled'
 type CoreSettings = {
-    horizontalSpacing: number,
-    verticalSpacing: number,
+    spacing: [number, number],
     viewMode: CoreViewMode,
     shape: CoreShape,
     pointSize: number
@@ -35,6 +34,7 @@ class CoreRenderer {
         downMetadata: TileTextureMetadata,
         punchMineralMaps: Array<HTMLImageElement>,
         punchMetadata: TileTextureMetadata,
+        bounds: BoundRect,
         coreSettings: CoreSettings,
         mineralSettings: MineralSettings
     ) {
@@ -45,8 +45,8 @@ class CoreRenderer {
         const { downVerts, punchVerts } = getCoreVerts(
             downMetadata,
             punchMetadata,
-            coreSettings.horizontalSpacing,
-            coreSettings.verticalSpacing
+            coreSettings.spacing,
+            bounds
         )
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
@@ -102,12 +102,16 @@ class CoreRenderer {
         this.punchRenderer.minerals.update(gl, magnitudes)
     }
 
-    setSpacing (gl: WebGLRenderingContext, horizontal: number, vertical: number): void {
+    setSpacing (
+        gl: WebGLRenderingContext,
+        spacing: [number, number],
+        bounds: BoundRect
+    ): void {
         const { downVerts, punchVerts } = getCoreVerts(
             this.downMetadata,
             this.punchMetadata,
-            horizontal,
-            vertical
+            spacing,
+            bounds
         )
         this.downRenderer.setVerts(gl, downVerts)
         this.punchRenderer.setVerts(gl, punchVerts)
@@ -136,12 +140,13 @@ const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 const getCoreVerts = (
     downMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
-    horizontalSpacing: number,
-    verticalSpacing: number
+    spacing: [number, number],
+    bounds: BoundRect
 ): {
     downVerts: Float32Array,
     punchVerts: Float32Array
 } => {
+    const [horizontalSpacing, verticalSpacing] = spacing
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
     const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
     const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * downMetadata.numTiles
@@ -151,8 +156,8 @@ const getCoreVerts = (
 
     let radius = MIN_RADIUS
     let angle = 0
-    let colX = -1
-    let colY = 1
+    let colX = bounds.left
+    let colY = bounds.top
 
     for (let i = 0; i < downMetadata.numTiles; i++) {
         const downRect = downMetadata.tiles[i]
@@ -162,9 +167,9 @@ const getCoreVerts = (
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
-        if (colY - tileHeight <= -1) {
+        if (colY - tileHeight <= bounds.bottom) {
             colX += BAND_WIDTH * (1 + horizontalSpacing)
-            colY = 1
+            colY = bounds.top
         }
 
         addDownscaledTile(
