@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { clamp } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
+import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, { addDownscaledTile } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, { addPunchcardTile } from '../vis/punchcard-core'
 
@@ -9,6 +10,13 @@ const SHAPE_T_MAP = { column: 0, spiral: 1 }
 
 type CoreShape = 'column' | 'spiral'
 type CoreViewMode = 'punchcard' | 'downscaled'
+type CoreSettings = {
+    horizontalSpacing: number,
+    verticalSpacing: number,
+    viewMode: CoreViewMode,
+    shape: CoreShape,
+    pointSize: number
+}
 
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
@@ -26,23 +34,37 @@ class CoreRenderer {
         downMineralMaps: Array<HTMLImageElement>,
         downMetadata: TileTextureMetadata,
         punchMineralMaps: Array<HTMLImageElement>,
-        punchMetadata: TileTextureMetadata
+        punchMetadata: TileTextureMetadata,
+        coreSettings: CoreSettings,
+        mineralSettings: MineralSettings
     ) {
         if (downMetadata.numTiles !== punchMetadata.numTiles) {
             throw new Error('Downscaled and punchcard tile textures contain different tiles')
         }
 
-        const { downVerts, punchVerts } = getCoreVerts(downMetadata, punchMetadata, 0.5, 0.5)
-        this.downRenderer = new DownscaledCoreRenderer(gl, downMineralMaps, downVerts)
-        this.punchRenderer = new PunchcardCoreRenderer(gl, punchMineralMaps, punchVerts)
+        const { downVerts, punchVerts } = getCoreVerts(
+            downMetadata,
+            punchMetadata,
+            coreSettings.horizontalSpacing,
+            coreSettings.verticalSpacing
+        )
+        const downBlender = new MineralBlender(gl, downMineralMaps)
+        const punchBlender = new MineralBlender(gl, punchMineralMaps)
+        const defaultBlendMags = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
+        downBlender.update(gl, defaultBlendMags)
+        punchBlender.update(gl, defaultBlendMags)
+
+        this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downVerts)
+        this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchVerts)
+
         this.downMetadata = downMetadata
         this.punchMetadata = punchMetadata
 
-        this.currMineral = 0
-        this.numMinerals = downMineralMaps.length - 1
+        this.currMineral = mineralSettings.index
+        this.viewMode = coreSettings.viewMode
+        this.targetShape = coreSettings.shape
 
-        this.viewMode = 'downscaled'
-        this.targetShape = 'column'
+        this.numMinerals = downMineralMaps.length - 1
         this.shapeT = SHAPE_T_MAP[this.targetShape]
     }
 
@@ -76,8 +98,8 @@ class CoreRenderer {
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
-        this.downRenderer.textureBlender.update(gl, magnitudes)
-        this.punchRenderer.textureBlender.update(gl, magnitudes)
+        this.downRenderer.minerals.update(gl, magnitudes)
+        this.punchRenderer.minerals.update(gl, magnitudes)
     }
 
     setSpacing (gl: WebGLRenderingContext, horizontal: number, vertical: number): void {
@@ -186,5 +208,6 @@ const getCoreVerts = (
 export default CoreRenderer
 export type {
     CoreViewMode,
-    CoreShape
+    CoreShape,
+    CoreSettings
 }

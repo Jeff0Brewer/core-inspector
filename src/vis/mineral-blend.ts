@@ -1,17 +1,31 @@
-import { initProgram, initBuffer, initTextureFramebuffer, initTexture, initAttribute, getTextureAttachments } from '../lib/gl-wrap'
-import vertSource from '../shaders/blend-vert.glsl?raw'
+import {
+    initProgram,
+    initBuffer,
+    initTextureFramebuffer,
+    initTexture,
+    initAttribute,
+    getTextureAttachments
+} from '../lib/gl-wrap'
+import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
+const BLENDED_IND = -1
 
-class TextureBlender {
+type MineralSettings = {
+    index: number,
+    blendMagnitude: 1
+}
+
+class MineralBlender {
     program: WebGLProgram
     buffer: WebGLBuffer
     bindAttrib: () => void
     textureAttachments: Array<number>
-    sourceTextures: Array<WebGLTexture>
-    texture: WebGLTexture
+
+    sources: Array<WebGLTexture>
+    blended: WebGLTexture
     framebuffer: WebGLFramebuffer
 
     setMagUniform: Array<(v: number) => void>
@@ -39,22 +53,22 @@ class TextureBlender {
             bindTexCoord()
         }
 
-        // get attachments for source textures
-        // remove attachment 0 since it's used for the output texture
+        // get attachments for source textures and output,
+        // first attachment reserved for output texture
         this.textureAttachments = getTextureAttachments(gl, sources.length + 1)
-        this.textureAttachments.shift()
 
-        this.sourceTextures = []
+        this.sources = []
         for (let i = 0; i < sources.length; i++) {
-            gl.activeTexture(this.textureAttachments[i])
+            // add one to attachment ind to skip output attachment
+            gl.activeTexture(this.textureAttachments[i + 1])
             const texture = initTexture(gl)
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, sources[i])
-            this.sourceTextures.push(texture)
+            this.sources.push(texture)
         }
 
         // init texture framebuffer of same size as source textures for blended output
         const { texture, framebuffer } = initTextureFramebuffer(gl, this.width, this.height)
-        this.texture = texture
+        this.blended = texture
         this.framebuffer = framebuffer
 
         this.setMagUniform = []
@@ -67,25 +81,23 @@ class TextureBlender {
 
             // get closures to set each magnitude uniform easily on update
             const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
-            gl.uniform1f(magnitudeLoc, 1)
             this.setMagUniform.push((v: number) => {
                 gl.uniform1f(magnitudeLoc, v)
             })
         }
     }
 
-    bindSource (gl: WebGLRenderingContext, i: number): void {
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, this.sourceTextures[i])
-    }
-
-    bindBlended (gl: WebGLRenderingContext): void {
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, this.texture)
+    bind (gl: WebGLRenderingContext, i: number): void {
+        gl.activeTexture(this.textureAttachments[0])
+        if (i === BLENDED_IND) {
+            gl.bindTexture(gl.TEXTURE_2D, this.blended)
+        } else {
+            gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
+        }
     }
 
     update (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
-        if (magnitudes.length < this.sourceTextures.length) {
+        if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
         }
 
@@ -95,10 +107,9 @@ class TextureBlender {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
-        for (let i = 0; i < this.sourceTextures.length; i++) {
-            gl.activeTexture(this.textureAttachments[i])
-            gl.bindTexture(gl.TEXTURE_2D, this.sourceTextures[i])
-
+        for (let i = 0; i < this.sources.length; i++) {
+            gl.activeTexture(this.textureAttachments[i + 1])
+            gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
             this.setMagUniform[i](magnitudes[i])
         }
 
@@ -163,4 +174,5 @@ const COLORS = [
     [0.8, 0.8, 0.8]
 ]
 
-export default TextureBlender
+export default MineralBlender
+export type { MineralSettings }

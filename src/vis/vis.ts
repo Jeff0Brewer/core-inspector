@@ -1,8 +1,28 @@
 import { mat4 } from 'gl-matrix'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import CoreRenderer, { CoreShape, CoreViewMode } from '../vis/core'
+import { MineralSettings } from '../vis/mineral-blend'
+import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
 import Camera2D from '../lib/camera'
+
+type VisSettings = {
+    core: CoreSettings,
+    mineral: MineralSettings
+}
+
+const VIS_DEFAULTS: VisSettings = {
+    core: {
+        horizontalSpacing: 0.5,
+        verticalSpacing: 0.5,
+        viewMode: 'downscaled',
+        shape: 'column',
+        pointSize: 2
+    },
+    mineral: {
+        index: 0,
+        blendMagnitude: 1
+    }
+}
 
 class VisRenderer {
     canvas: HTMLCanvasElement
@@ -29,7 +49,9 @@ class VisRenderer {
             downscaledMaps,
             downscaledMetadata,
             punchcardMaps,
-            punchcardMetadata
+            punchcardMetadata,
+            VIS_DEFAULTS.core,
+            VIS_DEFAULTS.mineral
         )
 
         this.camera = new Camera2D([0, 0, 1], [0, 0, 0], [0, 1, 0])

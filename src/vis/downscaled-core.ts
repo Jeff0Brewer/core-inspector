@@ -2,7 +2,7 @@ import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { TileRect } from '../lib/tile-texture'
-import TextureBlender from '../lib/texture-blend'
+import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/full-core-vert.glsl?raw'
 import fragSource from '../shaders/full-core-frag.glsl?raw'
 
@@ -11,30 +11,27 @@ const TEX_FPV = 2
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 class DownscaledCoreRenderer {
+    minerals: MineralBlender
     program: WebGLProgram
     buffer: WebGLBuffer
     bindAttrib: () => void
-    textureBlender: TextureBlender
-
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
-
     numVertex: number
 
     constructor (
         gl: WebGLRenderingContext,
-        mineralMaps: Array<HTMLImageElement>,
+        minerals: MineralBlender,
         vertices: Float32Array
     ) {
+        this.minerals = minerals
+
         this.program = initProgram(gl, vertSource, fragSource)
 
         this.numVertex = vertices.length / STRIDE
         this.buffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
-
-        this.textureBlender = new TextureBlender(gl, mineralMaps)
-        this.textureBlender.update(gl, Array(mineralMaps.length).fill(1))
 
         const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, STRIDE, 0)
         const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, STRIDE, POS_FPV)
@@ -61,18 +58,13 @@ class DownscaledCoreRenderer {
         this.numVertex = vertices.length / STRIDE
     }
 
-    draw (gl: WebGLRenderingContext, currMineral: number, shapeT: number): void {
+    draw (gl: WebGLRenderingContext, mineralIndex: number, shapeT: number): void {
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
         this.setShapeT(ease(shapeT))
-
-        if (currMineral < 0) {
-            this.textureBlender.bindBlended(gl)
-        } else {
-            this.textureBlender.bindSource(gl, currMineral)
-        }
+        this.minerals.bind(gl, mineralIndex)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
