@@ -157,3 +157,4 @@ class VisRenderer {
 }
 
 export default VisRenderer
+export { VIS_DEFAULTS }

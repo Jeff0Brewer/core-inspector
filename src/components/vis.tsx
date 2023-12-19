@@ -7,7 +7,7 @@ import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
-import VisRenderer from '../vis/vis'
+import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/vis.css'
 
 type VisProps = {
@@ -15,11 +15,27 @@ type VisProps = {
 }
 
 function Vis ({ vis }: VisProps): ReactElement {
-    const [mineral, setMineral] = useVisState<number>(0, v => vis.setCoreMineral(v))
-    const [shape, setShape] = useVisState<CoreShape>('column', v => vis.setCoreShape(v))
-    const [viewMode, setViewMode] = useVisState<CoreViewMode>('downscaled', v => vis.setCoreViewMode(v))
-    const [spacing, setSpacing] = useVisState<[number, number]>([0.5, 0.5], v => vis.setCoreSpacing(...v))
-    const [zoom, setZoom, setZoomReact] = useVisState<number>(0.7, v => vis.setZoom(v))
+    const [mineral, setMineral] = useVisState<number>(
+        VIS_DEFAULTS.mineral.index,
+        v => vis.setCoreMineral(v)
+    )
+    const [shape, setShape] = useVisState<CoreShape>(
+        VIS_DEFAULTS.core.shape,
+        v => vis.setCoreShape(v)
+    )
+    const [viewMode, setViewMode] = useVisState<CoreViewMode>(
+        VIS_DEFAULTS.core.viewMode,
+        v => vis.setCoreViewMode(v)
+    )
+    const [spacing, setSpacing] = useVisState<[number, number]>(
+        [VIS_DEFAULTS.core.horizontalSpacing, VIS_DEFAULTS.core.verticalSpacing],
+        v => vis.setCoreSpacing(...v)
+    )
+    const [zoom, setZoom, setZoomReact] = useVisState<number>(
+        VIS_DEFAULTS.camera.zoom,
+        v => vis.setZoom(v)
+    )
+
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {
