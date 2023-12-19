@@ -24,7 +24,7 @@ const VIS_DEFAULTS: VisSettings = {
         blendMagnitude: 1
     },
     camera: {
-        zoom: 0.7
+        zoom: 0.5
     }
 }
 
