@@ -15,7 +15,7 @@ body {
     background-color: #1C1C1C;
     color: #fff;
     font-size: 10px;
-    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-family: system-ui, sans-serif;
     overscroll-behavior-y: none;
 }
 
