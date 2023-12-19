@@ -58,7 +58,7 @@ class VisRenderer {
             VIS_DEFAULTS.mineral
         )
 
-        this.camera = new Camera2D([0, 0, 0], [0, 0, -1], [0, 1, 0], VIS_DEFAULTS.camera.zoom)
+        this.camera = new Camera2D([0, 0, 0], [0, 0, 1], [0, 1, 0], VIS_DEFAULTS.camera.zoom)
         this.core.setView(this.gl, this.camera.matrix)
 
         this.proj = mat4.create()
