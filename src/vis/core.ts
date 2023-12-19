@@ -5,6 +5,10 @@ import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, { addDownscaledTile } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, { addPunchcardTile } from '../vis/punchcard-core'
 
+const POS_FPV = 2
+const TEX_FPV = 2
+const STRIDE = POS_FPV + POS_FPV + TEX_FPV
+
 const TRANSFORM_SPEED = 1
 const SHAPE_T_MAP = { column: 0, spiral: 1 }
 
@@ -204,6 +208,22 @@ const getCoreVerts = (
         radius += tileRadius
     }
 
+    // pad x position if full width not filled
+    if (colX < bounds.right) {
+        const colXPad = 0.5 * (bounds.right - colX)
+
+        // skip spiral position attrib to get offset of column x position
+        const colXOffset = POS_FPV
+
+        // adjust column x positions to center tiles in viewport
+        for (let i = colXOffset; i < downVerts.length; i += STRIDE) {
+            downVerts[i] += colXPad
+        }
+        for (let i = colXOffset; i < punchVerts.length; i += STRIDE) {
+            punchVerts[i] += colXPad
+        }
+    }
+
     return {
         downVerts: new Float32Array(downVerts),
         punchVerts: new Float32Array(punchVerts)
@@ -211,6 +231,7 @@ const getCoreVerts = (
 }
 
 export default CoreRenderer
+export { POS_FPV, TEX_FPV, STRIDE }
 export type {
     CoreViewMode,
     CoreShape,

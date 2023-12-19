@@ -1,14 +1,11 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
+import { POS_FPV, TEX_FPV, STRIDE } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/full-core-vert.glsl?raw'
 import fragSource from '../shaders/full-core-frag.glsl?raw'
-
-const POS_FPV = 2
-const TEX_FPV = 2
-const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 class DownscaledCoreRenderer {
     minerals: MineralBlender
