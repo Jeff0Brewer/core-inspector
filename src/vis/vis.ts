@@ -3,11 +3,12 @@ import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { MineralSettings } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
-import Camera2D from '../lib/camera'
+import Camera2D, { CameraSettings } from '../lib/camera'
 
 type VisSettings = {
     core: CoreSettings,
-    mineral: MineralSettings
+    mineral: MineralSettings,
+    camera: CameraSettings
 }
 
 const VIS_DEFAULTS: VisSettings = {
@@ -21,6 +22,9 @@ const VIS_DEFAULTS: VisSettings = {
     mineral: {
         index: 0,
         blendMagnitude: 1
+    },
+    camera: {
+        zoom: 0.7
     }
 }
 
@@ -54,7 +58,7 @@ class VisRenderer {
             VIS_DEFAULTS.mineral
         )
 
-        this.camera = new Camera2D([0, 0, 1], [0, 0, 0], [0, 1, 0])
+        this.camera = new Camera2D([0, 0, 0], [0, 0, -1], [0, 1, 0], VIS_DEFAULTS.camera.zoom)
         this.core.setView(this.gl, this.camera.matrix)
 
         this.proj = mat4.create()
@@ -111,7 +115,7 @@ class VisRenderer {
 
         const wheel = (e: WheelEvent): void => {
             this.camera.zoom(e.deltaY)
-            setZoom(this.camera.getZoom())
+            setZoom(this.camera.zoomT)
         }
 
         const keydown = (e: KeyboardEvent): void => {
