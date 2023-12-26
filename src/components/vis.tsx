@@ -35,6 +35,10 @@ function Vis ({ vis }: VisProps): ReactElement {
         VIS_DEFAULTS.camera.zoom,
         v => vis.setZoom(v)
     )
+    const [hovered, _, setHoveredReact] = useVisState<number>(
+        VIS_DEFAULTS.core.hovered,
+        v => vis.setHovered(v)
+    )
 
     const frameIdRef = useRef<number>(-1)
 
@@ -45,12 +49,13 @@ function Vis ({ vis }: VisProps): ReactElement {
     }, [vis, setZoomReact])
 
     useEffect(() => {
+        console.log('loop start')
         let lastT = 0
         const tick = (t: number): void => {
             const elapsed = (t - lastT) * 0.001
             lastT = t
 
-            vis.draw(elapsed)
+            vis.draw(elapsed, setHoveredReact)
             frameIdRef.current = window.requestAnimationFrame(tick)
         }
 
@@ -58,10 +63,11 @@ function Vis ({ vis }: VisProps): ReactElement {
         return () => {
             window.cancelAnimationFrame(frameIdRef.current)
         }
-    }, [vis])
+    }, [vis, setHoveredReact])
 
     return (
         <div className={'interface'}>
+            <p style={{ position: 'absolute', zIndex: 200, padding: '10px' }}>{hovered}</p>
             <div className={'top-bar'}>
                 <ToggleSelect
                     currValue={shape}

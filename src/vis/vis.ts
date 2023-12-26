@@ -17,7 +17,8 @@ const VIS_DEFAULTS: VisSettings = {
         spacing: [0.5, 0.5],
         viewMode: 'downscaled',
         shape: 'column',
-        pointSize: 2
+        pointSize: 2,
+        hovered: -1
     },
     mineral: {
         index: 0,
@@ -81,6 +82,10 @@ class VisRenderer {
         this.mousePos = [0, 0]
 
         this.resize() // init canvas size, gl viewport, proj matrix
+    }
+
+    setHovered (id: number): void {
+        this.core.stencilRenderer.currHovered = id
     }
 
     setBlending (magnitudes: Array<number>): void {
@@ -186,12 +191,12 @@ class VisRenderer {
         }
     }
 
-    draw (elapsed: number): void {
+    draw (elapsed: number, setHovered: (id: number) => void): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.core.setView(this.gl, this.camera.matrix)
-        this.core.draw(this.gl, elapsed, this.mousePos)
+        this.core.draw(this.gl, elapsed, this.mousePos, setHovered)
     }
 }
 

@@ -26,7 +26,8 @@ type CoreSettings = {
     spacing: [number, number],
     viewMode: CoreViewMode,
     shape: CoreShape,
-    pointSize: number
+    pointSize: number,
+    hovered: number
 }
 
 class CoreRenderer {
@@ -140,7 +141,12 @@ class CoreRenderer {
         this.stencilRenderer.setPositions(gl, downPositions)
     }
 
-    draw (gl: WebGLRenderingContext, elapsed: number, mousePos: [number, number]): void {
+    draw (
+        gl: WebGLRenderingContext,
+        elapsed: number,
+        mousePos: [number, number],
+        setHovered: (id: number) => void
+    ): void {
         const targetShapeT = SHAPE_T_MAP[this.targetShape]
         const incSign = Math.sign(targetShapeT - this.shapeT)
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
@@ -151,7 +157,7 @@ class CoreRenderer {
             this.punchRenderer.draw(gl, this.currMineral, this.shapeT)
         }
 
-        this.stencilRenderer.draw(gl, this.shapeT, mousePos)
+        this.stencilRenderer.draw(gl, this.shapeT, mousePos, setHovered)
     }
 }
 

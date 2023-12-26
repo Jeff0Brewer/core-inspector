@@ -78,7 +78,12 @@ class StencilCoreRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
     }
 
-    draw (gl: WebGLRenderingContext, shapeT: number, mousePos: [number, number]): void {
+    draw (
+        gl: WebGLRenderingContext,
+        shapeT: number,
+        mousePos: [number, number],
+        setHovered: (id: number) => void
+    ): void {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.useProgram(this.program)
 
@@ -99,6 +104,7 @@ class StencilCoreRenderer {
         ])
 
         this.currHovered = this.colorIdMap[colorHex] || -1
+        setHovered(this.currHovered)
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
