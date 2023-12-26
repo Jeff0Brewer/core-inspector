@@ -155,27 +155,24 @@ const getCoreTexCoords = (
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
-    const downTexCoords: Array<number> = []
-    const punchTexCoords: Array<number> = []
+    const downCoords: Array<number> = []
+    const punchCoords: Array<number> = []
+
     for (let i = 0; i < downMetadata.numTiles; i++) {
-        const downRect = downMetadata.tiles[i]
-        const punchRect = punchMetadata.tiles[i]
-
         addDownscaledTexCoords(
-            downTexCoords,
-            downRect
+            downCoords,
+            downMetadata.tiles[i]
         )
-
         addPunchcardTexCoords(
-            punchTexCoords,
-            punchRect,
+            punchCoords,
+            punchMetadata.tiles[i],
             punchMetadata.textureHeight
         )
     }
 
     return {
-        downTexCoords: new Float32Array(downTexCoords),
-        punchTexCoords: new Float32Array(punchTexCoords)
+        downTexCoords: new Float32Array(downCoords),
+        punchTexCoords: new Float32Array(punchCoords)
     }
 }
 
@@ -188,7 +185,7 @@ const getCorePositions = (
     bounds: BoundRect
 ): {
     downPositions: Float32Array,
-    punchPositions: Float32Array,
+    punchPositions: Float32Array
 } => {
     const [horizontalSpacing, verticalSpacing] = spacing
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
@@ -247,14 +244,10 @@ const getCorePositions = (
         radius += tileRadius
     }
 
-    // pad x position if full width not filled
+    // TODO: fix this temporary and inefficient spacing adjustment
     if (colX < bounds.right) {
         const colXPad = 0.5 * (bounds.right - colX)
-
-        // skip spiral position attrib to get offset of column x position
         const colXOffset = POS_FPV
-
-        // adjust column x positions to center tiles in viewport
         for (let i = colXOffset; i < downPositions.length; i += POS_STRIDE) {
             downPositions[i] += colXPad
         }
