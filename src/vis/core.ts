@@ -2,11 +2,16 @@ import { mat4 } from 'gl-matrix'
 import { clamp, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
-import DownscaledCoreRenderer, { addDownscaledTile } from '../vis/downscaled-core'
+import DownscaledCoreRenderer, {
+    addDownscaledPositions,
+    addDownscaledTexCoords
+} from '../vis/downscaled-core'
 import PunchcardCoreRenderer, { addPunchcardTile } from '../vis/punchcard-core'
 
 const POS_FPV = 2
 const TEX_FPV = 2
+const POS_STRIDE = POS_FPV + POS_FPV
+const TEX_STRIDE = TEX_FPV
 const STRIDE = POS_FPV + POS_FPV + TEX_FPV
 
 const TRANSFORM_SPEED = 1
@@ -46,7 +51,7 @@ class CoreRenderer {
             throw new Error('Downscaled and punchcard tile textures contain different tiles')
         }
 
-        const { downVerts, punchVerts } = getCoreVerts(
+        const { downPositions, downTexCoords, punchVerts } = getCoreVerts(
             downMetadata,
             punchMetadata,
             coreSettings.spacing,
@@ -58,7 +63,7 @@ class CoreRenderer {
         downBlender.update(gl, defaultBlendMags)
         punchBlender.update(gl, defaultBlendMags)
 
-        this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downVerts)
+        this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchVerts)
 
         this.downMetadata = downMetadata
@@ -111,13 +116,13 @@ class CoreRenderer {
         spacing: [number, number],
         bounds: BoundRect
     ): void {
-        const { downVerts, punchVerts } = getCoreVerts(
+        const { downPositions, punchVerts } = getCoreVerts(
             this.downMetadata,
             this.punchMetadata,
             spacing,
             bounds
         )
-        this.downRenderer.setVerts(gl, downVerts)
+        this.downRenderer.setPositions(gl, downPositions)
         this.punchRenderer.setVerts(gl, punchVerts)
     }
 
@@ -147,7 +152,8 @@ const getCoreVerts = (
     spacing: [number, number],
     bounds: BoundRect
 ): {
-    downVerts: Float32Array,
+    downPositions: Float32Array,
+    downTexCoords: Float32Array,
     punchVerts: Float32Array
 } => {
     const [horizontalSpacing, verticalSpacing] = spacing
@@ -155,7 +161,9 @@ const getCoreVerts = (
     const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
     const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * downMetadata.numTiles
 
-    const downVerts: Array<number> = []
+    const downPositions: Array<number> = []
+    const downTexCoords: Array<number> = []
+
     const punchVerts: Array<number> = []
 
     let radius = MIN_RADIUS
@@ -176,9 +184,8 @@ const getCoreVerts = (
             colY = bounds.top
         }
 
-        addDownscaledTile(
-            downVerts,
-            downRect,
+        addDownscaledPositions(
+            downPositions,
             radius,
             angle,
             colX,
@@ -187,6 +194,10 @@ const getCoreVerts = (
             tileAngle,
             tileHeight,
             BAND_WIDTH
+        )
+        addDownscaledTexCoords(
+            downTexCoords,
+            downRect
         )
 
         addPunchcardTile(
@@ -216,8 +227,8 @@ const getCoreVerts = (
         const colXOffset = POS_FPV
 
         // adjust column x positions to center tiles in viewport
-        for (let i = colXOffset; i < downVerts.length; i += STRIDE) {
-            downVerts[i] += colXPad
+        for (let i = colXOffset; i < downPositions.length; i += POS_STRIDE) {
+            downPositions[i] += colXPad
         }
         for (let i = colXOffset; i < punchVerts.length; i += STRIDE) {
             punchVerts[i] += colXPad
@@ -225,13 +236,14 @@ const getCoreVerts = (
     }
 
     return {
-        downVerts: new Float32Array(downVerts),
+        downPositions: new Float32Array(downPositions),
+        downTexCoords: new Float32Array(downTexCoords),
         punchVerts: new Float32Array(punchVerts)
     }
 }
 
 export default CoreRenderer
-export { POS_FPV, TEX_FPV, STRIDE }
+export { POS_FPV, TEX_FPV, STRIDE, POS_STRIDE, TEX_STRIDE }
 export type {
     CoreViewMode,
     CoreShape,
