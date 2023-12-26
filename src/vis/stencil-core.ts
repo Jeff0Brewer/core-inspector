@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec2 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
 import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
@@ -8,6 +8,8 @@ import fragSource from '../shaders/stencil-frag.glsl?raw'
 
 const COL_FPV = 2
 const COL_STRIDE = COL_FPV
+
+type ColorIdMap = { [color: string]: number }
 
 class StencilCoreRenderer {
     framebuffer: WebGLFramebuffer
@@ -20,6 +22,9 @@ class StencilCoreRenderer {
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     numVertex: number
+
+    colorIdMap: ColorIdMap
+    currHovered: number
 
     constructor (
         gl: WebGLRenderingContext,
@@ -37,8 +42,9 @@ class StencilCoreRenderer {
 
         this.colBuffer = initBuffer(gl)
         const vertPerTile = this.numVertex / metadata.numTiles
-        const colors = getStencilColors(metadata, vertPerTile)
+        const { colors, map } = getStencilColors(metadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
+        this.colorIdMap = map
 
         const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_STRIDE, 0)
         const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_STRIDE, POS_FPV)
@@ -54,6 +60,8 @@ class StencilCoreRenderer {
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
+
+        this.currHovered = -1
     }
 
     resize (gl: WebGLRenderingContext, w: number, h: number): void {
@@ -85,34 +93,52 @@ class StencilCoreRenderer {
 
         const pixels = new Uint8Array(4)
         gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-        console.log(pixels)
+        const colorHex = vecToHex([
+            pixels[0] / 255,
+            pixels[1] / 255
+        ])
+
+        this.currHovered = this.colorIdMap[colorHex] || -1
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
 }
 
-const indToColor = (i: number): [number, number] => {
-    const si = i * 30
+const vecToHex = (v: Array<number>): string => {
+    return v.map(x => Math.round(x * 255).toString(16)).join()
+}
+
+const indToColor = (i: number): { vec: vec2, hex: string } => {
+    const si = (i + 1) * 30
     const siMod = si % 256
     const siFract = si - siMod
-    const r = siMod / 255
-    const g = Math.floor(siFract / 255) / 255
-    return [r, g]
+    const vec: vec2 = [
+        siMod / 255,
+        Math.floor(siFract / 255) / 255
+    ]
+    const hex = vecToHex(vec)
+    return { vec, hex }
 }
 
 const getStencilColors = (
     metadata: TileTextureMetadata,
     vertPerTile: number
-): Float32Array => {
-    const inds = []
+): {
+    colors:Float32Array,
+    map: ColorIdMap
+} => {
     const colors = []
+    const map: ColorIdMap = {}
     for (let i = 0; i < metadata.numTiles; i++) {
-        const color = indToColor(i)
-        colors.push(color)
-        const tileVerts = Array(vertPerTile).fill(color).flat()
-        inds.push(...tileVerts)
+        const { vec, hex } = indToColor(i)
+        const tileVerts = Array(vertPerTile).fill(vec).flat()
+        colors.push(...tileVerts)
+        map[hex] = i
     }
-    return new Float32Array(inds)
+    return {
+        colors: new Float32Array(colors),
+        map
+    }
 }
 
 export default StencilCoreRenderer
