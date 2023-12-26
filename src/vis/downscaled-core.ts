@@ -81,11 +81,11 @@ const TILE_DETAIL = 8
 
 const addDownscaledAttrib = (
     out: Array<number>,
-    getAttribRow: (i: number) => [Array<number>, Array<number>]
+    getRowAttrib: (i: number) => [Array<number>, Array<number>]
 ): void => {
     for (let i = 0; i < TILE_DETAIL; i++) {
-        const [inner, outer] = getAttribRow(i)
-        const [nextInner, nextOuter] = getAttribRow(i + 1)
+        const [inner, outer] = getRowAttrib(i)
+        const [nextInner, nextOuter] = getRowAttrib(i + 1)
         out.push(
             ...inner,
             ...outer,
