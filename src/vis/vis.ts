@@ -40,6 +40,7 @@ class VisRenderer {
     core: CoreRenderer
     camera: Camera2D
     proj: mat4
+    mousePos: [number, number]
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -76,6 +77,8 @@ class VisRenderer {
             VIS_DEFAULTS.mineral
         )
         this.core.setView(this.gl, this.camera.matrix)
+
+        this.mousePos = [0, 0]
 
         this.resize() // init canvas size, gl viewport, proj matrix
     }
@@ -131,6 +134,7 @@ class VisRenderer {
         mat4.perspective(this.proj, fov, aspect, near, far)
 
         this.core.setProj(this.gl, this.proj)
+        this.core.stencilRenderer.resize(this.gl, w, h)
     }
 
     setupEventListeners (setZoom: (z: number) => void): (() => void) {
@@ -139,6 +143,10 @@ class VisRenderer {
         const mouseup = (): void => { dragging = false }
         const mouseleave = (): void => { dragging = false }
         const mousemove = (e: MouseEvent): void => {
+            this.mousePos = [
+                e.clientX * window.devicePixelRatio,
+                this.canvas.height - e.clientY * window.devicePixelRatio
+            ]
             if (dragging) {
                 this.camera.pan(e.movementX, e.movementY)
             }
@@ -183,7 +191,7 @@ class VisRenderer {
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
         this.core.setView(this.gl, this.camera.matrix)
-        this.core.draw(this.gl, elapsed)
+        this.core.draw(this.gl, elapsed, this.mousePos)
     }
 }
 
