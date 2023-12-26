@@ -53,12 +53,14 @@ class CoreRenderer {
             throw new Error('Downscaled and punchcard tile textures contain different tiles')
         }
 
-        const { downPositions, downTexCoords, punchPositions, punchTexCoords } = getCoreVerts(
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(downMetadata, punchMetadata)
+        const { downPositions, punchPositions } = getCorePositions(
             downMetadata,
             punchMetadata,
             coreSettings.spacing,
             bounds
         )
+
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
         const defaultBlendMags = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
@@ -118,7 +120,7 @@ class CoreRenderer {
         spacing: [number, number],
         bounds: BoundRect
     ): void {
-        const { downPositions, punchPositions } = getCoreVerts(
+        const { downPositions, punchPositions } = getCorePositions(
             this.downMetadata,
             this.punchMetadata,
             spacing,
@@ -146,18 +148,47 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
+const getCoreTexCoords = (
+    downMetadata: TileTextureMetadata,
+    punchMetadata: TileTextureMetadata
+): {
+    downTexCoords: Float32Array,
+    punchTexCoords: Float32Array
+} => {
+    const downTexCoords: Array<number> = []
+    const punchTexCoords: Array<number> = []
+    for (let i = 0; i < downMetadata.numTiles; i++) {
+        const downRect = downMetadata.tiles[i]
+        const punchRect = punchMetadata.tiles[i]
+
+        addDownscaledTexCoords(
+            downTexCoords,
+            downRect
+        )
+
+        addPunchcardTexCoords(
+            punchTexCoords,
+            punchRect,
+            punchMetadata.textureHeight
+        )
+    }
+
+    return {
+        downTexCoords: new Float32Array(downTexCoords),
+        punchTexCoords: new Float32Array(punchTexCoords)
+    }
+}
+
 // calculate vertices for downsampled and punchcard
 // representations at the same time to simplify alignment
-const getCoreVerts = (
+const getCorePositions = (
     downMetadata: TileTextureMetadata,
     punchMetadata: TileTextureMetadata,
     spacing: [number, number],
     bounds: BoundRect
 ): {
     downPositions: Float32Array,
-    downTexCoords: Float32Array,
     punchPositions: Float32Array,
-    punchTexCoords: Float32Array,
 } => {
     const [horizontalSpacing, verticalSpacing] = spacing
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
@@ -165,10 +196,7 @@ const getCoreVerts = (
     const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * downMetadata.numTiles
 
     const downPositions: Array<number> = []
-    const downTexCoords: Array<number> = []
-
     const punchPositions: Array<number> = []
-    const punchTexCoords: Array<number> = []
 
     let radius = MIN_RADIUS
     let angle = 0
@@ -199,10 +227,6 @@ const getCoreVerts = (
             tileHeight,
             BAND_WIDTH
         )
-        addDownscaledTexCoords(
-            downTexCoords,
-            downRect
-        )
 
         addPunchcardPositions(
             punchPositions,
@@ -215,11 +239,6 @@ const getCoreVerts = (
             tileAngle,
             tileHeight,
             BAND_WIDTH,
-            punchMetadata.textureHeight
-        )
-        addPunchcardTexCoords(
-            punchTexCoords,
-            punchRect,
             punchMetadata.textureHeight
         )
 
@@ -246,9 +265,7 @@ const getCoreVerts = (
 
     return {
         downPositions: new Float32Array(downPositions),
-        downTexCoords: new Float32Array(downTexCoords),
-        punchPositions: new Float32Array(punchPositions),
-        punchTexCoords: new Float32Array(punchTexCoords)
+        punchPositions: new Float32Array(punchPositions)
     }
 }
 
