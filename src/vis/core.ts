@@ -10,6 +10,7 @@ import PunchcardCoreRenderer, {
     addPunchcardPositions,
     addPunchcardTexCoords
 } from '../vis/punchcard-core'
+import StencilCoreRenderer from '../vis/stencil-core'
 
 const POS_FPV = 2
 const TEX_FPV = 2
@@ -31,6 +32,7 @@ type CoreSettings = {
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
+    stencilRenderer: StencilCoreRenderer
     downMetadata: TileTextureMetadata
     punchMetadata: TileTextureMetadata
     numMinerals: number
@@ -69,6 +71,7 @@ class CoreRenderer {
 
         this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchPositions, punchTexCoords)
+        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, downMetadata)
 
         this.downMetadata = downMetadata
         this.punchMetadata = punchMetadata
@@ -100,6 +103,9 @@ class CoreRenderer {
         gl.useProgram(this.punchRenderer.program)
         this.punchRenderer.setProj(m)
         this.punchRenderer.setDpr(window.devicePixelRatio)
+
+        gl.useProgram(this.stencilRenderer.program)
+        this.stencilRenderer.setProj(m)
     }
 
     setView (gl: WebGLRenderingContext, m: mat4): void {
@@ -108,6 +114,9 @@ class CoreRenderer {
 
         gl.useProgram(this.punchRenderer.program)
         this.punchRenderer.setView(m)
+
+        gl.useProgram(this.stencilRenderer.program)
+        this.stencilRenderer.setView(m)
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
@@ -128,6 +137,7 @@ class CoreRenderer {
         )
         this.downRenderer.setPositions(gl, downPositions)
         this.punchRenderer.setPositions(gl, punchPositions)
+        this.stencilRenderer.setPositions(gl, downPositions)
     }
 
     draw (gl: WebGLRenderingContext, elapsed: number): void {
