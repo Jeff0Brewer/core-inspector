@@ -4,8 +4,8 @@ import { ease } from '../lib/util'
 import { POS_FPV, TEX_FPV, POS_STRIDE, TEX_STRIDE } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
 import MineralBlender from '../vis/mineral-blend'
-import vertSource from '../shaders/full-core-vert.glsl?raw'
-import fragSource from '../shaders/full-core-frag.glsl?raw'
+import vertSource from '../shaders/downscaled-vert.glsl?raw'
+import fragSource from '../shaders/downscaled-frag.glsl?raw'
 
 class DownscaledCoreRenderer {
     minerals: MineralBlender
