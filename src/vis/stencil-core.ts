@@ -85,6 +85,7 @@ class StencilCoreRenderer {
         setHovered: (id: number) => void
     ): void {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
+        gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
