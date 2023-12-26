@@ -49,7 +49,6 @@ function Vis ({ vis }: VisProps): ReactElement {
     }, [vis, setZoomReact])
 
     useEffect(() => {
-        console.log('loop start')
         let lastT = 0
         const tick = (t: number): void => {
             const elapsed = (t - lastT) * 0.001
