@@ -24,7 +24,7 @@ class StencilCoreRenderer {
     numVertex: number
 
     colorIdMap: ColorIdMap
-    currHovered: number
+    currHovered: number | undefined
 
     constructor (
         gl: WebGLRenderingContext,
@@ -104,7 +104,7 @@ class StencilCoreRenderer {
             pixels[1] / 255
         ])
 
-        this.currHovered = this.colorIdMap[colorHex] || -1
+        this.currHovered = this.colorIdMap[colorHex]
         setHovered(this.currHovered)
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)

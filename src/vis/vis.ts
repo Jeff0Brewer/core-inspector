@@ -84,7 +84,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
-    setHovered (id: number): void {
+    setHovered (id: number | undefined): void {
         this.core.stencilRenderer.currHovered = id
     }
 

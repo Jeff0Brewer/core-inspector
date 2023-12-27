@@ -35,7 +35,7 @@ function Vis ({ vis }: VisProps): ReactElement {
         VIS_DEFAULTS.camera.zoom,
         v => vis.setZoom(v)
     )
-    const [hovered, _, setHoveredReact] = useVisState<number>(
+    const [hovered, _, setHoveredReact] = useVisState<number | undefined>(
         VIS_DEFAULTS.core.hovered,
         v => vis.setHovered(v)
     )
@@ -66,7 +66,10 @@ function Vis ({ vis }: VisProps): ReactElement {
 
     return (
         <div className={'interface'}>
-            <p style={{ position: 'absolute', zIndex: 200, padding: '10px' }}>{hovered}</p>
+            {/* temporary hover index display */}
+            <p style={{ position: 'absolute', zIndex: 200, padding: '10px' }}>
+                {hovered}
+            </p>
             <div className={'top-bar'}>
                 <ToggleSelect
                     currValue={shape}
