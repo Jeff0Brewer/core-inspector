@@ -64,23 +64,34 @@ const initAttribute = (
     name: string,
     size: number,
     stride: number,
-    offset: number
+    offset: number,
+    type: number = gl.FLOAT
 ): (() => void) => {
     const location = gl.getAttribLocation(program, name)
     if (location === -1) {
         throw new Error(`Attribute ${name} not found in program`)
     }
 
+    // gets byte size from gl type, can be extended for more types if needed
+    let byteSize: number
+    switch (type) {
+        case gl.FLOAT:
+            byteSize = Float32Array.BYTES_PER_ELEMENT
+            break
+        case gl.UNSIGNED_BYTE:
+            byteSize = Uint8Array.BYTES_PER_ELEMENT
+            break
+    }
+
     // store vertex attrib pointer call in closure for future binding
     const bindAttrib = (): void => {
-        // assume type of float, can update if other types needed
         gl.vertexAttribPointer(
             location,
             size,
-            gl.FLOAT,
+            type,
             false,
-            stride * Float32Array.BYTES_PER_ELEMENT,
-            offset * Float32Array.BYTES_PER_ELEMENT
+            stride * byteSize,
+            offset * byteSize
         )
     }
     bindAttrib()
