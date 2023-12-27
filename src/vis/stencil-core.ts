@@ -27,6 +27,8 @@ class StencilCoreRenderer {
     colorIdMap: ColorIdMap
     currHovered: number | undefined
 
+    lastMousePos: [number, number]
+
     constructor (
         gl: WebGLRenderingContext,
         positions: Float32Array,
@@ -63,6 +65,8 @@ class StencilCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
         this.currHovered = undefined
+
+        this.lastMousePos = [-1, -1]
     }
 
     resize (gl: WebGLRenderingContext, w: number, h: number): void {
@@ -77,6 +81,17 @@ class StencilCoreRenderer {
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+    }
+
+    checkHoverChange (shapeT: number, mousePos: [number, number]): boolean {
+        const shapeNotChanging = shapeT === 0 || shapeT === 1
+
+        const mousePosChanged =
+            this.lastMousePos[0] !== mousePos[0] ||
+            this.lastMousePos[1] !== mousePos[1]
+        this.lastMousePos = [...mousePos]
+
+        return mousePosChanged && shapeNotChanging
     }
 
     draw (
@@ -98,13 +113,20 @@ class StencilCoreRenderer {
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 
-        const pixels = new Uint8Array(4)
-        gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-        const [r, g] = pixels
-        const colorHex = vecToHex([r, g])
+        // mouse position is tracked here instead of using an event listener
+        // so that pixels can be read directly after draw
+        //
+        // pixels are only read when the mouse has moved and the
+        // core isn't currently transforming shape
+        if (this.checkHoverChange(shapeT, mousePos)) {
+            const pixels = new Uint8Array(4)
+            gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
-        this.currHovered = this.colorIdMap[colorHex]
-        setHovered(this.currHovered)
+            const colorHex = vecToHex([pixels[0], pixels[1]])
+            this.currHovered = this.colorIdMap[colorHex]
+
+            setHovered(this.currHovered)
+        }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
