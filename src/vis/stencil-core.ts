@@ -9,6 +9,7 @@ import fragSource from '../shaders/stencil-frag.glsl?raw'
 const COL_FPV = 2
 const COL_STRIDE = COL_FPV
 
+// maps color picked from stencil framebuffer into core section id
 type ColorIdMap = { [color: string]: number }
 
 class StencilCoreRenderer {
@@ -52,7 +53,7 @@ class StencilCoreRenderer {
             bindSpiralPos()
             bindColumnPos()
         }
-        this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_STRIDE, 0)
+        this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_STRIDE, 0, gl.UNSIGNED_BYTE)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
@@ -61,7 +62,7 @@ class StencilCoreRenderer {
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
-        this.currHovered = -1
+        this.currHovered = undefined
     }
 
     resize (gl: WebGLRenderingContext, w: number, h: number): void {
@@ -99,10 +100,8 @@ class StencilCoreRenderer {
 
         const pixels = new Uint8Array(4)
         gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-        const colorHex = vecToHex([
-            pixels[0] / 255,
-            pixels[1] / 255
-        ])
+        const [r, g] = pixels
+        const colorHex = vecToHex([r, g])
 
         this.currHovered = this.colorIdMap[colorHex]
         setHovered(this.currHovered)
@@ -112,18 +111,20 @@ class StencilCoreRenderer {
 }
 
 const vecToHex = (v: Array<number>): string => {
-    return v.map(x => Math.round(x * 255).toString(16)).join()
+    return v.map(x => x.toString(16)).join()
 }
 
 const indToColor = (i: number): { vec: vec2, hex: string } => {
-    const si = (i + 1) * 30
-    const siMod = si % 256
-    const siFract = si - siMod
-    const vec: vec2 = [
-        siMod / 255,
-        Math.floor(siFract / 255) / 255
-    ]
+    // scale index to make colors more distinct
+    // add one to index to prevent [0, 0] color
+    const ind = (i + 1) * 30
+
+    const mod = ind % 256
+    const fract = Math.floor((ind - mod) / 255)
+
+    const vec: vec2 = [mod, fract]
     const hex = vecToHex(vec)
+
     return { vec, hex }
 }
 
@@ -131,7 +132,7 @@ const getStencilColors = (
     metadata: TileTextureMetadata,
     vertPerTile: number
 ): {
-    colors:Float32Array,
+    colors: Uint8Array,
     map: ColorIdMap
 } => {
     const colors = []
@@ -143,7 +144,7 @@ const getStencilColors = (
         map[hex] = i
     }
     return {
-        colors: new Float32Array(colors),
+        colors: new Uint8Array(colors),
         map
     }
 }

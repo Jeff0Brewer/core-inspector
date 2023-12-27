@@ -83,13 +83,16 @@ const initAttribute = (
             break
     }
 
+    // only normalize byte types
+    const normalize = type === gl.UNSIGNED_BYTE
+
     // store vertex attrib pointer call in closure for future binding
     const bindAttrib = (): void => {
         gl.vertexAttribPointer(
             location,
             size,
             type,
-            false,
+            normalize,
             stride * byteSize,
             offset * byteSize
         )
