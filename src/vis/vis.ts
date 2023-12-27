@@ -46,9 +46,8 @@ class VisRenderer {
     constructor (
         canvas: HTMLCanvasElement,
         downscaledMaps: Array<HTMLImageElement>,
-        downscaledMetadata: TileTextureMetadata,
         punchcardMaps: Array<HTMLImageElement>,
-        punchcardMetadata: TileTextureMetadata
+        metadata: TileTextureMetadata
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -70,9 +69,8 @@ class VisRenderer {
         this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
-            downscaledMetadata,
             punchcardMaps,
-            punchcardMetadata,
+            metadata,
             bounds,
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral

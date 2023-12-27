@@ -25,18 +25,14 @@ function App (): ReactElement {
                 Promise.all(downscaledPaths.map(p => loadImageAsync(p))),
                 Promise.all(punchcardPaths.map(p => loadImageAsync(p)))
             ])
-            const [downscaledMeta, punchcardMeta] = await Promise.all([
-                fetch(`${basePath}/downscaled/metadata.json`).then(res => res.json()),
-                fetch(`${basePath}/punchcard/metadata.json`).then(res => res.json())
-            ])
+            const metadata = await fetch(`${basePath}/metadata.json`).then(res => res.json())
 
             setVisRenderer(
                 new VisRenderer(
                     canvas,
                     downscaledImgs,
-                    downscaledMeta,
                     punchcardImgs,
-                    punchcardMeta
+                    metadata
                 )
             )
         }

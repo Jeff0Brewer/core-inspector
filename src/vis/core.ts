@@ -34,8 +34,7 @@ class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
     stencilRenderer: StencilCoreRenderer
-    downMetadata: TileTextureMetadata
-    punchMetadata: TileTextureMetadata
+    metadata: TileTextureMetadata
     numMinerals: number
     currMineral: number
     viewMode: CoreViewMode
@@ -45,24 +44,14 @@ class CoreRenderer {
     constructor (
         gl: WebGLRenderingContext,
         downMineralMaps: Array<HTMLImageElement>,
-        downMetadata: TileTextureMetadata,
         punchMineralMaps: Array<HTMLImageElement>,
-        punchMetadata: TileTextureMetadata,
+        metadata: TileTextureMetadata,
         bounds: BoundRect,
         coreSettings: CoreSettings,
         mineralSettings: MineralSettings
     ) {
-        if (downMetadata.numTiles !== punchMetadata.numTiles) {
-            throw new Error('Downscaled and punchcard tile textures contain different tiles')
-        }
-
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(downMetadata, punchMetadata)
-        const { downPositions, punchPositions } = getCorePositions(
-            downMetadata,
-            punchMetadata,
-            coreSettings.spacing,
-            bounds
-        )
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(metadata)
+        const { downPositions, punchPositions } = getCorePositions(metadata, coreSettings.spacing, bounds)
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
@@ -72,10 +61,9 @@ class CoreRenderer {
 
         this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchPositions, punchTexCoords)
-        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, downMetadata)
+        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, metadata)
 
-        this.downMetadata = downMetadata
-        this.punchMetadata = punchMetadata
+        this.metadata = metadata
 
         this.currMineral = mineralSettings.index
         this.viewMode = coreSettings.viewMode
@@ -130,12 +118,7 @@ class CoreRenderer {
         spacing: [number, number],
         bounds: BoundRect
     ): void {
-        const { downPositions, punchPositions } = getCorePositions(
-            this.downMetadata,
-            this.punchMetadata,
-            spacing,
-            bounds
-        )
+        const { downPositions, punchPositions } = getCorePositions(this.metadata, spacing, bounds)
         this.downRenderer.setPositions(gl, downPositions)
         this.punchRenderer.setPositions(gl, punchPositions)
         this.stencilRenderer.setPositions(gl, downPositions)
@@ -166,25 +149,22 @@ const MIN_RADIUS = BAND_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
-const getCoreTexCoords = (
-    downMetadata: TileTextureMetadata,
-    punchMetadata: TileTextureMetadata
-): {
+const getCoreTexCoords = (metadata: TileTextureMetadata): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
     const downCoords: Array<number> = []
     const punchCoords: Array<number> = []
 
-    for (let i = 0; i < downMetadata.numTiles; i++) {
+    for (let i = 0; i < metadata.numTiles; i++) {
         addDownscaledTexCoords(
             downCoords,
-            downMetadata.tiles[i]
+            metadata.downTiles[i]
         )
         addPunchcardTexCoords(
             punchCoords,
-            punchMetadata.tiles[i],
-            punchMetadata.textureHeight
+            metadata.punchTiles[i],
+            metadata.punchDims[1]
         )
     }
 
@@ -196,19 +176,14 @@ const getCoreTexCoords = (
 
 // calculate vertices for downsampled and punchcard
 // representations at the same time to simplify alignment
-const getCorePositions = (
-    downMetadata: TileTextureMetadata,
-    punchMetadata: TileTextureMetadata,
-    spacing: [number, number],
-    bounds: BoundRect
-): {
+const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, number], bounds: BoundRect): {
     downPositions: Float32Array,
     punchPositions: Float32Array
 } => {
     const [horizontalSpacing, verticalSpacing] = spacing
     const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
     const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
-    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * downMetadata.numTiles
+    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.numTiles
 
     const downPositions: Array<number> = []
     const punchPositions: Array<number> = []
@@ -218,9 +193,9 @@ const getCorePositions = (
     let colX = bounds.left
     let colY = bounds.top
 
-    for (let i = 0; i < downMetadata.numTiles; i++) {
-        const downRect = downMetadata.tiles[i]
-        const punchRect = punchMetadata.tiles[i]
+    for (let i = 0; i < metadata.numTiles; i++) {
+        const downRect = metadata.downTiles[i]
+        const punchRect = metadata.punchTiles[i]
 
         const tileHeight = BAND_WIDTH * (downRect.height / downRect.width)
         const tileAngle = tileHeight / radius
@@ -254,7 +229,7 @@ const getCorePositions = (
             tileAngle,
             tileHeight,
             BAND_WIDTH,
-            punchMetadata.textureHeight
+            metadata.punchDims[1]
         )
 
         colY -= tileHeight + BAND_WIDTH * verticalSpacing
