@@ -7,6 +7,7 @@ import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
+import MetadataHover from '../components/metadata-hover'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/vis.css'
 
@@ -66,10 +67,7 @@ function Vis ({ vis }: VisProps): ReactElement {
 
     return (
         <div className={'interface'}>
-            {/* temporary hover index display */}
-            <p style={{ position: 'absolute', zIndex: 200, padding: '10px' }}>
-                {hovered}
-            </p>
+            <MetadataHover hovered={hovered} />
             <div className={'top-bar'}>
                 <ToggleSelect
                     currValue={shape}
