@@ -12,14 +12,14 @@ function App (): ReactElement {
     useEffect(() => {
         const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
             const basePath = './data/gt1'
-            const numMinerals = 7
+            const numMinerals = 9
 
             // fetch visualization textures / metadata
             const downscaledPaths = []
             const punchcardPaths = []
             for (let i = 0; i < numMinerals; i++) {
-                downscaledPaths.push(`${basePath}/downscaled/0${i}.png`)
-                punchcardPaths.push(`${basePath}/punchcard/0${i}.png`)
+                downscaledPaths.push(`${basePath}/downscaled/${i}.png`)
+                punchcardPaths.push(`${basePath}/punchcard/${i}.png`)
             }
             const [downscaledImgs, punchcardImgs] = await Promise.all([
                 Promise.all(downscaledPaths.map(p => loadImageAsync(p))),

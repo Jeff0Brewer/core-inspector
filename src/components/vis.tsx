@@ -154,7 +154,9 @@ const MINERALS = [
     'zeolite',
     'amphibole',
     'pyroxene',
-    'gypsum'
+    'gypsum',
+    'carbonate',
+    'kaolinite-montmorillinite'
 ]
 
 // TODO: get new icons for horizontal / vertical dist
