@@ -199,7 +199,9 @@ const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, numbe
         const downRect = metadata.downTiles[i]
         const punchRect = metadata.punchTiles[i]
 
-        const tileHeight = BAND_WIDTH * (downRect.height / downRect.width)
+        // TODO: investigate tile dims in metadata, shouldn't have to scale tile
+        // height by 2
+        const tileHeight = 2 * BAND_WIDTH * (downRect.height / downRect.width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
