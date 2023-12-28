@@ -35,7 +35,7 @@ function Vis ({ vis }: VisProps): ReactElement {
         VIS_DEFAULTS.camera.zoom,
         v => vis.setZoom(v)
     )
-    const [hovered, _, setHoveredReact] = useVisState<number | undefined>(
+    const [hovered, _, setHoveredReact] = useVisState<string | undefined>(
         VIS_DEFAULTS.core.hovered,
         v => vis.setHovered(v)
     )

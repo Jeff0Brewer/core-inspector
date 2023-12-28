@@ -21,18 +21,20 @@ function App (): ReactElement {
                 downscaledPaths.push(`${basePath}/downscaled/${i}.png`)
                 punchcardPaths.push(`${basePath}/punchcard/${i}.png`)
             }
-            const [downscaledImgs, punchcardImgs] = await Promise.all([
+            const [downscaledImgs, punchcardImgs, tileMetadata, idMetadata] = await Promise.all([
                 Promise.all(downscaledPaths.map(p => loadImageAsync(p))),
-                Promise.all(punchcardPaths.map(p => loadImageAsync(p)))
+                Promise.all(punchcardPaths.map(p => loadImageAsync(p))),
+                fetch(`${basePath}/tile-metadata.json`).then(res => res.json()),
+                fetch(`${basePath}/id-metadata.json`).then(res => res.json())
             ])
-            const tileMetadata = await fetch(`${basePath}/tile-metadata.json`).then(res => res.json())
 
             setVisRenderer(
                 new VisRenderer(
                     canvas,
                     downscaledImgs,
                     punchcardImgs,
-                    tileMetadata
+                    tileMetadata,
+                    idMetadata
                 )
             )
         }

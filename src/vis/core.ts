@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { clamp, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
+import { SectionIdMetadata } from '../lib/metadata'
 import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, {
     addDownscaledPositions,
@@ -27,7 +28,7 @@ type CoreSettings = {
     viewMode: CoreViewMode,
     shape: CoreShape,
     pointSize: number,
-    hovered: number
+    hovered: string | undefined
 }
 
 class CoreRenderer {
@@ -45,13 +46,14 @@ class CoreRenderer {
         gl: WebGLRenderingContext,
         downMineralMaps: Array<HTMLImageElement>,
         punchMineralMaps: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata,
+        tileMetadata: TileTextureMetadata,
+        idMetadata: SectionIdMetadata,
         bounds: BoundRect,
         coreSettings: CoreSettings,
         mineralSettings: MineralSettings
     ) {
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(metadata)
-        const { downPositions, punchPositions } = getCorePositions(metadata, coreSettings.spacing, bounds)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
+        const { downPositions, punchPositions } = getCorePositions(tileMetadata, coreSettings.spacing, bounds)
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
@@ -61,9 +63,9 @@ class CoreRenderer {
 
         this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchPositions, punchTexCoords)
-        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, metadata)
+        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, tileMetadata, idMetadata)
 
-        this.metadata = metadata
+        this.metadata = tileMetadata
 
         this.currMineral = mineralSettings.index
         this.viewMode = coreSettings.viewMode
@@ -128,7 +130,7 @@ class CoreRenderer {
         gl: WebGLRenderingContext,
         elapsed: number,
         mousePos: [number, number],
-        setHovered: (id: number) => void
+        setHovered: (id: string | undefined) => void
     ): void {
         const targetShapeT = SHAPE_T_MAP[this.targetShape]
         const incSign = Math.sign(targetShapeT - this.shapeT)

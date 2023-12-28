@@ -3,6 +3,7 @@ import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '
 import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
+import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
@@ -10,7 +11,7 @@ const COL_FPV = 2
 const COL_STRIDE = COL_FPV
 
 // maps color picked from stencil framebuffer into core section id
-type ColorIdMap = { [color: string]: number }
+type ColorIdMap = { [color: string]: string }
 
 class StencilCoreRenderer {
     framebuffer: WebGLFramebuffer
@@ -25,14 +26,15 @@ class StencilCoreRenderer {
     numVertex: number
 
     colorIdMap: ColorIdMap
-    currHovered: number | undefined
+    currHovered: string | undefined
 
     lastMousePos: [number, number]
 
     constructor (
         gl: WebGLRenderingContext,
         positions: Float32Array,
-        metadata: TileTextureMetadata
+        tileMetadata: TileTextureMetadata,
+        idMetadata: SectionIdMetadata
     ) {
         const { framebuffer } = initTextureFramebuffer(gl, 1, 1) // placeholder dimensions
         this.framebuffer = framebuffer
@@ -44,8 +46,8 @@ class StencilCoreRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
         this.colBuffer = initBuffer(gl)
-        const vertPerTile = this.numVertex / metadata.numTiles
-        const { colors, map } = getStencilColors(metadata, vertPerTile)
+        const vertPerTile = this.numVertex / tileMetadata.numTiles
+        const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
         this.colorIdMap = map
 
@@ -98,7 +100,7 @@ class StencilCoreRenderer {
         gl: WebGLRenderingContext,
         shapeT: number,
         mousePos: [number, number],
-        setHovered: (id: number) => void
+        setHovered: (id: string) => void
     ): void {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
@@ -151,7 +153,8 @@ const indToColor = (i: number): { vec: vec2, hex: string } => {
 }
 
 const getStencilColors = (
-    metadata: TileTextureMetadata,
+    tileMetadata: TileTextureMetadata,
+    idMetadata: SectionIdMetadata,
     vertPerTile: number
 ): {
     colors: Uint8Array,
@@ -159,11 +162,11 @@ const getStencilColors = (
 } => {
     const colors = []
     const map: ColorIdMap = {}
-    for (let i = 0; i < metadata.numTiles; i++) {
+    for (let i = 0; i < tileMetadata.numTiles; i++) {
         const { vec, hex } = indToColor(i)
         const tileVerts = Array(vertPerTile).fill(vec).flat()
         colors.push(...tileVerts)
-        map[hex] = i
+        map[hex] = idMetadata.ids[i]
     }
     return {
         colors: new Uint8Array(colors),

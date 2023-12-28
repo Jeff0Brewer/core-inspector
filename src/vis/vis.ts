@@ -2,6 +2,7 @@ import { mat4 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
+import { SectionIdMetadata } from '../lib/metadata'
 import { MineralSettings } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
 import Camera2D, { CameraSettings } from '../lib/camera'
@@ -18,7 +19,7 @@ const VIS_DEFAULTS: VisSettings = {
         viewMode: 'downscaled',
         shape: 'column',
         pointSize: 2,
-        hovered: -1
+        hovered: undefined
     },
     mineral: {
         index: 0,
@@ -47,7 +48,8 @@ class VisRenderer {
         canvas: HTMLCanvasElement,
         downscaledMaps: Array<HTMLImageElement>,
         punchcardMaps: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata
+        tileMetadata: TileTextureMetadata,
+        idMetadata: SectionIdMetadata
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -70,7 +72,8 @@ class VisRenderer {
             this.gl,
             downscaledMaps,
             punchcardMaps,
-            metadata,
+            tileMetadata,
+            idMetadata,
             bounds,
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral
@@ -82,7 +85,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
     }
 
-    setHovered (id: number | undefined): void {
+    setHovered (id: string | undefined): void {
         this.core.stencilRenderer.currHovered = id
     }
 
@@ -189,7 +192,7 @@ class VisRenderer {
         }
     }
 
-    draw (elapsed: number, setHovered: (id: number) => void): void {
+    draw (elapsed: number, setHovered: (id: string | undefined) => void): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
