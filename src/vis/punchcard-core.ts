@@ -54,7 +54,7 @@ class PunchcardCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
         this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
 
-        let pointSize = 2
+        let pointSize = 3
         const pointSizeLoc = gl.getUniformLocation(this.program, 'pointSize')
         this.incPointSize = (delta: number): void => {
             pointSize = Math.max(1, pointSize + delta)
