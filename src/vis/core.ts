@@ -97,6 +97,9 @@ class CoreRenderer {
 
         gl.useProgram(this.stencilRenderer.program)
         this.stencilRenderer.setProj(m)
+
+        gl.useProgram(this.stencilRenderer.highlight.program)
+        this.stencilRenderer.highlight.setProj(m)
     }
 
     setView (gl: WebGLRenderingContext, m: mat4): void {
@@ -108,6 +111,9 @@ class CoreRenderer {
 
         gl.useProgram(this.stencilRenderer.program)
         this.stencilRenderer.setView(m)
+
+        gl.useProgram(this.stencilRenderer.highlight.program)
+        this.stencilRenderer.highlight.setView(m)
     }
 
     setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {

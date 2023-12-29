@@ -4,6 +4,7 @@ import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
+import HoverHighlight from '../vis/hover-highlight'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
@@ -12,6 +13,8 @@ const COL_STRIDE = COL_FPV
 
 // maps color picked from stencil framebuffer into core section id
 type ColorIdMap = { [color: string]: string }
+
+type IdIndMap = { [id: string]: number }
 
 class StencilCoreRenderer {
     framebuffer: WebGLFramebuffer
@@ -24,8 +27,14 @@ class StencilCoreRenderer {
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     numVertex: number
+    floatPerTile: number
+    positions: Float32Array
 
+    highlight: HoverHighlight
+
+    idIndMap: IdIndMap
     colorIdMap: ColorIdMap
+    lastHovered: string | undefined
     currHovered: string | undefined
 
     lastMousePos: [number, number]
@@ -36,17 +45,28 @@ class StencilCoreRenderer {
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata
     ) {
-        const { framebuffer } = initTextureFramebuffer(gl, 1, 1) // placeholder dimensions
+        // placeholder dimensions for framebuffer so init can happen before canvas resized
+        const { framebuffer } = initTextureFramebuffer(gl, 1, 1)
+
+        this.numVertex = positions.length / POS_STRIDE
+        const vertPerTile = this.numVertex / tileMetadata.numTiles
+        this.floatPerTile = vertPerTile * POS_STRIDE
+        this.positions = positions
+
+        this.idIndMap = {}
+        Object.entries(idMetadata.ids).forEach(
+            ([ind, id]) => { this.idIndMap[id] = parseInt(ind) }
+        )
+        this.highlight = new HoverHighlight(gl)
+
         this.framebuffer = framebuffer
 
         this.program = initProgram(gl, vertSource, fragSource)
 
-        this.numVertex = positions.length / POS_STRIDE
         this.posBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
         this.colBuffer = initBuffer(gl)
-        const vertPerTile = this.numVertex / tileMetadata.numTiles
         const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
         this.colorIdMap = map
@@ -67,6 +87,7 @@ class StencilCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
         this.currHovered = undefined
+        this.lastHovered = undefined
 
         this.lastMousePos = [-1, -1]
     }
@@ -83,6 +104,8 @@ class StencilCoreRenderer {
         }
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+
+        this.positions = positions
     }
 
     checkHoverChange (shapeT: number, mousePos: [number, number]): boolean {
@@ -119,18 +142,31 @@ class StencilCoreRenderer {
         // so that pixels can be read directly after draw
         //
         // pixels are only read when the mouse has moved and the
-        // core isn't currently transforming shape
+        // core isn't currently transforming shape for performance
         if (this.checkHoverChange(shapeT, mousePos)) {
             const pixels = new Uint8Array(4)
             gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
             const colorHex = vecToHex([pixels[0], pixels[1]])
             this.currHovered = this.colorIdMap[colorHex]
+            if (this.currHovered !== this.lastHovered) {
+                if (this.currHovered) {
+                    const hoveredInd = this.idIndMap[this.currHovered]
+                    const si = hoveredInd * this.floatPerTile
+                    const ei = si + this.floatPerTile
+                    this.highlight.setPositions(gl, this.positions.slice(si, ei))
+                } else {
+                    this.highlight.setPositions(gl, new Float32Array())
+                }
+            }
+            this.lastHovered = this.currHovered
 
             setHovered(this.currHovered)
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
+        this.highlight.draw(gl, shapeT)
     }
 }
 
