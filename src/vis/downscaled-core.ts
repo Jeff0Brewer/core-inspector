@@ -77,7 +77,7 @@ class DownscaledCoreRenderer {
     }
 }
 
-const TILE_DETAIL = 8
+const TILE_DETAIL = 12
 
 const addDownscaledAttrib = (
     out: Array<number>,
