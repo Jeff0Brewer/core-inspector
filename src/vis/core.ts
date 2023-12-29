@@ -59,6 +59,7 @@ class CoreRenderer {
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
+
         const defaultBlendMags = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
         downBlender.update(gl, defaultBlendMags)
         punchBlender.update(gl, defaultBlendMags)
@@ -83,7 +84,12 @@ class CoreRenderer {
             idMetadata,
             coreSettings.hovered
         )
-        this.highlightRenderer = new HoverHighlightRenderer(gl, downPositions, tileMetadata, idMetadata)
+        this.highlightRenderer = new HoverHighlightRenderer(
+            gl,
+            downPositions,
+            tileMetadata,
+            idMetadata
+        )
 
         this.metadata = tileMetadata
 
@@ -151,9 +157,11 @@ class CoreRenderer {
         mousePos: [number, number],
         setHovered: (id: string | undefined) => void
     ): void {
+        // TODO: simplify shape calc
         const targetShapeT = SHAPE_T_MAP[this.targetShape]
         const incSign = Math.sign(targetShapeT - this.shapeT)
-        this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
+        this.shapeT = this.shapeT + incSign * TRANSFORM_SPEED * elapsed
+        this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
 
         if (this.viewMode === 'downscaled') {
@@ -220,8 +228,7 @@ const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, numbe
         const downRect = metadata.downTiles[i]
         const punchRect = metadata.punchTiles[i]
 
-        // TODO: investigate tile dims in metadata, shouldn't have to scale tile
-        // height by 2
+        // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
         const tileHeight = 2 * BAND_WIDTH * (downRect.height / downRect.width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
