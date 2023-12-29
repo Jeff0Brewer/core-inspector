@@ -138,15 +138,17 @@ const addPunchcardPositions = (
     const numRows = Math.round(rect.height * textureHeight)
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
-    const colYInc = tileHeight / numRows
+    const colYInc = -1 * tileHeight / numRows
 
     const startRadius = currRadius - bandWidth * 0.5
+    const startAngle = currAngle + angleInc * 0.5
+    const startColY = currColY + colYInc * 0.5
 
     const getPointPositions = (i: number, j: number): Array<number> => {
-        const angle = currAngle + angleInc * i
+        const angle = startAngle + angleInc * i
         const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
         const radius = startRadius + i * radiusInc + bandAcross
-        const colY = currColY - colYInc * i
+        const colY = startColY + colYInc * i
         const colX = currColX + bandAcross
         return [
             Math.cos(angle) * radius,
