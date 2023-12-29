@@ -3,8 +3,8 @@ import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import vertSource from '../shaders/highlight-vert.glsl?raw'
-import fragSource from '../shaders/highlight-frag.glsl?raw'
+import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
+import fragSource from '../shaders/hover-highlight-frag.glsl?raw'
 
 type IdIndMap = { [id: string]: [number, number] }
 
