@@ -24,7 +24,7 @@ function MineralBlend (
 
     return (
         <div className={'blend-menu'}>
-            <a
+            <button
                 onClick={() => {
                     setMineral(-1)
                     setOpen(!open)
@@ -32,7 +32,7 @@ function MineralBlend (
                 data-active={currMineral < 0}
             >
                 <MdColorLens />
-            </a>
+            </button>
             { open && <div>
                 { minerals.map((name, i) => (
                     <div key={i}>

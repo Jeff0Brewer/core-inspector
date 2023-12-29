@@ -1,4 +1,4 @@
-.blend-menu > a {
+.blend-menu > button {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -9,13 +9,6 @@
     height: 20px;
     width: 30px;
     border-radius: var(--border-radius);
-
-    background-color: var(--inactive-color);
-    transition: background-color var(--transition-param);
-}
-
-.blend-menu > a[data-active="true"] {
-    background-color: var(--active-color);
 }
 
 .blend-menu > div {

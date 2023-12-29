@@ -31,6 +31,18 @@ button {
     font: inherit;
 }
 
+button[data-active] {
+    transition: background-color var(--transition-param);
+}
+
+button[data-active="true"] {
+    background-color: var(--active-color);
+}
+
+button[data-active="false"] {
+    background-color: var(--inactive-color);
+}
+
 input[type="range"] {
     --thumb-size: 14px;
     --track-width: 2px;

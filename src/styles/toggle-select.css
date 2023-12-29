@@ -11,11 +11,4 @@
 
     width: 35px;
     height: 30px;
-
-    background-color: var(--inactive-color);
-    transition: background-color var(--transition-param);
-}
-
-.toggle-select button[data-active="true"] {
-    background-color: var(--active-color);
 }
