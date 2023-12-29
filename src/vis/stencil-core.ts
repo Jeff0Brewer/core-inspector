@@ -109,6 +109,7 @@ class StencilCoreRenderer {
 
     draw (
         gl: WebGLRenderingContext,
+        view: mat4,
         shapeT: number,
         mousePos: [number, number],
         setHovered: (id: string) => void
@@ -121,6 +122,8 @@ class StencilCoreRenderer {
         this.bindPositions()
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colBuffer)
         this.bindColors()
+
+        this.setView(view)
         this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)

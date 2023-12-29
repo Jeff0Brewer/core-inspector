@@ -115,20 +115,6 @@ class CoreRenderer {
         this.highlightRenderer.setProj(m)
     }
 
-    setView (gl: WebGLRenderingContext, m: mat4): void {
-        gl.useProgram(this.downRenderer.program)
-        this.downRenderer.setView(m)
-
-        gl.useProgram(this.punchRenderer.program)
-        this.punchRenderer.setView(m)
-
-        gl.useProgram(this.stencilRenderer.program)
-        this.stencilRenderer.setView(m)
-
-        gl.useProgram(this.highlightRenderer.program)
-        this.highlightRenderer.setView(m)
-    }
-
     setSpacing (
         gl: WebGLRenderingContext,
         spacing: [number, number],
@@ -143,6 +129,7 @@ class CoreRenderer {
 
     draw (
         gl: WebGLRenderingContext,
+        view: mat4,
         elapsed: number,
         mousePos: [number, number],
         setHovered: (id: string | undefined) => void
@@ -152,13 +139,13 @@ class CoreRenderer {
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
 
         if (this.viewMode === 'downscaled') {
-            this.downRenderer.draw(gl, this.currMineral, this.shapeT)
+            this.downRenderer.draw(gl, view, this.currMineral, this.shapeT)
         } else {
-            this.punchRenderer.draw(gl, this.currMineral, this.shapeT)
+            this.punchRenderer.draw(gl, view, this.currMineral, this.shapeT)
         }
 
-        this.stencilRenderer.draw(gl, this.shapeT, mousePos, setHovered)
-        this.highlightRenderer.draw(gl, this.shapeT)
+        this.stencilRenderer.draw(gl, view, this.shapeT, mousePos, setHovered)
+        this.highlightRenderer.draw(gl, view, this.shapeT)
     }
 }
 

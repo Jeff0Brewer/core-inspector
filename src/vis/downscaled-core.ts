@@ -62,7 +62,12 @@ class DownscaledCoreRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
     }
 
-    draw (gl: WebGLRenderingContext, mineralIndex: number, shapeT: number): void {
+    draw (
+        gl: WebGLRenderingContext,
+        view: mat4,
+        mineralIndex: number,
+        shapeT: number
+    ): void {
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
@@ -70,7 +75,9 @@ class DownscaledCoreRenderer {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer)
         this.bindTexCoords()
 
+        this.setView(view)
         this.setShapeT(ease(shapeT))
+
         this.minerals.bind(gl, mineralIndex)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)

@@ -78,11 +78,10 @@ class VisRenderer {
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral
         )
-        this.core.setView(this.gl, this.camera.matrix)
-
-        this.mousePos = [0, 0]
 
         this.resize() // init canvas size, gl viewport, proj matrix
+
+        this.mousePos = [0, 0]
     }
 
     setHovered (id: string | undefined): void {
@@ -204,14 +203,19 @@ class VisRenderer {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
-        // TODO: fix this hacky trash
+        // TODO: rework react hook to permit hover behavior
         const setHovered = (id: string | undefined): void => {
             setHoveredReact(id)
             this.setHovered(id)
         }
 
-        this.core.setView(this.gl, this.camera.matrix)
-        this.core.draw(this.gl, elapsed, this.mousePos, setHovered)
+        this.core.draw(
+            this.gl,
+            this.camera.matrix,
+            elapsed,
+            this.mousePos,
+            setHovered
+        )
     }
 }
 

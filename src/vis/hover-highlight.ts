@@ -86,13 +86,15 @@ class HoverHighlightRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, sectionVerts, gl.STATIC_DRAW)
     }
 
-    draw (gl: WebGLRenderingContext, shapeT: number): void {
+    draw (gl: WebGLRenderingContext, view: mat4, shapeT: number): void {
         if (this.numVertex === 0) { return }
 
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
+
+        this.setView(view)
         this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
