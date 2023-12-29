@@ -34,7 +34,8 @@ class StencilCoreRenderer {
         gl: WebGLRenderingContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata
+        idMetadata: SectionIdMetadata,
+        currHovered: string | undefined
     ) {
         // placeholder dimensions for framebuffer so init can happen before canvas resized
         const { framebuffer } = initTextureFramebuffer(gl, 1, 1)
@@ -68,7 +69,7 @@ class StencilCoreRenderer {
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
-        this.currHovered = undefined
+        this.currHovered = currHovered
         this.lastMousePos = [-1, -1]
     }
 

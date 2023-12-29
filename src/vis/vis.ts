@@ -18,7 +18,7 @@ const VIS_DEFAULTS: VisSettings = {
         spacing: [0.5, 0.5],
         viewMode: 'downscaled',
         shape: 'column',
-        pointSize: 3,
+        pointSize: 3.5,
         hovered: undefined
     },
     mineral: {

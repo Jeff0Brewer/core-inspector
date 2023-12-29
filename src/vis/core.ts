@@ -63,9 +63,26 @@ class CoreRenderer {
         downBlender.update(gl, defaultBlendMags)
         punchBlender.update(gl, defaultBlendMags)
 
-        this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
-        this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchPositions, punchTexCoords)
-        this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, tileMetadata, idMetadata)
+        this.downRenderer = new DownscaledCoreRenderer(
+            gl,
+            downBlender,
+            downPositions,
+            downTexCoords
+        )
+        this.punchRenderer = new PunchcardCoreRenderer(
+            gl,
+            punchBlender,
+            punchPositions,
+            punchTexCoords,
+            coreSettings.pointSize
+        )
+        this.stencilRenderer = new StencilCoreRenderer(
+            gl,
+            downPositions,
+            tileMetadata,
+            idMetadata,
+            coreSettings.hovered
+        )
         this.highlightRenderer = new HoverHighlightRenderer(gl, downPositions, tileMetadata, idMetadata)
 
         this.metadata = tileMetadata
