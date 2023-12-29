@@ -41,6 +41,8 @@ class HoverHighlight {
     }
 
     draw (gl: WebGLRenderingContext, shapeT: number): void {
+        if (this.numVertex === 0) { return }
+
         gl.useProgram(this.program)
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
