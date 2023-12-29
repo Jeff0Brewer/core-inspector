@@ -12,6 +12,7 @@ type CameraSettings = {
 
 class Camera2D {
     matrix: mat4
+    eye: vec3
     focus: vec3
     lookDir: vec3
     up: vec3
@@ -23,10 +24,10 @@ class Camera2D {
         vec3.normalize(lookDir, lookDir)
 
         const zoom = zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
-        const eye = vec3.scaleAndAdd(vec3.create(), focus, lookDir, zoom)
+        this.eye = vec3.scaleAndAdd(vec3.create(), focus, lookDir, zoom)
 
         this.matrix = mat4.create()
-        mat4.lookAt(this.matrix, eye, focus, up)
+        mat4.lookAt(this.matrix, this.eye, focus, up)
 
         this.focus = vec3.clone(focus)
         this.lookDir = vec3.clone(lookDir)
@@ -43,18 +44,16 @@ class Camera2D {
         this.zoomT = clamp(t, 0, 1)
         const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
 
-        const eye = vec3.create()
-        vec3.scaleAndAdd(eye, this.focus, this.lookDir, zoom)
-        mat4.lookAt(this.matrix, eye, this.focus, this.up)
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
+        mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 
     zoom (d: number): void {
         this.zoomT = clamp(this.zoomT * (1 + d * ZOOM_SPEED), 0, 1)
         const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
 
-        const eye = vec3.create()
-        vec3.scaleAndAdd(eye, this.focus, this.lookDir, zoom)
-        mat4.lookAt(this.matrix, eye, this.focus, this.up)
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
+        mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 
     pan (dx: number, dy: number): void {
@@ -64,9 +63,8 @@ class Camera2D {
 
         const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
 
-        const eye = vec3.create()
-        vec3.scaleAndAdd(eye, this.focus, this.lookDir, zoom)
-        mat4.lookAt(this.matrix, eye, this.focus, this.up)
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
+        mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 }
 
