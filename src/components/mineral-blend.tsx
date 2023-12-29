@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
+import { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/mineral-blend.css'
 
 type MineralBlendProps = {
@@ -13,7 +14,9 @@ function MineralBlend (
     { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-    const [mags, setMags] = useState<Array<number>>(Array(minerals.length).fill(1))
+    const [mags, setMags] = useState<Array<number>>(
+        Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
+    )
 
     // close blend menu if not currently using blended output
     useEffect(() => {
