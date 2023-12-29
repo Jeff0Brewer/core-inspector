@@ -12,6 +12,7 @@ import PunchcardCoreRenderer, {
     addPunchcardTexCoords
 } from '../vis/punchcard-core'
 import StencilCoreRenderer from '../vis/stencil-core'
+import HoverHighlightRenderer from '../vis/hover-highlight'
 
 const POS_FPV = 2
 const TEX_FPV = 2
@@ -35,6 +36,7 @@ class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
     stencilRenderer: StencilCoreRenderer
+    highlightRenderer: HoverHighlightRenderer
     metadata: TileTextureMetadata
     numMinerals: number
     currMineral: number
@@ -64,6 +66,7 @@ class CoreRenderer {
         this.downRenderer = new DownscaledCoreRenderer(gl, downBlender, downPositions, downTexCoords)
         this.punchRenderer = new PunchcardCoreRenderer(gl, punchBlender, punchPositions, punchTexCoords)
         this.stencilRenderer = new StencilCoreRenderer(gl, downPositions, tileMetadata, idMetadata)
+        this.highlightRenderer = new HoverHighlightRenderer(gl, downPositions, tileMetadata, idMetadata)
 
         this.metadata = tileMetadata
 
@@ -73,6 +76,11 @@ class CoreRenderer {
 
         this.numMinerals = downMineralMaps.length - 1
         this.shapeT = SHAPE_T_MAP[this.targetShape]
+    }
+
+    setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
+        this.highlightRenderer.setHovered(gl, id)
+        this.stencilRenderer.setHovered(id)
     }
 
     setShape (shape: CoreShape): void {
@@ -87,6 +95,11 @@ class CoreRenderer {
         this.viewMode = v
     }
 
+    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
+        this.downRenderer.minerals.update(gl, magnitudes)
+        this.punchRenderer.minerals.update(gl, magnitudes)
+    }
+
     setProj (gl: WebGLRenderingContext, m: mat4): void {
         gl.useProgram(this.downRenderer.program)
         this.downRenderer.setProj(m)
@@ -98,8 +111,8 @@ class CoreRenderer {
         gl.useProgram(this.stencilRenderer.program)
         this.stencilRenderer.setProj(m)
 
-        gl.useProgram(this.stencilRenderer.highlight.program)
-        this.stencilRenderer.highlight.setProj(m)
+        gl.useProgram(this.highlightRenderer.program)
+        this.highlightRenderer.setProj(m)
     }
 
     setView (gl: WebGLRenderingContext, m: mat4): void {
@@ -112,13 +125,8 @@ class CoreRenderer {
         gl.useProgram(this.stencilRenderer.program)
         this.stencilRenderer.setView(m)
 
-        gl.useProgram(this.stencilRenderer.highlight.program)
-        this.stencilRenderer.highlight.setView(m)
-    }
-
-    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
-        this.downRenderer.minerals.update(gl, magnitudes)
-        this.punchRenderer.minerals.update(gl, magnitudes)
+        gl.useProgram(this.highlightRenderer.program)
+        this.highlightRenderer.setView(m)
     }
 
     setSpacing (
@@ -130,6 +138,7 @@ class CoreRenderer {
         this.downRenderer.setPositions(gl, downPositions)
         this.punchRenderer.setPositions(gl, punchPositions)
         this.stencilRenderer.setPositions(gl, downPositions)
+        this.highlightRenderer.positions = downPositions
     }
 
     draw (
@@ -149,6 +158,7 @@ class CoreRenderer {
         }
 
         this.stencilRenderer.draw(gl, this.shapeT, mousePos, setHovered)
+        this.highlightRenderer.draw(gl, this.shapeT)
     }
 }
 

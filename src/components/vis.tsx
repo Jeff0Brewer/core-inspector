@@ -46,8 +46,8 @@ function Vis ({ vis }: VisProps): ReactElement {
     useEffect(() => {
         // use react only state setters since visualization state
         // already set inside event listener
-        return vis.setupEventListeners(setZoomReact)
-    }, [vis, setZoomReact])
+        return vis.setupEventListeners(setZoomReact, setHoveredReact)
+    }, [vis, setZoomReact, setHoveredReact])
 
     useEffect(() => {
         let lastT = 0

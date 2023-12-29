@@ -4,7 +4,6 @@ import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import HoverHighlight from '../vis/hover-highlight'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
@@ -13,13 +12,8 @@ const COL_STRIDE = COL_FPV
 
 // maps color picked from stencil framebuffer into core section id
 type ColorIdMap = { [color: string]: string }
-// maps from section id to section index, used when getting offset into
-// position buffer for highlighted section
-type IdIndMap = { [id: string]: number }
 
 class StencilCoreRenderer {
-    highlight: HoverHighlight
-
     framebuffer: WebGLFramebuffer
     program: WebGLProgram
     posBuffer: WebGLBuffer
@@ -30,13 +24,10 @@ class StencilCoreRenderer {
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     numVertex: number
-    floatPerTile: number
     positions: Float32Array
 
-    idIndMap: IdIndMap
     colorIdMap: ColorIdMap
 
-    lastHovered: string | undefined
     currHovered: string | undefined
     lastMousePos: [number, number]
 
@@ -46,26 +37,18 @@ class StencilCoreRenderer {
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata
     ) {
-        this.numVertex = positions.length / POS_STRIDE
-        const vertPerTile = this.numVertex / tileMetadata.numTiles
-        this.floatPerTile = vertPerTile * POS_STRIDE
-
-        this.idIndMap = {}
-        Object.entries(idMetadata.ids).forEach(
-            ([ind, id]) => { this.idIndMap[id] = parseInt(ind) }
-        )
-        this.highlight = new HoverHighlight(gl)
-
         // placeholder dimensions for framebuffer so init can happen before canvas resized
         const { framebuffer } = initTextureFramebuffer(gl, 1, 1)
         this.framebuffer = framebuffer
 
         this.program = initProgram(gl, vertSource, fragSource)
 
+        this.numVertex = positions.length / POS_STRIDE
         this.posBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
         this.positions = positions
 
+        const vertPerTile = this.numVertex / tileMetadata.numTiles
         this.colBuffer = initBuffer(gl)
         const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
@@ -87,15 +70,11 @@ class StencilCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
         this.currHovered = undefined
-        this.lastHovered = undefined
         this.lastMousePos = [-1, -1]
     }
 
-    // need to call resize as well as update projection matrix when window changes
-    // since stencil buffer is offscreen texture framebuffer and needs to match window size
-    resize (gl: WebGLRenderingContext, w: number, h: number): void {
-        const { framebuffer } = initTextureFramebuffer(gl, w, h)
-        this.framebuffer = framebuffer
+    setHovered (id: string | undefined): void {
+        this.currHovered = id
     }
 
     setPositions (gl: WebGLRenderingContext, positions: Float32Array): void {
@@ -107,6 +86,13 @@ class StencilCoreRenderer {
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
         this.positions = positions
+    }
+
+    // need to call resize as well as update projection matrix when window changes
+    // since stencil buffer is offscreen texture framebuffer and needs to match window size
+    resize (gl: WebGLRenderingContext, w: number, h: number): void {
+        const { framebuffer } = initTextureFramebuffer(gl, w, h)
+        this.framebuffer = framebuffer
     }
 
     // check if stencil framebuffer should be read, want to minimize readPixels calls
@@ -135,7 +121,6 @@ class StencilCoreRenderer {
         this.bindPositions()
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colBuffer)
         this.bindColors()
-
         this.setShapeT(ease(shapeT))
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
@@ -149,26 +134,10 @@ class StencilCoreRenderer {
             const colorHex = vecToHex([pixels[0], pixels[1]])
             this.currHovered = this.colorIdMap[colorHex]
             setHovered(this.currHovered)
-
-            // update hover highlight buffer with verts for currently hovered section
-            if (this.currHovered !== this.lastHovered) {
-                if (this.currHovered) {
-                    const hoveredInd = this.idIndMap[this.currHovered]
-                    const sectionVerts = this.positions.slice(
-                        hoveredInd * this.floatPerTile,
-                        (hoveredInd + 1) * this.floatPerTile
-                    )
-                    this.highlight.setPositions(gl, sectionVerts)
-                } else {
-                    this.highlight.setPositions(gl, new Float32Array())
-                }
-            }
-            this.lastHovered = this.currHovered
         }
         this.lastMousePos = mousePos
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-        this.highlight.draw(gl, shapeT)
     }
 }
 

@@ -86,7 +86,7 @@ class VisRenderer {
     }
 
     setHovered (id: string | undefined): void {
-        this.core.stencilRenderer.currHovered = id
+        this.core.setHovered(this.gl, id)
     }
 
     setBlending (magnitudes: Array<number>): void {
@@ -143,11 +143,19 @@ class VisRenderer {
         this.core.stencilRenderer.resize(this.gl, w, h)
     }
 
-    setupEventListeners (setZoom: (z: number) => void): (() => void) {
+    setupEventListeners (
+        setZoom: (z: number) => void,
+        setHovered: (h: string | undefined) => void
+    ): (() => void) {
         let dragging = false
         const mousedown = (): void => { dragging = true }
         const mouseup = (): void => { dragging = false }
-        const mouseleave = (): void => { dragging = false }
+        const mouseleave = (): void => {
+            dragging = false
+            // TODO: remove manual coordination between react / vis hover state
+            setHovered(undefined)
+            this.setHovered(undefined)
+        }
         const mousemove = (e: MouseEvent): void => {
             this.mousePos = [
                 e.clientX * window.devicePixelRatio,
@@ -192,9 +200,15 @@ class VisRenderer {
         }
     }
 
-    draw (elapsed: number, setHovered: (id: string | undefined) => void): void {
+    draw (elapsed: number, setHoveredReact: (id: string | undefined) => void): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
+
+        // TODO: fix this hacky trash
+        const setHovered = (id: string | undefined): void => {
+            setHoveredReact(id)
+            this.setHovered(id)
+        }
 
         this.core.setView(this.gl, this.camera.matrix)
         this.core.draw(this.gl, elapsed, this.mousePos, setHovered)
