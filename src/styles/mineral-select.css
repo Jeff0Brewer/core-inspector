@@ -17,6 +17,7 @@
     text-transform: uppercase;
 
     background-color: var(--inactive-color);
+    transition: background-color var(--transition-param);
 }
 
 .mineral-select button[data-active="true"] {

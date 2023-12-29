@@ -9,7 +9,9 @@
     height: 20px;
     width: 30px;
     border-radius: var(--border-radius);
+
     background-color: var(--inactive-color);
+    transition: background-color var(--transition-param);
 }
 
 .blend-menu > a[data-active="true"] {

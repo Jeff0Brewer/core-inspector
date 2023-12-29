@@ -1,6 +1,5 @@
 .toggle-select {
     display: flex;
-    gap: 1px;
     overflow: hidden;
     border-radius: var(--border-radius);
     width: fit-content;
@@ -14,6 +13,7 @@
     height: 30px;
 
     background-color: var(--inactive-color);
+    transition: background-color var(--transition-param);
 }
 
 .toggle-select button[data-active="true"] {
