@@ -1,6 +1,5 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
-import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -124,7 +123,7 @@ class StencilCoreRenderer {
         this.bindColors()
 
         this.setView(view)
-        this.setShapeT(ease(shapeT))
+        this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 

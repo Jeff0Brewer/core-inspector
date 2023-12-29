@@ -1,6 +1,5 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
-import { ease } from '../lib/util'
 import { POS_FPV, TEX_FPV, POS_STRIDE, TEX_STRIDE } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
 import MineralBlender from '../vis/mineral-blend'
@@ -76,7 +75,7 @@ class DownscaledCoreRenderer {
         this.bindTexCoords()
 
         this.setView(view)
-        this.setShapeT(ease(shapeT))
+        this.setShapeT(shapeT)
 
         this.minerals.bind(gl, mineralIndex)
 

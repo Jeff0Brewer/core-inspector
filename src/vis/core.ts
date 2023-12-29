@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { clamp, BoundRect } from '../lib/util'
+import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
@@ -137,15 +137,16 @@ class CoreRenderer {
         const targetShapeT = SHAPE_T_MAP[this.targetShape]
         const incSign = Math.sign(targetShapeT - this.shapeT)
         this.shapeT = clamp(this.shapeT + TRANSFORM_SPEED * elapsed * incSign, 0, 1)
+        const easedShapeT = ease(this.shapeT)
 
         if (this.viewMode === 'downscaled') {
-            this.downRenderer.draw(gl, view, this.currMineral, this.shapeT)
+            this.downRenderer.draw(gl, view, this.currMineral, easedShapeT)
         } else {
-            this.punchRenderer.draw(gl, view, this.currMineral, this.shapeT)
+            this.punchRenderer.draw(gl, view, this.currMineral, easedShapeT)
         }
 
-        this.stencilRenderer.draw(gl, view, this.shapeT, mousePos, setHovered)
-        this.highlightRenderer.draw(gl, view, this.shapeT)
+        this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
+        this.highlightRenderer.draw(gl, view, easedShapeT)
     }
 }
 

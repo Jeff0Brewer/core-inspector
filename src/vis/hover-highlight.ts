@@ -1,6 +1,5 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
-import { ease } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -95,7 +94,7 @@ class HoverHighlightRenderer {
         this.bindAttrib()
 
         this.setView(view)
-        this.setShapeT(ease(shapeT))
+        this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
