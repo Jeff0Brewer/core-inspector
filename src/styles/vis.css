@@ -6,7 +6,7 @@
     pointer-events: none;
 }
 
-.interface * {
+.top-bar, .side-bar, .bottom-bar {
     pointer-events: auto;
 }
 
