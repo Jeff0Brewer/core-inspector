@@ -2,7 +2,7 @@
     position: absolute;
     z-index: 999;
     background-color: var(--menu-bg-color);
-    border-radius: var(--border-radius);
+    border-radius: var(--radius);
     padding: 5px;
     transform: translate(-120%, -50%);
     text-transform: uppercase;
