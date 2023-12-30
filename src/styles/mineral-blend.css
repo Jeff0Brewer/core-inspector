@@ -69,3 +69,10 @@
     background-color: #fff;
     pointer-events: none;
 }
+
+.slider-arrow {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    transform: translate(-5px, -8px);
+}

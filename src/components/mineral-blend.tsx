@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
+import { IoCaretDownSharp } from 'react-icons/io5'
 import { clamp } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/mineral-blend.css'
@@ -13,43 +14,48 @@ function MineralBlender (
     { mineral, setBlend }: MineralBlenderProps
 ): ReactElement {
     const [percentage, setPercentage] = useState<number>(VIS_DEFAULTS.mineral.blendMagnitude)
+    const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
-    const dragRef = useRef<boolean>(false)
 
     useEffect(() => {
         const slider = sliderRef.current
-        if (!slider) {
-            throw new Error('No reference to slider')
+        if (!slider) { throw new Error('No reference to slider') }
+
+        const updatePercentage = (e: MouseEvent): void => {
+            const { left, right } = slider.getBoundingClientRect()
+            const dx = e.clientX - left
+            const width = right - left
+            const clickPercentage = clamp(dx / width, 0, 1)
+
+            setPercentage(clickPercentage)
+            setBlend(clickPercentage)
         }
 
-        const mouseup = (): void => { dragRef.current = false }
-        const mouseleave = (): void => { dragRef.current = false }
-        const mousedown = (): void => { dragRef.current = true }
-        const mousemove = (e: MouseEvent): void => {
-            if (dragRef.current) {
-                const { left, right } = slider.getBoundingClientRect()
-                const dx = e.clientX - left
-                const width = right - left
-                const clickPercentage = clamp(dx / width, 0, 1)
-                setPercentage(clickPercentage)
-                setBlend(clickPercentage)
+        if (!dragging) {
+            const mousedown = (e: MouseEvent): void => {
+                updatePercentage(e)
+                setDragging(true)
+            }
+            // attach only mousedown event to slider so drag
+            // can extend past slider bounds once started
+            slider.addEventListener('mousedown', mousedown)
+            return () => {
+                slider.removeEventListener('mousedown', mousedown)
             }
         }
 
+        const mouseup = (): void => { setDragging(false) }
+        const mouseleave = (): void => { setDragging(false) }
+        const mousemove = (e: MouseEvent): void => { updatePercentage(e) }
         window.addEventListener('mouseup', mouseup)
         window.addEventListener('mouseleave', mouseleave)
         window.addEventListener('mousemove', mousemove)
-        // only attach drag start handler to slider so mouse can leave
-        // slider bounds and drag will continue
-        slider.addEventListener('mousedown', mousedown)
-
         return () => {
-            window.removeEventListener('mousemove', mousemove)
             window.removeEventListener('mouseup', mouseup)
             window.removeEventListener('mouseleave', mouseleave)
-            slider.removeEventListener('mousedown', mousedown)
+            window.removeEventListener('mousemove', mousemove)
         }
-    }, [setBlend])
+    }, [dragging, setBlend])
 
     return (
         <div className={'mineral-blender'}>
@@ -58,6 +64,12 @@ function MineralBlender (
                 <p>{mineral}</p>
             </div>
             <div ref={sliderRef} className={'slider-wrap'}>
+                { dragging && <div
+                    className={'slider-arrow'}
+                    style={{ left: `${percentage * 100}%` }}
+                >
+                    <IoCaretDownSharp />
+                </div> }
                 <div
                     className={'slider-value'}
                     style={{ width: `${percentage * 100}%` }}
