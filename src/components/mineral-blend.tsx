@@ -95,15 +95,10 @@ function MineralBlender (
     }, [dragging])
 
     useEffect(() => {
-        if (!textInputRef.current) {
-            throw new Error('No reference to text input element')
-        }
         if (visible) {
             setBlend(percentage)
-            textInputRef.current.value = formatPercent(percentage)
         } else {
             setBlend(0)
-            textInputRef.current.value = '0'
         }
     }, [visible, percentage, setBlend])
 
@@ -133,12 +128,12 @@ function MineralBlender (
                 </div>
             </div>
             <div ref={sliderRef} className={'slider-wrap'}>
-                { dragging && <div
+                <div
                     className={'slider-arrow'}
                     style={{ left: `${percentage * 100}%` }}
                 >
                     <IoCaretDownSharp />
-                </div> }
+                </div>
                 <div
                     className={'slider-value'}
                     style={{ width: `${percentage * 100}%` }}

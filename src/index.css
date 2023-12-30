@@ -5,7 +5,7 @@
     --color1: #606060;
     --color2: #808080;
     --color3: #a0a0a0;
-    --transition-param: 150ms ease-out;
+    --transition-param: 150ms ease;
 }
 
 * {

@@ -42,6 +42,7 @@
     width: 20px;
     height: 20px;
     font-size: 14px;
+    transition: color var(--transition-param);
 }
 
 .mineral-blender[data-visible="false"] a {
@@ -68,6 +69,13 @@
 
 .percentage-wrap {
     color: var(--color3);
+    opacity: 1;
+    transition: opacity var(--transition-param);
+}
+
+.mineral-blender[data-visible="false"] .percentage-wrap {
+    pointer-events: none;
+    opacity: 0;
 }
 
 .percentage-wrap input[type="text"] {
@@ -100,9 +108,10 @@
 }
 
 .slider-value {
+    pointer-events: none;
     height: 100%;
     background-color: #fff;
-    pointer-events: none;
+    transition: background-color var(--transition-param);
 }
 
 .mineral-blender[data-visible="false"] .slider-value {
@@ -114,4 +123,8 @@
     width: 10px;
     height: 10px;
     transform: translate(-5px, -8px);
+}
+
+.mineral-blender[data-dragging="false"] .slider-arrow {
+    display: none;
 }
