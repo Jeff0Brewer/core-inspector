@@ -3,7 +3,8 @@
     --border-radius: 3px;
     --color0: #202020;
     --color1: #606060;
-    --color2: #707070;
+    --color2: #808080;
+    --color3: #a0a0a0;
     --transition-param: 150ms ease-out;
 }
 
@@ -21,14 +22,13 @@ body {
     overscroll-behavior-y: none;
 }
 
-a {
+button, a {
     cursor: pointer;
 }
 
-button {
+button, input[type="text"] {
     color: inherit;
     border: none;
-    cursor: pointer;
     font: inherit;
 }
 

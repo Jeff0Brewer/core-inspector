@@ -74,10 +74,20 @@ function MineralBlender (
             data-dragging={dragging}
         >
             <div className={'mineral-blender-top'}>
-                <a onClick={(): void => { setVisible(!visible) }}>
-                    <MdRemoveRedEye />
-                </a>
-                <p>{mineral}</p>
+                <div>
+                    <a onClick={(): void => { setVisible(!visible) }}>
+                        <MdRemoveRedEye />
+                    </a>
+                    <p>{mineral}</p>
+                </div>
+                <div>
+                    <div className={'percentage-wrap'}>
+                        <input
+                            type="text"
+                        />
+                        %
+                    </div>
+                </div>
             </div>
             <div ref={sliderRef} className={'slider-wrap'}>
                 { dragging && <div
