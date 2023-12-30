@@ -1,9 +1,121 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
+import { PiCaretDownBold } from 'react-icons/pi'
 import { IoCaretDownSharp } from 'react-icons/io5'
-import { clamp } from '../lib/util'
+import { vec3 } from 'gl-matrix'
+import { clamp, vecToHex } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/mineral-blend.css'
+
+type MineralColor = {
+    color: vec3,
+    mineral?: string
+}
+
+const ITEMS: Array<Array<MineralColor>> = [
+    [
+        { color: [1, 0, 0] },
+        { color: [0, 1, 0] },
+        { color: [0, 0, 1] },
+        { color: [1, 0, 1] },
+        { color: [1, 1, 0] }
+    ], [
+        { color: [0.5, 0.25, 0.25] },
+        { color: [0.25, 0.5, 0.25] },
+        { color: [0.25, 0.25, 0.5] },
+        { color: [0.5, 0.25, 0.5] },
+        { color: [0.5, 0.5, 0.25] }
+    ]
+]
+
+type ColorDropdownProps = {
+    items: Array<Array<MineralColor>>,
+    setColors: (c: Array<MineralColor>) => void
+}
+
+function ColorDropdown (
+    { items, setColors }: ColorDropdownProps
+): ReactElement {
+    const [open, setOpen] = useState<boolean>(false)
+
+    const getColor = (swatch: MineralColor): string => {
+        const colorU8 = vec3.create()
+        vec3.scale(colorU8, swatch.color, 255)
+        vec3.floor(colorU8, colorU8)
+        const color = `#${vecToHex([...colorU8])}`
+        return color
+    }
+
+    return (
+        <div className={'dropdown'} data-open={open}>
+            <div className={'content'}>
+                <div className={'selected'}></div>
+                { open && <div className={'items'}>
+                    { items.map((item, i) =>
+                        <a className={'item'} key={i}>
+                            { item.map((swatch, i) =>
+                                <div
+                                    key={i}
+                                    className={'swatch'}
+                                    style={{ backgroundColor: getColor(swatch) }}
+                                ></div>) }
+                        </a>) }
+                </div> }
+            </div>
+            <button onClick={(): void => setOpen(!open)}>
+                <PiCaretDownBold />
+            </button>
+        </div>
+    )
+}
+
+type MineralBlendProps = {
+    minerals: Array<string>,
+    currMineral: number,
+    setMineral: (i: number) => void,
+    setBlending: (i: number, m: number) => void
+}
+
+function MineralBlend (
+    { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
+): ReactElement {
+    const [open, setOpen] = useState<boolean>(true)
+
+    // close blend menu if not currently using blended output
+    useEffect(() => {
+        if (currMineral >= 0) {
+            setOpen(false)
+        }
+    }, [currMineral])
+
+    return (
+        <div className={'blend'}>
+            <button
+                onClick={() => {
+                    setMineral(-1)
+                    setOpen(!open)
+                }}
+                data-active={currMineral < 0}
+            >
+                <MdColorLens />
+            </button>
+            { open && <section className={'menu'}>
+                <div>
+                    <ColorDropdown items={ITEMS} setColors={(c) => { console.log(c) }} />
+                </div>
+                <div>
+                    { minerals.map((name, i) => (
+                        <MineralBlender
+                            key={i}
+                            mineral={name}
+                            setBlend={(m: number) => { setBlending(i, m) }}
+                        />
+                    )) }
+                </div>
+            </section> }
+        </div>
+    )
+}
 
 type MineralBlenderProps = {
     mineral: string,
@@ -62,7 +174,7 @@ function MineralBlender (
             const clickPercentage = clamp(dx / width, 0, 1)
 
             setPercentage(clickPercentage)
-            textInput.value = (clickPercentage * 100).toFixed()
+            textInput.value = formatPercent(clickPercentage)
         }
 
         if (!dragging) {
@@ -104,84 +216,39 @@ function MineralBlender (
 
     return (
         <div
-            className={'mineral-blender'}
+            className={'mineral'}
             data-visible={visible}
             data-dragging={dragging}
         >
-            <div className={'mineral-blender-top'}>
+            <div className={'top'}>
                 <div>
                     <a onClick={(): void => { setVisible(!visible) }}>
                         <MdRemoveRedEye />
                     </a>
                     <p>{mineral}</p>
                 </div>
-                <div>
-                    <div className={'percentage-wrap'}>
-                        <input
-                            ref={textInputRef}
-                            type="text"
-                            defaultValue={lastValidTextRef.current}
-                            onInput={updatePercentageText}
-                        />
-                        %
-                    </div>
+                <div className={'percentage'}>
+                    <input
+                        ref={textInputRef}
+                        type="text"
+                        defaultValue={lastValidTextRef.current}
+                        onInput={updatePercentageText}
+                    />
+                    %
                 </div>
             </div>
-            <div ref={sliderRef} className={'slider-wrap'}>
+            <div ref={sliderRef} className={'slider'}>
                 <div
-                    className={'slider-arrow'}
+                    className={'arrow'}
                     style={{ left: `${percentage * 100}%` }}
                 >
                     <IoCaretDownSharp />
                 </div>
                 <div
-                    className={'slider-value'}
+                    className={'value'}
                     style={{ width: `${percentage * 100}%` }}
                 ></div>
             </div>
-        </div>
-    )
-}
-
-type MineralBlendProps = {
-    minerals: Array<string>,
-    currMineral: number,
-    setMineral: (i: number) => void,
-    setBlending: (i: number, m: number) => void
-}
-
-function MineralBlend (
-    { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
-): ReactElement {
-    const [open, setOpen] = useState<boolean>(false)
-
-    // close blend menu if not currently using blended output
-    useEffect(() => {
-        if (currMineral >= 0) {
-            setOpen(false)
-        }
-    }, [currMineral])
-
-    return (
-        <div className={'blend-menu'}>
-            <button
-                onClick={() => {
-                    setMineral(-1)
-                    setOpen(!open)
-                }}
-                data-active={currMineral < 0}
-            >
-                <MdColorLens />
-            </button>
-            { open && <div>
-                { minerals.map((name, i) => (
-                    <MineralBlender
-                        key={i}
-                        mineral={name}
-                        setBlend={(m: number) => { setBlending(i, m) }}
-                    />
-                )) }
-            </div> }
         </div>
     )
 }

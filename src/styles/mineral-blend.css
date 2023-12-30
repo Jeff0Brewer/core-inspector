@@ -8,7 +8,7 @@
     font-size: 16px;
     height: 20px;
     width: 30px;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius);
 }
 
 .blend .menu {
@@ -98,6 +98,7 @@
     transition:
         height var(--transition-param),
         margin-bottom var(--transition-param);
+    transition-delay: 1s;
 }
 
 .mineral:hover .slider,
@@ -105,6 +106,7 @@
 .mineral:focus-within .slider {
     height: var(--slider-height);
     margin-bottom: 0;
+    transition-delay: 0s;
 }
 
 .slider .value {
@@ -130,4 +132,71 @@
 
 .mineral[data-dragging="false"] .slider .arrow {
     opacity: 0;
+}
+
+.dropdown {
+    position: relative;
+    z-index: 999;
+    display: grid;
+    width: 220px;
+    height: 20px;
+    grid-template-columns: 1fr 20px;
+    grid-template-rows: 20px auto;
+    grid-template-areas: "content button";
+    overflow: visible;
+
+    background-color: var(--color0);
+}
+
+.dropdown .content {
+    grid-area: "content";
+}
+
+.dropdown button {
+    background-color: transparent;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    border: 1px solid var(--color1);
+    border-left: none;
+    background-color: var(--color0);
+    transition: background-color var(--transition-param);
+}
+
+.dropdown button:hover {
+    background-color: #303030;
+}
+
+.dropdown button > * {
+    transition: transform var(--transition-param);
+}
+
+.dropdown[data-open="true"] button > * {
+    transform: rotate(180deg);
+}
+
+
+.dropdown .selected {
+    height: 100%;
+    border: 1px solid var(--color2);
+}
+
+.dropdown .items {
+    background-color: var(--color0);
+    border: 1px solid var(--color1);
+    border-top: none;
+}
+
+.dropdown .item {
+    display: flex;
+    padding: 2px;
+    gap: 2px;
+    width: 100%;
+}
+
+.dropdown .items .item:not(:last-of-type) {
+    border-bottom: 1px solid var(--color1);
+}
+
+.swatch {
+    width: 16px;
+    height: 16px;
 }
