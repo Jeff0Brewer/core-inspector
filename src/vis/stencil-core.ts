@@ -1,5 +1,6 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
+import { vecToHex } from '../lib/util'
 import { POS_FPV, POS_STRIDE } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -145,10 +146,6 @@ class StencilCoreRenderer {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
-}
-
-const vecToHex = (v: Array<number>): string => {
-    return v.map(x => x.toString(16)).join()
 }
 
 const indToColor = (i: number): { vec: vec2, hex: string } => {

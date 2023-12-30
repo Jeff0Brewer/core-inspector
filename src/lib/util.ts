@@ -7,6 +7,10 @@ const clamp = (v: number, min: number, max: number): number => {
     return Math.max(Math.min(v, max), min)
 }
 
+const vecToHex = (v: Array<number>): string => {
+    return v.map(x => x.toString(16)).join()
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -14,5 +18,9 @@ type BoundRect = {
     right: number
 }
 
-export { ease, clamp }
+export {
+    ease,
+    clamp,
+    vecToHex
+}
 export type { BoundRect }
