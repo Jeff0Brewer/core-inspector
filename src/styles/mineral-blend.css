@@ -1,4 +1,4 @@
-.blend-menu > button {
+.blend > button {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -11,7 +11,7 @@
     border-radius: var(--border-radius);
 }
 
-.blend-menu > div {
+.blend .menu {
     position: absolute;
 
     right: 0;
@@ -24,11 +24,11 @@
     background-color: var(--menu-bg-color);
 }
 
-.blend-menu p {
+.blend p {
     text-transform: uppercase;
 }
 
-.mineral-blender {
+.mineral {
     --slider-height: 4px;
     position: relative;
     width: 250px;
@@ -36,7 +36,7 @@
     padding-top: var(--slider-height);
 }
 
-.mineral-blender a {
+.mineral a {
     display: grid;
     place-content: center;
     width: 20px;
@@ -45,40 +45,40 @@
     transition: color var(--transition-param);
 }
 
-.mineral-blender[data-visible="false"] a {
+.mineral[data-visible="false"] a {
     color: var(--color2);
 }
 
-.mineral-blender p {
+.mineral p {
     font-size: 0.65rem;
     letter-spacing: 0.05rem;
     font-weight: 300;
 }
 
-.mineral-blender-top {
+.mineral .top {
     display: flex;
     justify-content: space-between;
     background-color: var(--color0);
 }
 
-.mineral-blender-top > div {
+.mineral .top > div {
     display: flex;
     align-items: center;
     gap: 5px;
 }
 
-.percentage-wrap {
+.percentage {
     color: var(--color3);
     opacity: 1;
     transition: opacity var(--transition-param);
 }
 
-.mineral-blender[data-visible="false"] .percentage-wrap {
+.mineral[data-visible="false"] .percentage {
     pointer-events: none;
     opacity: 0;
 }
 
-.percentage-wrap input[type="text"] {
+.percentage input[type="text"] {
     background-color: transparent;
     border: 1px solid var(--color1);
     height: 16px;
@@ -88,7 +88,7 @@
     padding: 4px;
 }
 
-.slider-wrap {
+.slider {
     position: relative;
     width: 100%;
     background-color: var(--color1);
@@ -100,25 +100,25 @@
         margin-bottom var(--transition-param);
 }
 
-.mineral-blender:hover .slider-wrap,
-.mineral-blender[data-dragging="true"] .slider-wrap,
-.mineral-blender:focus-within .slider-wrap {
+.mineral:hover .slider,
+.mineral[data-dragging="true"] .slider,
+.mineral:focus-within .slider {
     height: var(--slider-height);
     margin-bottom: 0;
 }
 
-.slider-value {
+.slider .value {
     pointer-events: none;
     height: 100%;
     background-color: #fff;
     transition: background-color var(--transition-param);
 }
 
-.mineral-blender[data-visible="false"] .slider-value {
+.mineral[data-visible="false"] .slider .value {
     background-color: transparent;
 }
 
-.slider-arrow {
+.slider .arrow {
     position: absolute;
     width: 10px;
     height: 10px;
@@ -128,6 +128,6 @@
     transition: opacity var(--transition-param);
 }
 
-.mineral-blender[data-dragging="false"] .slider-arrow {
+.mineral[data-dragging="false"] .slider .arrow {
     opacity: 0;
 }
