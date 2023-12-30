@@ -10,6 +10,10 @@ type MineralBlenderProps = {
     setBlend: (m: number) => void
 }
 
+const formatPercent = (p: number): string => {
+    return (p * 100).toFixed()
+}
+
 function MineralBlender (
     { mineral, setBlend }: MineralBlenderProps
 ): ReactElement {
@@ -17,24 +21,53 @@ function MineralBlender (
     const [visible, setVisible] = useState<boolean>(true)
     const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
+    const textInputRef = useRef<HTMLInputElement>(null)
+
+    const lastValidTextRef = useRef<string>(formatPercent(percentage))
+    const cleanTextTimeoutIdRef = useRef<number>(-1)
+
+    const updatePercentageText = (): void => {
+        if (!textInputRef.current) {
+            throw new Error('No reference to text input element')
+        }
+
+        const value = parseFloat(textInputRef.current.value)
+        if (!Number.isNaN(value) && value >= 0 && value <= 100) {
+            const percentage = value * 0.01
+            setPercentage(percentage)
+            // store valid text input value to revert to
+            // if user input invalid
+            lastValidTextRef.current = formatPercent(percentage)
+        }
+
+        window.clearTimeout(cleanTextTimeoutIdRef.current)
+        cleanTextTimeoutIdRef.current = window.setTimeout((): void => {
+            if (textInputRef.current) {
+                textInputRef.current.value = lastValidTextRef.current
+            }
+        }, 5000)
+    }
 
     useEffect(() => {
         const slider = sliderRef.current
-        if (!slider) { throw new Error('No reference to slider') }
+        const textInput = textInputRef.current
+        if (!slider || !textInput) {
+            throw new Error('No reference to input elements')
+        }
 
-        const updatePercentage = (e: MouseEvent): void => {
+        const updatePercentageMouse = (e: MouseEvent): void => {
             const { left, right } = slider.getBoundingClientRect()
             const dx = e.clientX - left
             const width = right - left
             const clickPercentage = clamp(dx / width, 0, 1)
 
             setPercentage(clickPercentage)
-            setBlend(clickPercentage)
+            textInput.value = (clickPercentage * 100).toFixed()
         }
 
         if (!dragging) {
             const mousedown = (e: MouseEvent): void => {
-                updatePercentage(e)
+                updatePercentageMouse(e)
                 setDragging(true)
                 setVisible(true)
             }
@@ -48,7 +81,9 @@ function MineralBlender (
 
         const mouseup = (): void => { setDragging(false) }
         const mouseleave = (): void => { setDragging(false) }
-        const mousemove = (e: MouseEvent): void => { updatePercentage(e) }
+        const mousemove = (e: MouseEvent): void => {
+            updatePercentageMouse(e)
+        }
         window.addEventListener('mouseup', mouseup)
         window.addEventListener('mouseleave', mouseleave)
         window.addEventListener('mousemove', mousemove)
@@ -57,13 +92,18 @@ function MineralBlender (
             window.removeEventListener('mouseleave', mouseleave)
             window.removeEventListener('mousemove', mousemove)
         }
-    }, [dragging, setBlend])
+    }, [dragging])
 
     useEffect(() => {
+        if (!textInputRef.current) {
+            throw new Error('No reference to text input element')
+        }
         if (visible) {
             setBlend(percentage)
+            textInputRef.current.value = formatPercent(percentage)
         } else {
             setBlend(0)
+            textInputRef.current.value = '0'
         }
     }, [visible, percentage, setBlend])
 
@@ -83,7 +123,10 @@ function MineralBlender (
                 <div>
                     <div className={'percentage-wrap'}>
                         <input
+                            ref={textInputRef}
                             type="text"
+                            defaultValue={lastValidTextRef.current}
+                            onInput={updatePercentageText}
                         />
                         %
                     </div>

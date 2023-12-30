@@ -93,7 +93,8 @@
 }
 
 .mineral-blender:hover .slider-wrap,
-.mineral-blender[data-dragging="true"] .slider-wrap {
+.mineral-blender[data-dragging="true"] .slider-wrap,
+.mineral-blender:focus-within .slider-wrap {
     height: var(--slider-height);
     margin-bottom: 0;
 }
