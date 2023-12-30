@@ -14,6 +14,7 @@ function MineralBlender (
     { mineral, setBlend }: MineralBlenderProps
 ): ReactElement {
     const [percentage, setPercentage] = useState<number>(VIS_DEFAULTS.mineral.blendMagnitude)
+    const [visible, setVisible] = useState<boolean>(true)
     const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
 
@@ -35,6 +36,7 @@ function MineralBlender (
             const mousedown = (e: MouseEvent): void => {
                 updatePercentage(e)
                 setDragging(true)
+                setVisible(true)
             }
             // attach only mousedown event to slider so drag
             // can extend past slider bounds once started
@@ -57,10 +59,24 @@ function MineralBlender (
         }
     }, [dragging, setBlend])
 
+    useEffect(() => {
+        if (visible) {
+            setBlend(percentage)
+        } else {
+            setBlend(0)
+        }
+    }, [visible, percentage, setBlend])
+
     return (
-        <div className={'mineral-blender'}>
+        <div
+            className={'mineral-blender'}
+            data-visible={visible}
+            data-dragging={dragging}
+        >
             <div className={'mineral-blender-top'}>
-                <a><MdRemoveRedEye /></a>
+                <a onClick={(): void => { setVisible(!visible) }}>
+                    <MdRemoveRedEye />
+                </a>
                 <p>{mineral}</p>
             </div>
             <div ref={sliderRef} className={'slider-wrap'}>

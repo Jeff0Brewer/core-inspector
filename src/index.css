@@ -4,6 +4,7 @@
     --color0: #202020;
     --color1: #606060;
     --color2: #707070;
+    --transition-param: 150ms ease-out;
 }
 
 * {
@@ -20,6 +21,10 @@ body {
     overscroll-behavior-y: none;
 }
 
+a {
+    cursor: pointer;
+}
+
 button {
     color: inherit;
     border: none;
@@ -28,7 +33,7 @@ button {
 }
 
 button[data-active] {
-    transition: background-color 200ms ease;
+    transition: background-color var(--transition-param);
 }
 
 button[data-active="true"] {
