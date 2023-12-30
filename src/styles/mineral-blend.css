@@ -143,29 +143,58 @@
 }
 
 .dropdown {
+    --height: 22px;
     position: relative;
-    display: grid;
     width: 220px;
-    height: 20px;
-    grid-template-columns: 1fr 20px;
-    grid-template-rows: 20px auto;
-    grid-template-areas: "content button";
-    overflow: visible;
-
-    background-color: var(--color0);
+    height: var(--height);
 }
 
-.dropdown .content {
-    grid-area: "content";
+.dropdown .label {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.dropdown .selected {
+    position: relative;
+    z-index: 200;
+    width: calc(100% - var(--height));
+    height: 100%;
+    border: 1px solid var(--color2);
+    background-color: var(--color0);
+    transition: opacity var(--transition-param);
+}
+
+.dropdown[data-selected="false"] .selected {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .dropdown button {
+    position: absolute;
+    right: 0;
+    width: var(--height);
+    height: 100%;
+
     background-color: transparent;
     border-radius: 0 var(--radius) var(--radius) 0;
     border: 1px solid var(--color1);
-    border-left: none;
     background-color: var(--color0);
-    transition: background-color var(--transition-param);
+    transition:
+        background-color var(--transition-param),
+        border-radius var(--transition-param),
+        width var(--transition-param);
+}
+
+.dropdown[data-selected="true"] button {
+    border-left: none;
+}
+
+.dropdown[data-selected="false"] button {
+    border-radius: var(--radius);
+    width: 100%;
+
 }
 
 .dropdown button:hover {
@@ -180,13 +209,10 @@
     transform: rotate(180deg);
 }
 
-.dropdown .selected {
-    height: 100%;
-    border: 1px solid var(--color2);
-}
-
-.dropdown .items {
-    position: relative;
+.dropdown .content {
+    position: absolute;
+    top: 100%;
+    width: 100%;
     z-index: 999;
     background-color: var(--color0);
     border: 1px solid var(--color1);
@@ -196,7 +222,7 @@
         transform var(--transition-param);
 }
 
-.dropdown[data-open="false"] .items {
+.dropdown[data-open="false"] .content {
     pointer-events: none;
     opacity: 0;
     transform: translateY(-2px);
@@ -209,11 +235,24 @@
     width: 100%;
 }
 
-.dropdown .items .item:not(:last-of-type) {
+.dropdown .content .item:not(:last-of-type) {
     border-bottom: 1px solid var(--color1);
 }
 
 .swatch {
+    position: relative;
     width: 16px;
     height: 16px;
+}
+
+.swatch p {
+    background-color: #000;
+    width: 100%;
+    height: 60%;
+    border-top: 1px solid var(--color0);
+    position: absolute;
+    bottom: 0;
+    font-size: 0.4rem;
+    display: grid;
+    place-content: center;
 }

@@ -12,7 +12,9 @@ type MineralColor = {
     mineral?: string
 }
 
-const ITEMS: Array<Array<MineralColor>> = [
+type ColorPreset = Array<MineralColor>
+
+const ITEMS: Array<ColorPreset> = [
     [
         { color: [1, 0, 0] },
         { color: [0, 1, 0] },
@@ -28,15 +30,31 @@ const ITEMS: Array<Array<MineralColor>> = [
     ]
 ]
 
+const LABELED_ITEMS: Array<ColorPreset> = [
+    [
+        { mineral: 'chlorite', color: [1, 0, 0] },
+        { mineral: 'epidote', color: [0, 1, 0] },
+        { mineral: 'prehnite', color: [0, 0, 1] },
+        { mineral: 'amphibole', color: [1, 0, 1] },
+        { mineral: 'carbonate', color: [1, 1, 0] }
+    ], [
+        { mineral: 'pyroxene', color: [1, 0, 0] },
+        { mineral: 'amphibole', color: [0, 1, 0] },
+        { mineral: 'gypsum', color: [0, 0, 1] },
+        { mineral: 'kaolinite-montmorillinite', color: [1, 0, 1] },
+        { mineral: 'zeolite', color: [1, 1, 0] }
+    ]
+]
+
 type ColorDropdownProps = {
-    items: Array<Array<MineralColor>>,
-    setColors: (c: Array<MineralColor>) => void
+    items: Array<ColorPreset>
 }
 
 function ColorDropdown (
-    { items, setColors }: ColorDropdownProps
+    { items }: ColorDropdownProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
+    const [selected, setSelected] = useState<ColorPreset | null>(null)
 
     const getColor = (swatch: MineralColor): string => {
         const colorU8 = vec3.create()
@@ -46,25 +64,47 @@ function ColorDropdown (
         return color
     }
 
+    const renderColorPreset = (item: ColorPreset, key: number): ReactElement => {
+        return (
+            <a
+                className={'item'} key={key}
+                onClick={() => {
+                    setSelected(item)
+                    setOpen(false)
+                }}
+            >
+                { item.map((swatch, i) =>
+                    <div
+                        key={i}
+                        className={'swatch'}
+                        style={{ backgroundColor: getColor(swatch) }}
+                    >
+                        { swatch.mineral && <p>
+                            {swatch.mineral.substring(0, 3)}
+                        </p>}
+                    </div>) }
+            </a>
+        )
+    }
+
     return (
-        <div className={'dropdown'} data-open={open}>
-            <div className={'content'}>
-                <div className={'selected'}></div>
-                <div className={'items'}>
-                    { items.map((item, i) =>
-                        <a className={'item'} key={i}>
-                            { item.map((swatch, i) =>
-                                <div
-                                    key={i}
-                                    className={'swatch'}
-                                    style={{ backgroundColor: getColor(swatch) }}
-                                ></div>) }
-                        </a>) }
+        <div
+            className={'dropdown'}
+            data-open={open}
+            data-selected={!!selected}
+        >
+            <div className={'label'}>
+                <div className={'selected'}>
+                    { selected !== null && renderColorPreset(selected, 0) }
                 </div>
+                <button onClick={() => setOpen(!open)}>
+                    <PiCaretDownBold />
+                </button>
             </div>
-            <button onClick={(): void => setOpen(!open)}>
-                <PiCaretDownBold />
-            </button>
+            <div className={'content'}>
+                { items.map((item, i) =>
+                    renderColorPreset(item, i)) }
+            </div>
         </div>
     )
 }
@@ -102,11 +142,11 @@ function MineralBlend (
             { open && <section className={'menu'}>
                 <p>color+mineral presets</p>
                 <div>
-                    <ColorDropdown items={ITEMS} setColors={(c) => { console.log(c) }} />
+                    <ColorDropdown items={LABELED_ITEMS} />
                 </div>
                 <p>color presets</p>
                 <div>
-                    <ColorDropdown items={ITEMS} setColors={(c) => { console.log(c) }} />
+                    <ColorDropdown items={ITEMS} />
                 </div>
                 <p>mineral color mixer</p>
                 <div>
