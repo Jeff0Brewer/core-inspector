@@ -24,6 +24,14 @@
     background-color: var(--menu-bg-color);
 }
 
+.blend .menu > p {
+    padding: 5px 0;
+}
+
+.blend .menu > p:not(:first-of-type) {
+    margin-top: 20px;
+}
+
 .blend p {
     text-transform: uppercase;
 }

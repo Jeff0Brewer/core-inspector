@@ -100,9 +100,15 @@ function MineralBlend (
                 <MdColorLens />
             </button>
             { open && <section className={'menu'}>
+                <p>color+mineral presets</p>
                 <div>
                     <ColorDropdown items={ITEMS} setColors={(c) => { console.log(c) }} />
                 </div>
+                <p>color presets</p>
+                <div>
+                    <ColorDropdown items={ITEMS} setColors={(c) => { console.log(c) }} />
+                </div>
+                <p>mineral color mixer</p>
                 <div>
                     { minerals.map((name, i) => (
                         <MineralBlender
