@@ -1,6 +1,9 @@
 :root {
     --menu-bg-color: rgba(65, 65, 65, 0.65);
     --border-radius: 3px;
+    --color0: #202020;
+    --color1: #606060;
+    --color2: #707070;
 }
 
 * {
@@ -29,15 +32,15 @@ button[data-active] {
 }
 
 button[data-active="true"] {
-    background-color: #202020;
+    background-color: var(--color0);
 }
 
 button[data-active="false"] {
-    background-color: #606060;
+    background-color: var(--color1);
 }
 
 button[data-active="false"]:hover {
-    background-color: #707070;
+    background-color: var(--color2);
 }
 
 input[type="range"] {
