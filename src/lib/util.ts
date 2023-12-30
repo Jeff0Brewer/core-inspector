@@ -8,7 +8,12 @@ const clamp = (v: number, min: number, max: number): number => {
 }
 
 const vecToHex = (v: Array<number>): string => {
-    return v.map(x => x.toString(16)).join()
+    return v.map(x => {
+        const hex = x.toString(16)
+        return hex.length === 1
+            ? '0' + hex
+            : hex
+    }).join('')
 }
 
 type BoundRect = {
