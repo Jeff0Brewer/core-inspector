@@ -181,7 +181,6 @@
     transform: rotate(180deg);
 }
 
-
 .dropdown .selected {
     height: 100%;
     border: 1px solid var(--color2);
@@ -191,6 +190,15 @@
     background-color: var(--color0);
     border: 1px solid var(--color1);
     border-top: none;
+    transition:
+        opacity var(--transition-param),
+        transform var(--transition-param);
+}
+
+.dropdown[data-open="false"] .items {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-2px);
 }
 
 .dropdown .item {

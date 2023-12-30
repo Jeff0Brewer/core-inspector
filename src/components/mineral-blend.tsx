@@ -50,7 +50,7 @@ function ColorDropdown (
         <div className={'dropdown'} data-open={open}>
             <div className={'content'}>
                 <div className={'selected'}></div>
-                { open && <div className={'items'}>
+                <div className={'items'}>
                     { items.map((item, i) =>
                         <a className={'item'} key={i}>
                             { item.map((swatch, i) =>
@@ -60,7 +60,7 @@ function ColorDropdown (
                                     style={{ backgroundColor: getColor(swatch) }}
                                 ></div>) }
                         </a>) }
-                </div> }
+                </div>
             </div>
             <button onClick={(): void => setOpen(!open)}>
                 <PiCaretDownBold />
