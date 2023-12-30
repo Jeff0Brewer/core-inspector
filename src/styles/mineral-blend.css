@@ -28,3 +28,44 @@
 .blend-menu p {
     text-transform: uppercase;
 }
+
+
+.mineral-blender {
+    position: relative;
+    width: 250px;
+    background-color: var(--color0);
+    user-select: none;
+}
+
+.mineral-blender a {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+}
+
+.mineral-blender p {
+    font-size: 12px;
+    letter-spacing: 1px;
+    font-weight: 300;
+}
+
+.mineral-blender-top {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.slider-wrap {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background-color: var(--color1);
+}
+
+.slider-value {
+    height: 100%;
+    background-color: #fff;
+    pointer-events: none;
+}

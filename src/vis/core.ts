@@ -43,6 +43,7 @@ class CoreRenderer {
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
+    blendMagnitudes: Array<number>
 
     constructor (
         gl: WebGLRenderingContext,
@@ -60,9 +61,9 @@ class CoreRenderer {
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
 
-        const defaultBlendMags = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
-        downBlender.update(gl, defaultBlendMags)
-        punchBlender.update(gl, defaultBlendMags)
+        this.blendMagnitudes = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
+        downBlender.update(gl, this.blendMagnitudes)
+        punchBlender.update(gl, this.blendMagnitudes)
 
         this.downRenderer = new DownscaledCoreRenderer(
             gl,
@@ -118,9 +119,10 @@ class CoreRenderer {
         this.viewMode = v
     }
 
-    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
-        this.downRenderer.minerals.update(gl, magnitudes)
-        this.punchRenderer.minerals.update(gl, magnitudes)
+    setBlending (gl: WebGLRenderingContext, ind: number, magnitude: number): void {
+        this.blendMagnitudes[ind] = magnitude
+        this.downRenderer.minerals.update(gl, this.blendMagnitudes)
+        this.punchRenderer.minerals.update(gl, this.blendMagnitudes)
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {

@@ -135,8 +135,11 @@ class StencilCoreRenderer {
             gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
             const colorHex = vecToHex([pixels[0], pixels[1]])
-            this.currHovered = this.colorIdMap[colorHex]
-            setHovered(this.currHovered)
+            const newHovered = this.colorIdMap[colorHex]
+            if (this.currHovered !== newHovered) {
+                this.currHovered = newHovered
+                setHovered(this.currHovered)
+            }
         }
         this.lastMousePos = mousePos
 

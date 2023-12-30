@@ -88,8 +88,8 @@ class VisRenderer {
         this.core.setHovered(this.gl, id)
     }
 
-    setBlending (magnitudes: Array<number>): void {
-        this.core.setBlending(this.gl, magnitudes)
+    setBlending (ind: number, magnitude: number): void {
+        this.core.setBlending(this.gl, ind, magnitude)
     }
 
     setZoom (t: number): void {

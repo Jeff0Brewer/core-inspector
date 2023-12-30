@@ -121,7 +121,7 @@ function Vis ({ vis }: VisProps): ReactElement {
                     minerals={MINERALS}
                     currMineral={mineral}
                     setMineral={setMineral}
-                    setBlending={v => vis.setBlending(v)}
+                    setBlending={(i, m) => vis.setBlending(i, m)}
                 />
             </div>
         </div>
