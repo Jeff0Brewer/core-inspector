@@ -1,3 +1,4 @@
+import { vec3 } from 'gl-matrix'
 import {
     initProgram,
     initBuffer,
@@ -28,7 +29,8 @@ class MineralBlender {
     blended: WebGLTexture
     framebuffer: WebGLFramebuffer
 
-    setMagUniform: Array<(v: number) => void>
+    setMagUniform: Array<(m: number) => void>
+    setColUniform: Array<(c: vec3) => void>
 
     numVertex: number
     width: number
@@ -72,17 +74,21 @@ class MineralBlender {
         this.framebuffer = framebuffer
 
         this.setMagUniform = []
+        this.setColUniform = []
         for (let i = 0; i < sources.length; i++) {
-            // init texture / color uniforms statically
+            // init texture uniforms statically
             const textureLoc = gl.getUniformLocation(this.program, `texture${i}`)
-            const colorLoc = gl.getUniformLocation(this.program, `color${i}`)
             gl.uniform1i(textureLoc, i + 1) // add one since attachment 0 is reserved for output
-            gl.uniform3fv(colorLoc, COLORS[i])
 
-            // get closures to set each magnitude uniform easily on update
+            // get closures to set each magnitude / color uniforms easily on update
             const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
-            this.setMagUniform.push((v: number) => {
-                gl.uniform1f(magnitudeLoc, v)
+            this.setMagUniform.push((m: number) => {
+                gl.uniform1f(magnitudeLoc, m)
+            })
+
+            const colorLoc = gl.getUniformLocation(this.program, `color${i}`)
+            this.setColUniform.push((c: vec3) => {
+                gl.uniform3fv(colorLoc, c)
             })
         }
     }
@@ -96,9 +102,12 @@ class MineralBlender {
         }
     }
 
-    update (gl: WebGLRenderingContext, magnitudes: Array<number>): void {
+    update (gl: WebGLRenderingContext, magnitudes: Array<number>, colors: Array<vec3 | null>): void {
         if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
+        }
+        if (magnitudes.length !== colors.length) {
+            throw new Error('Different number of magnitudes and colors')
         }
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
@@ -110,7 +119,8 @@ class MineralBlender {
         for (let i = 0; i < this.sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i + 1])
             gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
-            this.setMagUniform[i](magnitudes[i])
+            this.setMagUniform[i](colors[i] !== null ? magnitudes[i] : 0)
+            this.setColUniform[i](colors[i] || [0, 0, 0])
         }
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
@@ -163,18 +173,6 @@ const FULLSCREEN_RECT = new Float32Array([
     -1, 1, 0, 1,
     1, 1, 1, 1
 ])
-
-const COLORS = [
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-    [0.5, 0.5, 0],
-    [0, 0.5, 0.5],
-    [0.5, 0, 0.5],
-    [0.8, 0.8, 0.8],
-    [0.5, 0.25, 0.25],
-    [0.25, 0.25, 0.5]
-]
 
 export default MineralBlender
 export type { MineralSettings }

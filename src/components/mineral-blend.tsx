@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactElement } from 'react'
+import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
 import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
 import { PiCaretDownBold } from 'react-icons/pi'
 import { IoCaretDownSharp } from 'react-icons/io5'
@@ -14,15 +14,63 @@ type MineralBlendProps = {
     minerals: Array<string>,
     currMineral: number,
     setMineral: (i: number) => void,
-    setBlending: (i: number, m: number) => void
+    setBlending: (m: Array<number>, c: Array<vec3 | null>) => void
 }
 
 function MineralBlend (
     { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
 ): ReactElement {
-    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
     const [pallate, setPallate] = useState<LabelledPallate | UnlabelledPallate>(LABELED_ITEMS[0])
+    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
+    const [magnitudes, setMagnitudes] = useState<Array<number>>(
+        Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
+    )
     const [open, setOpen] = useState<boolean>(true)
+
+    const getColor = useCallback((mineral: string, index: number): vec3 | null => {
+        const isLabelled = !Array.isArray(pallate)
+        let color
+        if (isLabelled) {
+            color = pallate[mineral] || null
+        } else {
+            if (visibilities[index]) {
+                const ind = visibilities.slice(0, index).filter(v => v).length
+                color = pallate[ind]
+            } else {
+                color = null
+            }
+        }
+        return color
+    }, [pallate, visibilities])
+
+    // init visibilities on pallate change, hide minerals not present in
+    // labelled keys and hide minerals not in unlabelled array bounds
+    useEffect(() => {
+        const isLabelled = !Array.isArray(pallate)
+        const visibilities = Array(minerals.length).fill(false)
+        if (isLabelled) {
+            const visibleMinerals = Object.keys(pallate)
+            for (let i = 0; i < minerals.length; i++) {
+                const visible = visibleMinerals.indexOf(minerals[i]) !== -1
+                if (visible) {
+                    visibilities[i] = true
+                }
+            }
+        } else {
+            for (let i = 0; i < pallate.length; i++) {
+                visibilities[i] = true
+            }
+        }
+        setVisibilities(visibilities)
+    }, [pallate, minerals])
+
+    useEffect(() => {
+        const colors = []
+        for (let i = 0; i < minerals.length; i++) {
+            colors.push(getColor(minerals[i], i))
+        }
+        setBlending(magnitudes, colors)
+    }, [minerals, magnitudes, getColor, setBlending])
 
     // close blend menu if not currently using blended output
     useEffect(() => {
@@ -30,23 +78,6 @@ function MineralBlend (
             setOpen(false)
         }
     }, [currMineral])
-
-    // init visibilities on pallate change, hide minerals not present in
-    // labelled keys and hide minerals not in unlabelled array bounds
-    useEffect(() => {
-        const isLabelled = !Array.isArray(pallate)
-        if (isLabelled) {
-            const visibleMinerals = Object.keys(pallate)
-            const visibilities = minerals.map(m => visibleMinerals.indexOf(m) !== -1)
-            setVisibilities(visibilities)
-        } else {
-            const visibilities = Array(minerals.length)
-            for (let i = 0; i < minerals.length; i++) {
-                visibilities[i] = i < pallate.length
-            }
-            setVisibilities(visibilities)
-        }
-    }, [pallate, minerals])
 
     const isLabelled = !Array.isArray(pallate)
     return (
@@ -79,29 +110,23 @@ function MineralBlend (
                 </div>
                 <p>mineral color mixer</p>
                 <div>
-                    { minerals.map((name, i) => {
-                        const setVisible = (visible: boolean): void => {
-                            visibilities[i] = visible
+                    { minerals.map((mineral, i) => {
+                        const setVisible = (v: boolean): void => {
+                            visibilities[i] = v
                             setVisibilities([...visibilities])
                         }
-                        let color
-                        if (isLabelled) {
-                            color = pallate[name] || null
-                        } else {
-                            if (visibilities[i]) {
-                                const ind = visibilities.slice(0, i).filter(v => v).length
-                                color = pallate[ind]
-                            } else {
-                                color = null
-                            }
+                        const setMagnitude = (m: number): void => {
+                            magnitudes[i] = m
+                            setMagnitudes([...magnitudes])
                         }
                         return <MineralBlender
                             key={i}
+                            mineral={mineral}
+                            color={getColor(mineral, i)}
                             visible={visibilities[i]}
                             setVisible={setVisible}
-                            mineral={name}
-                            setBlend={(m: number) => setBlending(i, m)}
-                            color={color}
+                            magnitude={magnitudes[i]}
+                            setMagnitude={setMagnitude}
                         />
                     }) }
                 </div>
@@ -197,22 +222,22 @@ const formatPercent = (p: number): string => {
 }
 
 type MineralBlenderProps = {
+    mineral: string,
+    color: vec3 | null,
     visible: boolean,
     setVisible: (v: boolean) => void,
-    mineral: string,
-    setBlend: (m: number) => void,
-    color: vec3 | null
+    magnitude: number,
+    setMagnitude: (m: number) => void
 }
 
 function MineralBlender (
-    { visible, setVisible, mineral, setBlend, color }: MineralBlenderProps
+    { mineral, color, visible, setVisible, magnitude, setMagnitude }: MineralBlenderProps
 ): ReactElement {
-    const [percentage, setPercentage] = useState<number>(VIS_DEFAULTS.mineral.blendMagnitude)
     const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
     const textInputRef = useRef<HTMLInputElement>(null)
 
-    const lastValidTextRef = useRef<string>(formatPercent(percentage))
+    const lastValidTextRef = useRef<string>(formatPercent(magnitude))
     const cleanTextTimeoutIdRef = useRef<number>(-1)
 
     const updatePercentageText = (): void => {
@@ -222,11 +247,11 @@ function MineralBlender (
 
         const value = parseFloat(textInputRef.current.value)
         if (!Number.isNaN(value) && value >= 0 && value <= 100) {
-            const percentage = value * 0.01
-            setPercentage(percentage)
+            const magnitude = value * 0.01
+            setMagnitude(magnitude)
             // store valid text input value to revert to
             // if user input invalid
-            lastValidTextRef.current = formatPercent(percentage)
+            lastValidTextRef.current = formatPercent(magnitude)
         }
 
         window.clearTimeout(cleanTextTimeoutIdRef.current)
@@ -236,14 +261,6 @@ function MineralBlender (
             }
         }, 5000)
     }
-
-    useEffect(() => {
-        if (visible && color) {
-            setBlend(percentage)
-        } else {
-            setBlend(0)
-        }
-    }, [visible, color, percentage, setBlend])
 
     useEffect(() => {
         const slider = sliderRef.current
@@ -258,7 +275,7 @@ function MineralBlender (
             const width = right - left
             const clickPercentage = clamp(dx / width, 0, 1)
 
-            setPercentage(clickPercentage)
+            setMagnitude(clickPercentage)
             textInput.value = formatPercent(clickPercentage)
         }
 
@@ -289,7 +306,7 @@ function MineralBlender (
             window.removeEventListener('mouseleave', mouseleave)
             window.removeEventListener('mousemove', mousemove)
         }
-    }, [dragging, setVisible])
+    }, [dragging, setMagnitude, setVisible])
 
     return (
         <div
@@ -322,13 +339,13 @@ function MineralBlender (
             <div ref={sliderRef} className={'slider'}>
                 <div
                     className={'arrow'}
-                    style={{ left: `${percentage * 100}%` }}
+                    style={{ left: `${magnitude * 100}%` }}
                 >
                     <IoCaretDownSharp />
                 </div>
                 <div
                     className={'value'}
-                    style={{ width: `${percentage * 100}%` }}
+                    style={{ width: `${magnitude * 100}%` }}
                 ></div>
             </div>
         </div>

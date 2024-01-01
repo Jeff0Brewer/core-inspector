@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -62,8 +62,6 @@ class CoreRenderer {
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
 
         this.blendMagnitudes = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
-        downBlender.update(gl, this.blendMagnitudes)
-        punchBlender.update(gl, this.blendMagnitudes)
 
         this.downRenderer = new DownscaledCoreRenderer(
             gl,
@@ -119,10 +117,9 @@ class CoreRenderer {
         this.viewMode = v
     }
 
-    setBlending (gl: WebGLRenderingContext, ind: number, magnitude: number): void {
-        this.blendMagnitudes[ind] = magnitude
-        this.downRenderer.minerals.update(gl, this.blendMagnitudes)
-        this.punchRenderer.minerals.update(gl, this.blendMagnitudes)
+    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>, colors: Array<vec3 | null>): void {
+        this.downRenderer.minerals.update(gl, magnitudes, colors)
+        this.punchRenderer.minerals.update(gl, magnitudes, colors)
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {

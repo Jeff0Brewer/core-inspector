@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec3 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -96,8 +96,8 @@ class VisRenderer {
         this.uiState = uiState
     }
 
-    setBlending (ind: number, magnitude: number): void {
-        this.core.setBlending(this.gl, ind, magnitude)
+    setBlending (magnitudes: Array<number>, colors: Array<vec3 | null>): void {
+        this.core.setBlending(this.gl, magnitudes, colors)
     }
 
     setHovered (id: string | undefined): void {
