@@ -30,6 +30,15 @@ const VIS_DEFAULTS: VisSettings = {
     }
 }
 
+type UiState = {
+    setMineral: (m: number) => void,
+    setShape: (s: CoreShape) => void,
+    setViewMode: (v: CoreViewMode) => void,
+    setSpacing: (s: [number, number]) => void,
+    setZoom: (z: number) => void,
+    setHovered: (h: string | undefined) => void
+}
+
 const PROJECTION_PARAMS = {
     fov: 0.5 * Math.PI,
     near: 0.01,
@@ -43,13 +52,15 @@ class VisRenderer {
     camera: Camera2D
     proj: mat4
     mousePos: [number, number]
+    uiState: UiState
 
     constructor (
         canvas: HTMLCanvasElement,
         downscaledMaps: Array<HTMLImageElement>,
         punchcardMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata
+        idMetadata: SectionIdMetadata,
+        uiState: UiState
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -82,35 +93,42 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
 
         this.mousePos = [0, 0]
-    }
-
-    setHovered (id: string | undefined): void {
-        this.core.setHovered(this.gl, id)
+        this.uiState = uiState
     }
 
     setBlending (ind: number, magnitude: number): void {
         this.core.setBlending(this.gl, ind, magnitude)
     }
 
+    setHovered (id: string | undefined): void {
+        this.core.setHovered(this.gl, id)
+        this.uiState.setHovered(id)
+    }
+
     setZoom (t: number): void {
         this.camera.setZoom(t)
+        this.uiState.setZoom(t)
     }
 
-    setCoreMineral (i: number): void {
+    setMineral (i: number): void {
         this.core.setMineral(i)
+        this.uiState.setMineral(i)
     }
 
-    setCoreShape (s: CoreShape): void {
+    setShape (s: CoreShape): void {
         this.core.setShape(s)
+        this.uiState.setShape(s)
     }
 
-    setCoreViewMode (m: CoreViewMode): void {
+    setViewMode (m: CoreViewMode): void {
         this.core.setViewMode(m)
+        this.uiState.setViewMode(m)
     }
 
-    setCoreSpacing (spacing: [number, number]): void {
+    setSpacing (spacing: [number, number]): void {
         const bounds = this.getUnprojectedViewportBounds()
         this.core.setSpacing(this.gl, spacing, bounds)
+        this.uiState.setSpacing(spacing)
     }
 
     getUnprojectedViewportBounds (): BoundRect {
@@ -142,17 +160,12 @@ class VisRenderer {
         this.core.stencilRenderer.resize(this.gl, w, h)
     }
 
-    setupEventListeners (
-        setZoom: (z: number) => void,
-        setHovered: (h: string | undefined) => void
-    ): (() => void) {
+    setupEventListeners (): (() => void) {
         let dragging = false
         const mousedown = (): void => { dragging = true }
         const mouseup = (): void => { dragging = false }
         const mouseleave = (): void => {
             dragging = false
-            // TODO: remove manual coordination between react / vis hover state
-            setHovered(undefined)
             this.setHovered(undefined)
         }
         const mousemove = (e: MouseEvent): void => {
@@ -167,7 +180,7 @@ class VisRenderer {
 
         const wheel = (e: WheelEvent): void => {
             this.camera.zoom(e.deltaY)
-            setZoom(this.camera.zoomT)
+            this.uiState.setZoom(this.camera.zoomT)
         }
 
         const keydown = (e: KeyboardEvent): void => {
@@ -199,14 +212,12 @@ class VisRenderer {
         }
     }
 
-    draw (elapsed: number, setHoveredReact: (id: string | undefined) => void): void {
+    draw (elapsed: number): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
 
-        // TODO: rework react hook to permit hover behavior
-        const setHovered = (id: string | undefined): void => {
-            setHoveredReact(id)
-            this.setHovered(id)
+        const setHovered = (h: string | undefined): void => {
+            this.setHovered(h)
         }
 
         this.core.draw(
@@ -220,4 +231,5 @@ class VisRenderer {
 }
 
 export default VisRenderer
+export type { UiState }
 export { VIS_DEFAULTS }

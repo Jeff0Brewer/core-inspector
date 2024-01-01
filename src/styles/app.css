@@ -5,3 +5,61 @@ canvas {
     width: 100vw;
     height: 100vh;
 }
+
+.interface {
+    position: relative;
+    z-index: 2;
+    /* temporary dimensions, will break on mobile */
+    min-height: 100vh;
+    pointer-events: none;
+}
+
+.top-bar, .side-bar, .bottom-bar {
+    pointer-events: auto;
+}
+
+.top-bar {
+    position: relative;
+
+    display: flex;
+    width: 100%;
+    gap: 30px;
+    padding: 8px;
+    padding-left: 60px;
+
+    background-color: var(--menu-bg-color);
+}
+
+.side-bar {
+    position: relative;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+.bottom-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+
+    background-color: var(--menu-bg-color);
+}
+
+.downscaled-icon {
+    width: 12px;
+    height: 20px;
+    background-color: #fff;
+    border-radius: 1px;
+}
+
+.distance-icon {
+    display: grid;
+    place-content: center;
+    width: fit-content;
+    border: 1px solid #fff;
+    border-width: 0 1px;
+    font-size: 12px;
+}
