@@ -46,6 +46,45 @@ const LABELED_ITEMS: Array<ColorPreset> = [
     ]
 ]
 
+type ColorPallateProps = {
+    colors: Array<MineralColor>
+}
+
+function ColorPallate (
+    { colors }: ColorPallateProps
+): ReactElement {
+    return (
+        <div className={'pallate'}>
+            { colors.map((mineralColor, i) =>
+                <ColorSwatch {...mineralColor} key={i} />) }
+        </div>
+    )
+}
+
+type ColorSwatchProps = {
+    color: vec3,
+    mineral?: string
+}
+
+function ColorSwatch (
+    { color, mineral }: ColorSwatchProps
+): ReactElement {
+    const getColor = (color: vec3): string => {
+        const colorU8 = vec3.create()
+        vec3.scale(colorU8, color, 255)
+        vec3.floor(colorU8, colorU8)
+        return `#${vecToHex([...colorU8])}`
+    }
+
+    return (
+        <div className={'swatch'} style={{ backgroundColor: getColor(color) }}>
+            { mineral && <p>
+                { mineral.substring(0, 3) }
+            </p> }
+        </div>
+    )
+}
+
 type ColorDropdownProps = {
     items: Array<ColorPreset>
 }
@@ -56,37 +95,6 @@ function ColorDropdown (
     const [open, setOpen] = useState<boolean>(false)
     const [selected, setSelected] = useState<ColorPreset | null>(null)
 
-    const getColor = (swatch: MineralColor): string => {
-        const colorU8 = vec3.create()
-        vec3.scale(colorU8, swatch.color, 255)
-        vec3.floor(colorU8, colorU8)
-        const color = `#${vecToHex([...colorU8])}`
-        return color
-    }
-
-    const renderColorPreset = (item: ColorPreset, key: number): ReactElement => {
-        return (
-            <a
-                className={'item'} key={key}
-                onClick={() => {
-                    setSelected(item)
-                    setOpen(false)
-                }}
-            >
-                { item.map((swatch, i) =>
-                    <div
-                        key={i}
-                        className={'swatch'}
-                        style={{ backgroundColor: getColor(swatch) }}
-                    >
-                        { swatch.mineral && <p>
-                            {swatch.mineral.substring(0, 3)}
-                        </p>}
-                    </div>) }
-            </a>
-        )
-    }
-
     return (
         <div
             className={'dropdown'}
@@ -95,7 +103,8 @@ function ColorDropdown (
         >
             <div className={'label'}>
                 <div className={'selected'}>
-                    { selected !== null && renderColorPreset(selected, 0) }
+                    { selected !== null &&
+                        <ColorPallate colors={selected} />}
                 </div>
                 <button onClick={() => setOpen(!open)}>
                     <PiCaretDownBold />
@@ -103,7 +112,12 @@ function ColorDropdown (
             </div>
             <div className={'content'}>
                 { items.map((item, i) =>
-                    renderColorPreset(item, i)) }
+                    <a key={i} onClick={() => {
+                        setSelected(item)
+                        setOpen(false)
+                    }}>
+                        <ColorPallate colors={item} />
+                    </a>) }
             </div>
         </div>
     )
