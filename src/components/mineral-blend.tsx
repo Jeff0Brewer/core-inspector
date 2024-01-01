@@ -10,14 +10,6 @@ import '../styles/mineral-blend.css'
 type LabelledPallate = { [mineral: string]: vec3 }
 type UnlabelledPallate = Array<vec3>
 
-function isLabelledPallate (p: LabelledPallate | UnlabelledPallate): LabelledPallate | null {
-    return !Array.isArray(p) ? p : null
-}
-
-function isUnlabelledPallate (p: LabelledPallate | UnlabelledPallate): UnlabelledPallate | null {
-    return Array.isArray(p) ? p : null
-}
-
 type MineralBlendProps = {
     minerals: Array<string>,
     currMineral: number,
