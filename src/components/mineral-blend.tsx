@@ -10,6 +10,14 @@ import '../styles/mineral-blend.css'
 type LabelledPallate = { [mineral: string]: vec3 }
 type UnlabelledPallate = Array<vec3>
 
+function isLabelledPallate (p: LabelledPallate | UnlabelledPallate): LabelledPallate | null {
+    return !Array.isArray(p) ? p : null
+}
+
+function isUnlabelledPallate (p: LabelledPallate | UnlabelledPallate): UnlabelledPallate | null {
+    return Array.isArray(p) ? p : null
+}
+
 type MineralBlendProps = {
     minerals: Array<string>,
     currMineral: number,
@@ -24,20 +32,6 @@ function MineralBlend (
     const [pallate, setPallate] = useState<LabelledPallate | UnlabelledPallate>(LABELED_ITEMS[0])
     const [open, setOpen] = useState<boolean>(true)
 
-    useEffect(() => {
-        const isLabelled = !Array.isArray(pallate)
-
-        // if pallate is labelled, set only labelled minerals to visible
-        if (isLabelled) {
-            const visibilities = Array(minerals.length).fill(false)
-            for (const mineral of Object.keys(pallate)) {
-                const ind = minerals.indexOf(mineral)
-                visibilities[ind] = true
-            }
-            setVisibilities(visibilities)
-        }
-    }, [pallate, minerals])
-
     // close blend menu if not currently using blended output
     useEffect(() => {
         if (currMineral >= 0) {
@@ -45,6 +39,24 @@ function MineralBlend (
         }
     }, [currMineral])
 
+    // init visibilities on pallate change, hide minerals not present in
+    // labelled keys and hide minerals not in unlabelled array bounds
+    useEffect(() => {
+        const isLabelled = !Array.isArray(pallate)
+        if (isLabelled) {
+            const visibleMinerals = Object.keys(pallate)
+            const visibilities = minerals.map(m => visibleMinerals.indexOf(m) !== -1)
+            setVisibilities(visibilities)
+        } else {
+            const visibilities = Array(minerals.length)
+            for (let i = 0; i < minerals.length; i++) {
+                visibilities[i] = i < pallate.length
+            }
+            setVisibilities(visibilities)
+        }
+    }, [pallate, minerals])
+
+    const isLabelled = !Array.isArray(pallate)
     return (
         <div className={'blend'}>
             <button
@@ -59,21 +71,38 @@ function MineralBlend (
             { open && <section className={'menu'}>
                 <p>color+mineral presets</p>
                 <div>
-                    <ColorDropdown items={LABELED_ITEMS} />
+                    <ColorDropdown
+                        items={LABELED_ITEMS}
+                        selected={isLabelled ? pallate : null}
+                        setSelected={setPallate}
+                    />
                 </div>
                 <p>color presets</p>
                 <div>
-                    <ColorDropdown items={ITEMS} />
+                    <ColorDropdown
+                        items={ITEMS}
+                        selected={!isLabelled ? pallate : null}
+                        setSelected={setPallate}
+                    />
                 </div>
                 <p>mineral color mixer</p>
                 <div>
                     { minerals.map((name, i) => {
-                        const setVisible = (v: boolean): void => {
-                            visibilities[i] = v
+                        const setVisible = (visible: boolean): void => {
+                            visibilities[i] = visible
                             setVisibilities([...visibilities])
                         }
-                        const isLabelled = !Array.isArray(pallate)
-                        const color = isLabelled ? pallate[name] : pallate[i]
+                        let color
+                        if (isLabelled) {
+                            color = pallate[name] || null
+                        } else {
+                            if (visibilities[i]) {
+                                const ind = visibilities.slice(0, i).filter(v => v).length
+                                color = pallate[ind]
+                            } else {
+                                color = null
+                            }
+                        }
                         return <MineralBlender
                             key={i}
                             visible={visibilities[i]}
@@ -133,14 +162,15 @@ function ColorSwatch (
 }
 
 type ColorDropdownProps<T extends LabelledPallate | UnlabelledPallate> = {
-    items: Array<T>
+    items: Array<T>,
+    selected: T | null,
+    setSelected: (s: T) => void
 }
 
 function ColorDropdown<T extends LabelledPallate | UnlabelledPallate> (
-    { items }: ColorDropdownProps<T>
+    { items, selected, setSelected }: ColorDropdownProps<T>
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-    const [selected, setSelected] = useState<T | null>(null)
 
     return (
         <div
@@ -179,7 +209,7 @@ type MineralBlenderProps = {
     setVisible: (v: boolean) => void,
     mineral: string,
     setBlend: (m: number) => void,
-    color: vec3 | undefined
+    color: vec3 | null
 }
 
 function MineralBlender (
@@ -216,12 +246,12 @@ function MineralBlender (
     }
 
     useEffect(() => {
-        if (visible) {
+        if (visible && color) {
             setBlend(percentage)
         } else {
             setBlend(0)
         }
-    }, [visible, percentage, setBlend])
+    }, [visible, color, percentage, setBlend])
 
     useEffect(() => {
         const slider = sliderRef.current

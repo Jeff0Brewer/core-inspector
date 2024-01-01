@@ -39,7 +39,7 @@
 .mineral {
     --slider-height: 4px;
     position: relative;
-    width: 250px;
+    width: 300px;
     user-select: none;
     padding-top: var(--slider-height);
 }
