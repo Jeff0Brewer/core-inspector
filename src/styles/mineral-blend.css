@@ -231,9 +231,7 @@
 .pallate {
     display: flex;
     width: 100%;
-    gap: 2px;
-    padding: 2px;
-
+    padding: 1px;
 }
 
 .dropdown .content > a:not(:last-of-type) {
@@ -245,6 +243,7 @@
     position: relative;
     width: 16px;
     height: 16px;
+    margin: 1px;
 }
 
 .swatch p {
@@ -257,4 +256,8 @@
     font-size: 0.4rem;
     display: grid;
     place-content: center;
+}
+
+.mineral .swatch {
+    padding-right: 1px;
 }
