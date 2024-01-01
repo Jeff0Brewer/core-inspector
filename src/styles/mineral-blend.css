@@ -241,9 +241,12 @@
 
 .swatch {
     position: relative;
+    display: grid;
+    place-content: center;
     width: 16px;
     height: 16px;
     margin: 1px;
+    transition: background-color var(--transition-param);
 }
 
 .swatch p {
@@ -258,6 +261,15 @@
     place-content: center;
 }
 
-.mineral .swatch {
-    padding-right: 1px;
+.swatch:before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: #111;
+    transition: opacity var(--transition-param);
+    opacity: 0;
+}
+
+.swatch[data-color="false"]:before {
+    opacity: 1;
 }

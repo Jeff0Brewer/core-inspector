@@ -155,14 +155,17 @@ function ColorPallate (
 }
 
 type ColorSwatchProps = {
-    color: vec3,
+    color: vec3 | null,
     mineral?: string
 }
 
 function ColorSwatch (
     { color, mineral }: ColorSwatchProps
 ): ReactElement {
-    const getColor = (color: vec3): string => {
+    const getColor = (color: vec3 | null): string => {
+        if (!color) {
+            return 'transparent'
+        }
         const colorU8 = vec3.create()
         vec3.scale(colorU8, color, 255)
         vec3.floor(colorU8, colorU8)
@@ -170,7 +173,11 @@ function ColorSwatch (
     }
 
     return (
-        <div className={'swatch'} style={{ backgroundColor: getColor(color) }}>
+        <div
+            className={'swatch'}
+            data-color={!!color}
+            style={{ backgroundColor: getColor(color) }}
+        >
             { mineral && <p>
                 { mineral.substring(0, 3) }
             </p> }
@@ -332,7 +339,7 @@ function MineralBlender (
                         %
                     </div>
                     <div>
-                        { color && <ColorSwatch color={color} /> }
+                        <ColorSwatch color={visible ? color : null} />
                     </div>
                 </div>
             </div>
