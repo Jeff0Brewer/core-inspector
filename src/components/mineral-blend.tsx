@@ -69,8 +69,9 @@ function MineralBlend (
         for (let i = 0; i < minerals.length; i++) {
             colors.push(getColor(minerals[i], i))
         }
-        setBlending(magnitudes, colors)
-    }, [minerals, magnitudes, getColor, setBlending])
+        const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
+        setBlending(visibleMagnitudes, colors)
+    }, [minerals, visibilities, magnitudes, getColor, setBlending])
 
     // close blend menu if not currently using blended output
     useEffect(() => {
