@@ -20,7 +20,7 @@ type MineralBlendProps = {
 function MineralBlend (
     { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
 ): ReactElement {
-    const [pallate, setPallate] = useState<LabelledPallate | UnlabelledPallate>(LABELED_ITEMS[0])
+    const [pallate, setPallate] = useState<LabelledPallate | UnlabelledPallate>(COLOR_PRESETS[0])
     const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
@@ -95,7 +95,7 @@ function MineralBlend (
                 <p>color+mineral presets</p>
                 <div>
                     <ColorDropdown
-                        items={LABELED_ITEMS}
+                        items={COLOR_MINERAL_PRESETS}
                         selected={isLabelled ? pallate : null}
                         setSelected={setPallate}
                     />
@@ -103,7 +103,7 @@ function MineralBlend (
                 <p>color presets</p>
                 <div>
                     <ColorDropdown
-                        items={ITEMS}
+                        items={COLOR_PRESETS}
                         selected={!isLabelled ? pallate : null}
                         setSelected={setPallate}
                     />
@@ -359,36 +359,37 @@ function MineralBlender (
     )
 }
 
-const ITEMS: Array<UnlabelledPallate> = [
-    [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1],
-        [1, 0, 1],
-        [1, 1, 0]
-    ], [
-        [0.5, 0.25, 0.25],
-        [0.25, 0.5, 0.25],
-        [0.25, 0.25, 0.5],
-        [0.5, 0.25, 0.5],
-        [0.5, 0.5, 0.25]
-    ]
+const COLOR_MINERAL_PRESETS: Array<LabelledPallate> = [
+    {
+        chlorite: [0.6039, 0.6588, 0.5647],
+        epidote: [0.6705, 0.7411, 0.6823],
+        prehnite: [0.4156, 0.4745, 0.5764],
+        zeolite: [1, 1, 1],
+        amphibole: [0.8, 0.7843, 0.6941],
+        pyroxene: [0.8039, 0.8509, 0.8666],
+        gypsum: [0.4431, 0.5960, 0.3333],
+        carbonate: [0.4705, 0.3450, 0.5882]
+    }, {
+        pyroxene: [0.9333333333333333, 0.38823529411764707, 0.3215686274509804],
+        prehnite: [0.34901960784313724, 0.803921568627451, 0.5647058823529412],
+        chlorite: [0.24705882352941178, 0.6549019607843137, 0.8392156862745098],
+        'kaolinite-montmorillinite': [0.9803921568627451, 0.7529411764705882, 0.3686274509803922],
+        amphibole: [0.9686274509803922, 0.615686274509804, 0.5176470588235295]
+    }
 ]
 
-const LABELED_ITEMS: Array<LabelledPallate> = [
-    {
-        chlorite: [1, 0, 0],
-        epidote: [0, 1, 0],
-        prehnite: [0, 0, 1],
-        amphibole: [1, 0, 1],
-        carbonate: [1, 1, 0]
-    }, {
-        pyroxene: [1, 0, 0],
-        amphibole: [0, 1, 0],
-        gypsum: [0, 0, 1],
-        'kaolinite-montmorillinite': [1, 0, 1],
-        zeolite: [1, 1, 0]
-    }
+const COLOR_PRESETS: Array<UnlabelledPallate> = [
+    [
+        [0.47058823529411764, 0.34509803921568627, 0.5882352941176471],
+        [0.6705882352941176, 0.7411764705882353, 0.6862745098039216],
+        [0.41568627450980394, 0.4745098039215686, 0.5764705882352941]
+    ], [
+        [0.3803921568627451, 0.23137254901960785, 0.35294117647058826],
+        [0.5372549019607843, 0.3764705882352941, 0.5568627450980392],
+        [0.7294117647058823, 0.5843137254901961, 0.5764705882352941],
+        [0.9294117647058824, 0.9764705882352941, 0.6666666666666666],
+        [0.7843137254901961, 0.9803921568627451, 0.7411764705882353]
+    ]
 ]
 
 export default MineralBlend
