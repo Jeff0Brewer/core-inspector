@@ -40,20 +40,25 @@ function MetadataHover ({ hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
+    const renderInd = (id: string): ReactElement => {
+        const [section, part] = id.split('_')
+        return (
+            <div className={'id'}>
+                <p>section <span>{section}</span></p>
+                <p>part <span>{part}</span></p>
+            </div>
+        )
+    }
+
     return <>
         { hovered !== undefined &&
             <div
-                className={'metadata-hover'}
+                className={'metadata'}
                 style={{ left: `${x}px`, top: `${y}px` }}
             >
-                <p>
-                    section
-                    <span>
-                        {hovered}
-                    </span>
-                </p>
+                { renderInd(hovered) }
                 { data.hydration && data.hydration[hovered] && <p>
-                    hydration
+                    hydration:
                     <span>
                         {formatHydration(data.hydration[hovered])}
                     </span>
