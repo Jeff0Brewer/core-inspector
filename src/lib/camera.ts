@@ -11,48 +11,52 @@ type CameraSettings = {
 }
 
 class Camera2D {
-    matrix: mat4
-    eye: vec3
     focus: vec3
     lookDir: vec3
     up: vec3
     right: vec3
+    eye: vec3
+    matrix: mat4
     zoomT: number
 
     constructor (focus: vec3, lookDir: vec3, up: vec3, zoomT: number) {
-        vec3.normalize(up, up)
-        vec3.normalize(lookDir, lookDir)
+        this.zoomT = zoomT
+        this.focus = vec3.clone(focus)
 
-        const zoom = zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
-        this.eye = vec3.scaleAndAdd(vec3.create(), focus, lookDir, zoom)
+        this.lookDir = vec3.create()
+        vec3.normalize(this.lookDir, lookDir)
+
+        this.up = vec3.create()
+        vec3.normalize(this.up, up)
+
+        this.right = vec3.create()
+        vec3.cross(this.right, this.lookDir, this.up)
+
+        this.eye = vec3.create()
+        vec3.scaleAndAdd(
+            this.eye,
+            this.focus,
+            this.lookDir,
+            this.zoomDistance()
+        )
 
         this.matrix = mat4.create()
-        mat4.lookAt(this.matrix, this.eye, focus, up)
-
-        this.focus = vec3.clone(focus)
-        this.lookDir = vec3.clone(lookDir)
-        this.up = vec3.clone(up)
-        this.right = vec3.cross(vec3.create(), this.lookDir, up)
-        this.zoomT = zoomT
-    }
-
-    getFocusDistance (): number {
-        return this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
-    }
-
-    setZoom (t: number): void {
-        this.zoomT = clamp(t, 0, 1)
-        const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
-
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
+    }
+
+    zoomDistance (): number {
+        return this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
     }
 
     zoom (d: number): void {
         this.zoomT = clamp(this.zoomT * (1 + d * ZOOM_SPEED), 0, 1)
-        const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
+        mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
+    }
 
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
+    setZoom (t: number): void {
+        this.zoomT = clamp(t, 0, 1)
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 
@@ -61,9 +65,7 @@ class Camera2D {
         vec3.scaleAndAdd(this.focus, this.focus, this.up, dy * PAN_SPEED * zoomFactor)
         vec3.scaleAndAdd(this.focus, this.focus, this.right, dx * PAN_SPEED * zoomFactor)
 
-        const zoom = this.zoomT * (MAX_ZOOM - MIN_ZOOM) + MIN_ZOOM
-
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, zoom)
+        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 }
