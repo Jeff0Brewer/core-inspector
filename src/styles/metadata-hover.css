@@ -16,3 +16,11 @@
     display: flex;
     gap: 5px;
 }
+
+.metadata-hover > p:not(:last-of-type) {
+    margin-bottom: 2px;
+}
+
+.metadata-hover p span {
+    margin: 0 5px;
+}
