@@ -133,7 +133,7 @@ class VisRenderer {
 
     getUnprojectedViewportBounds (): BoundRect {
         const { fov } = PROJECTION_PARAMS
-        const heightBound = Math.tan(fov * 0.5) * this.camera.getFocusDistance()
+        const heightBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
         const widthBound = this.canvas.width / this.canvas.height * heightBound
         return {
             top: heightBound,
