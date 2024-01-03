@@ -3,8 +3,8 @@ import { clamp } from '../lib/util'
 
 const PAN_SPEED = 0.003
 const ZOOM_SPEED = 0.0005
-const MIN_ZOOM = 0.1
-const MAX_ZOOM = 1.5
+const MIN_ZOOM = 0.2
+const MAX_ZOOM = 1.75
 
 type CameraSettings = {
     zoom: number
