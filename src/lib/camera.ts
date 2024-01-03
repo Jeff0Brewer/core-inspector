@@ -11,34 +11,18 @@ type CameraSettings = {
 }
 
 class Camera2D {
-    focus: vec3
-    lookDir: vec3
-    up: vec3
-    right: vec3
-    eye: vec3
-    matrix: mat4
     zoomT: number
+    eye: vec3
+    focus: vec3
+    up: vec3
+    matrix: mat4
 
-    constructor (focus: vec3, lookDir: vec3, up: vec3, zoomT: number) {
+    constructor (zoomT: number) {
         this.zoomT = zoomT
-        this.focus = vec3.clone(focus)
 
-        this.lookDir = vec3.create()
-        vec3.normalize(this.lookDir, lookDir)
-
-        this.up = vec3.create()
-        vec3.normalize(this.up, up)
-
-        this.right = vec3.create()
-        vec3.cross(this.right, this.lookDir, this.up)
-
-        this.eye = vec3.create()
-        vec3.scaleAndAdd(
-            this.eye,
-            this.focus,
-            this.lookDir,
-            this.zoomDistance()
-        )
+        this.eye = vec3.fromValues(0, 0, this.zoomDistance())
+        this.focus = vec3.fromValues(0, 0, 0)
+        this.up = vec3.fromValues(0, 1, 0)
 
         this.matrix = mat4.create()
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
@@ -50,22 +34,25 @@ class Camera2D {
 
     zoom (d: number): void {
         this.zoomT = clamp(this.zoomT * (1 + d * ZOOM_SPEED), 0, 1)
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
+        this.eye[2] = this.zoomDistance()
+
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 
     setZoom (t: number): void {
         this.zoomT = clamp(t, 0, 1)
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
+        this.eye[2] = this.zoomDistance()
+
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 
     pan (dx: number, dy: number): void {
         const zoomFactor = Math.pow(this.zoomT, 0.7)
-        vec3.scaleAndAdd(this.focus, this.focus, this.up, dy * PAN_SPEED * zoomFactor)
-        vec3.scaleAndAdd(this.focus, this.focus, this.right, dx * PAN_SPEED * zoomFactor)
+        this.eye[0] -= dx * PAN_SPEED * zoomFactor
+        this.eye[1] += dy * PAN_SPEED * zoomFactor
+        this.focus[0] = this.eye[0]
+        this.focus[1] = this.eye[1]
 
-        vec3.scaleAndAdd(this.eye, this.focus, this.lookDir, this.zoomDistance())
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
     }
 }

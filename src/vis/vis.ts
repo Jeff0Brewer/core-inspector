@@ -68,12 +68,7 @@ class VisRenderer {
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
-        this.camera = new Camera2D(
-            [0, 0, 0],
-            [0, 0, 1],
-            [0, 1, 0],
-            VIS_DEFAULTS.camera.zoom
-        )
+        this.camera = new Camera2D(VIS_DEFAULTS.camera.zoom)
         const aspect = window.innerWidth / window.innerHeight
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
