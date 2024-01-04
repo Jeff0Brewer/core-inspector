@@ -154,30 +154,9 @@ function MineralSlider (
     const sliderRef = useRef<HTMLDivElement>(null)
     const textInputRef = useRef<HTMLInputElement>(null)
 
+    // store valid text value to revert if user input invalid
     const lastValidTextRef = useRef<string>(formatPercent(magnitude))
     const cleanTextTimeoutIdRef = useRef<number>(-1)
-
-    const updatePercentageText = (): void => {
-        if (!textInputRef.current) {
-            throw new Error('No reference to text input element')
-        }
-
-        const value = parseFloat(textInputRef.current.value)
-        if (!Number.isNaN(value) && value >= 0 && value <= 100) {
-            const magnitude = value * 0.01
-            setMagnitude(magnitude)
-            // store valid text input value to revert to
-            // if user input invalid
-            lastValidTextRef.current = formatPercent(magnitude)
-        }
-
-        window.clearTimeout(cleanTextTimeoutIdRef.current)
-        cleanTextTimeoutIdRef.current = window.setTimeout((): void => {
-            if (textInputRef.current) {
-                textInputRef.current.value = lastValidTextRef.current
-            }
-        }, 5000)
-    }
 
     useEffect(() => {
         const slider = sliderRef.current
@@ -188,42 +167,65 @@ function MineralSlider (
 
         const updatePercentageMouse = (e: MouseEvent): void => {
             const { left, right } = slider.getBoundingClientRect()
-            const dx = e.clientX - left
-            const width = right - left
-            const clickPercentage = clamp(dx / width, 0, 1)
-
+            const clickPercentage = clamp((e.clientX - left) / (right - left), 0, 1)
             setMagnitude(clickPercentage)
-            textInput.value = formatPercent(clickPercentage)
+
+            // update text input with value from mouse
+            const formatted = formatPercent(clickPercentage)
+            textInput.value = formatted
+            lastValidTextRef.current = formatted
         }
 
         if (!dragging) {
+            // if not dragging, only need handler to start drag on mouse down
             const mousedown = (e: MouseEvent): void => {
                 updatePercentageMouse(e)
                 setDragging(true)
                 setVisible(true)
             }
-            // attach only mousedown event to slider so drag
-            // can extend past slider bounds once started
             slider.addEventListener('mousedown', mousedown)
             return () => {
                 slider.removeEventListener('mousedown', mousedown)
             }
-        }
-
-        const mouseup = (): void => { setDragging(false) }
-        const mouseleave = (): void => { setDragging(false) }
-        const mousemove = (e: MouseEvent): void => {
-            updatePercentageMouse(e)
-        }
-        window.addEventListener('mouseup', mouseup)
-        window.addEventListener('mouseleave', mouseleave)
-        window.addEventListener('mousemove', mousemove)
-        return () => {
-            window.removeEventListener('mouseup', mouseup)
-            window.removeEventListener('mouseleave', mouseleave)
-            window.removeEventListener('mousemove', mousemove)
+        } else {
+            // attach dragging events to window so drag can extend past
+            // slider bounds once started
+            const mouseup = (): void => { setDragging(false) }
+            const mouseleave = (): void => { setDragging(false) }
+            const mousemove = (e: MouseEvent): void => {
+                updatePercentageMouse(e)
+            }
+            window.addEventListener('mouseup', mouseup)
+            window.addEventListener('mouseleave', mouseleave)
+            window.addEventListener('mousemove', mousemove)
+            return () => {
+                window.removeEventListener('mouseup', mouseup)
+                window.removeEventListener('mouseleave', mouseleave)
+                window.removeEventListener('mousemove', mousemove)
+            }
         }
     }, [dragging, setMagnitude, setVisible])
+
+    const updatePercentageText = (): void => {
+        if (!textInputRef.current) {
+            throw new Error('No reference to text input element')
+        }
+
+        const value = parseFloat(textInputRef.current.value)
+        if (!Number.isNaN(value)) {
+            const magnitude = clamp(value * 0.01, 0, 1)
+            setMagnitude(magnitude)
+            lastValidTextRef.current = formatPercent(magnitude)
+        }
+
+        // revert to valid text value after period of no user input
+        window.clearTimeout(cleanTextTimeoutIdRef.current)
+        cleanTextTimeoutIdRef.current = window.setTimeout((): void => {
+            if (textInputRef.current) {
+                textInputRef.current.value = lastValidTextRef.current
+            }
+        }, 5000)
+    }
 
     return (
         <div
