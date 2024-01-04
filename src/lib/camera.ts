@@ -65,8 +65,12 @@ class Camera2D {
 
     mousedrag (dx: number, dy: number): void {
         const x = -1 * dx * PAN_SPEED
-        const y = dy * PAN_SPEED
-        this.pan(x, y)
+        if (this.mode === 'column') {
+            this.pan(x, 0)
+        } else {
+            const y = dy * PAN_SPEED
+            this.pan(x, y)
+        }
     }
 }
 
