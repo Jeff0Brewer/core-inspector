@@ -275,58 +275,57 @@ type MineralBlendProps = {
 function MineralBlend (
     { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
 ): ReactElement {
-    const [palette, setPalette] = useState<GenericPalette>(COLOR_PRESETS[0])
-    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
+    const [open, setOpen] = useState<boolean>(true)
+    const [selected, setSelected] = useState<GenericPalette>(COLOR_PRESETS[0])
+    const [visibilities, setVisibilities] = useState<Array<boolean>>(
+        Array(minerals.length).fill(true)
+    )
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
-    const [open, setOpen] = useState<boolean>(true)
 
+    // assigns colors from palettes to mineral sliders based
+    // on current visibilities and palette type
     const getColor = useCallback((mineral: string, index: number): vec3 | null => {
-        const isLabelled = !Array.isArray(palette)
+        const isLabelled = !Array.isArray(selected)
         let color
         if (isLabelled) {
-            color = palette[mineral] || null
+            color = selected[mineral] || null
         } else {
             if (visibilities[index]) {
                 const ind = visibilities.slice(0, index).filter(v => v).length
-                color = palette[ind]
+                color = selected[ind]
             } else {
                 color = null
             }
         }
         return color
-    }, [palette, visibilities])
+    }, [selected, visibilities])
 
     // init visibilities on palette change, hide minerals not present in
     // labelled keys and hide minerals not in unlabelled array bounds
     useEffect(() => {
-        const isLabelled = !Array.isArray(palette)
+        const isLabelled = !Array.isArray(selected)
         const visibilities = Array(minerals.length).fill(false)
         if (isLabelled) {
-            const visibleMinerals = Object.keys(palette)
+            const visibleMinerals = Object.keys(selected)
             for (let i = 0; i < minerals.length; i++) {
-                const visible = visibleMinerals.indexOf(minerals[i]) !== -1
-                if (visible) {
-                    visibilities[i] = true
-                }
+                visibilities[i] = visibleMinerals.indexOf(minerals[i]) !== -1
             }
         } else {
-            for (let i = 0; i < palette.length; i++) {
+            for (let i = 0; i < selected.length; i++) {
                 visibilities[i] = true
             }
         }
         setVisibilities(visibilities)
-    }, [palette, minerals])
+    }, [selected, minerals])
 
+    // apply blending on changes to visibilities or magnitudes
     useEffect(() => {
-        const colors = []
-        for (let i = 0; i < minerals.length; i++) {
-            colors.push(getColor(minerals[i], i))
-        }
+        const colors = minerals.map((mineral, i) => getColor(mineral, i))
         const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
         setBlending(visibleMagnitudes, colors)
-    }, [minerals, visibilities, magnitudes, getColor, setBlending])
+    }, [visibilities, magnitudes, minerals, getColor, setBlending])
 
     // close blend menu if not currently using blended output
     useEffect(() => {
@@ -335,7 +334,21 @@ function MineralBlend (
         }
     }, [currMineral])
 
-    const isLabelled = !Array.isArray(palette)
+    const getVisibilitySetter = (ind: number): ((v: boolean) => void) => {
+        return (v: boolean) => {
+            visibilities[ind] = v
+            setVisibilities([...visibilities])
+        }
+    }
+
+    const getMagnitudeSetter = (ind: number): ((m: number) => void) => {
+        return (m: number) => {
+            magnitudes[ind] = m
+            setMagnitudes([...magnitudes])
+        }
+    }
+
+    const isLabelled = !Array.isArray(selected)
     return (
         <div className={'blend'}>
             <button
@@ -352,39 +365,31 @@ function MineralBlend (
                 <div>
                     <ColorDropdown
                         palettes={COLOR_MINERAL_PRESETS}
-                        selected={isLabelled ? palette : null}
-                        setSelected={setPalette}
+                        selected={isLabelled ? selected : null}
+                        setSelected={setSelected}
                     />
                 </div>
                 <p>color presets</p>
                 <div>
                     <ColorDropdown
                         palettes={COLOR_PRESETS}
-                        selected={!isLabelled ? palette : null}
-                        setSelected={setPalette}
+                        selected={!isLabelled ? selected : null}
+                        setSelected={setSelected}
                     />
                 </div>
                 <p>mineral color mixer</p>
                 <div className={'mineral-mixer'}>
-                    { minerals.map((mineral, i) => {
-                        const setVisible = (v: boolean): void => {
-                            visibilities[i] = v
-                            setVisibilities([...visibilities])
-                        }
-                        const setMagnitude = (m: number): void => {
-                            magnitudes[i] = m
-                            setMagnitudes([...magnitudes])
-                        }
-                        return <MineralSlider
+                    { minerals.map((mineral, i) =>
+                        <MineralSlider
                             key={i}
                             mineral={mineral}
                             color={getColor(mineral, i)}
                             visible={visibilities[i]}
-                            setVisible={setVisible}
+                            setVisible={getVisibilitySetter(i)}
                             magnitude={magnitudes[i]}
-                            setMagnitude={setMagnitude}
+                            setMagnitude={getMagnitudeSetter(i)}
                         />
-                    }) }
+                    ) }
                 </div>
             </section> }
         </div>
