@@ -233,9 +233,16 @@ function MineralSlider (
             data-visible={visible}
             data-dragging={dragging}
         >
+            <div ref={sliderRef} className={'slider'}>
+                <div className={'arrow'} style={{ left: `${magnitude * 100}%` }}>
+                    <IoCaretDownSharp />
+                </div>
+                <div className={'value'} style={{ width: `${magnitude * 100}%` }}>
+                </div>
+            </div>
             <div className={'top'}>
                 <div>
-                    <a onClick={(): void => { setVisible(!visible) }}>
+                    <a onClick={() => setVisible(!visible)}>
                         <MdRemoveRedEye />
                     </a>
                     <p>{mineral}</p>
@@ -251,21 +258,9 @@ function MineralSlider (
                         %
                     </div>
                     <div>
-                        <ColorSwatch mineral={null} color={visible ? color : null} />
+                        <ColorSwatch color={visible ? color : null} mineral={null} />
                     </div>
                 </div>
-            </div>
-            <div ref={sliderRef} className={'slider'}>
-                <div
-                    className={'arrow'}
-                    style={{ left: `${magnitude * 100}%` }}
-                >
-                    <IoCaretDownSharp />
-                </div>
-                <div
-                    className={'value'}
-                    style={{ width: `${magnitude * 100}%` }}
-                ></div>
             </div>
         </div>
     )
@@ -371,7 +366,7 @@ function MineralBlend (
                     />
                 </div>
                 <p>mineral color mixer</p>
-                <div>
+                <div className={'mineral-mixer'}>
                     { minerals.map((mineral, i) => {
                         const setVisible = (v: boolean): void => {
                             visibilities[i] = v

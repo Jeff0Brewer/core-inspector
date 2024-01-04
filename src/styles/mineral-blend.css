@@ -36,37 +36,31 @@
     text-transform: uppercase;
 }
 
+.mineral-mixer {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 .mineral {
-    --slider-height: 4px;
     position: relative;
     width: 300px;
+    height: 22px;
     user-select: none;
-    padding-top: var(--slider-height);
-}
-
-.mineral a {
-    display: grid;
-    place-content: center;
-    width: 20px;
-    height: 20px;
-    font-size: 14px;
-    transition: color var(--transition-param);
-}
-
-.mineral[data-visible="false"] a {
-    color: var(--color2);
-}
-
-.mineral p {
-    font-size: 0.65rem;
-    letter-spacing: 0.05rem;
-    font-weight: 300;
 }
 
 .mineral .top {
+    position: relative;
     display: flex;
+    height: 20px;
+    width: 100%;
     justify-content: space-between;
     background-color: var(--color0);
+    pointer-events: none;
+}
+
+.mineral .top a, .mineral .top .percentage {
+    pointer-events: auto;
 }
 
 .mineral .top > div {
@@ -75,15 +69,25 @@
     gap: 5px;
 }
 
+.mineral a {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 14px;
+    transition: color var(--transition-param);
+}
+
+.mineral p {
+    font-size: 0.65rem;
+    letter-spacing: 0.05rem;
+    font-weight: 300;
+}
+
 .percentage {
     color: var(--color3);
     opacity: 1;
     transition: opacity var(--transition-param);
-}
-
-.mineral[data-visible="false"] .percentage {
-    pointer-events: none;
-    opacity: 0;
 }
 
 .percentage input[type="text"] {
@@ -97,24 +101,14 @@
 }
 
 .slider {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
     background-color: var(--color1);
-
-    height: 0;
-    margin-bottom: var(--slider-height);
-    transition:
-        height var(--transition-param),
-        margin-bottom var(--transition-param);
-    transition-delay: 1s;
-}
-
-.mineral:hover .slider,
-.mineral[data-dragging="true"] .slider,
-.mineral:focus-within .slider {
-    height: var(--slider-height);
-    margin-bottom: 0;
-    transition-delay: 0s;
+    opacity: 0;
+    transition: opacity var(--transition-param);
 }
 
 .slider .value {
@@ -124,22 +118,16 @@
     transition: background-color var(--transition-param);
 }
 
-.mineral[data-visible="false"] .slider .value {
-    background-color: transparent;
-}
-
 .slider .arrow {
     position: absolute;
+    z-index: 200;
     width: 10px;
     height: 10px;
-    transform: translate(-5px, -8px);
+    bottom: 0;
+    transform: translateX(-5px);
     pointer-events: none;
     opacity: 1;
     transition: opacity var(--transition-param);
-}
-
-.mineral[data-dragging="false"] .slider .arrow {
-    opacity: 0;
 }
 
 .dropdown {
@@ -166,11 +154,6 @@
     transition: opacity var(--transition-param);
 }
 
-.dropdown[data-selected="false"] .selected {
-    opacity: 0;
-    pointer-events: none;
-}
-
 .dropdown button {
     position: absolute;
     right: 0;
@@ -187,26 +170,8 @@
         width var(--transition-param);
 }
 
-.dropdown[data-selected="true"] button {
-    border-left: none;
-}
-
-.dropdown[data-selected="false"] button {
-    border-radius: var(--radius);
-    width: 100%;
-
-}
-
-.dropdown button:hover {
-    background-color: #303030;
-}
-
 .dropdown button > * {
     transition: transform var(--transition-param);
-}
-
-.dropdown[data-open="true"] button > * {
-    transform: rotate(180deg);
 }
 
 .dropdown .items {
@@ -220,12 +185,6 @@
     transition:
         opacity var(--transition-param),
         transform var(--transition-param);
-}
-
-.dropdown[data-open="false"] .items {
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(-2px);
 }
 
 .palette {
@@ -268,6 +227,57 @@
     background-color: #111;
     transition: opacity var(--transition-param);
     opacity: 0;
+}
+
+.mineral[data-visible="false"] a {
+    color: var(--color2);
+}
+
+.mineral[data-visible="false"] .percentage {
+    pointer-events: none;
+    opacity: 0;
+}
+
+.mineral:hover .slider,
+.mineral[data-dragging="true"] .slider,
+.mineral:focus-within .slider {
+    opacity: 1;
+}
+
+.mineral[data-visible="false"] .slider .value {
+    background-color: transparent;
+}
+
+.mineral[data-dragging="false"] .slider .arrow {
+    opacity: 0;
+}
+
+.dropdown[data-selected="true"] button {
+    border-left: none;
+}
+
+.dropdown[data-selected="false"] button {
+    border-radius: var(--radius);
+    width: 100%;
+}
+
+.dropdown[data-selected="false"] .selected {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dropdown[data-open="true"] button > * {
+    transform: rotate(180deg);
+}
+
+.dropdown[data-open="false"] .items {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-2px);
+}
+
+.dropdown button:hover {
+    background-color: #303030;
 }
 
 .swatch[data-color="false"]:before {
