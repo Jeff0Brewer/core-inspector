@@ -279,18 +279,6 @@ const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, numbe
         radius += tileRadius
     }
 
-    // TODO: fix this temporary and inefficient spacing adjustment
-    if (colX < bounds.right) {
-        const colXPad = 0.5 * (bounds.right - colX)
-        const colXOffset = POS_FPV
-        for (let i = colXOffset; i < downPositions.length; i += POS_STRIDE) {
-            downPositions[i] += colXPad
-        }
-        for (let i = colXOffset; i < punchPositions.length; i += POS_STRIDE) {
-            punchPositions[i] += colXPad
-        }
-    }
-
     return {
         downPositions: new Float32Array(downPositions),
         punchPositions: new Float32Array(punchPositions)
