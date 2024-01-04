@@ -136,56 +136,6 @@ function MineralBlend (
     )
 }
 
-type ColorPaletteProps = {
-    palette: LabelledPalette | UnlabelledPalette
-}
-
-function ColorPalette (
-    { palette }: ColorPaletteProps
-): ReactElement {
-    const isLabelled = !Array.isArray(palette)
-    return (
-        <div className={'palette'}>
-            { isLabelled
-                ? Object.entries(palette).map(([mineral, color], i) =>
-                    <ColorSwatch mineral={mineral} color={color} key={i} />)
-                : palette.map((color, i) =>
-                    <ColorSwatch color={color} key={i} />) }
-        </div>
-    )
-}
-
-type ColorSwatchProps = {
-    color: vec3 | null,
-    mineral?: string
-}
-
-function ColorSwatch (
-    { color, mineral }: ColorSwatchProps
-): ReactElement {
-    const getColor = (color: vec3 | null): string => {
-        if (!color) {
-            return 'transparent'
-        }
-        const colorU8 = vec3.create()
-        vec3.scale(colorU8, color, 255)
-        vec3.floor(colorU8, colorU8)
-        return `#${vecToHex([...colorU8])}`
-    }
-
-    return (
-        <div
-            className={'swatch'}
-            data-color={!!color}
-            style={{ backgroundColor: getColor(color) }}
-        >
-            { mineral && <p>
-                { mineral.substring(0, 3) }
-            </p> }
-        </div>
-    )
-}
-
 type ColorDropdownProps<T extends LabelledPalette | UnlabelledPalette> = {
     items: Array<T>,
     selected: T | null,
@@ -221,6 +171,52 @@ function ColorDropdown<T extends LabelledPalette | UnlabelledPalette> (
                         <ColorPalette palette={item} />
                     </a>) }
             </div>
+        </div>
+    )
+}
+
+type ColorPaletteProps = {
+    palette: LabelledPalette | UnlabelledPalette
+}
+
+function ColorPalette (
+    { palette }: ColorPaletteProps
+): ReactElement {
+    const isLabelled = !Array.isArray(palette)
+    return (
+        <div className={'palette'}>
+            { Object.entries(palette).map(([mineral, color], i) =>
+                <ColorSwatch
+                    mineral={isLabelled ? mineral : null}
+                    color={color}
+                    key={i} />
+            ) }
+        </div>
+    )
+}
+
+type ColorSwatchProps = {
+    color: vec3 | null,
+    mineral: string | null
+}
+
+function ColorSwatch (
+    { color, mineral }: ColorSwatchProps
+): ReactElement {
+    // get css color from color prop, returning transparent if color is null
+    const getColor = (color: vec3 | null): string => {
+        if (!color) { return 'transparent' }
+        const colorU8 = color.map(v => Math.floor(v * 255))
+        return `#${vecToHex(colorU8)}`
+    }
+
+    return (
+        <div
+            className={'swatch'}
+            style={{ backgroundColor: getColor(color) }}
+            data-color={!!color}
+        >
+            { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
     )
 }
