@@ -134,7 +134,7 @@ class VisRenderer {
     }
 
     setSpacing (spacing: [number, number]): void {
-        const bounds = this.getUnprojectedViewportBounds()
+        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
         this.core.setSpacing(this.gl, spacing, bounds)
         this.uiState.setSpacing(spacing)
     }
@@ -143,7 +143,7 @@ class VisRenderer {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
         const xBound = this.canvas.width / this.canvas.height * yBound
-        const [xPad, yPad] = padding || [0, 0]
+        const [xPad, yPad] = padding || [1, 1]
         const x = xBound * xPad
         const y = yBound * yPad
         return { top: y, bottom: -y, left: -x, right: -x }
