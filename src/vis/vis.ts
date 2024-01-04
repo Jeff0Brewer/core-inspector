@@ -7,6 +7,8 @@ import { MineralSettings } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
 import Camera2D, { CameraSettings } from '../lib/camera'
 
+const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
+
 type VisSettings = {
     core: CoreSettings,
     mineral: MineralSettings,
@@ -73,7 +75,7 @@ class VisRenderer {
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
 
-        const bounds = this.getUnprojectedViewportBounds()
+        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
         this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
@@ -100,23 +102,30 @@ class VisRenderer {
         this.uiState.setHovered(id)
     }
 
-    setZoom (t: number): void {
-        this.camera.zoom(t)
-        this.uiState.setZoom(t)
-    }
-
     setMineral (i: number): void {
         this.core.setMineral(i)
         this.uiState.setMineral(i)
     }
 
-    setShape (s: CoreShape): void {
-        if (s === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds())
+    setZoom (t: number): void {
+        this.camera.zoom(t)
+        this.uiState.setZoom(t)
+
+        // regen verts if in column view to wrap viewport bounds
+        if (this.core.targetShape === 'column') {
+            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
         }
+    }
+
+    setShape (s: CoreShape): void {
         this.core.setShape(s)
         this.camera.setMode(s)
         this.uiState.setShape(s)
+
+        // regen verts if in column view to wrap viewport bounds
+        if (s === 'column') {
+            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
+        }
     }
 
     setViewMode (m: CoreViewMode): void {
@@ -130,16 +139,14 @@ class VisRenderer {
         this.uiState.setSpacing(spacing)
     }
 
-    getUnprojectedViewportBounds (): BoundRect {
+    getUnprojectedViewportBounds (padding?: [number, number]): BoundRect {
         const { fov } = PROJECTION_PARAMS
-        const heightBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
-        const widthBound = this.canvas.width / this.canvas.height * heightBound
-        return {
-            top: heightBound,
-            bottom: -heightBound,
-            left: -widthBound,
-            right: widthBound
-        }
+        const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
+        const xBound = this.canvas.width / this.canvas.height * yBound
+        const [xPad, yPad] = padding || [0, 0]
+        const x = xBound * xPad
+        const y = yBound * yPad
+        return { top: y, bottom: -y, left: -x, right: -x }
     }
 
     resize (): void {
