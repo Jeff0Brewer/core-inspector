@@ -40,6 +40,7 @@ class CoreRenderer {
     metadata: TileTextureMetadata
     numMinerals: number
     currMineral: number
+    currSpacing: [number, number]
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
@@ -55,8 +56,9 @@ class CoreRenderer {
         coreSettings: CoreSettings,
         mineralSettings: MineralSettings
     ) {
+        this.currSpacing = coreSettings.spacing
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
-        const { downPositions, punchPositions } = getCorePositions(tileMetadata, coreSettings.spacing, bounds)
+        const { downPositions, punchPositions } = getCorePositions(tileMetadata, this.currSpacing, bounds)
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
@@ -137,16 +139,25 @@ class CoreRenderer {
         this.highlightRenderer.setProj(m)
     }
 
+    genVerts (gl: WebGLRenderingContext, bounds: BoundRect): void {
+        const { downPositions, punchPositions } = getCorePositions(
+            this.metadata,
+            this.currSpacing,
+            bounds
+        )
+        this.downRenderer.setPositions(gl, downPositions)
+        this.punchRenderer.setPositions(gl, punchPositions)
+        this.stencilRenderer.setPositions(gl, downPositions)
+        this.highlightRenderer.positions = downPositions
+    }
+
     setSpacing (
         gl: WebGLRenderingContext,
         spacing: [number, number],
         bounds: BoundRect
     ): void {
-        const { downPositions, punchPositions } = getCorePositions(this.metadata, spacing, bounds)
-        this.downRenderer.setPositions(gl, downPositions)
-        this.punchRenderer.setPositions(gl, punchPositions)
-        this.stencilRenderer.setPositions(gl, downPositions)
-        this.highlightRenderer.positions = downPositions
+        this.currSpacing = spacing
+        this.genVerts(gl, bounds)
     }
 
     draw (

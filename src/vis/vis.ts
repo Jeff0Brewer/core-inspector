@@ -111,6 +111,9 @@ class VisRenderer {
     }
 
     setShape (s: CoreShape): void {
+        if (s === 'column') {
+            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds())
+        }
         this.core.setShape(s)
         this.camera.setMode(s)
         this.uiState.setShape(s)
