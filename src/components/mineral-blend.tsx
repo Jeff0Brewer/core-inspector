@@ -8,142 +8,106 @@ import { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/mineral-blend.css'
 
 type LabelledPalette = { [mineral: string]: vec3 }
-type UnlabelledPalette = Array<vec3>
+const COLOR_MINERAL_PRESETS: Array<LabelledPalette> = [
+    {
+        chlorite: [0.6039, 0.6588, 0.5647],
+        epidote: [0.6705, 0.7411, 0.6823],
+        prehnite: [0.4156, 0.4745, 0.5764],
+        zeolite: [1, 1, 1],
+        amphibole: [0.8, 0.7843, 0.6941],
+        pyroxene: [0.8039, 0.8509, 0.8666],
+        gypsum: [0.4431, 0.5960, 0.3333],
+        carbonate: [0.4705, 0.3450, 0.5882]
+    }, {
+        prehnite: [0.34901960784313724, 0.803921568627451, 0.5647058823529412],
+        chlorite: [0.24705882352941178, 0.6549019607843137, 0.8392156862745098],
+        pyroxene: [0.9803921568627451, 0.7529411764705882, 0.3686274509803922],
+        amphibole: [0.9686274509803922, 0.615686274509804, 0.5176470588235295],
+        'kaolinite-montmorillinite': [0.9333333333333333, 0.38823529411764707, 0.3215686274509804]
+    }
+]
 
-type MineralBlendProps = {
-    minerals: Array<string>,
-    currMineral: number,
-    setMineral: (i: number) => void,
-    setBlending: (m: Array<number>, c: Array<vec3 | null>) => void
+type UnlabelledPalette = Array<vec3>
+const COLOR_PRESETS: Array<UnlabelledPalette> = [
+    [
+        [0.47058823529411764, 0.34509803921568627, 0.5882352941176471],
+        [0.6705882352941176, 0.7411764705882353, 0.6862745098039216],
+        [0.41568627450980394, 0.4745098039215686, 0.5764705882352941]
+    ], [
+        [0.3803921568627451, 0.23137254901960785, 0.35294117647058826],
+        [0.5372549019607843, 0.3764705882352941, 0.5568627450980392],
+        [0.7294117647058823, 0.5843137254901961, 0.5764705882352941],
+        [0.9294117647058824, 0.9764705882352941, 0.6666666666666666],
+        [0.7843137254901961, 0.9803921568627451, 0.7411764705882353]
+    ],
+    [
+        [0.5843137254901961, 0.3803921568627451, 0.8862745098039215],
+        [0.8901960784313725, 0.20392156862745098, 0.1843137254901961],
+        [1, 0.9294117647058824, 0.2901960784313726],
+        [0.9647058823529412, 0.6, 0.24705882352941178],
+        [0.20392156862745098, 0.5647058823529412, 0.8627450980392157],
+        [0.30196078431372547, 0.7529411764705882, 0.7098039215686275],
+        [0.2196078431372549, 0.7568627450980392, 0.4470588235294118],
+        [0.39215686274509803, 0.4549019607843137, 0.803921568627451],
+        [0.9647058823529412, 0.42745098039215684, 0.6078431372549019]
+    ]
+]
+
+type GenericPalette = LabelledPalette | UnlabelledPalette
+
+type ColorSwatchProps = {
+    color: vec3 | null,
+    mineral: string | null
 }
 
-function MineralBlend (
-    { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
+function ColorSwatch (
+    { color, mineral }: ColorSwatchProps
 ): ReactElement {
-    const [palette, setPalette] = useState<LabelledPalette | UnlabelledPalette>(COLOR_PRESETS[0])
-    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
-    const [magnitudes, setMagnitudes] = useState<Array<number>>(
-        Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
-    )
-    const [open, setOpen] = useState<boolean>(true)
+    const getColor = (color: vec3 | null): string => {
+        if (!color) { return 'transparent' }
+        const colorU8 = color.map(v => Math.floor(v * 255))
+        return `#${vecToHex(colorU8)}`
+    }
 
-    const getColor = useCallback((mineral: string, index: number): vec3 | null => {
-        const isLabelled = !Array.isArray(palette)
-        let color
-        if (isLabelled) {
-            color = palette[mineral] || null
-        } else {
-            if (visibilities[index]) {
-                const ind = visibilities.slice(0, index).filter(v => v).length
-                color = palette[ind]
-            } else {
-                color = null
-            }
-        }
-        return color
-    }, [palette, visibilities])
-
-    // init visibilities on palette change, hide minerals not present in
-    // labelled keys and hide minerals not in unlabelled array bounds
-    useEffect(() => {
-        const isLabelled = !Array.isArray(palette)
-        const visibilities = Array(minerals.length).fill(false)
-        if (isLabelled) {
-            const visibleMinerals = Object.keys(palette)
-            for (let i = 0; i < minerals.length; i++) {
-                const visible = visibleMinerals.indexOf(minerals[i]) !== -1
-                if (visible) {
-                    visibilities[i] = true
-                }
-            }
-        } else {
-            for (let i = 0; i < palette.length; i++) {
-                visibilities[i] = true
-            }
-        }
-        setVisibilities(visibilities)
-    }, [palette, minerals])
-
-    useEffect(() => {
-        const colors = []
-        for (let i = 0; i < minerals.length; i++) {
-            colors.push(getColor(minerals[i], i))
-        }
-        const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
-        setBlending(visibleMagnitudes, colors)
-    }, [minerals, visibilities, magnitudes, getColor, setBlending])
-
-    // close blend menu if not currently using blended output
-    useEffect(() => {
-        if (currMineral >= 0) {
-            setOpen(false)
-        }
-    }, [currMineral])
-
-    const isLabelled = !Array.isArray(palette)
     return (
-        <div className={'blend'}>
-            <button
-                onClick={() => {
-                    setMineral(-1)
-                    setOpen(!open)
-                }}
-                data-active={currMineral < 0}
-            >
-                <MdColorLens />
-            </button>
-            { open && <section className={'menu'}>
-                <p>color+mineral presets</p>
-                <div>
-                    <ColorDropdown
-                        palettes={COLOR_MINERAL_PRESETS}
-                        selected={isLabelled ? palette : null}
-                        setSelected={setPalette}
-                    />
-                </div>
-                <p>color presets</p>
-                <div>
-                    <ColorDropdown
-                        palettes={COLOR_PRESETS}
-                        selected={!isLabelled ? palette : null}
-                        setSelected={setPalette}
-                    />
-                </div>
-                <p>mineral color mixer</p>
-                <div>
-                    { minerals.map((mineral, i) => {
-                        const setVisible = (v: boolean): void => {
-                            visibilities[i] = v
-                            setVisibilities([...visibilities])
-                        }
-                        const setMagnitude = (m: number): void => {
-                            magnitudes[i] = m
-                            setMagnitudes([...magnitudes])
-                        }
-                        return <MineralSlider
-                            key={i}
-                            mineral={mineral}
-                            color={getColor(mineral, i)}
-                            visible={visibilities[i]}
-                            setVisible={setVisible}
-                            magnitude={magnitudes[i]}
-                            setMagnitude={setMagnitude}
-                        />
-                    }) }
-                </div>
-            </section> }
+        <div
+            className={'swatch'}
+            style={{ backgroundColor: getColor(color) }}
+            data-color={!!color}
+        >
+            { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
     )
 }
 
-type ColorDropdownProps<T extends LabelledPalette | UnlabelledPalette> = {
-    palettes: Array<T>,
-    selected: T | null,
-    setSelected: (s: T) => void
+type ColorPaletteProps = {
+    palette: GenericPalette
 }
 
-function ColorDropdown<T extends LabelledPalette | UnlabelledPalette> (
-    { palettes, selected, setSelected }: ColorDropdownProps<T>
+function ColorPalette (
+    { palette }: ColorPaletteProps
+): ReactElement {
+    const isLabelled = !Array.isArray(palette)
+    return (
+        <div className={'palette'}>
+            { Object.entries(palette).map(([mineral, color], i) =>
+                <ColorSwatch
+                    mineral={isLabelled ? mineral : null}
+                    color={color}
+                    key={i} />
+            ) }
+        </div>
+    )
+}
+
+type ColorDropdownProps = {
+    palettes: Array<GenericPalette>,
+    selected: GenericPalette | null,
+    setSelected: (s: GenericPalette) => void
+}
+
+function ColorDropdown (
+    { palettes, selected, setSelected }: ColorDropdownProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
 
@@ -170,52 +134,6 @@ function ColorDropdown<T extends LabelledPalette | UnlabelledPalette> (
                         <ColorPalette palette={palette} />
                     </a>) }
             </div>
-        </div>
-    )
-}
-
-type ColorPaletteProps = {
-    palette: LabelledPalette | UnlabelledPalette
-}
-
-function ColorPalette (
-    { palette }: ColorPaletteProps
-): ReactElement {
-    const isLabelled = !Array.isArray(palette)
-    return (
-        <div className={'palette'}>
-            { Object.entries(palette).map(([mineral, color], i) =>
-                <ColorSwatch
-                    mineral={isLabelled ? mineral : null}
-                    color={color}
-                    key={i} />
-            ) }
-        </div>
-    )
-}
-
-type ColorSwatchProps = {
-    color: vec3 | null,
-    mineral: string | null
-}
-
-function ColorSwatch (
-    { color, mineral }: ColorSwatchProps
-): ReactElement {
-    // get css color from color prop, returning transparent if color is null
-    const getColor = (color: vec3 | null): string => {
-        if (!color) { return 'transparent' }
-        const colorU8 = color.map(v => Math.floor(v * 255))
-        return `#${vecToHex(colorU8)}`
-    }
-
-    return (
-        <div
-            className={'swatch'}
-            style={{ backgroundColor: getColor(color) }}
-            data-color={!!color}
-        >
-            { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
     )
 }
@@ -351,48 +269,130 @@ function MineralSlider (
     )
 }
 
-const COLOR_MINERAL_PRESETS: Array<LabelledPalette> = [
-    {
-        chlorite: [0.6039, 0.6588, 0.5647],
-        epidote: [0.6705, 0.7411, 0.6823],
-        prehnite: [0.4156, 0.4745, 0.5764],
-        zeolite: [1, 1, 1],
-        amphibole: [0.8, 0.7843, 0.6941],
-        pyroxene: [0.8039, 0.8509, 0.8666],
-        gypsum: [0.4431, 0.5960, 0.3333],
-        carbonate: [0.4705, 0.3450, 0.5882]
-    }, {
-        prehnite: [0.34901960784313724, 0.803921568627451, 0.5647058823529412],
-        chlorite: [0.24705882352941178, 0.6549019607843137, 0.8392156862745098],
-        pyroxene: [0.9803921568627451, 0.7529411764705882, 0.3686274509803922],
-        amphibole: [0.9686274509803922, 0.615686274509804, 0.5176470588235295],
-        'kaolinite-montmorillinite': [0.9333333333333333, 0.38823529411764707, 0.3215686274509804]
-    }
-]
+type MineralBlendProps = {
+    minerals: Array<string>,
+    currMineral: number,
+    setMineral: (i: number) => void,
+    setBlending: (m: Array<number>, c: Array<vec3 | null>) => void
+}
 
-const COLOR_PRESETS: Array<UnlabelledPalette> = [
-    [
-        [0.47058823529411764, 0.34509803921568627, 0.5882352941176471],
-        [0.6705882352941176, 0.7411764705882353, 0.6862745098039216],
-        [0.41568627450980394, 0.4745098039215686, 0.5764705882352941]
-    ], [
-        [0.3803921568627451, 0.23137254901960785, 0.35294117647058826],
-        [0.5372549019607843, 0.3764705882352941, 0.5568627450980392],
-        [0.7294117647058823, 0.5843137254901961, 0.5764705882352941],
-        [0.9294117647058824, 0.9764705882352941, 0.6666666666666666],
-        [0.7843137254901961, 0.9803921568627451, 0.7411764705882353]
-    ],
-    [
-        [0.5843137254901961, 0.3803921568627451, 0.8862745098039215],
-        [0.8901960784313725, 0.20392156862745098, 0.1843137254901961],
-        [1, 0.9294117647058824, 0.2901960784313726],
-        [0.9647058823529412, 0.6, 0.24705882352941178],
-        [0.20392156862745098, 0.5647058823529412, 0.8627450980392157],
-        [0.30196078431372547, 0.7529411764705882, 0.7098039215686275],
-        [0.2196078431372549, 0.7568627450980392, 0.4470588235294118],
-        [0.39215686274509803, 0.4549019607843137, 0.803921568627451],
-        [0.9647058823529412, 0.42745098039215684, 0.6078431372549019]
-    ]
-]
+function MineralBlend (
+    { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
+): ReactElement {
+    const [palette, setPalette] = useState<GenericPalette>(COLOR_PRESETS[0])
+    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
+    const [magnitudes, setMagnitudes] = useState<Array<number>>(
+        Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
+    )
+    const [open, setOpen] = useState<boolean>(true)
+
+    const getColor = useCallback((mineral: string, index: number): vec3 | null => {
+        const isLabelled = !Array.isArray(palette)
+        let color
+        if (isLabelled) {
+            color = palette[mineral] || null
+        } else {
+            if (visibilities[index]) {
+                const ind = visibilities.slice(0, index).filter(v => v).length
+                color = palette[ind]
+            } else {
+                color = null
+            }
+        }
+        return color
+    }, [palette, visibilities])
+
+    // init visibilities on palette change, hide minerals not present in
+    // labelled keys and hide minerals not in unlabelled array bounds
+    useEffect(() => {
+        const isLabelled = !Array.isArray(palette)
+        const visibilities = Array(minerals.length).fill(false)
+        if (isLabelled) {
+            const visibleMinerals = Object.keys(palette)
+            for (let i = 0; i < minerals.length; i++) {
+                const visible = visibleMinerals.indexOf(minerals[i]) !== -1
+                if (visible) {
+                    visibilities[i] = true
+                }
+            }
+        } else {
+            for (let i = 0; i < palette.length; i++) {
+                visibilities[i] = true
+            }
+        }
+        setVisibilities(visibilities)
+    }, [palette, minerals])
+
+    useEffect(() => {
+        const colors = []
+        for (let i = 0; i < minerals.length; i++) {
+            colors.push(getColor(minerals[i], i))
+        }
+        const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
+        setBlending(visibleMagnitudes, colors)
+    }, [minerals, visibilities, magnitudes, getColor, setBlending])
+
+    // close blend menu if not currently using blended output
+    useEffect(() => {
+        if (currMineral >= 0) {
+            setOpen(false)
+        }
+    }, [currMineral])
+
+    const isLabelled = !Array.isArray(palette)
+    return (
+        <div className={'blend'}>
+            <button
+                onClick={() => {
+                    setMineral(-1)
+                    setOpen(!open)
+                }}
+                data-active={currMineral < 0}
+            >
+                <MdColorLens />
+            </button>
+            { open && <section className={'menu'}>
+                <p>color+mineral presets</p>
+                <div>
+                    <ColorDropdown
+                        palettes={COLOR_MINERAL_PRESETS}
+                        selected={isLabelled ? palette : null}
+                        setSelected={setPalette}
+                    />
+                </div>
+                <p>color presets</p>
+                <div>
+                    <ColorDropdown
+                        palettes={COLOR_PRESETS}
+                        selected={!isLabelled ? palette : null}
+                        setSelected={setPalette}
+                    />
+                </div>
+                <p>mineral color mixer</p>
+                <div>
+                    { minerals.map((mineral, i) => {
+                        const setVisible = (v: boolean): void => {
+                            visibilities[i] = v
+                            setVisibilities([...visibilities])
+                        }
+                        const setMagnitude = (m: number): void => {
+                            magnitudes[i] = m
+                            setMagnitudes([...magnitudes])
+                        }
+                        return <MineralSlider
+                            key={i}
+                            mineral={mineral}
+                            color={getColor(mineral, i)}
+                            visible={visibilities[i]}
+                            setVisible={setVisible}
+                            magnitude={magnitudes[i]}
+                            setMagnitude={setMagnitude}
+                        />
+                    }) }
+                </div>
+            </section> }
+        </div>
+    )
+}
 
 export default MineralBlend
