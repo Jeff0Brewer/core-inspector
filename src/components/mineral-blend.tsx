@@ -96,7 +96,7 @@ function MineralBlend (
                 <p>color+mineral presets</p>
                 <div>
                     <ColorDropdown
-                        items={COLOR_MINERAL_PRESETS}
+                        palettes={COLOR_MINERAL_PRESETS}
                         selected={isLabelled ? palette : null}
                         setSelected={setPalette}
                     />
@@ -104,7 +104,7 @@ function MineralBlend (
                 <p>color presets</p>
                 <div>
                     <ColorDropdown
-                        items={COLOR_PRESETS}
+                        palettes={COLOR_PRESETS}
                         selected={!isLabelled ? palette : null}
                         setSelected={setPalette}
                     />
@@ -137,13 +137,13 @@ function MineralBlend (
 }
 
 type ColorDropdownProps<T extends LabelledPalette | UnlabelledPalette> = {
-    items: Array<T>,
+    palettes: Array<T>,
     selected: T | null,
     setSelected: (s: T) => void
 }
 
 function ColorDropdown<T extends LabelledPalette | UnlabelledPalette> (
-    { items, selected, setSelected }: ColorDropdownProps<T>
+    { palettes, selected, setSelected }: ColorDropdownProps<T>
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
 
@@ -155,20 +155,19 @@ function ColorDropdown<T extends LabelledPalette | UnlabelledPalette> (
         >
             <div className={'label'}>
                 <div className={'selected'}>
-                    { selected !== null &&
-                        <ColorPalette palette={selected} />}
+                    { selected && <ColorPalette palette={selected} />}
                 </div>
                 <button onClick={() => setOpen(!open)}>
                     <PiCaretDownBold />
                 </button>
             </div>
             <div className={'content'}>
-                { items.map((item, i) =>
+                { palettes.map((palette, i) =>
                     <a key={i} onClick={() => {
-                        setSelected(item)
+                        setSelected(palette)
                         setOpen(false)
                     }}>
-                        <ColorPalette palette={item} />
+                        <ColorPalette palette={palette} />
                     </a>) }
             </div>
         </div>
@@ -336,7 +335,7 @@ function MineralSlider (
                         %
                     </div>
                     <div>
-                        <ColorSwatch color={visible ? color : null} />
+                        <ColorSwatch mineral={null} color={visible ? color : null} />
                     </div>
                 </div>
             </div>
