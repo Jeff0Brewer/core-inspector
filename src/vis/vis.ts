@@ -187,6 +187,7 @@ class VisRenderer {
         const wheel = (e: WheelEvent): void => {
             this.camera.mousewheel(e.deltaY)
             this.uiState.setZoom(this.camera.zoomT)
+            this.setHovered(undefined)
         }
 
         const keydown = (e: KeyboardEvent): void => {
