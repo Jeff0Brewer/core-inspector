@@ -121,15 +121,14 @@
 }
 
 .mineral .slider .arrow {
-    position: absolute;
     padding: inherit;
-    right: 0;
+    position: absolute;
     z-index: 200;
-    width: 10px;
-    height: 10px;
+    right: 0;
     bottom: 0;
+    width: 0;
+    height: 10px;
     transform: translateX(-5px);
-    pointer-events: none;
     opacity: 1;
     transition: opacity var(--transition-param);
 }
