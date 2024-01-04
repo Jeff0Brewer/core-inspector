@@ -125,7 +125,7 @@ function ColorDropdown (
                     <PiCaretDownBold />
                 </button>
             </div>
-            <div className={'content'}>
+            <div className={'items'}>
                 { palettes.map((palette, i) =>
                     <a key={i} onClick={() => {
                         setSelected(palette)

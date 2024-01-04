@@ -209,7 +209,7 @@
     transform: rotate(180deg);
 }
 
-.dropdown .content {
+.dropdown .items {
     position: absolute;
     top: 100%;
     width: 100%;
@@ -222,7 +222,7 @@
         transform var(--transition-param);
 }
 
-.dropdown[data-open="false"] .content {
+.dropdown[data-open="false"] .items {
     pointer-events: none;
     opacity: 0;
     transform: translateY(-2px);
@@ -234,7 +234,7 @@
     padding: 1px;
 }
 
-.dropdown .content > a:not(:last-of-type) {
+.dropdown .items > a:not(:last-of-type) {
     display: block;
     border-bottom: 1px solid var(--color1);
 }
