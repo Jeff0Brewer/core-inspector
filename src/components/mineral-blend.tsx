@@ -3,7 +3,7 @@ import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
 import { PiCaretDownBold } from 'react-icons/pi'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { clamp, vecToHex } from '../lib/util'
+import { clamp, vecToHex, formatPercent } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/mineral-blend.css'
 
@@ -218,10 +218,6 @@ function ColorSwatch (
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
     )
-}
-
-const formatPercent = (p: number): string => {
-    return (p * 100).toFixed()
 }
 
 type MineralSliderProps = {
