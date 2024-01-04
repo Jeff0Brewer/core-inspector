@@ -69,7 +69,7 @@
     gap: 5px;
 }
 
-.mineral a {
+.mineral .top a {
     display: grid;
     place-content: center;
     width: 20px;
@@ -78,19 +78,19 @@
     transition: color var(--transition-param);
 }
 
-.mineral p {
+.mineral .top p {
     font-size: 0.65rem;
     letter-spacing: 0.05rem;
     font-weight: 300;
 }
 
-.percentage {
+.mineral .top .percentage {
     color: var(--color3);
     opacity: 1;
     transition: opacity var(--transition-param);
 }
 
-.percentage input[type="text"] {
+.mineral .top .percentage input[type="text"] {
     background-color: transparent;
     border: 1px solid var(--color1);
     height: 16px;
@@ -100,7 +100,7 @@
     padding: 4px;
 }
 
-.slider {
+.mineral .slider {
     position: absolute;
     top: 0;
     left: 0;
@@ -111,15 +111,19 @@
     transition: opacity var(--transition-param);
 }
 
-.slider .value {
-    pointer-events: none;
+.mineral .slider:before {
+    display: block;
+    content: "";
     height: 100%;
+    width: 100%;
     background-color: #fff;
     transition: background-color var(--transition-param);
 }
 
-.slider .arrow {
+.mineral .slider .arrow {
     position: absolute;
+    padding: inherit;
+    right: 0;
     z-index: 200;
     width: 10px;
     height: 10px;
@@ -244,7 +248,7 @@
     opacity: 1;
 }
 
-.mineral[data-visible="false"] .slider .value {
+.mineral[data-visible="false"] .slider:before {
     background-color: transparent;
 }
 

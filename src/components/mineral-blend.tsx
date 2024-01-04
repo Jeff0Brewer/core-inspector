@@ -233,12 +233,13 @@ function MineralSlider (
             data-visible={visible}
             data-dragging={dragging}
         >
-            <div ref={sliderRef} className={'slider'}>
-                <div className={'arrow'} style={{ left: `${magnitude * 100}%` }}>
-                    <IoCaretDownSharp />
-                </div>
-                <div className={'value'} style={{ width: `${magnitude * 100}%` }}>
-                </div>
+            {/* slider div before top label to ensure lower z-index */}
+            <div
+                ref={sliderRef}
+                className={'slider'}
+                style={{ paddingRight: `${(1 - magnitude) * 100}%` }}
+            >
+                <div className={'arrow'}><IoCaretDownSharp /></div>
             </div>
             <div className={'top'}>
                 <div>
@@ -257,9 +258,7 @@ function MineralSlider (
                         />
                         %
                     </div>
-                    <div>
-                        <ColorSwatch color={visible ? color : null} mineral={null} />
-                    </div>
+                    <ColorSwatch color={visible ? color : null} mineral={null} />
                 </div>
             </div>
         </div>
