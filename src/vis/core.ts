@@ -287,7 +287,13 @@ const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, numbe
 }
 
 export default CoreRenderer
-export { POS_FPV, TEX_FPV, POS_STRIDE, TEX_STRIDE }
+export {
+    POS_FPV,
+    TEX_FPV,
+    POS_STRIDE,
+    TEX_STRIDE,
+    TRANSFORM_SPEED
+}
 export type {
     CoreViewMode,
     CoreShape,

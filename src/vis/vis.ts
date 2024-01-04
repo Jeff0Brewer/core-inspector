@@ -111,8 +111,8 @@ class VisRenderer {
     }
 
     setShape (s: CoreShape): void {
-        this.camera.mode = s
         this.core.setShape(s)
+        this.camera.setMode(s)
         this.uiState.setShape(s)
     }
 
@@ -211,6 +211,8 @@ class VisRenderer {
     draw (elapsed: number): void {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
+
+        this.camera.update(elapsed)
 
         const setHovered = (h: string | undefined): void => {
             this.setHovered(h)
