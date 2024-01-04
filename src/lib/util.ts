@@ -19,6 +19,10 @@ const vecToHex = (v: Array<number> | vec2 | vec3 | vec4): string => {
     return hex.join('')
 }
 
+const formatPercent = (p: number): string => {
+    return (p * 100).toFixed()
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -29,6 +33,7 @@ type BoundRect = {
 export {
     ease,
     clamp,
-    vecToHex
+    vecToHex,
+    formatPercent
 }
 export type { BoundRect }
