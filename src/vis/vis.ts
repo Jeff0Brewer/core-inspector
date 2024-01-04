@@ -68,7 +68,7 @@ class VisRenderer {
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
-        this.camera = new Camera2D(VIS_DEFAULTS.camera.zoom)
+        this.camera = new Camera2D(VIS_DEFAULTS.camera.zoom, VIS_DEFAULTS.core.shape)
         const aspect = window.innerWidth / window.innerHeight
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
@@ -101,7 +101,7 @@ class VisRenderer {
     }
 
     setZoom (t: number): void {
-        this.camera.setZoom(t)
+        this.camera.zoom(t)
         this.uiState.setZoom(t)
     }
 
@@ -111,6 +111,7 @@ class VisRenderer {
     }
 
     setShape (s: CoreShape): void {
+        this.camera.mode = s
         this.core.setShape(s)
         this.uiState.setShape(s)
     }
@@ -169,12 +170,12 @@ class VisRenderer {
                 this.canvas.height - e.clientY * window.devicePixelRatio
             ]
             if (dragging) {
-                this.camera.pan(e.movementX, e.movementY)
+                this.camera.mousedrag(e.movementX, e.movementY)
             }
         }
 
         const wheel = (e: WheelEvent): void => {
-            this.camera.zoom(e.deltaY)
+            this.camera.mousewheel(e.deltaY)
             this.uiState.setZoom(this.camera.zoomT)
         }
 
