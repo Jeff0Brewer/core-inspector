@@ -120,7 +120,7 @@ function MineralBlend (
                             magnitudes[i] = m
                             setMagnitudes([...magnitudes])
                         }
-                        return <MineralBlender
+                        return <MineralSlider
                             key={i}
                             mineral={mineral}
                             color={getColor(mineral, i)}
@@ -229,7 +229,7 @@ const formatPercent = (p: number): string => {
     return (p * 100).toFixed()
 }
 
-type MineralBlenderProps = {
+type MineralSliderProps = {
     mineral: string,
     color: vec3 | null,
     visible: boolean,
@@ -238,8 +238,8 @@ type MineralBlenderProps = {
     setMagnitude: (m: number) => void
 }
 
-function MineralBlender (
-    { mineral, color, visible, setVisible, magnitude, setMagnitude }: MineralBlenderProps
+function MineralSlider (
+    { mineral, color, visible, setVisible, magnitude, setMagnitude }: MineralSliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
