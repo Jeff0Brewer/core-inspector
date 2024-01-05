@@ -70,14 +70,14 @@ class Camera2D {
 
     pan (x: number, y: number): void {
         const zoomFactor = Math.pow(this.zoomT + 0.1, 0.7)
-        this.eye[0] += x * zoomFactor
-        this.eye[1] += y * zoomFactor
-        this.focus[0] = this.eye[0]
-        this.focus[1] = this.eye[1]
-        if (this.targetFocusT >= 1) {
-            this.targetFocus[0] = this.focus[0]
-            this.targetFocus[1] = this.focus[1]
-        }
+        const dx = x * zoomFactor
+        const dy = y * zoomFactor
+        this.focus[0] += dx
+        this.focus[1] += dy
+        this.targetFocus[0] += dx
+        this.targetFocus[1] += dy
+        this.eye[0] = this.focus[0]
+        this.eye[1] = this.focus[1]
     }
 
     zoom (t: number): void {
