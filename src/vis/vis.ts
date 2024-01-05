@@ -164,6 +164,11 @@ class VisRenderer {
 
         this.core.setProj(this.gl, this.proj)
         this.core.stencilRenderer.resize(this.gl, w, h)
+
+        // regen verts if in column view to wrap viewport bounds
+        if (this.core.targetShape === 'column') {
+            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
+        }
     }
 
     setupEventListeners (): (() => void) {
