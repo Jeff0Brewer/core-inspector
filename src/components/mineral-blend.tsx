@@ -275,8 +275,8 @@ type MineralBlendProps = {
 function MineralBlend (
     { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
 ): ReactElement {
-    const [open, setOpen] = useState<boolean>(true)
-    const [selected, setSelected] = useState<GenericPalette>(COLOR_PRESETS[0])
+    const [open, setOpen] = useState<boolean>(false)
+    const [selected, setSelected] = useState<GenericPalette>(COLOR_MINERAL_PRESETS[0])
     const [visibilities, setVisibilities] = useState<Array<boolean>>(
         Array(minerals.length).fill(true)
     )

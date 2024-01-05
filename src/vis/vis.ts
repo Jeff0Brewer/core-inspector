@@ -24,7 +24,7 @@ const VIS_DEFAULTS: VisSettings = {
         hovered: undefined
     },
     mineral: {
-        index: 0,
+        index: -1, // start with blended mineral map
         blendMagnitude: 1
     },
     camera: {
