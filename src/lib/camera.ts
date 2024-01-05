@@ -5,7 +5,7 @@ import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
 const MOUSE_PAN_SPEED = 0.003
 const WHEEL_PAN_SPEED = 0.001
 const ZOOM_SPEED = 0.0005
-const MIN_ZOOM = 0.2
+const MIN_ZOOM = 0.3
 const MAX_ZOOM = 1.75
 
 type CameraMode = CoreShape
