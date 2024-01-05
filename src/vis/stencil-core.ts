@@ -115,34 +115,35 @@ class StencilCoreRenderer {
         mousePos: [number, number],
         setHovered: (id: string) => void
     ): void {
+        // only update stencil framebuffer and read pixels if
+        // hover has potentially changed
+        if (!this.checkHoverChange(shapeT, mousePos)) {
+            return
+        }
+        this.lastMousePos = mousePos
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
-        gl.useProgram(this.program)
 
+        gl.useProgram(this.program)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
         this.bindPositions()
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colBuffer)
         this.bindColors()
-
         this.setView(view)
         this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 
-        // mouse position is tracked here instead of using an event listener
-        // so that pixels can be read directly after draw
-        if (this.checkHoverChange(shapeT, mousePos)) {
-            const pixels = new Uint8Array(4)
-            gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+        const pixels = new Uint8Array(4)
+        gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
-            const colorHex = vecToHex([pixels[0], pixels[1]])
-            const newHovered = this.colorIdMap[colorHex]
-            if (this.currHovered !== newHovered) {
-                this.currHovered = newHovered
-                setHovered(this.currHovered)
-            }
+        const colorHex = vecToHex([pixels[0], pixels[1]])
+        const newHovered = this.colorIdMap[colorHex]
+        if (this.currHovered !== newHovered) {
+            this.currHovered = newHovered
+            setHovered(this.currHovered)
         }
-        this.lastMousePos = mousePos
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
