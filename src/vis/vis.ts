@@ -142,7 +142,7 @@ class VisRenderer {
     getUnprojectedViewportBounds (padding?: [number, number]): BoundRect {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
-        const xBound = this.canvas.width / this.canvas.height * yBound
+        const xBound = window.innerWidth / window.innerHeight * yBound
         const [xPad, yPad] = padding || [1, 1]
         const x = xBound * xPad
         const y = yBound * yPad
