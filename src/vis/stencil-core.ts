@@ -7,12 +7,15 @@ import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
-const COL_FPV = 2
-const COL_STRIDE = COL_FPV
-
 // maps color picked from stencil framebuffer into core section id
 type ColorIdMap = { [color: string]: string }
 
+const COL_FPV = 2
+const COL_STRIDE = COL_FPV
+
+// stencil renderer for mouse interactions, draws each segment as a
+// unique color and reads pixels under the mouse to determine which
+// segment is currently hovered
 class StencilCoreRenderer {
     framebuffer: WebGLFramebuffer
     program: WebGLProgram
@@ -45,11 +48,12 @@ class StencilCoreRenderer {
         this.program = initProgram(gl, vertSource, fragSource)
 
         this.numVertex = positions.length / POS_STRIDE
+        const vertPerTile = this.numVertex / tileMetadata.numTiles
+
         this.posBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
         this.positions = positions
 
-        const vertPerTile = this.numVertex / tileMetadata.numTiles
         this.colBuffer = initBuffer(gl)
         const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
@@ -96,8 +100,8 @@ class StencilCoreRenderer {
         this.framebuffer = framebuffer
     }
 
-    // check if stencil framebuffer should be read, want to minimize readPixels calls
-    // so only read when mouse has moved and shape is not currently transforming
+    // check if stencil framebuffer should be updated, want to minimize draws and reads,
+    // ensure mouse has moved and shape is not currently transforming
     checkHoverChange (shapeT: number, mousePos: [number, number]): boolean {
         const shapeNotChanging = shapeT === 0 || shapeT === 1
 
@@ -126,10 +130,13 @@ class StencilCoreRenderer {
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
 
         gl.useProgram(this.program)
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
         this.bindPositions()
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colBuffer)
         this.bindColors()
+
         this.setView(view)
         this.setShapeT(shapeT)
 
