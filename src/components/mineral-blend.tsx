@@ -22,10 +22,10 @@ const COLOR_MINERAL_PRESETS: Array<LabelledPalette> = [
         gypsum: [0.4431, 0.5960, 0.3333],
         carbonate: [0.4705, 0.3450, 0.5882]
     }, {
-        prehnite: [0.3490, 0.8039, 0.5647],
         chlorite: [0.2470, 0.6549, 0.8392],
-        pyroxene: [0.9803, 0.7529, 0.3686],
-        amphibole: [0.9686, 0.6156, 0.5176],
+        prehnite: [0.3490, 0.8039, 0.5647],
+        zeolite: [0.9686, 0.6156, 0.5176],
+        carbonate: [0.9803, 0.7529, 0.3686],
         'kaolinite-montmorillinite': [0.9333, 0.3882, 0.3215]
     }
 ]
