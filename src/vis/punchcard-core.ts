@@ -152,7 +152,7 @@ const addPunchcardPositions = (
 
     const getPointPositions = (i: number, j: number): Array<number> => {
         const angle = startAngle + angleInc * i
-        const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
+        const bandAcross = bandWidth - (bandWidth * (j + 0.5) / POINT_PER_ROW)
         const radius = startRadius + i * radiusInc + bandAcross
         const colY = startColY + colYInc * i
         const colX = currColX + bandAcross

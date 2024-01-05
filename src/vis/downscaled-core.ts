@@ -144,14 +144,14 @@ const addDownscaledPositions = (
         const colX = currColX
 
         const inner = [
-            Math.cos(angle) * (radius - bandWidth * 0.5),
-            Math.sin(angle) * (radius - bandWidth * 0.5),
+            Math.cos(angle) * (radius + bandWidth * 0.5),
+            Math.sin(angle) * (radius + bandWidth * 0.5),
             colX,
             colY
         ]
         const outer = [
-            Math.cos(angle) * (radius + bandWidth * 0.5),
-            Math.sin(angle) * (radius + bandWidth * 0.5),
+            Math.cos(angle) * (radius - bandWidth * 0.5),
+            Math.sin(angle) * (radius - bandWidth * 0.5),
             colX + bandWidth,
             colY
         ]
