@@ -2,7 +2,8 @@ import { mat4, vec3 } from 'gl-matrix'
 import { clamp, ease } from '../lib/util'
 import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
 
-const PAN_SPEED = 0.003
+const MOUSE_PAN_SPEED = 0.003
+const WHEEL_PAN_SPEED = 0.001
 const ZOOM_SPEED = 0.0005
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 1.75
@@ -90,7 +91,7 @@ class Camera2D {
 
     mousewheel (d: number): void {
         if (this.mode === 'column') {
-            const x = d * ZOOM_SPEED
+            const x = d * WHEEL_PAN_SPEED
             this.pan(x, 0)
         } else {
             const t = this.zoomT * (1 + d * ZOOM_SPEED)
@@ -99,11 +100,11 @@ class Camera2D {
     }
 
     mousedrag (dx: number, dy: number): void {
-        const x = -1 * dx * PAN_SPEED
+        const x = -1 * dx * MOUSE_PAN_SPEED
         if (this.mode === 'column') {
             this.pan(x, 0)
         } else {
-            const y = dy * PAN_SPEED
+            const y = dy * MOUSE_PAN_SPEED
             this.pan(x, y)
         }
     }
