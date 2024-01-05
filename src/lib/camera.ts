@@ -69,7 +69,7 @@ class Camera2D {
     }
 
     pan (x: number, y: number): void {
-        const zoomFactor = Math.pow(this.zoomT, 0.7)
+        const zoomFactor = Math.pow(this.zoomT + 0.1, 0.7)
         this.eye[0] += x * zoomFactor
         this.eye[1] += y * zoomFactor
         this.focus[0] = this.eye[0]
