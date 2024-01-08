@@ -22,12 +22,30 @@ canvas {
     position: relative;
 
     display: flex;
+    align-items: center;
     width: 100%;
     gap: 30px;
     padding: 8px;
     padding-left: 60px;
 
     background-color: var(--menu-bg-color);
+}
+
+.info-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 25px;
+    padding-left: 15px;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--color2);
+    border-left: 1px solid var(--color2);
+}
+
+.info-label span {
+    color: #fff;
+    margin-right: 10px;
 }
 
 .side-bar {

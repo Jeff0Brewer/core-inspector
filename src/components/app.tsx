@@ -3,6 +3,7 @@ import { loadImageAsync } from '../lib/load'
 import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
+import { FaLongArrowAltRight } from 'react-icons/fa'
 import { CoreViewMode, CoreShape } from '../vis/core'
 import VerticalSlider from '../components/vertical-slider'
 import ToggleSelect from '../components/toggle-select'
@@ -12,6 +13,8 @@ import MetadataHover from '../components/metadata-hover'
 import Vis from '../components/vis'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
+
+const CORE = 'GT1'
 
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
@@ -89,6 +92,11 @@ function App (): ReactElement {
                             item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                             item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                         />
+                        <p className={'info-label'}>
+                            CORE <span>{CORE}</span>
+                            SECTIONS <span>0000 - 0156</span>
+                            DEPTH <span>0m - 400m</span>
+                        </p>
                     </div>
                     <div className={'side-bar'}>
                         <VerticalSlider
