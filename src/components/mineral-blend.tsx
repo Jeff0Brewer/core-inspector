@@ -140,6 +140,7 @@ function ColorDropdown (
 
 type MineralSliderProps = {
     mineral: string,
+    shortcut: string,
     color: vec3 | null,
     visible: boolean,
     setVisible: (v: boolean) => void,
@@ -148,7 +149,7 @@ type MineralSliderProps = {
 }
 
 function MineralSlider (
-    { mineral, color, visible, setVisible, magnitude, setMagnitude }: MineralSliderProps
+    { mineral, shortcut, color, visible, setVisible, magnitude, setMagnitude }: MineralSliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
     const sliderRef = useRef<HTMLDivElement>(null)
@@ -246,7 +247,9 @@ function MineralSlider (
                     <a onClick={() => setVisible(!visible)}>
                         <MdRemoveRedEye />
                     </a>
-                    <p>{mineral}</p>
+                    <p>{mineral}
+                        <span className={'shortcut'}>({shortcut})</span>
+                    </p>
                 </div>
                 <div>
                     <div className={'percentage'}>
@@ -353,6 +356,21 @@ function MineralBlend (
         }
     }, [monochrome, setMonochrome])
 
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent): void => {
+            const numKey = parseInt(e.key)
+            if (!Number.isNaN(numKey)) {
+                const mineralInd = numKey - 1
+                visibilities[mineralInd] = !visibilities[mineralInd]
+                setVisibilities([...visibilities])
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [visibilities])
+
     // close blend menu if not currently using blended output
     useEffect(() => {
         if (currMineral >= 0) {
@@ -413,6 +431,7 @@ function MineralBlend (
                     { minerals.map((mineral, i) =>
                         <MineralSlider
                             key={i}
+                            shortcut={(i + 1).toString()}
                             mineral={mineral}
                             color={getColor(mineral, i)}
                             visible={visibilities[i]}

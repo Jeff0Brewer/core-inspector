@@ -109,6 +109,16 @@
     font-weight: 300;
 }
 
+.mineral .shortcut {
+    opacity: 0;
+    margin-left: 5px;
+    transition: opacity var(--transition-param);
+}
+
+.mineral:hover .shortcut {
+    opacity: 1;
+}
+
 .mineral .top .percentage {
     color: var(--color3);
     opacity: 1;
