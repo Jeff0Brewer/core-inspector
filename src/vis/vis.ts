@@ -196,9 +196,9 @@ class VisRenderer {
         }
 
         const keydown = (e: KeyboardEvent): void => {
-            if (e.key === '+') {
+            if (e.key === '+' || e.key === '=') {
                 this.core.punchRenderer.incPointSize(0.2)
-            } else if (e.key === '-') {
+            } else if (e.key === '-' || e.key === '_') {
                 this.core.punchRenderer.incPointSize(-0.2)
             }
         }
