@@ -55,6 +55,12 @@ const COLOR_PRESETS: Array<UnlabelledPalette> = [
     ]
 ]
 
+const getColorHex = (color: vec3 | null): string => {
+    if (!color) { return 'transparent' }
+    const colorU8 = color.map(v => Math.floor(v * 255))
+    return `#${vecToHex(colorU8)}`
+}
+
 type ColorSwatchProps = {
     color: vec3 | null,
     mineral: string | null
@@ -63,16 +69,10 @@ type ColorSwatchProps = {
 function ColorSwatch (
     { color, mineral }: ColorSwatchProps
 ): ReactElement {
-    const getColor = (color: vec3 | null): string => {
-        if (!color) { return 'transparent' }
-        const colorU8 = color.map(v => Math.floor(v * 255))
-        return `#${vecToHex(colorU8)}`
-    }
-
     return (
         <div
             className={'swatch'}
-            style={{ backgroundColor: getColor(color) }}
+            style={{ backgroundColor: getColorHex(color) }}
             data-color={!!color}
         >
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
@@ -284,28 +284,12 @@ function MineralBlend (
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
     const [monochrome, setMonochrome] = useState<boolean>(false)
+    const [numVisible, setNumVisible] = useState<number>(0)
 
-    // assigns colors from palettes to mineral sliders based
-    // on current visibilities and palette type
-    const getColor = useCallback((mineral: string, index: number): vec3 | null => {
-        const numVisible = visibilities.reduce((n, v) => { return n + (v ? 1 : 0) }, 0)
-        if (numVisible === 1 && monochrome) {
-            return [1, 1, 1]
-        }
-        const isLabelled = !Array.isArray(selected)
-        let color
-        if (isLabelled) {
-            color = selected[mineral] || null
-        } else {
-            if (visibilities[index]) {
-                const ind = visibilities.slice(0, index).filter(v => v).length
-                color = selected[ind]
-            } else {
-                color = null
-            }
-        }
-        return color
-    }, [selected, visibilities, monochrome])
+    const getFirstColor = (palette: GenericPalette): string => {
+        const colors = Object.values(palette)
+        return getColorHex(colors[0])
+    }
 
     // init visibilities on palette change, hide minerals not present in
     // labelled keys and hide minerals not in unlabelled array bounds
@@ -324,6 +308,31 @@ function MineralBlend (
         }
         setVisibilities(visibilities)
     }, [selected, minerals])
+
+    useEffect(() => {
+        setNumVisible(visibilities.reduce((n, v) => n + (v ? 1 : 0), 0))
+    }, [visibilities])
+
+    // assigns colors from palettes to mineral sliders based
+    // on current visibilities and palette type
+    const getColor = useCallback((mineral: string, index: number): vec3 | null => {
+        if (numVisible === 1 && monochrome) {
+            return [1, 1, 1]
+        }
+        const isLabelled = !Array.isArray(selected)
+        let color
+        if (isLabelled) {
+            color = selected[mineral] || null
+        } else {
+            if (visibilities[index]) {
+                const ind = visibilities.slice(0, index).filter(v => v).length
+                color = selected[ind]
+            } else {
+                color = null
+            }
+        }
+        return color
+    }, [selected, visibilities, numVisible, monochrome])
 
     // apply blending on changes to visibilities or magnitudes
     useEffect(() => {
@@ -385,6 +394,11 @@ function MineralBlend (
                         selected={isLabelled ? selected : null}
                         setSelected={setSelected}
                     />
+                    <button
+                        className={'monochrome-icon'}
+                        style={{ backgroundColor: monochrome ? '#fff' : getFirstColor(selected) }}
+                        onClick={() => setMonochrome(!monochrome)}
+                    ></button>
                 </div>
                 <p>color presets</p>
                 <div>
