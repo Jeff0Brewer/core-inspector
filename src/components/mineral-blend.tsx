@@ -283,10 +283,15 @@ function MineralBlend (
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
+    const [monochrome, setMonochrome] = useState<boolean>(false)
 
     // assigns colors from palettes to mineral sliders based
     // on current visibilities and palette type
     const getColor = useCallback((mineral: string, index: number): vec3 | null => {
+        const numVisible = visibilities.reduce((n, v) => { return n + (v ? 1 : 0) }, 0)
+        if (numVisible === 1 && monochrome) {
+            return [1, 1, 1]
+        }
         const isLabelled = !Array.isArray(selected)
         let color
         if (isLabelled) {
@@ -300,7 +305,7 @@ function MineralBlend (
             }
         }
         return color
-    }, [selected, visibilities])
+    }, [selected, visibilities, monochrome])
 
     // init visibilities on palette change, hide minerals not present in
     // labelled keys and hide minerals not in unlabelled array bounds
@@ -325,7 +330,19 @@ function MineralBlend (
         const colors = minerals.map((mineral, i) => getColor(mineral, i))
         const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
         setBlending(visibleMagnitudes, colors)
-    }, [visibilities, magnitudes, minerals, getColor, setBlending])
+    }, [visibilities, magnitudes, monochrome, minerals, getColor, setBlending])
+
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent): void => {
+            if (e.key === 'b') {
+                setMonochrome(!monochrome)
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [monochrome, setMonochrome])
 
     // close blend menu if not currently using blended output
     useEffect(() => {
