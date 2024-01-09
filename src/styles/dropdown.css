@@ -3,7 +3,6 @@
     position: relative;
     width: 150px;
     height: var(--height);
-    background-color: var(--color0);
 }
 
 .generic-dropdown .label {
@@ -20,6 +19,7 @@
     height: 100%;
     border: 1px solid var(--color1);
     transition: opacity var(--transition-param);
+    background-color: var(--color0);
 }
 
 .generic-dropdown[data-selected="false"] .selected {
@@ -35,7 +35,7 @@
     width: 100%;
     border-radius: var(--radius);
     border: 1px solid var(--color1);
-    background-color: transparent;
+    background-color: var(--color0);
     transition:
         width var(--transition-param),
         background-color var(--transition-param),
