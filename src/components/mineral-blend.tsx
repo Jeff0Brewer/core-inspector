@@ -375,9 +375,7 @@ function MineralBlend (
                         selected={isLabelled ? selected : null}
                         setSelected={setSelected}
                         Element={ColorPalette}
-                        wrapClass={'dropdown'}
-                        labelClass={'label'}
-                        itemsClass={'items'}
+                        customClass={'dropdown'}
                     />
                     <button
                         className={'monochrome-icon'}
@@ -392,9 +390,7 @@ function MineralBlend (
                         selected={!isLabelled ? selected : null}
                         setSelected={setSelected}
                         Element={ColorPalette}
-                        wrapClass={'dropdown'}
-                        labelClass={'label'}
-                        itemsClass={'items'}
+                        customClass={'dropdown'}
                     />
                 </div>
                 <p>mineral color mixer</p>

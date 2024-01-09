@@ -1,0 +1,88 @@
+.generic-dropdown {
+    --height: 20px;
+    position: relative;
+    width: 150px;
+    height: var(--height);
+    background-color: var(--color0);
+}
+
+.generic-dropdown .label {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.generic-dropdown .selected {
+    position: relative;
+    z-index: 200;
+    width: calc(100% - var(--height));
+    height: 100%;
+    border: 1px solid var(--color1);
+    transition: opacity var(--transition-param);
+}
+
+.generic-dropdown[data-selected="false"] .selected {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.generic-dropdown button {
+    position: absolute;
+    z-index: 100;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: var(--radius);
+    border: 1px solid var(--color1);
+    background-color: transparent;
+    transition:
+        width var(--transition-param),
+        background-color var(--transition-param),
+        border-radius var(--transition-param);
+}
+
+.generic-dropdown button:hover {
+    background-color: #303030;
+}
+
+.generic-dropdown[data-selected="true"] button {
+    width: var(--height);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    border-left: none;
+}
+
+.generic-dropdown button > * {
+    transition: transform var(--transition-param);
+}
+
+.generic-dropdown[data-open="true"] button > * {
+    transform: rotate(180deg);
+}
+
+.generic-dropdown .items {
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    z-index: 999;
+    background-color: var(--color0);
+    border: 1px solid var(--color1);
+    border-top: none;
+    transition:
+        opacity var(--transition-param),
+        transform var(--transition-param);
+}
+
+.generic-dropdown[data-open="false"] .items {
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-2px);
+}
+
+.generic-dropdown .items > a {
+    display: block;
+}
+
+.generic-dropdown .items > a:not(:last-of-type) {
+    border-bottom: 1px solid var(--color1);
+}
