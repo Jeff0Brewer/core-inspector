@@ -250,6 +250,7 @@ function MineralBlend (
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
     const [saturation, setSaturation] = useState<number>(1)
+    const [threshold, setThreshold] = useState<number>(0)
     const [monochrome, setMonochrome] = useState<boolean>(false)
     const [numVisible, setNumVisible] = useState<number>(0)
 
@@ -306,10 +307,11 @@ function MineralBlend (
         const params: BlendParams = {
             colors: minerals.map((mineral, i) => getColor(mineral, i)),
             magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0),
-            saturation
+            saturation,
+            threshold
         }
         setBlending(params)
-    }, [visibilities, magnitudes, saturation, monochrome, minerals, getColor, setBlending])
+    }, [visibilities, magnitudes, saturation, threshold, monochrome, minerals, getColor, setBlending])
 
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
@@ -418,7 +420,17 @@ function MineralBlend (
                     min={0.1}
                     max={2}
                     step={0.01}
+                    defaultValue={saturation}
                     onChange={e => setSaturation(e.target.valueAsNumber)}
+                />
+                <p>threshold</p>
+                <input
+                    type={'range'}
+                    min={0}
+                    max={0.99}
+                    step={0.01}
+                    defaultValue={threshold}
+                    onChange={e => setThreshold(e.target.valueAsNumber)}
                 />
             </section> }
         </div>

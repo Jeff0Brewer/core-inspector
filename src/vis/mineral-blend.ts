@@ -17,7 +17,8 @@ const BLENDED_IND = -1
 type BlendParams = {
     magnitudes: Array<number>,
     colors: Array<vec3 | null>,
-    saturation: number
+    saturation: number,
+    threshold: number
 }
 
 type MineralSettings = {
@@ -36,6 +37,7 @@ class MineralBlender {
     framebuffer: WebGLFramebuffer
 
     setSaturation: (s: number) => void
+    setThreshold: (t: number) => void
     setMagUniform: Array<(m: number) => void>
     setColUniform: Array<(c: vec3) => void>
 
@@ -83,6 +85,9 @@ class MineralBlender {
         const saturationLoc = gl.getUniformLocation(this.program, 'saturation')
         this.setSaturation = (s: number): void => { gl.uniform1f(saturationLoc, s) }
 
+        const thresholdLoc = gl.getUniformLocation(this.program, 'threshold')
+        this.setThreshold = (t: number): void => { gl.uniform1f(thresholdLoc, t) }
+
         this.setMagUniform = []
         this.setColUniform = []
         for (let i = 0; i < sources.length; i++) {
@@ -113,7 +118,7 @@ class MineralBlender {
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
-        const { magnitudes, colors, saturation } = params
+        const { magnitudes, colors, saturation, threshold } = params
         if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
         }
@@ -128,6 +133,7 @@ class MineralBlender {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
         this.setSaturation(saturation)
+        this.setThreshold(threshold)
         for (let i = 0; i < this.sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i + 1])
             gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
@@ -143,7 +149,8 @@ class MineralBlender {
 // create fragment shader dynamically to blend textures based on number of input textures
 const getBlendFrag = (numTexture: number): string => {
     const uniforms = [
-        'uniform float saturation;'
+        'uniform float saturation;',
+        'uniform float threshold;'
     ]
     const values = []
     const calcs = []
@@ -159,11 +166,10 @@ const getBlendFrag = (numTexture: number): string => {
         values.push(
             `float value${i} = texture2D(texture${i}, vTexCoord).x;`
         )
-        // sum together colors based on texture value and magnitude
-        // to get final blended color
-        const end = i === numTexture - 1 ? ';' : ' +'
+        // sum together colors based on texture value and magnitude to get final blended color
+        const endChar = i === numTexture - 1 ? ';' : ' +'
         calcs.push(
-            `value${i} * magnitude${i} * color${i}${end}`
+            `smoothstep(threshold, 1.0, value${i}) * magnitude${i} * color${i}${endChar}`
         )
     }
 
