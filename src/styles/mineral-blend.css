@@ -83,11 +83,6 @@
     color: var(--color2);
 }
 
-.mineral[data-visible="false"] .percentage {
-    pointer-events: none;
-    opacity: 0;
-}
-
 .mineral .top {
     position: relative;
     display: flex;
@@ -137,6 +132,11 @@
     color: var(--color3);
     opacity: 1;
     transition: opacity var(--transition-param);
+}
+
+.mineral[data-visible="false"] .top .percentage {
+    pointer-events: none;
+    opacity: 0;
 }
 
 .mineral .top .percentage input[type="text"] {
