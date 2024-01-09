@@ -5,6 +5,7 @@ import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
 import { clamp, vecToHex, formatPercent } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
+import Dropdown from '../components/dropdown'
 import '../styles/mineral-blend.css'
 
 type LabelledPalette = { [mineral: string]: vec3 }
@@ -81,59 +82,21 @@ function ColorSwatch (
 }
 
 type ColorPaletteProps = {
-    palette: GenericPalette
+    item: GenericPalette
 }
 
 function ColorPalette (
-    { palette }: ColorPaletteProps
+    { item }: ColorPaletteProps
 ): ReactElement {
-    const isLabelled = !Array.isArray(palette)
+    const isLabelled = !Array.isArray(item)
     return (
         <div className={'palette'}>
-            { Object.entries(palette).map(([mineral, color], i) =>
+            { Object.entries(item).map(([mineral, color], i) =>
                 <ColorSwatch
                     mineral={isLabelled ? mineral : null}
                     color={color}
                     key={i} />
             ) }
-        </div>
-    )
-}
-
-type ColorDropdownProps = {
-    palettes: Array<GenericPalette>,
-    selected: GenericPalette | null,
-    setSelected: (s: GenericPalette) => void
-}
-
-function ColorDropdown (
-    { palettes, selected, setSelected }: ColorDropdownProps
-): ReactElement {
-    const [open, setOpen] = useState<boolean>(false)
-
-    return (
-        <div
-            className={'dropdown'}
-            data-open={open}
-            data-selected={!!selected}
-        >
-            <div className={'label'}>
-                <div className={'selected'}>
-                    { selected && <ColorPalette palette={selected} />}
-                </div>
-                <button onClick={() => setOpen(!open)}>
-                    <PiCaretDownBold />
-                </button>
-            </div>
-            <div className={'items'}>
-                { palettes.map((palette, i) =>
-                    <a key={i} onClick={() => {
-                        setSelected(palette)
-                        setOpen(false)
-                    }}>
-                        <ColorPalette palette={palette} />
-                    </a>) }
-            </div>
         </div>
     )
 }
@@ -407,10 +370,14 @@ function MineralBlend (
             { open && <section className={'menu'}>
                 <p>color+mineral presets</p>
                 <div>
-                    <ColorDropdown
-                        palettes={COLOR_MINERAL_PRESETS}
+                    <Dropdown
+                        items={COLOR_MINERAL_PRESETS}
                         selected={isLabelled ? selected : null}
                         setSelected={setSelected}
+                        Element={ColorPalette}
+                        wrapClass={'dropdown'}
+                        labelClass={'label'}
+                        itemsClass={'items'}
                     />
                     <button
                         className={'monochrome-icon'}
@@ -420,10 +387,14 @@ function MineralBlend (
                 </div>
                 <p>color presets</p>
                 <div>
-                    <ColorDropdown
-                        palettes={COLOR_PRESETS}
+                    <Dropdown
+                        items={COLOR_PRESETS}
                         selected={!isLabelled ? selected : null}
                         setSelected={setSelected}
+                        Element={ColorPalette}
+                        wrapClass={'dropdown'}
+                        labelClass={'label'}
+                        itemsClass={'items'}
                     />
                 </div>
                 <p>mineral color mixer</p>
