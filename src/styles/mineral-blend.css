@@ -13,7 +13,7 @@
 
 .blend input[type="range"] {
     width: 80%;
-    margin: 5px 0;
+    margin-top: 5px;
 }
 
 .blend .menu {
