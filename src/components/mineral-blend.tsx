@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
 import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
-import { PiCaretDownBold } from 'react-icons/pi'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
 import { clamp, vecToHex, formatPercent } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
+import { BlendParams } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import '../styles/mineral-blend.css'
 
@@ -235,7 +235,7 @@ type MineralBlendProps = {
     minerals: Array<string>,
     currMineral: number,
     setMineral: (i: number) => void,
-    setBlending: (m: Array<number>, c: Array<vec3 | null>) => void
+    setBlending: (p: BlendParams) => void
 }
 
 function MineralBlend (
@@ -302,9 +302,11 @@ function MineralBlend (
 
     // apply blending on changes to visibilities or magnitudes
     useEffect(() => {
-        const colors = minerals.map((mineral, i) => getColor(mineral, i))
-        const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
-        setBlending(visibleMagnitudes, colors)
+        const params: BlendParams = {
+            colors: minerals.map((mineral, i) => getColor(mineral, i)),
+            magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
+        }
+        setBlending(params)
     }, [visibilities, magnitudes, monochrome, minerals, getColor, setBlending])
 
     useEffect(() => {

@@ -136,7 +136,7 @@ function App (): ReactElement {
                             minerals={MINERALS}
                             currMineral={mineral}
                             setMineral={m => vis.setMineral(m)}
-                            setBlending={(m, c) => vis.setBlending(m, c)}
+                            setBlending={p => vis.setBlending(p)}
                         />
                     </div>
                 </div>

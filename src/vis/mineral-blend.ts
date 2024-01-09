@@ -14,6 +14,11 @@ const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
 const BLENDED_IND = -1
 
+type BlendParams = {
+    magnitudes: Array<number>,
+    colors: Array<vec3 | null>
+}
+
 type MineralSettings = {
     index: number,
     blendMagnitude: 1
@@ -102,7 +107,8 @@ class MineralBlender {
         }
     }
 
-    update (gl: WebGLRenderingContext, magnitudes: Array<number>, colors: Array<vec3 | null>): void {
+    update (gl: WebGLRenderingContext, params: BlendParams): void {
+        const { magnitudes, colors } = params
         if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
         }
@@ -175,4 +181,7 @@ const FULLSCREEN_RECT = new Float32Array([
 ])
 
 export default MineralBlender
-export type { MineralSettings }
+export type {
+    MineralSettings,
+    BlendParams
+}

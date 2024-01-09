@@ -3,7 +3,7 @@ import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import { MineralSettings } from '../vis/mineral-blend'
+import { MineralSettings, BlendParams } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
 import Camera2D, { CameraSettings } from '../lib/camera'
 
@@ -93,8 +93,8 @@ class VisRenderer {
         this.uiState = uiState
     }
 
-    setBlending (magnitudes: Array<number>, colors: Array<vec3 | null>): void {
-        this.core.setBlending(this.gl, magnitudes, colors)
+    setBlending (params: BlendParams): void {
+        this.core.setBlending(this.gl, params)
     }
 
     setHovered (id: string | undefined): void {
