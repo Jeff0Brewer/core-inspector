@@ -1,3 +1,10 @@
+.string-item {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
 .generic-dropdown {
     --height: 20px;
     position: relative;

@@ -1,4 +1,4 @@
-import { useState, ReactElement, ReactPortal } from 'react'
+import { useState, ReactElement } from 'react'
 import { PiCaretDownBold } from 'react-icons/pi'
 import '../styles/dropdown.css'
 
@@ -18,7 +18,9 @@ function StringItem<T> (
     { item }: StringItemProps<T>
 ): ReactElement {
     return (
-        <p>{checkStringType(item)}</p>
+        <p className={'string-item'}>
+            {checkStringType(item)}
+        </p>
     )
 }
 
