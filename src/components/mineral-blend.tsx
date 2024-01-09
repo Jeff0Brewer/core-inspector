@@ -4,7 +4,7 @@ import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
 import { clamp, vecToHex, formatPercent } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
-import { BlendParams } from '../vis/mineral-blend'
+import { BlendParams, BlendMode } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import '../styles/mineral-blend.css'
 
@@ -251,6 +251,7 @@ function MineralBlend (
     )
     const [saturation, setSaturation] = useState<number>(1)
     const [threshold, setThreshold] = useState<number>(0)
+    const [blendMode, setBlendMode] = useState<BlendMode>('additive')
     const [monochrome, setMonochrome] = useState<boolean>(false)
     const [numVisible, setNumVisible] = useState<number>(0)
 
@@ -308,10 +309,21 @@ function MineralBlend (
             colors: minerals.map((mineral, i) => getColor(mineral, i)),
             magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0),
             saturation,
-            threshold
+            threshold,
+            mode: blendMode
         }
         setBlending(params)
-    }, [visibilities, magnitudes, saturation, threshold, monochrome, minerals, getColor, setBlending])
+    }, [
+        visibilities,
+        magnitudes,
+        saturation,
+        threshold,
+        blendMode,
+        monochrome,
+        minerals,
+        getColor,
+        setBlending
+    ])
 
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
@@ -431,6 +443,12 @@ function MineralBlend (
                     step={0.01}
                     defaultValue={threshold}
                     onChange={e => setThreshold(e.target.valueAsNumber)}
+                />
+                <p>composite mode</p>
+                <Dropdown<BlendMode>
+                    items={['additive', 'maximum']}
+                    selected={blendMode}
+                    setSelected={setBlendMode}
                 />
             </section> }
         </div>
