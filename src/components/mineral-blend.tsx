@@ -249,6 +249,7 @@ function MineralBlend (
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
+    const [saturation, setSaturation] = useState<number>(1)
     const [monochrome, setMonochrome] = useState<boolean>(false)
     const [numVisible, setNumVisible] = useState<number>(0)
 
@@ -300,14 +301,15 @@ function MineralBlend (
         return color
     }, [selected, visibilities, numVisible, monochrome])
 
-    // apply blending on changes to visibilities or magnitudes
+    // apply blending on changes to params
     useEffect(() => {
         const params: BlendParams = {
             colors: minerals.map((mineral, i) => getColor(mineral, i)),
-            magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
+            magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0),
+            saturation
         }
         setBlending(params)
-    }, [visibilities, magnitudes, monochrome, minerals, getColor, setBlending])
+    }, [visibilities, magnitudes, saturation, monochrome, minerals, getColor, setBlending])
 
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
@@ -410,6 +412,14 @@ function MineralBlend (
                         />
                     ) }
                 </div>
+                <p>saturation</p>
+                <input
+                    type={'range'}
+                    min={0.1}
+                    max={2}
+                    step={0.01}
+                    onChange={e => setSaturation(e.target.valueAsNumber)}
+                />
             </section> }
         </div>
     )

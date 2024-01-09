@@ -16,7 +16,8 @@ const BLENDED_IND = -1
 
 type BlendParams = {
     magnitudes: Array<number>,
-    colors: Array<vec3 | null>
+    colors: Array<vec3 | null>,
+    saturation: number
 }
 
 type MineralSettings = {
@@ -34,6 +35,7 @@ class MineralBlender {
     blended: WebGLTexture
     framebuffer: WebGLFramebuffer
 
+    setSaturation: (s: number) => void
     setMagUniform: Array<(m: number) => void>
     setColUniform: Array<(c: vec3) => void>
 
@@ -78,6 +80,9 @@ class MineralBlender {
         this.blended = texture
         this.framebuffer = framebuffer
 
+        const saturationLoc = gl.getUniformLocation(this.program, 'saturation')
+        this.setSaturation = (s: number): void => { gl.uniform1f(saturationLoc, s) }
+
         this.setMagUniform = []
         this.setColUniform = []
         for (let i = 0; i < sources.length; i++) {
@@ -108,7 +113,7 @@ class MineralBlender {
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
-        const { magnitudes, colors } = params
+        const { magnitudes, colors, saturation } = params
         if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
         }
@@ -122,6 +127,7 @@ class MineralBlender {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
+        this.setSaturation(saturation)
         for (let i = 0; i < this.sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i + 1])
             gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
@@ -136,7 +142,9 @@ class MineralBlender {
 
 // create fragment shader dynamically to blend textures based on number of input textures
 const getBlendFrag = (numTexture: number): string => {
-    const uniforms = []
+    const uniforms = [
+        'uniform float saturation;'
+    ]
     const values = []
     const calcs = []
 
@@ -167,7 +175,7 @@ const getBlendFrag = (numTexture: number): string => {
         ...values,
         'vec3 color =',
         ...calcs,
-        'gl_FragColor = vec4(color, 1.0);',
+        'gl_FragColor = vec4(color * saturation, 1.0);',
         '}'
     ]
     return fragSource.join('\n')
