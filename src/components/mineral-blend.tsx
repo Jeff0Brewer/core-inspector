@@ -393,7 +393,7 @@ function MineralBlend (
                         selected={isLabelled ? selected : null}
                         setSelected={setSelected}
                         Element={ColorPalette}
-                        customClass={'dropdown'}
+                        customClass={'palette-dropdown'}
                     />
                     <button
                         className={'monochrome-icon'}
@@ -408,7 +408,7 @@ function MineralBlend (
                         selected={!isLabelled ? selected : null}
                         setSelected={setSelected}
                         Element={ColorPalette}
-                        customClass={'dropdown'}
+                        customClass={'palette-dropdown'}
                     />
                 </div>
                 <p>mineral color mixer</p>
@@ -426,6 +426,13 @@ function MineralBlend (
                         />
                     ) }
                 </div>
+                <p>composite mode</p>
+                <Dropdown<BlendMode>
+                    items={['additive', 'maximum']}
+                    selected={blendMode}
+                    setSelected={setBlendMode}
+                    customClass={'blend-mode-dropdown'}
+                />
                 <p>saturation</p>
                 <input
                     type={'range'}
@@ -443,12 +450,6 @@ function MineralBlend (
                     step={0.01}
                     defaultValue={threshold}
                     onChange={e => setThreshold(e.target.valueAsNumber)}
-                />
-                <p>composite mode</p>
-                <Dropdown<BlendMode>
-                    items={['additive', 'maximum']}
-                    selected={blendMode}
-                    setSelected={setBlendMode}
                 />
             </section> }
         </div>
