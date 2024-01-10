@@ -71,6 +71,21 @@ function App (): ReactElement {
         initVisRenderer(canvasRef.current)
     }, [])
 
+    useEffect(() => {
+        if (!vis) { return }
+        vis.setMineral(mineral)
+        vis.setShape(shape)
+        vis.setViewMode(viewMode)
+        vis.setSpacing(spacing)
+        vis.setZoom(zoom)
+        vis.setHovered(hovered)
+
+        // don't include state variables in dependency array
+        // since only want to set full vis state when vis initialized
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [vis])
+
     return (
         <main>
             <canvas ref={canvasRef}></canvas>
