@@ -75,6 +75,7 @@
     background-color: var(--color0);
     border: 1px solid var(--color1);
     border-top: none;
+    overflow: hidden;
     transition:
         opacity var(--transition-param),
         transform var(--transition-param);
@@ -88,6 +89,11 @@
 
 .generic-dropdown .items > a {
     display: block;
+    transition: background-color var(--transition-param);
+}
+
+.generic-dropdown .items > a:hover {
+    background-color: #303030;
 }
 
 .generic-dropdown .items > a:not(:last-of-type) {
