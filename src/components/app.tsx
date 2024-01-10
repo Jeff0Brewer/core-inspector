@@ -94,7 +94,7 @@ function App (): ReactElement {
             { vis !== null && <>
                 <Vis vis={vis} />
                 <div className={'interface'}>
-                    <MetadataHover hovered={hovered} />
+                    <MetadataHover core={core} hovered={hovered} />
                     <div className={'top-bar'}>
                         <ToggleSelect<CoreShape>
                             currValue={shape}
