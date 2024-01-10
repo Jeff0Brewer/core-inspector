@@ -14,7 +14,7 @@ import Vis from '../components/vis'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
 
-const CORES = ['gt1', 'gt2']
+const CORES = ['gt1', 'gt2', 'gt3']
 
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
