@@ -1,4 +1,4 @@
-import { mat4, vec3 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
