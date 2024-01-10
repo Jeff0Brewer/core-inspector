@@ -261,6 +261,20 @@
     margin-top: 1px;
 }
 
+.blend .menu .params {
+    display: block;
+    flex-direction: column;
+    margin-top: 15px;
+}
+
+.params > p {
+    padding: 5px 0;
+}
+
+.params > p:not(:first-of-type) {
+    margin-top: 5px;
+}
+
 .param {
     position: relative;
     display: flex;
@@ -298,6 +312,7 @@
     text-align: center;
     height: 100%;
     width: 30px;
+    color: var(--color3);
 }
 
 .param button {

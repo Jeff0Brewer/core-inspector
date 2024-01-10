@@ -433,22 +433,24 @@ function MineralBlend (
                     setSelected={setBlendMode}
                     customClass={'blend-mode-dropdown'}
                 />
-                <p>saturation</p>
-                <ParamSlider
-                    value={saturation}
-                    setValue={setSaturation}
-                    min={0.1}
-                    max={2}
-                    defaultValue={1}
-                />
-                <p>threshold</p>
-                <ParamSlider
-                    value={threshold}
-                    setValue={setThreshold}
-                    min={0}
-                    max={0.99}
-                    defaultValue={0}
-                />
+                <div className={'params'}>
+                    <p>saturation</p>
+                    <ParamSlider
+                        value={saturation}
+                        setValue={setSaturation}
+                        min={0.1}
+                        max={2}
+                        defaultValue={1}
+                    />
+                    <p>threshold</p>
+                    <ParamSlider
+                        value={threshold}
+                        setValue={setThreshold}
+                        min={0}
+                        max={0.99}
+                        defaultValue={0}
+                    />
+                </div>
             </section> }
         </div>
     )
