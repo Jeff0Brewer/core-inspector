@@ -11,6 +11,11 @@
     border-radius: var(--radius);
 }
 
+.blend input[type="range"] {
+    width: 80%;
+    margin-top: 5px;
+}
+
 .blend .menu {
     position: absolute;
 
@@ -74,6 +79,10 @@
     user-select: none;
 }
 
+.mineral[data-visible="false"] a {
+    color: var(--color2);
+}
+
 .mineral .top {
     position: relative;
     display: flex;
@@ -125,6 +134,11 @@
     transition: opacity var(--transition-param);
 }
 
+.mineral[data-visible="false"] .top .percentage {
+    pointer-events: none;
+    opacity: 0;
+}
+
 .mineral .top .percentage input[type="text"] {
     background-color: transparent;
     border: 1px solid var(--color1);
@@ -146,13 +160,23 @@
     transition: opacity var(--transition-param);
 }
 
+.mineral:hover .slider,
+.mineral[data-dragging="true"] .slider,
+.mineral:focus-within .slider {
+    opacity: 1;
+}
+
 .mineral .slider:before {
-    display: block;
     content: "";
+    display: block;
     height: 100%;
     width: 100%;
     background-color: #fff;
     transition: background-color var(--transition-param);
+}
+
+.mineral[data-visible="false"] .slider:before {
+    background-color: transparent;
 }
 
 .mineral .slider .arrow {
@@ -168,72 +192,14 @@
     transition: opacity var(--transition-param);
 }
 
-.dropdown {
-    --height: 22px;
-    position: relative;
-    width: 220px;
-    height: var(--height);
-}
-
-.dropdown .label {
-    position: relative;
-    display: flex;
-    width: 100%;
-    height: 100%;
-}
-
-.dropdown .selected {
-    position: relative;
-    z-index: 200;
-    width: calc(100% - var(--height));
-    height: 100%;
-    border: 1px solid var(--color2);
-    background-color: var(--color0);
-    transition: opacity var(--transition-param);
-}
-
-.dropdown button {
-    position: absolute;
-    right: 0;
-    width: var(--height);
-    height: 100%;
-
-    background-color: transparent;
-    border-radius: 0 var(--radius) var(--radius) 0;
-    border: 1px solid var(--color1);
-    background-color: var(--color0);
-    transition:
-        background-color var(--transition-param),
-        border-radius var(--transition-param),
-        width var(--transition-param);
-}
-
-.dropdown button > * {
-    transition: transform var(--transition-param);
-}
-
-.dropdown .items {
-    position: absolute;
-    top: 100%;
-    width: 100%;
-    z-index: 999;
-    background-color: var(--color0);
-    border: 1px solid var(--color1);
-    border-top: none;
-    transition:
-        opacity var(--transition-param),
-        transform var(--transition-param);
+.mineral[data-dragging="false"] .slider .arrow {
+    opacity: 0;
 }
 
 .palette {
     display: flex;
     width: 100%;
     padding: 1px;
-}
-
-.dropdown .items > a:not(:last-of-type) {
-    display: block;
-    border-bottom: 1px solid var(--color1);
 }
 
 .swatch {
@@ -267,57 +233,104 @@
     opacity: 0;
 }
 
-.mineral[data-visible="false"] a {
-    color: var(--color2);
-}
-
-.mineral[data-visible="false"] .percentage {
-    pointer-events: none;
-    opacity: 0;
-}
-
-.mineral:hover .slider,
-.mineral[data-dragging="true"] .slider,
-.mineral:focus-within .slider {
-    opacity: 1;
-}
-
-.mineral[data-visible="false"] .slider:before {
-    background-color: transparent;
-}
-
-.mineral[data-dragging="false"] .slider .arrow {
-    opacity: 0;
-}
-
-.dropdown[data-selected="true"] button {
-    border-left: none;
-}
-
-.dropdown[data-selected="false"] button {
-    border-radius: var(--radius);
-    width: 100%;
-}
-
-.dropdown[data-selected="false"] .selected {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.dropdown[data-open="true"] button > * {
-    transform: rotate(180deg);
-}
-
-.dropdown[data-open="false"] .items {
-    pointer-events: none;
-    opacity: 0;
-    transform: translateY(-2px);
-}
-
-.dropdown button:hover {
-    background-color: #303030;
-}
-
 .swatch[data-color="false"]:before {
     opacity: 1;
+}
+
+.palette-dropdown {
+    --height: 22px;
+    width: 220px;
+    height: var(--height);
+}
+
+.palette-dropdown .selected {
+    border: 1px solid var(--color2);
+}
+
+.blend-mode-dropdown .label, .blend-mode-dropdown .items {
+    border: 1px solid var(--color1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.blend-mode-dropdown .label * {
+    border: none;
+}
+
+.blend-mode-dropdown .items {
+    margin-top: 1px;
+}
+
+.blend .menu .params {
+    display: block;
+    flex-direction: column;
+    margin-top: 15px;
+}
+
+.params > p {
+    padding: 5px 0;
+}
+
+.params > p:not(:first-of-type) {
+    margin-top: 5px;
+}
+
+.param {
+    position: relative;
+    display: flex;
+    gap: 5px;
+    width: 100%;
+    height: 18px;
+    overflow: hidden;
+}
+
+.param .slider, .param input[type="text"], .param button {
+    background-color: var(--color0);
+    border: 1px solid var(--color1);
+}
+
+.param .slider {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.param .slider > div {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+}
+
+.param[data-dragging="false"] .slider > div {
+    transition: width var(--transition-param);
+}
+
+.param input[type="text"] {
+    line-height: 100%;
+    text-align: center;
+    height: 100%;
+    width: 30px;
+    color: var(--color3);
+}
+
+.param button {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 12px;
+    overflow: hidden;
+    transition:
+        opacity var(--transition-param),
+        background-color var(--transition-param);
+}
+
+.param button[data-visible="false"] {
+    opacity: 0;
+}
+
+.param button:hover {
+    background-color: #303030;
 }

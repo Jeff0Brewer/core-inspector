@@ -30,6 +30,7 @@ button, input[type="text"] {
     color: inherit;
     border: none;
     font: inherit;
+    background-color: transparent;
 }
 
 button[data-active] {

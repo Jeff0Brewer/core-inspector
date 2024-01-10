@@ -14,6 +14,20 @@ const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
 const BLENDED_IND = -1
 
+const BLEND_MODES = {
+    additive: 0,
+    maximum: 1
+} as const
+type BlendMode = keyof typeof BLEND_MODES
+
+type BlendParams = {
+    magnitudes: Array<number>,
+    colors: Array<vec3 | null>,
+    saturation: number,
+    threshold: number,
+    mode: BlendMode
+}
+
 type MineralSettings = {
     index: number,
     blendMagnitude: 1
@@ -29,6 +43,9 @@ class MineralBlender {
     blended: WebGLTexture
     framebuffer: WebGLFramebuffer
 
+    setMode: (m: BlendMode) => void
+    setSaturation: (s: number) => void
+    setThreshold: (t: number) => void
     setMagUniform: Array<(m: number) => void>
     setColUniform: Array<(c: vec3) => void>
 
@@ -73,6 +90,15 @@ class MineralBlender {
         this.blended = texture
         this.framebuffer = framebuffer
 
+        const saturationLoc = gl.getUniformLocation(this.program, 'saturation')
+        this.setSaturation = (s: number): void => { gl.uniform1f(saturationLoc, s) }
+
+        const thresholdLoc = gl.getUniformLocation(this.program, 'threshold')
+        this.setThreshold = (t: number): void => { gl.uniform1f(thresholdLoc, t) }
+
+        const modeLoc = gl.getUniformLocation(this.program, 'mode')
+        this.setMode = (m: BlendMode): void => { gl.uniform1f(modeLoc, BLEND_MODES[m]) }
+
         this.setMagUniform = []
         this.setColUniform = []
         for (let i = 0; i < sources.length; i++) {
@@ -102,7 +128,8 @@ class MineralBlender {
         }
     }
 
-    update (gl: WebGLRenderingContext, magnitudes: Array<number>, colors: Array<vec3 | null>): void {
+    update (gl: WebGLRenderingContext, params: BlendParams): void {
+        const { magnitudes, colors, saturation, threshold, mode } = params
         if (magnitudes.length < this.sources.length) {
             throw new Error('Not enough blend magnitudes for all source textures')
         }
@@ -116,6 +143,9 @@ class MineralBlender {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
         this.bindAttrib()
+        this.setSaturation(saturation)
+        this.setThreshold(threshold)
+        this.setMode(mode)
         for (let i = 0; i < this.sources.length; i++) {
             gl.activeTexture(this.textureAttachments[i + 1])
             gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
@@ -130,8 +160,14 @@ class MineralBlender {
 
 // create fragment shader dynamically to blend textures based on number of input textures
 const getBlendFrag = (numTexture: number): string => {
-    const uniforms = []
-    const values = []
+    const uniforms = [
+        'uniform float saturation;',
+        'uniform float threshold;',
+        'uniform float mode;'
+    ]
+    const values = [
+        'float maxValue = 0.0;'
+    ]
     const calcs = []
 
     for (let i = 0; i < numTexture; i++) {
@@ -141,15 +177,23 @@ const getBlendFrag = (numTexture: number): string => {
             `uniform vec3 color${i};`,
             `uniform float magnitude${i};`
         )
-        // get value from each channel's source texture
+        // get value from each channel's source texture and apply threshold
+        // also get max value to compare to if in maximum blend mode
         values.push(
-            `float value${i} = texture2D(texture${i}, vTexCoord).x;`
+            `float value${i} = smoothstep(threshold, 1.0, texture2D(texture${i}, vTexCoord).x);`,
+            `maxValue = max(maxValue, value${i});`
         )
-        // sum together colors based on texture value and magnitude
-        // to get final blended color
-        const end = i === numTexture - 1 ? ';' : ' +'
+
+        // get on / off value to control if all sources are added together
+        // or if only the maximum should be used
+        const isNotMaxumumMode = `(abs(mode - ${BLEND_MODES.maximum.toFixed(1)}) > 0.001)`
+        const isMaximumValue = `maxValue == value${i}`
+        const checkMax = `((${isNotMaxumumMode} || ${isMaximumValue}) ? 1.0 : 0.0)`
+
+        // get final blended color by summing texture values with params applied
+        const endChar = i === numTexture - 1 ? ';' : ' +'
         calcs.push(
-            `value${i} * magnitude${i} * color${i}${end}`
+            `${checkMax} * value${i} * magnitude${i} * color${i}${endChar}`
         )
     }
 
@@ -161,7 +205,7 @@ const getBlendFrag = (numTexture: number): string => {
         ...values,
         'vec3 color =',
         ...calcs,
-        'gl_FragColor = vec4(color, 1.0);',
+        'gl_FragColor = vec4(color * saturation, 1.0);',
         '}'
     ]
     return fragSource.join('\n')
@@ -175,4 +219,8 @@ const FULLSCREEN_RECT = new Float32Array([
 ])
 
 export default MineralBlender
-export type { MineralSettings }
+export type {
+    MineralSettings,
+    BlendParams,
+    BlendMode
+}

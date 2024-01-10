@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
-import { MdRemoveRedEye, MdColorLens } from 'react-icons/md'
-import { PiCaretDownBold } from 'react-icons/pi'
+import { MdRemoveRedEye, MdColorLens, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { clamp, vecToHex, formatPercent } from '../lib/util'
+import { clamp, vecToHex, formatPercent, formatFloat } from '../lib/util'
 import { VIS_DEFAULTS } from '../vis/vis'
+import { BlendParams, BlendMode } from '../vis/mineral-blend'
+import Dropdown from '../components/dropdown'
 import '../styles/mineral-blend.css'
 
 type LabelledPalette = { [mineral: string]: vec3 }
@@ -81,59 +82,21 @@ function ColorSwatch (
 }
 
 type ColorPaletteProps = {
-    palette: GenericPalette
+    item: GenericPalette
 }
 
 function ColorPalette (
-    { palette }: ColorPaletteProps
+    { item }: ColorPaletteProps
 ): ReactElement {
-    const isLabelled = !Array.isArray(palette)
+    const isLabelled = !Array.isArray(item)
     return (
         <div className={'palette'}>
-            { Object.entries(palette).map(([mineral, color], i) =>
+            { Object.entries(item).map(([mineral, color], i) =>
                 <ColorSwatch
                     mineral={isLabelled ? mineral : null}
                     color={color}
                     key={i} />
             ) }
-        </div>
-    )
-}
-
-type ColorDropdownProps = {
-    palettes: Array<GenericPalette>,
-    selected: GenericPalette | null,
-    setSelected: (s: GenericPalette) => void
-}
-
-function ColorDropdown (
-    { palettes, selected, setSelected }: ColorDropdownProps
-): ReactElement {
-    const [open, setOpen] = useState<boolean>(false)
-
-    return (
-        <div
-            className={'dropdown'}
-            data-open={open}
-            data-selected={!!selected}
-        >
-            <div className={'label'}>
-                <div className={'selected'}>
-                    { selected && <ColorPalette palette={selected} />}
-                </div>
-                <button onClick={() => setOpen(!open)}>
-                    <PiCaretDownBold />
-                </button>
-            </div>
-            <div className={'items'}>
-                { palettes.map((palette, i) =>
-                    <a key={i} onClick={() => {
-                        setSelected(palette)
-                        setOpen(false)
-                    }}>
-                        <ColorPalette palette={palette} />
-                    </a>) }
-            </div>
         </div>
     )
 }
@@ -272,7 +235,7 @@ type MineralBlendProps = {
     minerals: Array<string>,
     currMineral: number,
     setMineral: (i: number) => void,
-    setBlending: (m: Array<number>, c: Array<vec3 | null>) => void
+    setBlending: (p: BlendParams) => void
 }
 
 function MineralBlend (
@@ -286,6 +249,9 @@ function MineralBlend (
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
         Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
     )
+    const [saturation, setSaturation] = useState<number>(1)
+    const [threshold, setThreshold] = useState<number>(0)
+    const [blendMode, setBlendMode] = useState<BlendMode>('additive')
     const [monochrome, setMonochrome] = useState<boolean>(false)
     const [numVisible, setNumVisible] = useState<number>(0)
 
@@ -337,12 +303,27 @@ function MineralBlend (
         return color
     }, [selected, visibilities, numVisible, monochrome])
 
-    // apply blending on changes to visibilities or magnitudes
+    // apply blending on changes to params
     useEffect(() => {
-        const colors = minerals.map((mineral, i) => getColor(mineral, i))
-        const visibleMagnitudes = magnitudes.map((mag, i) => visibilities[i] ? mag : 0)
-        setBlending(visibleMagnitudes, colors)
-    }, [visibilities, magnitudes, monochrome, minerals, getColor, setBlending])
+        const params: BlendParams = {
+            colors: minerals.map((mineral, i) => getColor(mineral, i)),
+            magnitudes: magnitudes.map((mag, i) => visibilities[i] ? mag : 0),
+            saturation,
+            threshold,
+            mode: blendMode
+        }
+        setBlending(params)
+    }, [
+        visibilities,
+        magnitudes,
+        saturation,
+        threshold,
+        blendMode,
+        monochrome,
+        minerals,
+        getColor,
+        setBlending
+    ])
 
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
@@ -407,10 +388,12 @@ function MineralBlend (
             { open && <section className={'menu'}>
                 <p>color+mineral presets</p>
                 <div>
-                    <ColorDropdown
-                        palettes={COLOR_MINERAL_PRESETS}
+                    <Dropdown
+                        items={COLOR_MINERAL_PRESETS}
                         selected={isLabelled ? selected : null}
                         setSelected={setSelected}
+                        Element={ColorPalette}
+                        customClass={'palette-dropdown'}
                     />
                     <button
                         className={'monochrome-icon'}
@@ -420,10 +403,12 @@ function MineralBlend (
                 </div>
                 <p>color presets</p>
                 <div>
-                    <ColorDropdown
-                        palettes={COLOR_PRESETS}
+                    <Dropdown
+                        items={COLOR_PRESETS}
                         selected={!isLabelled ? selected : null}
                         setSelected={setSelected}
+                        Element={ColorPalette}
+                        customClass={'palette-dropdown'}
                     />
                 </div>
                 <p>mineral color mixer</p>
@@ -441,7 +426,157 @@ function MineralBlend (
                         />
                     ) }
                 </div>
+                <p>composite mode</p>
+                <Dropdown
+                    items={['additive', 'maximum']}
+                    selected={blendMode}
+                    setSelected={setBlendMode}
+                    customClass={'blend-mode-dropdown'}
+                />
+                <div className={'params'}>
+                    <p>saturation</p>
+                    <ParamSlider
+                        value={saturation}
+                        setValue={setSaturation}
+                        min={0.1}
+                        max={2}
+                        defaultValue={1}
+                    />
+                    <p>threshold</p>
+                    <ParamSlider
+                        value={threshold}
+                        setValue={setThreshold}
+                        min={0}
+                        max={0.99}
+                        defaultValue={0}
+                    />
+                </div>
             </section> }
+        </div>
+    )
+}
+
+type ParamSliderProps = {
+    value: number,
+    setValue: (v: number) => void,
+    min: number,
+    max: number,
+    defaultValue?: number
+}
+
+// TODO: add generic slider component for both mineral and params
+// currently lots of same logic in both
+function ParamSlider (
+    { value, setValue, defaultValue, min, max }: ParamSliderProps
+): ReactElement {
+    const [dragging, setDragging] = useState<boolean>(false)
+    const sliderRef = useRef<HTMLDivElement>(null)
+    const textInputRef = useRef<HTMLInputElement>(null)
+
+    // store valid text value to revert if user input invalid
+    const lastValidTextRef = useRef<string>(formatFloat(value))
+    const cleanTextTimeoutIdRef = useRef<number>(-1)
+
+    useEffect(() => {
+        const slider = sliderRef.current
+        const textInput = textInputRef.current
+        if (!slider || !textInput) {
+            throw new Error('No reference to input elements')
+        }
+
+        const updatePercentageMouse = (e: MouseEvent): void => {
+            const { left, right } = slider.getBoundingClientRect()
+            const clickPercentage = clamp((e.clientX - left) / (right - left), 0, 1)
+            const value = clickPercentage * (max - min) + min
+            setValue(value)
+
+            // update text input with value from mouse
+            const formatted = formatFloat(value)
+            textInput.value = formatted
+            lastValidTextRef.current = formatted
+        }
+
+        if (!dragging) {
+            // if not dragging, only need handler to start drag on mouse down
+            const mousedown = (e: MouseEvent): void => {
+                updatePercentageMouse(e)
+                setDragging(true)
+            }
+            slider.addEventListener('mousedown', mousedown)
+            return () => {
+                slider.removeEventListener('mousedown', mousedown)
+            }
+        } else {
+            // attach dragging events to window so drag can extend past
+            // slider bounds once started
+            const mouseup = (): void => { setDragging(false) }
+            const mouseleave = (): void => { setDragging(false) }
+            const mousemove = (e: MouseEvent): void => {
+                updatePercentageMouse(e)
+            }
+            window.addEventListener('mouseup', mouseup)
+            window.addEventListener('mouseleave', mouseleave)
+            window.addEventListener('mousemove', mousemove)
+            return () => {
+                window.removeEventListener('mouseup', mouseup)
+                window.removeEventListener('mouseleave', mouseleave)
+                window.removeEventListener('mousemove', mousemove)
+            }
+        }
+    }, [dragging, setValue, min, max])
+
+    const updateValueText = (): void => {
+        if (!textInputRef.current) {
+            throw new Error('No reference to text input element')
+        }
+
+        const value = parseFloat(textInputRef.current.value)
+        if (!Number.isNaN(value)) {
+            const clampedValue = clamp(value, min, max)
+            setValue(clampedValue)
+            lastValidTextRef.current = formatFloat(clampedValue)
+        }
+
+        // revert to valid text value after period of no user input
+        window.clearTimeout(cleanTextTimeoutIdRef.current)
+        cleanTextTimeoutIdRef.current = window.setTimeout((): void => {
+            if (textInputRef.current) {
+                textInputRef.current.value = lastValidTextRef.current
+            }
+        }, 5000)
+    }
+
+    const resetValue = (): void => {
+        if (defaultValue === undefined || !textInputRef.current) { return }
+        setValue(defaultValue)
+        const formatted = formatFloat(defaultValue)
+        textInputRef.current.value = formatted
+        lastValidTextRef.current = formatted
+    }
+
+    return (
+        <div
+            className={'param'}
+            data-dragging={dragging}
+        >
+            <div
+                ref={sliderRef}
+                className={'slider'}
+            >
+                <div style={{ width: `${(value - min) / (max - min) * 100}%` }}></div>
+            </div>
+            <input
+                ref={textInputRef}
+                type={'text'}
+                defaultValue={lastValidTextRef.current}
+                onInput={updateValueText}
+            />
+            <button
+                data-visible={defaultValue !== undefined && value !== defaultValue}
+                onClick={resetValue}
+            >
+                <MdOutlineRefresh />
+            </button>
         </div>
     )
 }

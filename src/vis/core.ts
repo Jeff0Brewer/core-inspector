@@ -2,7 +2,7 @@ import { mat4, vec3 } from 'gl-matrix'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import MineralBlender, { MineralSettings } from '../vis/mineral-blend'
+import MineralBlender, { MineralSettings, BlendParams } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, {
     addDownscaledPositions,
     addDownscaledTexCoords
@@ -119,9 +119,9 @@ class CoreRenderer {
         this.viewMode = v
     }
 
-    setBlending (gl: WebGLRenderingContext, magnitudes: Array<number>, colors: Array<vec3 | null>): void {
-        this.downRenderer.minerals.update(gl, magnitudes, colors)
-        this.punchRenderer.minerals.update(gl, magnitudes, colors)
+    setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
+        this.downRenderer.minerals.update(gl, params)
+        this.punchRenderer.minerals.update(gl, params)
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {
