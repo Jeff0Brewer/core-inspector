@@ -33,13 +33,9 @@ type DropdownProps<T> = {
 }
 
 function Dropdown<T> (
-    { items, Element, selected, setSelected, customClass }: DropdownProps<T>
+    { items, Element = StringItem, selected, setSelected, customClass }: DropdownProps<T>
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-
-    if (!Element) {
-        Element = StringItem
-    }
 
     return (
         <div
