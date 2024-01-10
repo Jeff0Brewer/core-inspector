@@ -6,10 +6,11 @@ type DisplayMetadata = {
 }
 
 type MetadataHoverProps = {
+    core: string,
     hovered: string | undefined
 }
 
-function MetadataHover ({ hovered }: MetadataHoverProps): ReactElement {
+function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
     const [x, setX] = useState<number>(0)
     const [y, setY] = useState<number>(0)
     const [data, setData] = useState<DisplayMetadata>({})
@@ -18,7 +19,7 @@ function MetadataHover ({ hovered }: MetadataHoverProps): ReactElement {
         const getData = async (): Promise<void> => {
             const data: DisplayMetadata = {}
 
-            const basePath = './data/gt1'
+            const basePath = `./data/${core}`
             const hydrationMetadata = await fetch(`${basePath}/hydration-metadata.json`)
                 .then(res => res.json())
 
@@ -26,7 +27,7 @@ function MetadataHover ({ hovered }: MetadataHoverProps): ReactElement {
             setData({ ...data })
         }
         getData()
-    }, [])
+    }, [core])
 
     // track mouse for element positioning
     useEffect(() => {

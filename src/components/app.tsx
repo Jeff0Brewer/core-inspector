@@ -9,14 +9,16 @@ import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
 import MetadataHover from '../components/metadata-hover'
+import CoreSelect from '../components/core-select'
 import Vis from '../components/vis'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
 
-const CORE = 'GT1'
+const CORES = ['gt1', 'gt2', 'gt3']
 
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
+    const [core, setCore] = useState<string>(CORES[0])
     const [mineral, setMineral] = useState<number>(VIS_DEFAULTS.mineral.index)
     const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
     const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
@@ -29,7 +31,7 @@ function App (): ReactElement {
     // load data and init vis renderer
     useEffect(() => {
         const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
-            const basePath = './data/gt1'
+            const basePath = `./data/${core}`
             const numMinerals = 9
 
             // fetch visualization textures / metadata
@@ -69,7 +71,22 @@ function App (): ReactElement {
             throw new Error('No reference to canvas')
         }
         initVisRenderer(canvasRef.current)
-    }, [])
+    }, [core])
+
+    useEffect(() => {
+        if (!vis) { return }
+        vis.setMineral(mineral)
+        vis.setShape(shape)
+        vis.setViewMode(viewMode)
+        vis.setSpacing(spacing)
+        vis.setZoom(zoom)
+        vis.setHovered(hovered)
+
+        // don't include state variables in dependency array
+        // since only want to set full vis state when vis initialized
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [vis])
 
     return (
         <main>
@@ -77,7 +94,7 @@ function App (): ReactElement {
             { vis !== null && <>
                 <Vis vis={vis} />
                 <div className={'interface'}>
-                    <MetadataHover hovered={hovered} />
+                    <MetadataHover core={core} hovered={hovered} />
                     <div className={'top-bar'}>
                         <ToggleSelect<CoreShape>
                             currValue={shape}
@@ -91,11 +108,11 @@ function App (): ReactElement {
                             item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                             item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                         />
-                        <p className={'info-label'}>
-                            CORE <span>{CORE}</span>
-                            SECTIONS <span>0000 - 0156</span>
-                            DEPTH <span>0m - 400m</span>
-                        </p>
+                        <CoreSelect
+                            cores={CORES}
+                            selected={core}
+                            setSelected={setCore}
+                        />
                     </div>
                     <div className={'side-bar'}>
                         <VerticalSlider
