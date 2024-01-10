@@ -23,6 +23,10 @@ const formatPercent = (p: number): string => {
     return (p * 100).toFixed()
 }
 
+const formatFloat = (f: number): string => {
+    return f.toFixed(2)
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -34,6 +38,7 @@ export {
     ease,
     clamp,
     vecToHex,
-    formatPercent
+    formatPercent,
+    formatFloat
 }
 export type { BoundRect }
