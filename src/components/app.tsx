@@ -80,7 +80,7 @@ function App (): ReactElement {
         vis.setViewMode(viewMode)
         vis.setSpacing(spacing)
         vis.setZoom(zoom)
-        vis.setHovered(hovered)
+        vis.setHovered(undefined)
 
         // don't include state variables in dependency array
         // since only want to set full vis state when vis initialized
