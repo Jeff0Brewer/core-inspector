@@ -217,6 +217,7 @@ class VisRenderer {
         return (): void => {
             this.canvas.removeEventListener('mousedown', mousedown)
             this.canvas.removeEventListener('mouseup', mouseup)
+            this.canvas.removeEventListener('mousemove', mousemove)
             this.canvas.removeEventListener('mouseleave', mouseleave)
             this.canvas.removeEventListener('wheel', wheel)
             window.removeEventListener('keydown', keydown)
