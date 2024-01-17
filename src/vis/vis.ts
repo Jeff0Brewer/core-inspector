@@ -146,7 +146,7 @@ class VisRenderer {
         const [xPad, yPad] = padding || [1, 1]
         const x = xBound * xPad
         const y = yBound * yPad
-        return { top: y, bottom: -y, left: -x, right: -x }
+        return { top: y, bottom: -y, left: -x, right: x }
     }
 
     resize (): void {
