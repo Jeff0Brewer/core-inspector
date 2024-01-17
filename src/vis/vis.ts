@@ -75,14 +75,13 @@ class VisRenderer {
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
 
-        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
         this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
             punchcardMaps,
             tileMetadata,
             idMetadata,
-            bounds,
+            this.getViewportBounds(),
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral
         )
@@ -111,10 +110,7 @@ class VisRenderer {
         this.camera.zoom(t)
         this.uiState.setZoom(t)
 
-        // regen verts if in column view to wrap viewport bounds
-        if (this.core.targetShape === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setShape (s: CoreShape): void {
@@ -122,10 +118,7 @@ class VisRenderer {
         this.camera.setMode(s)
         this.uiState.setShape(s)
 
-        // regen verts if in column view to wrap viewport bounds
-        if (s === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setViewMode (m: CoreViewMode): void {
@@ -134,16 +127,17 @@ class VisRenderer {
     }
 
     setSpacing (spacing: [number, number]): void {
-        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
+        const bounds = this.getViewportBounds()
         this.core.setSpacing(this.gl, spacing, bounds)
         this.uiState.setSpacing(spacing)
     }
 
-    getUnprojectedViewportBounds (padding?: [number, number]): BoundRect {
+    getViewportBounds (): BoundRect {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
         const xBound = window.innerWidth / window.innerHeight * yBound
-        const [xPad, yPad] = padding || [1, 1]
+
+        const [xPad, yPad] = VIEWPORT_PADDING
         const x = xBound * xPad
         const y = yBound * yPad
         return { top: y, bottom: -y, left: -x, right: x }
@@ -165,10 +159,7 @@ class VisRenderer {
         this.core.setProj(this.gl, this.proj)
         this.core.stencilRenderer.resize(this.gl, w, h)
 
-        // regen verts if in column view to wrap viewport bounds
-        if (this.core.targetShape === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setupEventListeners (): (() => void) {

@@ -102,6 +102,12 @@ class CoreRenderer {
         this.shapeT = SHAPE_T_MAP[this.targetShape]
     }
 
+    wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
+        if (this.targetShape === 'column') {
+            this.genVerts(gl, bounds)
+        }
+    }
+
     setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
         this.highlightRenderer.setHovered(gl, id)
         this.stencilRenderer.setHovered(id)
