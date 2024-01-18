@@ -10,6 +10,7 @@ import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
 import MetadataHover from '../components/metadata-hover'
 import CoreSelect from '../components/core-select'
+import LoadIcon from '../components/load-icon'
 import Vis from '../components/vis'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
@@ -67,11 +68,12 @@ function App (): ReactElement {
             )
         }
 
-        if (!canvasRef.current) {
+        const canvas = canvasRef.current
+        if (!canvas) {
             throw new Error('No reference to canvas')
         }
         setVis(null)
-        initVisRenderer(canvasRef.current)
+        setTimeout(() => initVisRenderer(canvas), 4000)
     }, [core])
 
     useEffect(() => {
@@ -91,6 +93,7 @@ function App (): ReactElement {
 
     return (
         <main>
+            <LoadIcon loading={!vis} />
             <canvas ref={canvasRef} data-visible={!!vis}></canvas>
             <Vis vis={vis} />
             <div className={'interface'}>
