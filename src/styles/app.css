@@ -9,6 +9,7 @@ canvas {
 }
 
 canvas[data-visible="true"] {
+    transition-delay: 250ms;
     opacity: 1;
 }
 
