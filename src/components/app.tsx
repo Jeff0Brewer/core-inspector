@@ -1,17 +1,11 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../lib/load'
-import { PiSpiralLight, PiArrowsHorizontalBold } from 'react-icons/pi'
-import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
-import { IoSearch } from 'react-icons/io5'
-import { CoreViewMode, CoreShape } from '../vis/core'
-import VerticalSlider from '../components/vertical-slider'
-import MineralSelect from '../components/mineral-select'
-import MineralBlend from '../components/mineral-blend'
-import MetadataHover from '../components/metadata-hover'
 import LoadIcon from '../components/load-icon'
 import Vis from '../components/vis'
+import MetadataHover from '../components/metadata-hover'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
+import MineralControls from '../components/mineral-controls'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
 
@@ -20,7 +14,6 @@ const CORES = ['gt1', 'gt2', 'gt3']
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
     const [core, setCore] = useState<string>(CORES[0])
-    const [mineral, setMineral] = useState<number>(VIS_DEFAULTS.mineral.index)
     const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -56,7 +49,6 @@ function App (): ReactElement {
                     tileMetadata,
                     idMetadata,
                     {
-                        setMineral,
                         setHovered
                     }
                 )
@@ -72,13 +64,7 @@ function App (): ReactElement {
 
     useEffect(() => {
         if (!vis) { return }
-        vis.setMineral(mineral)
         vis.setHovered(undefined)
-
-        // don't include state variables in dependency array
-        // since only want to set full vis state when vis initialized
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
     return (
@@ -100,44 +86,11 @@ function App (): ReactElement {
                     <CoreViewSliders vis={vis} />
                 </div>
                 <div className={'bottom-bar'}>
-                    <MineralSelect
-                        minerals={MINERALS}
-                        currMineral={mineral}
-                        setMineral={m => vis?.setMineral(m)}
-                    />
-                    <MineralBlend
-                        minerals={MINERALS}
-                        currMineral={mineral}
-                        setMineral={m => vis?.setMineral(m)}
-                        setBlending={p => vis?.setBlending(p)}
-                    />
+                    <MineralControls vis={vis} />
                 </div>
             </div>
         </main>
     )
-}
-
-const MINERALS = [
-    'chlorite',
-    'epidote',
-    'prehnite',
-    'zeolite',
-    'amphibole',
-    'pyroxene',
-    'gypsum',
-    'carbonate',
-    'kaolinite-montmorillinite'
-]
-
-// TODO: get new icons for horizontal / vertical dist
-const ICONS = {
-    column: <RxColumns style={{ fontSize: '20px' }} />,
-    spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
-    downscaled: <div className={'downscaled-icon'}></div>,
-    punchcard: <RxDragHandleDots1 style={{ fontSize: '25px' }} />,
-    zoom: <IoSearch style={{ fontSize: '16px' }} />,
-    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
-    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
 
 export default App
