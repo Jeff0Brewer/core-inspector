@@ -24,6 +24,14 @@ function CoreVisSettings (
         if (!vis) { return }
         vis.uiState.setShape = setShape
         vis.uiState.setViewMode = setViewMode
+
+        vis.setShape(shape)
+        vis.setViewMode(viewMode)
+
+        // don't include state vars in dependency array
+        // since only want to reset state when vis re-initialized
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
     return <>
