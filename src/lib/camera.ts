@@ -4,7 +4,7 @@ import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
 
 const MOUSE_PAN_SPEED = 0.003
 const WHEEL_PAN_SPEED = 0.001
-const ZOOM_SPEED = 0.0005
+const ZOOM_SPEED = 0.0003
 const MIN_ZOOM = 0.3
 const MAX_ZOOM = 1.75
 
@@ -94,7 +94,7 @@ class Camera2D {
             const x = d * WHEEL_PAN_SPEED
             this.pan(x, 0)
         } else {
-            const t = this.zoomT * (1 + d * ZOOM_SPEED)
+            const t = this.zoomT + d * ZOOM_SPEED
             this.zoom(t)
         }
     }
