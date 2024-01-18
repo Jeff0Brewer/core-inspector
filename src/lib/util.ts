@@ -27,6 +27,15 @@ const formatFloat = (f: number): string => {
     return f.toFixed(2)
 }
 
+function padZeros (n: number | string, len: number): string {
+    const str = n.toString()
+    if (str.length > len) {
+        return str
+    }
+    const zeros = Array(len - str.length).fill('0').join('')
+    return zeros + str
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -39,6 +48,7 @@ export {
     clamp,
     vecToHex,
     formatPercent,
-    formatFloat
+    formatFloat,
+    padZeros
 }
 export type { BoundRect }
