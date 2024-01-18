@@ -1,0 +1,36 @@
+.load-icon {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 999;
+    width: 30px;
+    height: 60px;
+    top: calc(50% - 30px);
+    left: calc(50% - 30px);
+    opacity: 0;
+    transition: opacity var(--transition-param);
+    transform-origin: 30px 30px;
+    animation: rotate 1s linear infinite;
+}
+
+.load-icon:before {
+    content: "";
+    display: block;
+    width: 200%;
+    height: 100%;
+    border-radius: 50%;
+    border: 5px solid #fff;
+}
+
+.load-icon[data-visible="true"] {
+    opacity: 1;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}

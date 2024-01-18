@@ -1,19 +1,31 @@
-import { useEffect, useRef, ReactElement } from 'react'
-import VisRenderer from '../vis/vis'
+import { useState, useEffect, useRef, ReactElement } from 'react'
+import MetadataHover from '../components/metadata-hover'
+import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/vis.css'
 
 type VisProps = {
-    vis: VisRenderer
+    vis: VisRenderer | null,
+    core: string
 }
 
-function Vis ({ vis }: VisProps): ReactElement {
+function Vis (
+    { vis, core }: VisProps
+): ReactElement {
+    const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {
+        if (!vis) { return }
+        vis.uiState.setHovered = setHovered
+
+        vis.setHovered(undefined)
+
         return vis.setupEventListeners()
     }, [vis])
 
     useEffect(() => {
+        if (vis === null) { return }
+
         let lastT = 0
         const tick = (t: number): void => {
             const elapsed = (t - lastT) * 0.001
@@ -29,9 +41,9 @@ function Vis ({ vis }: VisProps): ReactElement {
         }
     }, [vis])
 
-    return (
-        <></>
-    )
+    return <>
+        <MetadataHover core={core} hovered={hovered} />
+    </>
 }
 
 export default Vis

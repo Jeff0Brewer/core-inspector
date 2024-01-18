@@ -1,4 +1,5 @@
 import { useState, useEffect, ReactElement } from 'react'
+import { padZeros } from '../lib/util'
 import '../styles/metadata-hover.css'
 
 type DisplayMetadata = {
@@ -41,14 +42,15 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    const renderInd = (id: string): ReactElement => {
+    const formatId = (id: string): string => {
         const [section, part] = id.split('_')
-        return (
-            <div className={'id'}>
-                <p>section <span>{section}</span></p>
-                <p>part <span>{part}</span></p>
-            </div>
-        )
+        return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
+    }
+
+    const checkSide = (): string => {
+        return x > window.innerWidth * 0.5
+            ? 'right'
+            : 'left'
     }
 
     return <>
@@ -56,8 +58,11 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
             <div
                 className={'metadata'}
                 style={{ left: `${x}px`, top: `${y}px` }}
+                data-side={checkSide()}
             >
-                { renderInd(hovered) }
+                <div className={'id'}>
+                    { formatId(hovered) }
+                </div>
                 { data.hydration && data.hydration[hovered] && <p>
                     hydration:
                     <span>

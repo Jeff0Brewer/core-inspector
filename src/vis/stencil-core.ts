@@ -1,7 +1,7 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
 import { vecToHex } from '../lib/util'
-import { POS_FPV, POS_STRIDE } from '../vis/core'
+import { POS_FPV } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
@@ -19,15 +19,13 @@ const COL_STRIDE = COL_FPV
 class StencilCoreRenderer {
     framebuffer: WebGLFramebuffer
     program: WebGLProgram
-    posBuffer: WebGLBuffer
-    colBuffer: WebGLBuffer
-    bindPositions: () => void
+    positionBuffer: WebGLBuffer
+    colorBuffer: WebGLBuffer
+    bindPosition: () => void
     bindColors: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
-    setShapeT: (t: number) => void
     numVertex: number
-    positions: Float32Array
 
     colorIdMap: ColorIdMap
 
@@ -47,32 +45,24 @@ class StencilCoreRenderer {
 
         this.program = initProgram(gl, vertSource, fragSource)
 
-        this.numVertex = positions.length / POS_STRIDE
+        this.numVertex = positions.length / POS_FPV
         const vertPerTile = this.numVertex / tileMetadata.numTiles
 
-        this.posBuffer = initBuffer(gl)
+        this.positionBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
-        this.positions = positions
 
-        this.colBuffer = initBuffer(gl)
+        this.colorBuffer = initBuffer(gl)
         const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
         gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
         this.colorIdMap = map
 
-        const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_STRIDE, 0)
-        const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_STRIDE, POS_FPV)
-        this.bindPositions = (): void => {
-            bindSpiralPos()
-            bindColumnPos()
-        }
+        this.bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
         this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_STRIDE, 0, gl.UNSIGNED_BYTE)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
-        const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
         this.currHovered = currHovered
         this.lastMousePos = [-1, -1]
@@ -82,15 +72,16 @@ class StencilCoreRenderer {
         this.currHovered = id
     }
 
-    setPositions (gl: WebGLRenderingContext, positions: Float32Array): void {
-        const newNumVertex = positions.length / POS_STRIDE
+    setPositions (
+        gl: WebGLRenderingContext,
+        positions: Float32Array
+    ): void {
+        const newNumVertex = positions.length / POS_FPV
         if (newNumVertex !== this.numVertex) {
             throw new Error('Incorrect number of new position vertices')
         }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
-
-        this.positions = positions
     }
 
     // need to call resize as well as update projection matrix when window changes
@@ -131,14 +122,13 @@ class StencilCoreRenderer {
 
         gl.useProgram(this.program)
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
-        this.bindPositions()
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        this.bindPosition()
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.colBuffer)
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
         this.bindColors()
 
         this.setView(view)
-        this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 

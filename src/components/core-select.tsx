@@ -1,18 +1,10 @@
 import { useState, useEffect, ReactElement } from 'react'
+import { padZeros } from '../lib/util'
 import { CoreMetadata } from '../lib/metadata'
 import Dropdown from '../components/dropdown'
 import '../styles/core-select.css'
 
 const SECTION_PAD_LEN = 4
-
-function padZeros (n: number, len: number): string {
-    const str = n.toString()
-    if (str.length > len) {
-        return str
-    }
-    const zeros = Array(len - str.length).fill('0').join('')
-    return zeros + str
-}
 
 type CoreSelectProps = {
     cores: Array<string>,

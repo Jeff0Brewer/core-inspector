@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
-import { POS_FPV, POS_STRIDE } from '../vis/core'
+import { POS_FPV } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
@@ -12,11 +12,10 @@ class HoverHighlightRenderer {
     idIndMap: IdIndMap
 
     program: WebGLProgram
-    buffer: WebGLBuffer
-    bindAttrib: () => void
+    positionBuffer: WebGLBuffer
+    bindPosition: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
-    setShapeT: (t: number) => void
     positions: Float32Array
     numVertex: number
 
@@ -41,24 +40,18 @@ class HoverHighlightRenderer {
             }
         )
 
-        this.program = initProgram(gl, vertSource, fragSource)
-        this.buffer = initBuffer(gl)
         this.positions = positions
         this.numVertex = 0
 
-        const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_STRIDE, 0)
-        const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_STRIDE, POS_FPV)
-        this.bindAttrib = (): void => {
-            bindSpiralPos()
-            bindColumnPos()
-        }
+        this.program = initProgram(gl, vertSource, fragSource)
+
+        this.positionBuffer = initBuffer(gl)
+        this.bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
-        const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-        this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
 
         this.lastHovered = undefined
     }
@@ -80,21 +73,20 @@ class HoverHighlightRenderer {
         } else {
             sectionVerts = new Float32Array()
         }
-        this.numVertex = sectionVerts.length / POS_STRIDE
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
+        this.numVertex = sectionVerts.length / POS_FPV
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, sectionVerts, gl.STATIC_DRAW)
     }
 
-    draw (gl: WebGLRenderingContext, view: mat4, shapeT: number): void {
+    draw (gl: WebGLRenderingContext, view: mat4): void {
         if (this.numVertex === 0) { return }
 
         gl.useProgram(this.program)
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
-        this.bindAttrib()
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
+        this.bindPosition()
 
         this.setView(view)
-        this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }

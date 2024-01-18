@@ -33,12 +33,12 @@ const VIS_DEFAULTS: VisSettings = {
 }
 
 type UiState = {
-    setMineral: (m: number) => void,
-    setShape: (s: CoreShape) => void,
-    setViewMode: (v: CoreViewMode) => void,
-    setSpacing: (s: [number, number]) => void,
-    setZoom: (z: number) => void,
-    setHovered: (h: string | undefined) => void
+    setMineral?: (m: number) => void,
+    setShape?: (s: CoreShape) => void,
+    setViewMode?: (v: CoreViewMode) => void,
+    setSpacing?: (s: [number, number]) => void,
+    setZoom?: (z: number) => void,
+    setHovered?: (h: string | undefined) => void
 }
 
 const PROJECTION_PARAMS = {
@@ -62,7 +62,7 @@ class VisRenderer {
         punchcardMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
-        uiState: UiState
+        uiState?: UiState
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -75,14 +75,13 @@ class VisRenderer {
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
 
-        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
         this.core = new CoreRenderer(
             this.gl,
             downscaledMaps,
             punchcardMaps,
             tileMetadata,
             idMetadata,
-            bounds,
+            this.getViewportBounds(),
             VIS_DEFAULTS.core,
             VIS_DEFAULTS.mineral
         )
@@ -90,7 +89,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
 
         this.mousePos = [0, 0]
-        this.uiState = uiState
+        this.uiState = uiState || {}
     }
 
     setBlending (params: BlendParams): void {
@@ -99,54 +98,46 @@ class VisRenderer {
 
     setHovered (id: string | undefined): void {
         this.core.setHovered(this.gl, id)
-        this.uiState.setHovered(id)
+        this.uiState.setHovered?.(id)
     }
 
     setMineral (i: number): void {
         this.core.setMineral(i)
-        this.uiState.setMineral(i)
+        this.uiState.setMineral?.(i)
     }
 
     setZoom (t: number): void {
         this.camera.zoom(t)
-        this.uiState.setZoom(t)
+        this.uiState.setZoom?.(t)
 
-        // regen verts if in column view to wrap viewport bounds
-        if (this.core.targetShape === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setShape (s: CoreShape): void {
-        this.core.setShape(s)
+        this.core.setShape(this.gl, s, this.getViewportBounds())
         this.camera.setMode(s)
-        this.uiState.setShape(s)
-
-        // regen verts if in column view to wrap viewport bounds
-        if (s === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.uiState.setShape?.(s)
     }
 
     setViewMode (m: CoreViewMode): void {
-        this.core.setViewMode(m)
-        this.uiState.setViewMode(m)
+        this.core.setViewMode(this.gl, m, this.getViewportBounds())
+        this.uiState.setViewMode?.(m)
     }
 
     setSpacing (spacing: [number, number]): void {
-        const bounds = this.getUnprojectedViewportBounds(VIEWPORT_PADDING)
-        this.core.setSpacing(this.gl, spacing, bounds)
-        this.uiState.setSpacing(spacing)
+        this.core.setSpacing(this.gl, spacing, this.getViewportBounds())
+        this.uiState.setSpacing?.(spacing)
     }
 
-    getUnprojectedViewportBounds (padding?: [number, number]): BoundRect {
+    getViewportBounds (): BoundRect {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
         const xBound = window.innerWidth / window.innerHeight * yBound
-        const [xPad, yPad] = padding || [1, 1]
+
+        const [xPad, yPad] = VIEWPORT_PADDING
         const x = xBound * xPad
         const y = yBound * yPad
-        return { top: y, bottom: -y, left: -x, right: -x }
+        return { top: y, bottom: -y, left: -x, right: x }
     }
 
     resize (): void {
@@ -165,10 +156,7 @@ class VisRenderer {
         this.core.setProj(this.gl, this.proj)
         this.core.stencilRenderer.resize(this.gl, w, h)
 
-        // regen verts if in column view to wrap viewport bounds
-        if (this.core.targetShape === 'column') {
-            this.core.genVerts(this.gl, this.getUnprojectedViewportBounds(VIEWPORT_PADDING))
-        }
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setupEventListeners (): (() => void) {
@@ -191,7 +179,7 @@ class VisRenderer {
 
         const wheel = (e: WheelEvent): void => {
             this.camera.mousewheel(e.deltaY)
-            this.uiState.setZoom(this.camera.zoomT)
+            this.uiState.setZoom?.(this.camera.zoomT)
             this.setHovered(undefined)
         }
 
