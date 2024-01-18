@@ -5,7 +5,7 @@ import { CoreViewMode, CoreShape } from '../vis/core'
 import ToggleSelect from '../components/toggle-select'
 import CoreSelect from '../components/core-select'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
-import '../styles/app.css'
+import '../styles/core-vis-settings.css'
 
 type CoreVisSettingsProps = {
     vis: VisRenderer | null,

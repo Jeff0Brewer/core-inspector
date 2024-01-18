@@ -3,7 +3,7 @@ import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import VerticalSlider from '../components/vertical-slider'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
-import '../styles/app.css'
+import '../styles/core-view-sliders.css'
 
 type CoreViewSlidersProps = {
     vis: VisRenderer | null

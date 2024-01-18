@@ -38,23 +38,6 @@ canvas[data-visible="true"] {
     background-color: var(--menu-bg-color);
 }
 
-.info-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    height: 25px;
-    padding-left: 15px;
-    font-size: 0.9rem;
-    font-weight: 300;
-    color: var(--color2);
-    border-left: 1px solid var(--color2);
-}
-
-.info-label span {
-    color: #fff;
-    margin-right: 10px;
-}
-
 .side-bar {
     position: relative;
     width: fit-content;
@@ -71,51 +54,4 @@ canvas[data-visible="true"] {
     display: flex;
 
     background-color: var(--menu-bg-color);
-}
-
-.downscaled-icon {
-    width: 12px;
-    height: 20px;
-    background-color: #fff;
-    border-radius: 1px;
-}
-
-.distance-icon {
-    display: grid;
-    place-content: center;
-    width: fit-content;
-    border: 1px solid #fff;
-    border-width: 0 1px;
-    font-size: 12px;
-}
-
-.load-icon {
-    position: absolute;
-    overflow: hidden;
-    pointer-events: none;
-    width: 30px;
-    height: 60px;
-    top: calc(50% - 30px);
-    left: calc(50% - 30px);
-    transition: opacity var(--transition-param);
-    transform-origin: 30px 30px;
-    animation: rotate 1s linear infinite;
-}
-
-.load-icon:before {
-    content: "";
-    display: block;
-    width: 200%;
-    height: 100%;
-    border-radius: 50%;
-    border: 5px solid #fff;
-}
-
-@keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(359deg);
-    }
 }

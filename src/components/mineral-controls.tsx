@@ -2,7 +2,6 @@ import { useState, useEffect, ReactElement } from 'react'
 import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
-import '../styles/app.css'
 
 type MineralControlsProps = {
     vis: VisRenderer | null
