@@ -94,8 +94,7 @@ class CoreRenderer {
             downPositions,
             tileMetadata,
             idMetadata,
-            coreSettings.hovered,
-            this.targetShape
+            coreSettings.hovered
         )
         this.highlightRenderer = new HoverHighlightRenderer(
             gl,
@@ -162,7 +161,7 @@ class CoreRenderer {
             this.targetShape
         )
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
-        this.stencilRenderer.setPositions(gl, downPositions, this.targetShape)
+        this.stencilRenderer.setPositions(gl, downPositions)
         this.punchRenderer.setPositions(gl, punchPositions)
         this.highlightRenderer.positions = downPositions
     }
