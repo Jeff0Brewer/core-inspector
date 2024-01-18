@@ -33,12 +33,12 @@ const VIS_DEFAULTS: VisSettings = {
 }
 
 type UiState = {
-    setMineral: (m: number) => void,
-    setShape: (s: CoreShape) => void,
-    setViewMode: (v: CoreViewMode) => void,
-    setSpacing: (s: [number, number]) => void,
-    setZoom: (z: number) => void,
-    setHovered: (h: string | undefined) => void
+    setMineral?: (m: number) => void,
+    setShape?: (s: CoreShape) => void,
+    setViewMode?: (v: CoreViewMode) => void,
+    setSpacing?: (s: [number, number]) => void,
+    setZoom?: (z: number) => void,
+    setHovered?: (h: string | undefined) => void
 }
 
 const PROJECTION_PARAMS = {
@@ -98,17 +98,17 @@ class VisRenderer {
 
     setHovered (id: string | undefined): void {
         this.core.setHovered(this.gl, id)
-        this.uiState.setHovered(id)
+        this.uiState.setHovered?.(id)
     }
 
     setMineral (i: number): void {
         this.core.setMineral(i)
-        this.uiState.setMineral(i)
+        this.uiState.setMineral?.(i)
     }
 
     setZoom (t: number): void {
         this.camera.zoom(t)
-        this.uiState.setZoom(t)
+        this.uiState.setZoom?.(t)
 
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
@@ -116,20 +116,20 @@ class VisRenderer {
     setShape (s: CoreShape): void {
         this.core.setShape(s)
         this.camera.setMode(s)
-        this.uiState.setShape(s)
+        this.uiState.setShape?.(s)
 
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setViewMode (m: CoreViewMode): void {
         this.core.setViewMode(m)
-        this.uiState.setViewMode(m)
+        this.uiState.setViewMode?.(m)
     }
 
     setSpacing (spacing: [number, number]): void {
         const bounds = this.getViewportBounds()
         this.core.setSpacing(this.gl, spacing, bounds)
-        this.uiState.setSpacing(spacing)
+        this.uiState.setSpacing?.(spacing)
     }
 
     getViewportBounds (): BoundRect {
@@ -182,7 +182,7 @@ class VisRenderer {
 
         const wheel = (e: WheelEvent): void => {
             this.camera.mousewheel(e.deltaY)
-            this.uiState.setZoom(this.camera.zoomT)
+            this.uiState.setZoom?.(this.camera.zoomT)
             this.setHovered(undefined)
         }
 
