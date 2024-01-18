@@ -92,7 +92,7 @@ function App (): ReactElement {
 
     return (
         <main>
-            <LoadIcon loading={!vis} />
+            <LoadIcon loading={!vis} showDelayMs={100} />
             <canvas ref={canvasRef} data-visible={!!vis}></canvas>
             <Vis vis={vis} />
             <div className={'interface'}>

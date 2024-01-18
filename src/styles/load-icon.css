@@ -2,6 +2,7 @@
     position: absolute;
     overflow: hidden;
     pointer-events: none;
+    z-index: 999;
     width: 30px;
     height: 60px;
     top: calc(50% - 30px);
@@ -21,7 +22,7 @@
     border: 5px solid #fff;
 }
 
-.load-icon[data-loading="true"] {
+.load-icon[data-visible="true"] {
     opacity: 1;
 }
 

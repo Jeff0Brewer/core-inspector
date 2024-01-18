@@ -1,30 +1,48 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useEffect, useRef, ReactElement } from 'react'
 import '../styles/load-icon.css'
 
 type LoadIconProps = {
-    loading: boolean
+    loading: boolean,
+    showDelayMs?: number
 }
 
 function LoadIcon (
-    { loading }: LoadIconProps
+    { loading, showDelayMs = 150 }: LoadIconProps
 ): ReactElement {
     const [visible, setVisible] = useState<boolean>(false)
+    const [render, setRender] = useState<boolean>(false)
+    const timeoutIdRef = useRef<number>(-1)
 
     useEffect(() => {
-        if (loading) {
-            setVisible(true)
-        } else {
-            window.setTimeout(() => setVisible(false), 500)
-        }
-    }, [loading])
+        // cancel timeouts if loading state changes quickly
+        window.clearTimeout(timeoutIdRef.current)
 
-    return <>
-        { visible &&
-            <div
-                className={'load-icon'}
-                data-loading={loading}
-            ></div> }
-    </>
+        if (loading) {
+            timeoutIdRef.current = window.setTimeout(
+                () => setVisible(true),
+                showDelayMs
+            )
+            setRender(true)
+        } else {
+            timeoutIdRef.current = window.setTimeout(
+                () => setRender(false),
+                500
+            )
+            setVisible(false)
+        }
+    }, [loading, showDelayMs])
+
+    // remove from dom when not needed
+    if (!render) {
+        return <></>
+    }
+
+    return (
+        <div
+            data-visible={visible}
+            className={'load-icon'}
+        ></div>
+    )
 }
 
 export default LoadIcon
