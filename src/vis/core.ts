@@ -180,6 +180,8 @@ class CoreRenderer {
         this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
 
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
         if (this.viewMode === 'downscaled') {
             this.downRenderer.draw(gl, view, this.currMineral, easedShapeT)
         } else {
