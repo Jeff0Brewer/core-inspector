@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
-import { POS_FPV, TEX_FPV, POS_STRIDE, TEX_STRIDE } from '../vis/core'
+import { POS_FPV, TEX_FPV, CoreShape } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/punchcard-vert.glsl?raw'
@@ -9,9 +9,11 @@ import fragSource from '../shaders/punchcard-frag.glsl?raw'
 class PunchcardCoreRenderer {
     minerals: MineralBlender
     program: WebGLProgram
-    posBuffer: WebGLBuffer
+    spiralPosBuffer: WebGLBuffer
+    columnPosBuffer: WebGLBuffer
     texBuffer: WebGLBuffer
-    bindPositions: () => void
+    bindSpiralPos: () => void
+    bindColumnPos: () => void
     bindTexCoords: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
@@ -25,25 +27,34 @@ class PunchcardCoreRenderer {
         minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
-        pointSize: number
+        pointSize: number,
+        shape: CoreShape
     ) {
         this.minerals = minerals
 
         this.program = initProgram(gl, vertSource, fragSource)
 
-        this.numVertex = positions.length / POS_STRIDE
-        this.posBuffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
         this.texBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW)
+        this.numVertex = texCoords.length / TEX_FPV
 
-        const bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_STRIDE, 0)
-        const bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_STRIDE, POS_FPV)
-        this.bindPositions = (): void => {
-            bindSpiralPos()
-            bindColumnPos()
-        }
-        this.bindTexCoords = initAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_STRIDE, 0)
+        this.spiralPosBuffer = initBuffer(gl)
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            shape === 'spiral' ? positions : new Float32Array(positions.length),
+            gl.STATIC_DRAW
+        )
+
+        this.columnPosBuffer = initBuffer(gl)
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            shape === 'column' ? positions : new Float32Array(positions.length),
+            gl.STATIC_DRAW
+        )
+
+        this.bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
+        this.bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
+        this.bindTexCoords = initAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
@@ -65,12 +76,19 @@ class PunchcardCoreRenderer {
 
     // generate vertices externally to coordinate alignment between
     // punchcard and downscaled representations
-    setPositions (gl: WebGLRenderingContext, positions: Float32Array): void {
-        const newNumVertex = positions.length / POS_STRIDE
+    setPositions (
+        gl: WebGLRenderingContext,
+        positions: Float32Array,
+        shape: CoreShape
+    ): void {
+        const newNumVertex = positions.length / POS_FPV
         if (newNumVertex !== this.numVertex) {
             throw new Error('Incorrect number of new position vertices')
         }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
+        gl.bindBuffer(gl.ARRAY_BUFFER, shape === 'spiral'
+            ? this.spiralPosBuffer
+            : this.columnPosBuffer
+        )
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
     }
 
@@ -82,8 +100,12 @@ class PunchcardCoreRenderer {
     ): void {
         gl.useProgram(this.program)
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.posBuffer)
-        this.bindPositions()
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
+        this.bindSpiralPos()
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
+        this.bindColumnPos()
+
         gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer)
         this.bindTexCoords()
 
@@ -128,40 +150,55 @@ const addPunchcardTexCoords = (
     addPunchcardAttrib(out, getPointCoords, numRows)
 }
 
-const addPunchcardPositions = (
+const addPunchcardSpiralPositions = (
     out: Array<number>,
-    rect: TileRect,
     currRadius: number,
     currAngle: number,
-    currColX: number,
-    currColY: number,
     tileRadius: number,
     tileAngle: number,
-    tileHeight: number,
     bandWidth: number,
+    rect: TileRect,
     textureHeight: number
 ): void => {
     const numRows = Math.round(rect.height * textureHeight)
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
-    const colYInc = -1 * tileHeight / numRows
 
     const startRadius = currRadius - bandWidth * 0.5
     const startAngle = currAngle + angleInc * 0.5
-    const startColY = currColY + colYInc * 0.5
 
-    const getPointPositions = (i: number, j: number): Array<number> => {
+    const getSpiralPointPositions = (i: number, j: number): Array<number> => {
         const angle = startAngle + angleInc * i
         const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
         const radius = startRadius + i * radiusInc + (bandWidth - bandAcross)
-        const colY = startColY + colYInc * i
-        const colX = currColX + bandAcross
         return [
             Math.cos(angle) * radius,
-            Math.sin(angle) * radius,
-            colX,
-            colY
+            Math.sin(angle) * radius
         ]
+    }
+
+    addPunchcardAttrib(out, getSpiralPointPositions, numRows)
+}
+
+const addPunchcardColumnPositions = (
+    out: Array<number>,
+    currColX: number,
+    currColY: number,
+    tileHeight: number,
+    bandWidth: number,
+    rect: TileRect,
+    textureHeight: number
+): void => {
+    const numRows = Math.round(rect.height * textureHeight)
+    const colYInc = -1 * tileHeight / numRows
+
+    const startColY = currColY + colYInc * 0.5
+
+    const getPointPositions = (i: number, j: number): Array<number> => {
+        const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
+        const colY = startColY + colYInc * i
+        const colX = currColX + bandAcross
+        return [colX, colY]
     }
 
     addPunchcardAttrib(out, getPointPositions, numRows)
@@ -169,6 +206,7 @@ const addPunchcardPositions = (
 
 export default PunchcardCoreRenderer
 export {
-    addPunchcardPositions,
+    addPunchcardSpiralPositions,
+    addPunchcardColumnPositions,
     addPunchcardTexCoords
 }

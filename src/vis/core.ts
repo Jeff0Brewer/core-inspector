@@ -9,7 +9,8 @@ import DownscaledCoreRenderer, {
     addDownscaledTexCoords
 } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, {
-    addPunchcardPositions,
+    addPunchcardSpiralPositions,
+    addPunchcardColumnPositions,
     addPunchcardTexCoords
 } from '../vis/punchcard-core'
 import StencilCoreRenderer from '../vis/stencil-core'
@@ -17,8 +18,6 @@ import HoverHighlightRenderer from '../vis/hover-highlight'
 
 const POS_FPV = 2
 const TEX_FPV = 2
-const POS_STRIDE = POS_FPV + POS_FPV
-const TEX_STRIDE = TEX_FPV
 
 const TRANSFORM_SPEED = 1
 const SHAPE_T_MAP = { column: 0, spiral: 1 }
@@ -87,7 +86,8 @@ class CoreRenderer {
             punchBlender,
             punchPositions,
             punchTexCoords,
-            coreSettings.pointSize
+            coreSettings.pointSize,
+            this.targetShape
         )
         this.stencilRenderer = new StencilCoreRenderer(
             gl,
@@ -160,9 +160,9 @@ class CoreRenderer {
             bounds,
             this.targetShape
         )
+        this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
-        this.punchRenderer.setPositions(gl, punchPositions)
         this.highlightRenderer.positions = downPositions
     }
 
@@ -279,6 +279,17 @@ const getCorePositions = (
                 tileAngle,
                 BAND_WIDTH
             )
+
+            addPunchcardSpiralPositions(
+                punchPositions,
+                radius,
+                angle,
+                tileRadius,
+                tileAngle,
+                BAND_WIDTH,
+                punchRect,
+                metadata.punchDims[1]
+            )
         } else {
             addDownscaledColumnPositions(
                 downPositions,
@@ -287,21 +298,17 @@ const getCorePositions = (
                 tileHeight,
                 BAND_WIDTH
             )
-        }
 
-        addPunchcardPositions(
-            punchPositions,
-            punchRect,
-            radius,
-            angle,
-            colX,
-            colY,
-            tileRadius,
-            tileAngle,
-            tileHeight,
-            BAND_WIDTH,
-            metadata.punchDims[1]
-        )
+            addPunchcardColumnPositions(
+                punchPositions,
+                colX,
+                colY,
+                tileHeight,
+                BAND_WIDTH,
+                punchRect,
+                metadata.punchDims[1]
+            )
+        }
 
         colY -= tileHeight + BAND_WIDTH * verticalSpacing
         angle += tileAngle + (BAND_WIDTH * verticalSpacing) / radius
@@ -318,8 +325,6 @@ export default CoreRenderer
 export {
     POS_FPV,
     TEX_FPV,
-    POS_STRIDE,
-    TEX_STRIDE,
     TRANSFORM_SPEED
 }
 export type {
