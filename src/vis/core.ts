@@ -199,7 +199,7 @@ class CoreRenderer {
         }
 
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
-        // this.highlightRenderer.draw(gl, view, easedShapeT)
+        this.highlightRenderer.draw(gl, view)
     }
 }
 
