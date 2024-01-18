@@ -62,7 +62,7 @@ class VisRenderer {
         punchcardMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
-        uiState: UiState
+        uiState?: UiState
     ) {
         this.canvas = canvas
         this.gl = initGl(this.canvas)
@@ -89,7 +89,7 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
 
         this.mousePos = [0, 0]
-        this.uiState = uiState
+        this.uiState = uiState || {}
     }
 
     setBlending (params: BlendParams): void {

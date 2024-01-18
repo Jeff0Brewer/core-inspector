@@ -2,11 +2,10 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../lib/load'
 import LoadIcon from '../components/load-icon'
 import Vis from '../components/vis'
-import MetadataHover from '../components/metadata-hover'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
-import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
+import VisRenderer from '../vis/vis'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -14,12 +13,7 @@ const CORES = ['gt1', 'gt2', 'gt3']
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
     const [core, setCore] = useState<string>(CORES[0])
-    const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
     const canvasRef = useRef<HTMLCanvasElement>(null)
-
-    const i = useRef<number>(0)
-    console.log('rerender!', i.current)
-    i.current++
 
     // load data and init vis renderer
     useEffect(() => {
@@ -47,10 +41,7 @@ function App (): ReactElement {
                     downscaledImgs,
                     punchcardImgs,
                     tileMetadata,
-                    idMetadata,
-                    {
-                        setHovered
-                    }
+                    idMetadata
                 )
             )
         }
@@ -58,22 +49,17 @@ function App (): ReactElement {
         if (!canvasRef.current) {
             throw new Error('No reference to canvas')
         }
+
         setVis(null)
         initVisRenderer(canvasRef.current)
     }, [core])
-
-    useEffect(() => {
-        if (!vis) { return }
-        vis.setHovered(undefined)
-    }, [vis])
 
     return (
         <main>
             <LoadIcon loading={!vis} showDelayMs={100} />
             <canvas ref={canvasRef} data-visible={!!vis}></canvas>
-            <Vis vis={vis} />
+            <Vis vis={vis} core={core} />
             <div className={'interface'}>
-                <MetadataHover core={core} hovered={hovered} />
                 <div className={'top-bar'}>
                     <CoreVisSettings
                         vis={vis}
