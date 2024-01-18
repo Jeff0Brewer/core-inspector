@@ -3,17 +3,21 @@ import VisRenderer from '../vis/vis'
 import '../styles/vis.css'
 
 type VisProps = {
-    vis: VisRenderer
+     vis: VisRenderer | null
 }
 
 function Vis ({ vis }: VisProps): ReactElement {
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {
-        return vis.setupEventListeners()
+        if (vis !== null) {
+            return vis.setupEventListeners()
+        }
     }, [vis])
 
     useEffect(() => {
+        if (vis === null) { return }
+
         let lastT = 0
         const tick = (t: number): void => {
             const elapsed = (t - lastT) * 0.001

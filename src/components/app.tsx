@@ -70,6 +70,7 @@ function App (): ReactElement {
         if (!canvasRef.current) {
             throw new Error('No reference to canvas')
         }
+        setVis(null)
         initVisRenderer(canvasRef.current)
     }, [core])
 
@@ -90,74 +91,72 @@ function App (): ReactElement {
 
     return (
         <main>
-            <canvas ref={canvasRef}></canvas>
-            { vis !== null && <>
-                <Vis vis={vis} />
-                <div className={'interface'}>
-                    <MetadataHover core={core} hovered={hovered} />
-                    <div className={'top-bar'}>
-                        <ToggleSelect<CoreShape>
-                            currValue={shape}
-                            setValue={s => vis.setShape(s)}
-                            item0={{ value: 'column', icon: ICONS.column }}
-                            item1={{ value: 'spiral', icon: ICONS.spiral }}
-                        />
-                        <ToggleSelect<CoreViewMode>
-                            currValue={viewMode}
-                            setValue={v => vis.setViewMode(v)}
-                            item0={{ value: 'downscaled', icon: ICONS.downscaled }}
-                            item1={{ value: 'punchcard', icon: ICONS.punchcard }}
-                        />
-                        <CoreSelect
-                            cores={CORES}
-                            selected={core}
-                            setSelected={setCore}
-                        />
-                    </div>
-                    <div className={'side-bar'}>
-                        <VerticalSlider
-                            setValue={v => vis.setZoom(v)}
-                            currValue={zoom}
-                            min={0}
-                            max={1}
-                            step={0.01}
-                            label={'zoom'}
-                            icon={ICONS.zoom}
-                        />
-                        <VerticalSlider
-                            setValue={v => vis.setSpacing([v, spacing[1]])}
-                            currValue={0.5}
-                            min={0}
-                            max={1}
-                            step={0.01}
-                            label={'horizontal distance'}
-                            icon={ICONS.horizontalDist}
-                        />
-                        <VerticalSlider
-                            setValue={v => vis.setSpacing([spacing[0], v])}
-                            currValue={0.5}
-                            min={0}
-                            max={1}
-                            step={0.01}
-                            label={'vertical distance'}
-                            icon={ICONS.verticalDist}
-                        />
-                    </div>
-                    <div className={'bottom-bar'}>
-                        <MineralSelect
-                            minerals={MINERALS}
-                            currMineral={mineral}
-                            setMineral={m => vis.setMineral(m)}
-                        />
-                        <MineralBlend
-                            minerals={MINERALS}
-                            currMineral={mineral}
-                            setMineral={m => vis.setMineral(m)}
-                            setBlending={p => vis.setBlending(p)}
-                        />
-                    </div>
+            <canvas ref={canvasRef} data-visible={!!vis}></canvas>
+            <Vis vis={vis} />
+            <div className={'interface'}>
+                <MetadataHover core={core} hovered={hovered} />
+                <div className={'top-bar'}>
+                    <ToggleSelect<CoreShape>
+                        currValue={shape}
+                        setValue={s => vis?.setShape(s)}
+                        item0={{ value: 'column', icon: ICONS.column }}
+                        item1={{ value: 'spiral', icon: ICONS.spiral }}
+                    />
+                    <ToggleSelect<CoreViewMode>
+                        currValue={viewMode}
+                        setValue={v => vis?.setViewMode(v)}
+                        item0={{ value: 'downscaled', icon: ICONS.downscaled }}
+                        item1={{ value: 'punchcard', icon: ICONS.punchcard }}
+                    />
+                    <CoreSelect
+                        cores={CORES}
+                        selected={core}
+                        setSelected={setCore}
+                    />
                 </div>
-            </> }
+                <div className={'side-bar'}>
+                    <VerticalSlider
+                        setValue={v => vis?.setZoom(v)}
+                        currValue={zoom}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        label={'zoom'}
+                        icon={ICONS.zoom}
+                    />
+                    <VerticalSlider
+                        setValue={v => vis?.setSpacing([v, spacing[1]])}
+                        currValue={0.5}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        label={'horizontal distance'}
+                        icon={ICONS.horizontalDist}
+                    />
+                    <VerticalSlider
+                        setValue={v => vis?.setSpacing([spacing[0], v])}
+                        currValue={0.5}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        label={'vertical distance'}
+                        icon={ICONS.verticalDist}
+                    />
+                </div>
+                <div className={'bottom-bar'}>
+                    <MineralSelect
+                        minerals={MINERALS}
+                        currMineral={mineral}
+                        setMineral={m => vis?.setMineral(m)}
+                    />
+                    <MineralBlend
+                        minerals={MINERALS}
+                        currMineral={mineral}
+                        setMineral={m => vis?.setMineral(m)}
+                        setBlending={p => vis?.setBlending(p)}
+                    />
+                </div>
+            </div>
         </main>
     )
 }

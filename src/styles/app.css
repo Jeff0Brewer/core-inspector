@@ -4,7 +4,14 @@ canvas {
     /* temporary dimensions, will break on mobile */
     width: 100vw;
     height: 100vh;
+    opacity: 0;
+    transition: opacity var(--transition-param);
 }
+
+canvas[data-visible="true"] {
+    opacity: 1;
+}
+
 
 .interface {
     position: relative;
