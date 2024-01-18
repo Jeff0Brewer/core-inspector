@@ -68,12 +68,11 @@ function App (): ReactElement {
             )
         }
 
-        const canvas = canvasRef.current
-        if (!canvas) {
+        if (!canvasRef.current) {
             throw new Error('No reference to canvas')
         }
         setVis(null)
-        setTimeout(() => initVisRenderer(canvas), 4000)
+        initVisRenderer(canvasRef.current)
     }, [core])
 
     useEffect(() => {
