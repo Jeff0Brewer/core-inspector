@@ -4,7 +4,8 @@ import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import MineralBlender, { MineralSettings, BlendParams } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, {
-    addDownscaledPositions,
+    addDownscaledSpiralPositions,
+    addDownscaledColumnPositions,
     addDownscaledTexCoords
 } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, {
@@ -57,8 +58,17 @@ class CoreRenderer {
         mineralSettings: MineralSettings
     ) {
         this.currSpacing = coreSettings.spacing
+        this.viewMode = coreSettings.viewMode
+        this.targetShape = coreSettings.shape
+        this.currMineral = mineralSettings.index
+
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
-        const { downPositions, punchPositions } = getCorePositions(tileMetadata, this.currSpacing, bounds)
+        const { downPositions, punchPositions } = getCorePositions(
+            tileMetadata,
+            this.currSpacing,
+            bounds,
+            this.targetShape
+        )
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
         const punchBlender = new MineralBlender(gl, punchMineralMaps)
@@ -69,7 +79,8 @@ class CoreRenderer {
             gl,
             downBlender,
             downPositions,
-            downTexCoords
+            downTexCoords,
+            this.targetShape
         )
         this.punchRenderer = new PunchcardCoreRenderer(
             gl,
@@ -94,10 +105,6 @@ class CoreRenderer {
 
         this.metadata = tileMetadata
 
-        this.currMineral = mineralSettings.index
-        this.viewMode = coreSettings.viewMode
-        this.targetShape = coreSettings.shape
-
         this.numMinerals = downMineralMaps.length - 1
         this.shapeT = SHAPE_T_MAP[this.targetShape]
     }
@@ -113,8 +120,9 @@ class CoreRenderer {
         this.stencilRenderer.setHovered(id)
     }
 
-    setShape (shape: CoreShape): void {
+    setShape (gl: WebGLRenderingContext, shape: CoreShape, bounds: BoundRect): void {
         this.targetShape = shape
+        this.genVerts(gl, bounds)
     }
 
     setMineral (i: number): void {
@@ -149,9 +157,10 @@ class CoreRenderer {
         const { downPositions, punchPositions } = getCorePositions(
             this.metadata,
             this.currSpacing,
-            bounds
+            bounds,
+            this.targetShape
         )
-        this.downRenderer.setPositions(gl, downPositions)
+        this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.punchRenderer.setPositions(gl, punchPositions)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.positions = downPositions
@@ -188,8 +197,8 @@ class CoreRenderer {
             this.punchRenderer.draw(gl, view, this.currMineral, easedShapeT)
         }
 
-        this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
-        this.highlightRenderer.draw(gl, view, easedShapeT)
+        // this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
+        // this.highlightRenderer.draw(gl, view, easedShapeT)
     }
 }
 
@@ -225,7 +234,12 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
 
 // calculate vertices for downsampled and punchcard
 // representations at the same time to simplify alignment
-const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, number], bounds: BoundRect): {
+const getCorePositions = (
+    metadata: TileTextureMetadata,
+    spacing: [number, number],
+    bounds: BoundRect,
+    shape: CoreShape
+): {
     downPositions: Float32Array,
     punchPositions: Float32Array
 } => {
@@ -256,17 +270,24 @@ const getCorePositions = (metadata: TileTextureMetadata, spacing: [number, numbe
             colY = bounds.top
         }
 
-        addDownscaledPositions(
-            downPositions,
-            radius,
-            angle,
-            colX,
-            colY,
-            tileRadius,
-            tileAngle,
-            tileHeight,
-            BAND_WIDTH
-        )
+        if (shape === 'spiral') {
+            addDownscaledSpiralPositions(
+                downPositions,
+                radius,
+                angle,
+                tileRadius,
+                tileAngle,
+                BAND_WIDTH
+            )
+        } else {
+            addDownscaledColumnPositions(
+                downPositions,
+                colX,
+                colY,
+                tileHeight,
+                BAND_WIDTH
+            )
+        }
 
         addPunchcardPositions(
             punchPositions,

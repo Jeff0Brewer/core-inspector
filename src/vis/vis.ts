@@ -114,7 +114,7 @@ class VisRenderer {
     }
 
     setShape (s: CoreShape): void {
-        this.core.setShape(s)
+        this.core.setShape(this.gl, s, this.getViewportBounds())
         this.camera.setMode(s)
         this.uiState.setShape?.(s)
 
