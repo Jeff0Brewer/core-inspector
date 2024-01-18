@@ -5,13 +5,12 @@ import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoSearch } from 'react-icons/io5'
 import { CoreViewMode, CoreShape } from '../vis/core'
 import VerticalSlider from '../components/vertical-slider'
-import ToggleSelect from '../components/toggle-select'
 import MineralSelect from '../components/mineral-select'
 import MineralBlend from '../components/mineral-blend'
 import MetadataHover from '../components/metadata-hover'
-import CoreSelect from '../components/core-select'
 import LoadIcon from '../components/load-icon'
 import Vis from '../components/vis'
+import CoreVisSettings from '../components/core-vis-settings'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
 
@@ -26,8 +25,11 @@ function App (): ReactElement {
     const [spacing, setSpacing] = useState<[number, number]>(VIS_DEFAULTS.core.spacing)
     const [zoom, setZoom] = useState<number>(VIS_DEFAULTS.camera.zoom)
     const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
-
     const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    const i = useRef<number>(0)
+    console.log('rerender!', i.current)
+    i.current++
 
     // load data and init vis renderer
     useEffect(() => {
@@ -98,22 +100,11 @@ function App (): ReactElement {
             <div className={'interface'}>
                 <MetadataHover core={core} hovered={hovered} />
                 <div className={'top-bar'}>
-                    <ToggleSelect<CoreShape>
-                        currValue={shape}
-                        setValue={s => vis?.setShape(s)}
-                        item0={{ value: 'column', icon: ICONS.column }}
-                        item1={{ value: 'spiral', icon: ICONS.spiral }}
-                    />
-                    <ToggleSelect<CoreViewMode>
-                        currValue={viewMode}
-                        setValue={v => vis?.setViewMode(v)}
-                        item0={{ value: 'downscaled', icon: ICONS.downscaled }}
-                        item1={{ value: 'punchcard', icon: ICONS.punchcard }}
-                    />
-                    <CoreSelect
+                    <CoreVisSettings
+                        vis={vis}
                         cores={CORES}
-                        selected={core}
-                        setSelected={setCore}
+                        currentCore={core}
+                        setCurrentCore={setCore}
                     />
                 </div>
                 <div className={'side-bar'}>
