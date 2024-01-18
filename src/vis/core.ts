@@ -66,7 +66,8 @@ class CoreRenderer {
             tileMetadata,
             this.currSpacing,
             bounds,
-            this.targetShape
+            this.targetShape,
+            'punchcard'
         )
 
         const downBlender = new MineralBlender(gl, downMineralMaps)
@@ -120,17 +121,20 @@ class CoreRenderer {
         this.stencilRenderer.setHovered(id)
     }
 
+    setMineral (i: number): void {
+        this.currMineral = i
+    }
+
     setShape (gl: WebGLRenderingContext, shape: CoreShape, bounds: BoundRect): void {
         this.targetShape = shape
         this.genVerts(gl, bounds)
     }
 
-    setMineral (i: number): void {
-        this.currMineral = i
-    }
-
-    setViewMode (v: CoreViewMode): void {
+    setViewMode (gl: WebGLRenderingContext, v: CoreViewMode, bounds: BoundRect): void {
         this.viewMode = v
+        if (v === 'punchcard') {
+            this.genVerts(gl, bounds)
+        }
     }
 
     setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
@@ -158,9 +162,12 @@ class CoreRenderer {
             this.metadata,
             this.currSpacing,
             bounds,
-            this.targetShape
+            this.targetShape,
+            this.viewMode
         )
-        this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
+        if (punchPositions.length > 0) {
+            this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
+        }
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.positions = downPositions
@@ -238,7 +245,8 @@ const getCorePositions = (
     metadata: TileTextureMetadata,
     spacing: [number, number],
     bounds: BoundRect,
-    shape: CoreShape
+    shape: CoreShape,
+    viewMode: CoreViewMode
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array
@@ -280,16 +288,18 @@ const getCorePositions = (
                 BAND_WIDTH
             )
 
-            addPunchcardSpiralPositions(
-                punchPositions,
-                radius,
-                angle,
-                tileRadius,
-                tileAngle,
-                BAND_WIDTH,
-                punchRect,
-                metadata.punchDims[1]
-            )
+            if (viewMode === 'punchcard') {
+                addPunchcardSpiralPositions(
+                    punchPositions,
+                    radius,
+                    angle,
+                    tileRadius,
+                    tileAngle,
+                    BAND_WIDTH,
+                    punchRect,
+                    metadata.punchDims[1]
+                )
+            }
         } else {
             addDownscaledColumnPositions(
                 downPositions,
@@ -299,15 +309,17 @@ const getCorePositions = (
                 BAND_WIDTH
             )
 
-            addPunchcardColumnPositions(
-                punchPositions,
-                colX,
-                colY,
-                tileHeight,
-                BAND_WIDTH,
-                punchRect,
-                metadata.punchDims[1]
-            )
+            if (viewMode === 'punchcard') {
+                addPunchcardColumnPositions(
+                    punchPositions,
+                    colX,
+                    colY,
+                    tileHeight,
+                    BAND_WIDTH,
+                    punchRect,
+                    metadata.punchDims[1]
+                )
+            }
         }
 
         colY -= tileHeight + BAND_WIDTH * verticalSpacing

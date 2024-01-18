@@ -117,18 +117,15 @@ class VisRenderer {
         this.core.setShape(this.gl, s, this.getViewportBounds())
         this.camera.setMode(s)
         this.uiState.setShape?.(s)
-
-        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setViewMode (m: CoreViewMode): void {
-        this.core.setViewMode(m)
+        this.core.setViewMode(this.gl, m, this.getViewportBounds())
         this.uiState.setViewMode?.(m)
     }
 
     setSpacing (spacing: [number, number]): void {
-        const bounds = this.getViewportBounds()
-        this.core.setSpacing(this.gl, spacing, bounds)
+        this.core.setSpacing(this.gl, spacing, this.getViewportBounds())
         this.uiState.setSpacing?.(spacing)
     }
 
