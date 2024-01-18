@@ -11,6 +11,7 @@ import MetadataHover from '../components/metadata-hover'
 import LoadIcon from '../components/load-icon'
 import Vis from '../components/vis'
 import CoreVisSettings from '../components/core-vis-settings'
+import CoreViewSliders from '../components/core-view-sliders'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/app.css'
 
@@ -20,10 +21,6 @@ function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
     const [core, setCore] = useState<string>(CORES[0])
     const [mineral, setMineral] = useState<number>(VIS_DEFAULTS.mineral.index)
-    const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
-    const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
-    const [spacing, setSpacing] = useState<[number, number]>(VIS_DEFAULTS.core.spacing)
-    const [zoom, setZoom] = useState<number>(VIS_DEFAULTS.camera.zoom)
     const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -60,10 +57,6 @@ function App (): ReactElement {
                     idMetadata,
                     {
                         setMineral,
-                        setShape,
-                        setViewMode,
-                        setSpacing,
-                        setZoom,
                         setHovered
                     }
                 )
@@ -80,10 +73,6 @@ function App (): ReactElement {
     useEffect(() => {
         if (!vis) { return }
         vis.setMineral(mineral)
-        vis.setShape(shape)
-        vis.setViewMode(viewMode)
-        vis.setSpacing(spacing)
-        vis.setZoom(zoom)
         vis.setHovered(undefined)
 
         // don't include state variables in dependency array
@@ -108,33 +97,7 @@ function App (): ReactElement {
                     />
                 </div>
                 <div className={'side-bar'}>
-                    <VerticalSlider
-                        setValue={v => vis?.setZoom(v)}
-                        currValue={zoom}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        label={'zoom'}
-                        icon={ICONS.zoom}
-                    />
-                    <VerticalSlider
-                        setValue={v => vis?.setSpacing([v, spacing[1]])}
-                        currValue={0.5}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        label={'horizontal distance'}
-                        icon={ICONS.horizontalDist}
-                    />
-                    <VerticalSlider
-                        setValue={v => vis?.setSpacing([spacing[0], v])}
-                        currValue={0.5}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                        label={'vertical distance'}
-                        icon={ICONS.verticalDist}
-                    />
+                    <CoreViewSliders vis={vis} />
                 </div>
                 <div className={'bottom-bar'}>
                     <MineralSelect
