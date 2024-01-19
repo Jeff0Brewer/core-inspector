@@ -217,7 +217,7 @@ class VisRenderer {
         this.camera.update(elapsed)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
-        this.gl.clear(this.gl.DEPTH_BUFFER_BIT || this.gl.COLOR_BUFFER_BIT)
+        this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
 
         this.core.draw(
             this.gl,
