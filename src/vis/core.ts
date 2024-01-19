@@ -20,10 +20,11 @@ const POS_FPV = 2
 const TEX_FPV = 2
 
 const TRANSFORM_SPEED = 1
-const SHAPE_T_MAP = { column: 0, spiral: 1 }
+const SHAPE_T_VALUES = { column: 0, spiral: 1 } as const
 
-type CoreShape = 'column' | 'spiral'
+type CoreShape = keyof typeof SHAPE_T_VALUES
 type CoreViewMode = 'punchcard' | 'downscaled'
+
 type CoreSettings = {
     spacing: [number, number],
     viewMode: CoreViewMode,
@@ -44,7 +45,6 @@ class CoreRenderer {
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
-    blendMagnitudes: Array<number>
 
     constructor (
         gl: WebGLRenderingContext,
@@ -56,10 +56,14 @@ class CoreRenderer {
         coreSettings: CoreSettings,
         mineralSettings: MineralSettings
     ) {
+        this.currMineral = mineralSettings.index
         this.currSpacing = coreSettings.spacing
         this.viewMode = coreSettings.viewMode
         this.targetShape = coreSettings.shape
-        this.currMineral = mineralSettings.index
+
+        this.shapeT = SHAPE_T_VALUES[this.targetShape]
+        this.numMinerals = downMineralMaps.length - 1
+        this.metadata = tileMetadata
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
         const { downPositions, punchPositions } = getCorePositions(
@@ -67,24 +71,21 @@ class CoreRenderer {
             this.currSpacing,
             bounds,
             this.targetShape,
+            // always punchcard view mode to ensure punchcard vertices are
+            // initialized regardless of initial view mode
             'punchcard'
         )
 
-        const downBlender = new MineralBlender(gl, downMineralMaps)
-        const punchBlender = new MineralBlender(gl, punchMineralMaps)
-
-        this.blendMagnitudes = Array(downMineralMaps.length).fill(mineralSettings.blendMagnitude)
-
         this.downRenderer = new DownscaledCoreRenderer(
             gl,
-            downBlender,
+            new MineralBlender(gl, downMineralMaps),
             downPositions,
             downTexCoords,
             this.targetShape
         )
         this.punchRenderer = new PunchcardCoreRenderer(
             gl,
-            punchBlender,
+            new MineralBlender(gl, punchMineralMaps),
             punchPositions,
             punchTexCoords,
             coreSettings.pointSize,
@@ -103,17 +104,6 @@ class CoreRenderer {
             tileMetadata,
             idMetadata
         )
-
-        this.metadata = tileMetadata
-
-        this.numMinerals = downMineralMaps.length - 1
-        this.shapeT = SHAPE_T_MAP[this.targetShape]
-    }
-
-    wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
-        if (this.targetShape === 'column') {
-            this.genVerts(gl, bounds)
-        }
     }
 
     setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
@@ -132,6 +122,8 @@ class CoreRenderer {
 
     setViewMode (gl: WebGLRenderingContext, v: CoreViewMode, bounds: BoundRect): void {
         this.viewMode = v
+        // since downscaled verts used in stencil / hover regardless of view mode
+        // only need to ensure that punchcard verts are updated
         if (v === 'punchcard') {
             this.genVerts(gl, bounds)
         }
@@ -140,6 +132,11 @@ class CoreRenderer {
     setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
         this.downRenderer.minerals.update(gl, params)
         this.punchRenderer.minerals.update(gl, params)
+    }
+
+    setSpacing (gl: WebGLRenderingContext, spacing: [number, number], bounds: BoundRect): void {
+        this.currSpacing = spacing
+        this.genVerts(gl, bounds)
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {
@@ -157,6 +154,12 @@ class CoreRenderer {
         this.highlightRenderer.setProj(m)
     }
 
+    wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
+        if (this.targetShape === 'column') {
+            this.genVerts(gl, bounds)
+        }
+    }
+
     genVerts (gl: WebGLRenderingContext, bounds: BoundRect): void {
         const { downPositions, punchPositions } = getCorePositions(
             this.metadata,
@@ -170,16 +173,7 @@ class CoreRenderer {
         }
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
-        this.highlightRenderer.positions = downPositions
-    }
-
-    setSpacing (
-        gl: WebGLRenderingContext,
-        spacing: [number, number],
-        bounds: BoundRect
-    ): void {
-        this.currSpacing = spacing
-        this.genVerts(gl, bounds)
+        this.highlightRenderer.setPositions(downPositions)
     }
 
     draw (
@@ -189,10 +183,8 @@ class CoreRenderer {
         mousePos: [number, number],
         setHovered: (id: string | undefined) => void
     ): void {
-        // TODO: simplify shape calc
-        const targetShapeT = SHAPE_T_MAP[this.targetShape]
-        const incSign = Math.sign(targetShapeT - this.shapeT)
-        this.shapeT = this.shapeT + incSign * TRANSFORM_SPEED * elapsed
+        const incSign = Math.sign(SHAPE_T_VALUES[this.targetShape] - this.shapeT)
+        this.shapeT += incSign * TRANSFORM_SPEED * elapsed
         this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
 
@@ -209,8 +201,8 @@ class CoreRenderer {
     }
 }
 
-const BAND_WIDTH = 0.025
-const MIN_RADIUS = BAND_WIDTH * 5
+const TILE_WIDTH = 0.025
+const MIN_RADIUS = TILE_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
@@ -239,8 +231,8 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
     }
 }
 
-// calculate vertices for downsampled and punchcard
-// representations at the same time to simplify alignment
+// calculate positions for downsampled and punchcard
+// representations in same place to simplify alignment
 const getCorePositions = (
     metadata: TileTextureMetadata,
     spacing: [number, number],
@@ -251,31 +243,36 @@ const getCorePositions = (
     downPositions: Float32Array,
     punchPositions: Float32Array
 } => {
-    const [horizontalSpacing, verticalSpacing] = spacing
-    const numRotation = RADIUS_RANGE / (BAND_WIDTH * (1 + horizontalSpacing))
-    const avgAngleSpacing = (BAND_WIDTH * verticalSpacing) / (MIN_RADIUS + RADIUS_RANGE * 0.5)
-    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.numTiles
-
     const downPositions: Array<number> = []
     const punchPositions: Array<number> = []
 
+    // get spacing from percentage of tile width
+    const [horizontalSpacing, verticalSpacing] = spacing.map(s => s * TILE_WIDTH)
+
+    const numRotation = RADIUS_RANGE / (TILE_WIDTH + horizontalSpacing)
+    const avgAngleSpacing = verticalSpacing / (MIN_RADIUS + RADIUS_RANGE * 0.5)
+    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.numTiles
+
     let radius = MIN_RADIUS
     let angle = 0
-    let colX = bounds.left
-    let colY = bounds.top
+    let columnX = bounds.left
+    let columnY = bounds.top
 
     for (let i = 0; i < metadata.numTiles; i++) {
         const downRect = metadata.downTiles[i]
         const punchRect = metadata.punchTiles[i]
 
+        // use downscaled tile dimensions to determine layout for
+        // both representations, ensuring alignment
         // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
-        const tileHeight = 2 * BAND_WIDTH * (downRect.height / downRect.width)
+        const tileHeight = 2 * TILE_WIDTH * (downRect.height / downRect.width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
-        if (colY - tileHeight <= bounds.bottom) {
-            colX += BAND_WIDTH * (1 + horizontalSpacing)
-            colY = bounds.top
+        // check if tile within bounds, wrap to next column if outside
+        if (columnY - tileHeight <= bounds.bottom) {
+            columnX += TILE_WIDTH + horizontalSpacing
+            columnY = bounds.top
         }
 
         if (shape === 'spiral') {
@@ -285,7 +282,7 @@ const getCorePositions = (
                 angle,
                 tileRadius,
                 tileAngle,
-                BAND_WIDTH
+                TILE_WIDTH
             )
 
             if (viewMode === 'punchcard') {
@@ -295,7 +292,7 @@ const getCorePositions = (
                     angle,
                     tileRadius,
                     tileAngle,
-                    BAND_WIDTH,
+                    TILE_WIDTH,
                     punchRect,
                     metadata.punchDims[1]
                 )
@@ -303,27 +300,27 @@ const getCorePositions = (
         } else {
             addDownscaledColumnPositions(
                 downPositions,
-                colX,
-                colY,
+                columnX,
+                columnY,
                 tileHeight,
-                BAND_WIDTH
+                TILE_WIDTH
             )
 
             if (viewMode === 'punchcard') {
                 addPunchcardColumnPositions(
                     punchPositions,
-                    colX,
-                    colY,
+                    columnX,
+                    columnY,
                     tileHeight,
-                    BAND_WIDTH,
+                    TILE_WIDTH,
                     punchRect,
                     metadata.punchDims[1]
                 )
             }
         }
 
-        colY -= tileHeight + BAND_WIDTH * verticalSpacing
-        angle += tileAngle + (BAND_WIDTH * verticalSpacing) / radius
+        columnY -= tileHeight + verticalSpacing
+        angle += tileAngle + (verticalSpacing / radius)
         radius += tileRadius
     }
 
