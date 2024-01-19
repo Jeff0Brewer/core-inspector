@@ -156,7 +156,7 @@ const addPunchcardSpiralPositions = (
     currAngle: number,
     tileRadius: number,
     tileAngle: number,
-    bandWidth: number,
+    tileWidth: number,
     rect: TileRect,
     textureHeight: number
 ): void => {
@@ -164,13 +164,13 @@ const addPunchcardSpiralPositions = (
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
 
-    const startRadius = currRadius - bandWidth * 0.5
+    const startRadius = currRadius - tileWidth * 0.5
     const startAngle = currAngle + angleInc * 0.5
 
     const getSpiralPointPositions = (i: number, j: number): Array<number> => {
         const angle = startAngle + angleInc * i
-        const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
-        const radius = startRadius + i * radiusInc + (bandWidth - bandAcross)
+        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
+        const radius = startRadius + i * radiusInc + (tileWidth - tileAcross)
         return [
             Math.cos(angle) * radius,
             Math.sin(angle) * radius
@@ -182,23 +182,23 @@ const addPunchcardSpiralPositions = (
 
 const addPunchcardColumnPositions = (
     out: Array<number>,
-    currColX: number,
-    currColY: number,
+    currColumnX: number,
+    currColumnY: number,
     tileHeight: number,
-    bandWidth: number,
+    tileWidth: number,
     rect: TileRect,
     textureHeight: number
 ): void => {
     const numRows = Math.round(rect.height * textureHeight)
-    const colYInc = -1 * tileHeight / numRows
+    const columnYInc = -1 * tileHeight / numRows
 
-    const startColY = currColY + colYInc * 0.5
+    const startColumnY = currColumnY + columnYInc * 0.5
 
     const getPointPositions = (i: number, j: number): Array<number> => {
-        const bandAcross = bandWidth * (j + 0.5) / POINT_PER_ROW
-        const colY = startColY + colYInc * i
-        const colX = currColX + bandAcross
-        return [colX, colY]
+        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
+        const columnY = startColumnY + columnYInc * i
+        const columnX = currColumnX + tileAcross
+        return [columnX, columnY]
     }
 
     addPunchcardAttrib(out, getPointPositions, numRows)
