@@ -6,11 +6,10 @@ import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
 import fragSource from '../shaders/hover-highlight-frag.glsl?raw'
 
+// map from section id to vertex start / end indices
 type IdIndMap = { [id: string]: [number, number] }
 
 class HoverHighlightRenderer {
-    idIndMap: IdIndMap
-
     program: WebGLProgram
     positionBuffer: WebGLBuffer
     bindPosition: () => void
@@ -18,8 +17,8 @@ class HoverHighlightRenderer {
     setView: (m: mat4) => void
     positions: Float32Array
     numVertex: number
-
     lastHovered: string | undefined
+    idIndMap: IdIndMap
 
     constructor (
         gl: WebGLRenderingContext,
@@ -56,26 +55,22 @@ class HoverHighlightRenderer {
         this.lastHovered = undefined
     }
 
-    setPositions (positions: Float32Array): void {
-        this.positions = positions
-    }
-
-    // copy verts for current section from position buffer into highlight buffer,
-    // could keep all positions in gpu and only draw required verts, but want to save gpu memory
+    // copy verts for current section from positions array into highlight buffer for drawing
     setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
         if (id === this.lastHovered) { return }
         this.lastHovered = id
 
-        let sectionVerts
-        if (id) {
-            const [start, end] = this.idIndMap[id]
-            sectionVerts = this.positions.slice(start, end)
-        } else {
-            sectionVerts = new Float32Array()
-        }
+        const sectionVerts = id !== undefined
+            ? this.positions.slice(...this.idIndMap[id])
+            : new Float32Array()
+
         this.numVertex = sectionVerts.length / POS_FPV
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
         gl.bufferData(gl.ARRAY_BUFFER, sectionVerts, gl.STATIC_DRAW)
+    }
+
+    setPositions (positions: Float32Array): void {
+        this.positions = positions
     }
 
     draw (gl: WebGLRenderingContext, view: mat4): void {
