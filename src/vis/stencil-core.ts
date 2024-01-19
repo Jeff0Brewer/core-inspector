@@ -10,8 +10,8 @@ import fragSource from '../shaders/stencil-frag.glsl?raw'
 // maps color picked from stencil framebuffer into core section id
 type ColorIdMap = { [color: string]: string }
 
+// only need 2 color channels to represent enough unique colors
 const COL_FPV = 2
-const COL_STRIDE = COL_FPV
 
 // stencil renderer for mouse interactions, draws each segment as a
 // unique color and reads pixels under the mouse to determine which
@@ -46,8 +46,11 @@ class StencilCoreRenderer {
         this.program = initProgram(gl, vertSource, fragSource)
 
         this.numVertex = positions.length / POS_FPV
+        // assume same number of vertices for each tile
         const vertPerTile = this.numVertex / tileMetadata.numTiles
 
+        // positions passed in as argument since exactly the same as downscaled
+        // representation, can reuse here and prevent extra vertex generation
         this.positionBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
 
@@ -57,7 +60,7 @@ class StencilCoreRenderer {
         this.colorIdMap = map
 
         this.bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
-        this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_STRIDE, 0, gl.UNSIGNED_BYTE)
+        this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_FPV, 0, gl.UNSIGNED_BYTE)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
@@ -124,14 +127,14 @@ class StencilCoreRenderer {
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
         this.bindPosition()
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
         this.bindColors()
-
         this.setView(view)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 
+        // read pixels immediately after draw to ensure render not in progress
+        // and colors are readable
         const pixels = new Uint8Array(4)
         gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
@@ -146,20 +149,8 @@ class StencilCoreRenderer {
     }
 }
 
-const indToColor = (i: number): { vec: vec2, hex: string } => {
-    // scale index to make colors more distinct
-    // add one to index to prevent [0, 0] color
-    const ind = (i + 1) * 30
-
-    const mod = ind % 256
-    const fract = Math.floor((ind - mod) / 255)
-
-    const vec: vec2 = [mod, fract]
-    const hex = vecToHex(vec)
-
-    return { vec, hex }
-}
-
+// get unique color for each tile id, return buffer for rendering and
+// map for converting rendered color to original id
 const getStencilColors = (
     tileMetadata: TileTextureMetadata,
     idMetadata: SectionIdMetadata,
@@ -180,6 +171,19 @@ const getStencilColors = (
         colors: new Uint8Array(colors),
         map
     }
+}
+
+const indToColor = (i: number): { vec: vec2, hex: string } => {
+    // scale index to make colors more distinct,
+    // add one to index to prevent [0, 0] color
+    const ind = (i + 1) * 30
+
+    const mod = ind % 256
+    const fract = Math.floor((ind - mod) / 255)
+    const vec: vec2 = [mod, fract]
+    const hex = vecToHex(vec)
+
+    return { vec, hex }
 }
 
 export default StencilCoreRenderer
