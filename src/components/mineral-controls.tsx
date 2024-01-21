@@ -14,7 +14,7 @@ function MineralControls (
 ): ReactElement {
     const [blendParams, setBlendParams] = useState<BlendParams>({
         magnitudes: new Array(MINERALS.length).fill(1),
-        palette: COLOR_PRESETS[2],
+        palette: COLOR_PRESETS[0],
         saturation: 1,
         threshold: 0,
         mode: 'additive'
