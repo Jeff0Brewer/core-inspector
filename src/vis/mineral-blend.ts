@@ -7,11 +7,24 @@ import {
     initAttribute,
     getTextureAttachments
 } from '../lib/gl-wrap'
+import { MINERALS } from '../components/mineral-controls'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
+
+type LabelledPalette = {
+    colors: { [mineral: string]: vec3 },
+    type: 'labelled'
+}
+
+type UnlabelledPalette = {
+    colors: Array<vec3>,
+    type: 'unlabelled'
+}
+
+type GenericPalette = LabelledPalette | UnlabelledPalette
 
 const BLEND_MODES = {
     additive: 0,
@@ -21,10 +34,29 @@ type BlendMode = keyof typeof BLEND_MODES
 
 type BlendParams = {
     magnitudes: Array<number>,
-    colors: Array<vec3 | null>,
+    palette: GenericPalette,
     saturation: number,
     threshold: number,
     mode: BlendMode
+}
+
+function getBlendColors (params: BlendParams, minerals: Array<string>): Array<vec3> {
+    const { palette, magnitudes } = params
+
+    const colors = new Array(minerals.length)
+    if (palette.type === 'labelled') {
+        minerals.forEach((mineral, i) => {
+            colors[i] = palette.colors[mineral] || [0, 0, 0]
+        })
+    } else {
+        let numVisible = 0
+        magnitudes.forEach((magnitude, i) => {
+            colors[i] = palette.colors[numVisible] || [0, 0, 0]
+            numVisible += Math.ceil(magnitude)
+        })
+    }
+
+    return colors
 }
 
 class MineralBlender {
@@ -119,13 +151,8 @@ class MineralBlender {
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
-        const { magnitudes, colors, saturation, threshold, mode } = params
-        if (magnitudes.length < this.sources.length) {
-            throw new Error('Not enough blend magnitudes for all source textures')
-        }
-        if (magnitudes.length !== colors.length) {
-            throw new Error('Different number of magnitudes and colors')
-        }
+        const { magnitudes, saturation, threshold, mode } = params
+        const colors = getBlendColors(params, MINERALS)
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.viewport(0, 0, this.width, this.height)
