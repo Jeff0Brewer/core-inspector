@@ -37,7 +37,8 @@ function MineralControls (
         return () => {
             blendParams.magnitudes.fill(0)
             blendParams.magnitudes[i] = 1
-            setBlendParams({ ...blendParams })
+            console.log(blendParams)
+            vis?.setBlending({ ...blendParams })
         }
     }
 
@@ -45,7 +46,7 @@ function MineralControls (
         <div className={'mineral-bar'}>
             { MINERALS.map((mineral, i) => (
                 <button
-                    onClick={() => getMineralSetter(i)}
+                    onClick={getMineralSetter(i)}
                     data-active={blendParams.magnitudes[i] > 0}
                     key={i}
                 >

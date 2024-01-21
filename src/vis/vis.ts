@@ -88,6 +88,7 @@ class VisRenderer {
 
     setBlending (params: BlendParams): void {
         this.core.setBlending(this.gl, params)
+        this.uiState.setBlending?.(params)
     }
 
     setHovered (id: string | undefined): void {
