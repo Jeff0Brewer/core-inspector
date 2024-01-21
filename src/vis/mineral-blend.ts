@@ -7,7 +7,6 @@ import {
     initAttribute,
     getTextureAttachments
 } from '../lib/gl-wrap'
-import { MINERALS } from '../components/mineral-controls'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 
 const POS_FPV = 2
@@ -26,6 +25,62 @@ type UnlabelledPalette = {
 
 type GenericPalette = LabelledPalette | UnlabelledPalette
 
+const COLOR_PRESETS: Array<GenericPalette> = [
+    {
+        type: 'labelled',
+        colors: {
+            chlorite: [0.6039, 0.6588, 0.5647],
+            epidote: [0.6705, 0.7411, 0.6823],
+            prehnite: [0.4156, 0.4745, 0.5764],
+            zeolite: [1, 1, 1],
+            amphibole: [0.8, 0.7843, 0.6941],
+            pyroxene: [0.8039, 0.8509, 0.8666],
+            gypsum: [0.4431, 0.5960, 0.3333],
+            carbonate: [0.4705, 0.3450, 0.5882]
+        }
+    }, {
+        type: 'labelled',
+        colors: {
+            chlorite: [0.2470, 0.6549, 0.8392],
+            prehnite: [0.8039, 0.3490, 0.5647],
+            zeolite: [0.9686, 0.6156, 0.5176],
+            carbonate: [0.9803, 0.7529, 0.3686],
+            'kaolinite-montmorillinite': [0.9333, 0.3882, 0.3215]
+        }
+    },
+    {
+        type: 'unlabelled',
+        colors: [
+            [0.4705, 0.3450, 0.5882],
+            [0.6705, 0.7411, 0.6862],
+            [0.4156, 0.4745, 0.5764]
+        ]
+    }, {
+        type: 'unlabelled',
+        colors: [
+            [0.3803, 0.2313, 0.3529],
+            [0.5372, 0.3764, 0.5568],
+            [0.7294, 0.5843, 0.5764],
+            [0.9294, 0.9764, 0.6666],
+            [0.7843, 0.9803, 0.7411]
+        ]
+    },
+    {
+        type: 'unlabelled',
+        colors: [
+            [0.9647, 0.4274, 0.6078],
+            [0.3921, 0.4549, 0.8039],
+            [0.3019, 0.7529, 0.7098],
+            [0.2039, 0.5647, 0.8627],
+            [0.2196, 0.7568, 0.4470],
+            [0.5843, 0.3803, 0.8862],
+            [0.8901, 0.2039, 0.1843],
+            [0.9647, 0.6, 0.2470],
+            [1, 0.9294, 0.2901]
+        ]
+    }
+]
+
 const BLEND_MODES = {
     additive: 0,
     maximum: 1
@@ -40,23 +95,29 @@ type BlendParams = {
     mode: BlendMode
 }
 
-function getBlendColors (params: BlendParams, minerals: Array<string>): Array<vec3> {
+const MINERALS = [
+    'chlorite',
+    'epidote',
+    'prehnite',
+    'zeolite',
+    'amphibole',
+    'pyroxene',
+    'gypsum',
+    'carbonate',
+    'kaolinite-montmorillinite'
+]
+
+function getBlendColor (params: BlendParams, mineral: string, index: number): vec3 | null {
     const { palette, magnitudes } = params
-
-    const colors = new Array(minerals.length)
     if (palette.type === 'labelled') {
-        minerals.forEach((mineral, i) => {
-            colors[i] = palette.colors[mineral] || [0, 0, 0]
-        })
+        return palette.colors[mineral] || null
     } else {
-        let numVisible = 0
-        magnitudes.forEach((magnitude, i) => {
-            colors[i] = palette.colors[numVisible] || [0, 0, 0]
-            numVisible += Math.ceil(magnitude)
-        })
+        if (magnitudes[index] === 0) {
+            return null
+        }
+        const priorNumVisible = magnitudes.slice(0, index).reduce((prev, curr) => Math.ceil(curr) + prev, 0)
+        return palette.colors[priorNumVisible] || null
     }
-
-    return colors
 }
 
 class MineralBlender {
@@ -152,7 +213,7 @@ class MineralBlender {
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
         const { magnitudes, saturation, threshold, mode } = params
-        const colors = getBlendColors(params, MINERALS)
+        const colors = MINERALS.map((mineral, i) => getBlendColor(params, mineral, i))
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.viewport(0, 0, this.width, this.height)
@@ -236,7 +297,13 @@ const FULLSCREEN_RECT = new Float32Array([
 ])
 
 export default MineralBlender
+export {
+    getBlendColor,
+    MINERALS,
+    COLOR_PRESETS
+}
 export type {
     BlendParams,
-    BlendMode
+    BlendMode,
+    GenericPalette
 }
