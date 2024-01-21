@@ -12,7 +12,6 @@ import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 const POS_FPV = 2
 const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
-const BLENDED_IND = -1
 
 const BLEND_MODES = {
     additive: 0,
@@ -28,11 +27,6 @@ type BlendParams = {
     mode: BlendMode
 }
 
-type MineralSettings = {
-    index: number,
-    blendMagnitude: 1
-}
-
 class MineralBlender {
     program: WebGLProgram
     buffer: WebGLBuffer
@@ -40,7 +34,7 @@ class MineralBlender {
     textureAttachments: Array<number>
 
     sources: Array<WebGLTexture>
-    blended: WebGLTexture
+    output: WebGLTexture
     framebuffer: WebGLFramebuffer
 
     setMode: (m: BlendMode) => void
@@ -87,7 +81,7 @@ class MineralBlender {
 
         // init texture framebuffer of same size as source textures for blended output
         const { texture, framebuffer } = initTextureFramebuffer(gl, this.width, this.height)
-        this.blended = texture
+        this.output = texture
         this.framebuffer = framebuffer
 
         const saturationLoc = gl.getUniformLocation(this.program, 'saturation')
@@ -119,13 +113,9 @@ class MineralBlender {
         }
     }
 
-    bind (gl: WebGLRenderingContext, i: number): void {
+    bind (gl: WebGLRenderingContext): void {
         gl.activeTexture(this.textureAttachments[0])
-        if (i === BLENDED_IND) {
-            gl.bindTexture(gl.TEXTURE_2D, this.blended)
-        } else {
-            gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
-        }
+        gl.bindTexture(gl.TEXTURE_2D, this.output)
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
@@ -220,7 +210,6 @@ const FULLSCREEN_RECT = new Float32Array([
 
 export default MineralBlender
 export type {
-    MineralSettings,
     BlendParams,
     BlendMode
 }

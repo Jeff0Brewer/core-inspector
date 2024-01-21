@@ -95,24 +95,20 @@ class PunchcardCoreRenderer {
     draw (
         gl: WebGLRenderingContext,
         view: mat4,
-        mineralIndex: number,
         shapeT: number
     ): void {
         gl.useProgram(this.program)
 
+        this.minerals.bind(gl)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
         this.bindSpiralPos()
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
         this.bindColumnPos()
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer)
         this.bindTexCoords()
 
         this.setView(view)
         this.setShapeT(shapeT)
-
-        this.minerals.bind(gl, mineralIndex)
 
         gl.drawArrays(gl.POINTS, 0, this.numVertex)
     }

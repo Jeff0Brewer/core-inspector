@@ -3,7 +3,6 @@ import { MdRemoveRedEye, MdColorLens, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
 import { clamp, vecToHex, formatPercent, formatFloat } from '../lib/util'
-import { VIS_DEFAULTS } from '../vis/vis'
 import { BlendParams, BlendMode } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import '../styles/mineral-blend.css'
@@ -233,13 +232,11 @@ function MineralSlider (
 
 type MineralBlendProps = {
     minerals: Array<string>,
-    currMineral: number,
-    setMineral: (i: number) => void,
     setBlending: (p: BlendParams) => void
 }
 
 function MineralBlend (
-    { minerals, currMineral, setMineral, setBlending }: MineralBlendProps
+    { minerals, setBlending }: MineralBlendProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
     const [selected, setSelected] = useState<GenericPalette>(COLOR_MINERAL_PRESETS[0])
@@ -247,7 +244,7 @@ function MineralBlend (
         Array(minerals.length).fill(true)
     )
     const [magnitudes, setMagnitudes] = useState<Array<number>>(
-        Array(minerals.length).fill(VIS_DEFAULTS.mineral.blendMagnitude)
+        Array(minerals.length).fill(1)
     )
     const [saturation, setSaturation] = useState<number>(1)
     const [threshold, setThreshold] = useState<number>(0)
@@ -352,13 +349,6 @@ function MineralBlend (
         }
     }, [visibilities])
 
-    // close blend menu if not currently using blended output
-    useEffect(() => {
-        if (currMineral >= 0) {
-            setOpen(false)
-        }
-    }, [currMineral])
-
     const getVisibilitySetter = (ind: number): ((v: boolean) => void) => {
         return (v: boolean) => {
             visibilities[ind] = v
@@ -378,10 +368,8 @@ function MineralBlend (
         <div className={'blend'}>
             <button
                 onClick={() => {
-                    setMineral(-1)
                     setOpen(!open)
                 }}
-                data-active={currMineral < 0}
             >
                 <MdColorLens />
             </button>

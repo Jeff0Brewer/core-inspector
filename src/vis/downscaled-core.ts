@@ -11,7 +11,7 @@ class DownscaledCoreRenderer {
     program: WebGLProgram
     spiralPosBuffer: WebGLBuffer
     columnPosBuffer: WebGLBuffer
-    texBuffer: WebGLBuffer
+    texCoordBuffer: WebGLBuffer
     bindSpiralPos: () => void
     bindColumnPos: () => void
     bindTexCoords: () => void
@@ -31,7 +31,7 @@ class DownscaledCoreRenderer {
 
         this.program = initProgram(gl, vertSource, fragSource)
 
-        this.texBuffer = initBuffer(gl)
+        this.texCoordBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW)
         this.numVertex = texCoords.length / TEX_FPV
 
@@ -82,24 +82,20 @@ class DownscaledCoreRenderer {
     draw (
         gl: WebGLRenderingContext,
         view: mat4,
-        mineralIndex: number,
         shapeT: number
     ): void {
         gl.useProgram(this.program)
 
+        this.minerals.bind(gl)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
         this.bindSpiralPos()
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
         this.bindColumnPos()
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer)
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
         this.bindTexCoords()
 
         this.setView(view)
         this.setShapeT(shapeT)
-
-        this.minerals.bind(gl, mineralIndex)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }

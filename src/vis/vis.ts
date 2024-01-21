@@ -3,7 +3,7 @@ import { BoundRect } from '../lib/util'
 import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import { MineralSettings, BlendParams } from '../vis/mineral-blend'
+import { BlendParams } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
 import Camera2D, { CameraSettings } from '../lib/camera'
 
@@ -11,7 +11,6 @@ const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
 
 type VisSettings = {
     core: CoreSettings,
-    mineral: MineralSettings,
     camera: CameraSettings
 }
 
@@ -23,22 +22,18 @@ const VIS_DEFAULTS: VisSettings = {
         pointSize: 3.5,
         hovered: undefined
     },
-    mineral: {
-        index: -1, // start with blended mineral map
-        blendMagnitude: 1
-    },
     camera: {
         zoom: 0.5
     }
 }
 
 type UiState = {
-    setMineral?: (m: number) => void,
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
     setSpacing?: (s: [number, number]) => void,
     setZoom?: (z: number) => void,
-    setHovered?: (h: string | undefined) => void
+    setHovered?: (h: string | undefined) => void,
+    setBlending?: (p: BlendParams) => void
 }
 
 const PROJECTION_PARAMS = {
@@ -82,8 +77,7 @@ class VisRenderer {
             tileMetadata,
             idMetadata,
             this.getViewportBounds(),
-            VIS_DEFAULTS.core,
-            VIS_DEFAULTS.mineral
+            VIS_DEFAULTS.core
         )
 
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -99,11 +93,6 @@ class VisRenderer {
     setHovered (id: string | undefined): void {
         this.core.setHovered(this.gl, id)
         this.uiState.setHovered?.(id)
-    }
-
-    setMineral (i: number): void {
-        this.core.setMineral(i)
-        this.uiState.setMineral?.(i)
     }
 
     setZoom (t: number): void {

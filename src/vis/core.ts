@@ -2,7 +2,7 @@ import { mat4 } from 'gl-matrix'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import MineralBlender, { MineralSettings, BlendParams } from '../vis/mineral-blend'
+import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
@@ -39,8 +39,6 @@ class CoreRenderer {
     stencilRenderer: StencilCoreRenderer
     highlightRenderer: HoverHighlightRenderer
     metadata: TileTextureMetadata
-    numMinerals: number
-    currMineral: number
     currSpacing: [number, number]
     viewMode: CoreViewMode
     targetShape: CoreShape
@@ -53,16 +51,13 @@ class CoreRenderer {
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
         bounds: BoundRect,
-        coreSettings: CoreSettings,
-        mineralSettings: MineralSettings
+        coreSettings: CoreSettings
     ) {
-        this.currMineral = mineralSettings.index
         this.currSpacing = coreSettings.spacing
         this.viewMode = coreSettings.viewMode
         this.targetShape = coreSettings.shape
 
         this.shapeT = SHAPE_T_VALUES[this.targetShape]
-        this.numMinerals = downMineralMaps.length - 1
         this.metadata = tileMetadata
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
@@ -106,13 +101,34 @@ class CoreRenderer {
         )
     }
 
+    setProj (gl: WebGLRenderingContext, m: mat4): void {
+        gl.useProgram(this.downRenderer.program)
+        this.downRenderer.setProj(m)
+
+        gl.useProgram(this.punchRenderer.program)
+        this.punchRenderer.setProj(m)
+        this.punchRenderer.setDpr(window.devicePixelRatio)
+
+        gl.useProgram(this.stencilRenderer.program)
+        this.stencilRenderer.setProj(m)
+
+        gl.useProgram(this.highlightRenderer.program)
+        this.highlightRenderer.setProj(m)
+    }
+
+    setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
+        this.downRenderer.minerals.update(gl, params)
+        this.punchRenderer.minerals.update(gl, params)
+    }
+
     setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
         this.highlightRenderer.setHovered(gl, id)
         this.stencilRenderer.setHovered(id)
     }
 
-    setMineral (i: number): void {
-        this.currMineral = i
+    setSpacing (gl: WebGLRenderingContext, spacing: [number, number], bounds: BoundRect): void {
+        this.currSpacing = spacing
+        this.genVerts(gl, bounds)
     }
 
     setShape (gl: WebGLRenderingContext, shape: CoreShape, bounds: BoundRect): void {
@@ -127,31 +143,6 @@ class CoreRenderer {
         if (v === 'punchcard') {
             this.genVerts(gl, bounds)
         }
-    }
-
-    setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
-        this.downRenderer.minerals.update(gl, params)
-        this.punchRenderer.minerals.update(gl, params)
-    }
-
-    setSpacing (gl: WebGLRenderingContext, spacing: [number, number], bounds: BoundRect): void {
-        this.currSpacing = spacing
-        this.genVerts(gl, bounds)
-    }
-
-    setProj (gl: WebGLRenderingContext, m: mat4): void {
-        gl.useProgram(this.downRenderer.program)
-        this.downRenderer.setProj(m)
-
-        gl.useProgram(this.punchRenderer.program)
-        this.punchRenderer.setProj(m)
-        this.punchRenderer.setDpr(window.devicePixelRatio)
-
-        gl.useProgram(this.stencilRenderer.program)
-        this.stencilRenderer.setProj(m)
-
-        gl.useProgram(this.highlightRenderer.program)
-        this.highlightRenderer.setProj(m)
     }
 
     wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
@@ -191,9 +182,9 @@ class CoreRenderer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
         if (this.viewMode === 'downscaled') {
-            this.downRenderer.draw(gl, view, this.currMineral, easedShapeT)
+            this.downRenderer.draw(gl, view, easedShapeT)
         } else {
-            this.punchRenderer.draw(gl, view, this.currMineral, easedShapeT)
+            this.punchRenderer.draw(gl, view, easedShapeT)
         }
 
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
