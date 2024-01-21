@@ -3,6 +3,7 @@ import { MdColorLens } from 'react-icons/md'
 import MineralBlend from '../components/mineral-blend'
 import { BlendParams, MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import VisRenderer from '../vis/vis'
+import '../styles/mineral-controls.css'
 
 type MineralControlsProps = {
     vis: VisRenderer | null
@@ -22,22 +23,17 @@ function MineralControls (
 
     useEffect(() => {
         if (!vis) { return }
-
         vis.uiState.setBlending = setBlendParams
-
-        vis.setBlending(blendParams)
-
-        // don't include state vars in dependency array
-        // since only want to reset state when vis re-initialized
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
+
+    useEffect(() => {
+        vis?.setBlending(blendParams)
+    }, [vis, blendParams])
 
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
             blendParams.magnitudes.fill(0)
             blendParams.magnitudes[i] = 1
-            console.log(blendParams)
             vis?.setBlending({ ...blendParams })
         }
     }
@@ -60,12 +56,14 @@ function MineralControls (
                 <MdColorLens />
             </button>
         </div>
-        { menuOpen && <MineralBlend
-            minerals={MINERALS}
-            palettes={COLOR_PRESETS}
-            blendParams={blendParams}
-            setBlendParams={b => vis?.setBlending(b)}
-        /> }
+        <div className={'blend-menu-wrap'}>
+            { menuOpen && <MineralBlend
+                minerals={MINERALS}
+                palettes={COLOR_PRESETS}
+                blendParams={blendParams}
+                setBlendParams={b => vis?.setBlending(b)}
+            /> }
+        </div>
     </>
 }
 

@@ -1,10 +1,11 @@
-.mineral-select {
+.mineral-bar {
+    position: relative;
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
-.mineral-select button {
+.mineral-bar button {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -15,4 +16,10 @@
     margin: 6px;
     border-radius: var(--border-radius);
     text-transform: uppercase;
+}
+
+.blend-menu-wrap {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
 }

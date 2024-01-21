@@ -64,7 +64,7 @@ function MineralSlider (
     { mineral, index, blendParams, setBlendParams }: MineralSliderProps
 ): ReactElement {
     const [magnitude, setMagnitude] = useState<number>(1)
-    const [visible, setVisible] = useState<boolean>(false)
+    const [visible, setVisible] = useState<boolean>(true)
     const [color, setColor] = useState<vec3 | null>(null)
 
     const [dragging, setDragging] = useState<boolean>(false)
@@ -208,27 +208,8 @@ type MineralBlendProps = {
 function MineralBlend (
     { minerals, palettes, blendParams, setBlendParams }: MineralBlendProps
 ): ReactElement {
-    // init visibilities on palette change, hide minerals not present in
-    // labelled keys and hide minerals not in unlabelled array bounds
-    // useEffect(() => {
-    //     const isLabelled = !Array.isArray(selected)
-    //     const visibilities = Array(minerals.length).fill(false)
-    //     if (isLabelled) {
-    //         const visibleMinerals = Object.keys(selected)
-    //         for (let i = 0; i < minerals.length; i++) {
-    //             visibilities[i] = visibleMinerals.indexOf(minerals[i]) !== -1
-    //         }
-    //     } else {
-    //         for (let i = 0; i < selected.length; i++) {
-    //             visibilities[i] = true
-    //         }
-    //     }
-    //     setVisibilities(visibilities)
-    // }, [selected, minerals])
-    //
-
     return (
-        <section className={'menu'}>
+        <section className={'blend-menu'}>
             <p>color+mineral presets</p>
             <div>
                 <Dropdown

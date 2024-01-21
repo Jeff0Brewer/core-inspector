@@ -1,49 +1,31 @@
-.blend > button {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: grid;
-    place-items: center;
-    margin: 6px;
-    font-size: 16px;
-    height: 20px;
-    width: 30px;
-    border-radius: var(--radius);
-}
-
-.blend input[type="range"] {
+.blend-menu input[type="range"] {
     width: 80%;
     margin-top: 5px;
 }
 
-.blend .menu {
-    position: absolute;
-
-    right: 0;
+.blend-menu {
+    position: relative;
     display: flex;
     flex-direction: column;
-
-    bottom: 32px;
     padding: 10px;
-
     background-color: var(--menu-bg-color);
 }
 
-.blend .menu > div {
+.blend-menu > div {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.blend .menu > p {
+.blend-menu > p {
     padding: 5px 0;
 }
 
-.blend .menu > p:not(:first-of-type) {
+.blend-menu > p:not(:first-of-type) {
     margin-top: 15px;
 }
 
-.blend p {
+.blend-menu p {
     text-transform: uppercase;
 }
 
@@ -261,7 +243,7 @@
     margin-top: 1px;
 }
 
-.blend .menu .params {
+.blend-menu .params {
     display: block;
     flex-direction: column;
     margin-top: 15px;
