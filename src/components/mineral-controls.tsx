@@ -25,8 +25,8 @@ function MineralControls (
 
     useEffect(() => {
         if (!vis) { return }
-        vis.uiState.setBlending = setBlendParams
 
+        vis.uiState.setBlending = setBlendParams
         vis?.setBlending(blendParams)
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

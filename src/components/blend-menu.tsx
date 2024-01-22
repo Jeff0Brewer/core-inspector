@@ -160,6 +160,40 @@ function ParamSlider (
     )
 }
 
+type MonochromeToggleProps = {
+    palette: GenericPalette,
+    monochrome: boolean,
+    setMonochrome: (m: boolean) => void
+}
+
+function MonochromeToggle (
+    { palette, monochrome, setMonochrome }: MonochromeToggleProps
+): ReactElement {
+    const color = monochrome
+        ? '#fff'
+        : getColorHex(Object.values(palette.colors)[0] as vec3)
+
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent): void => {
+            if (e.key === 'b') {
+                setMonochrome(!monochrome)
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [monochrome, setMonochrome])
+
+    return (
+        <button
+            className={'monochrome-toggle'}
+            style={{ backgroundColor: color }}
+            onClick={() => setMonochrome(!monochrome)}
+        ></button>
+    )
+}
+
 type MineralBlendProps = {
     minerals: Array<string>,
     palettes: Array<GenericPalette>
@@ -190,8 +224,18 @@ function BlendMenu (
         setBlendParams({ ...blendParams })
     }
 
+    const setMonochrome = (m: boolean): void => {
+        blendParams.monochrome = m
+        setBlendParams({ ...blendParams })
+    }
+
     return (
         <section className={'blend-menu'}>
+            <MonochromeToggle
+                palette={blendParams.palette}
+                monochrome={blendParams.monochrome}
+                setMonochrome={setMonochrome}
+            />
             <p>color+mineral presets</p>
             <div>
                 <Dropdown
