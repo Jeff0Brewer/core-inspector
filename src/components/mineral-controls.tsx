@@ -1,6 +1,6 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
-import MineralBlend from '../components/mineral-blend'
+import BlendMenu from '../components/blend-menu'
 import { BlendParams, MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import VisRenderer from '../vis/vis'
 import '../styles/mineral-controls.css'
@@ -89,7 +89,7 @@ function MineralControls (
             </button>
         </div>
         <div className={'blend-menu-wrap'}>
-            { menuOpen && <MineralBlend
+            { menuOpen && <BlendMenu
                 minerals={MINERALS}
                 palettes={COLOR_PRESETS}
                 blendParams={blendParams}

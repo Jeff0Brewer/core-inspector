@@ -167,7 +167,7 @@ type MineralBlendProps = {
     setBlendParams: (p: BlendParams) => void
 }
 
-function MineralBlend (
+function BlendMenu (
     { minerals, palettes, blendParams, setBlendParams }: MineralBlendProps
 ): ReactElement {
     const setPalette = (p: GenericPalette): void => {
@@ -257,4 +257,4 @@ function MineralBlend (
     )
 }
 
-export default MineralBlend
+export default BlendMenu
