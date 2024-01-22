@@ -62,19 +62,22 @@
 
 .mineral-input .text-input,
 .mineral-input .slider-bar,
-.mineral-input .shortcut {
+.mineral-input .shortcut,
+.mineral-input .slider-handle{
     transition: opacity var(--transition-param);
 }
 
 .mineral-input[data-visible="false"] .text-input,
 .mineral-input[data-visible="false"] .slider-value,
 .mineral-input .slider-bar,
-.mineral-input .shortcut {
+.mineral-input .shortcut,
+.mineral-input .slider-handle {
     opacity: 0;
 }
 
 .mineral-input:hover .slider-bar,
 .mineral-input:hover .shortcut,
+.mineral-input .slider-bar[data-dragging="true"] .slider-handle,
 .mineral-input .slider-bar[data-dragging="true"] {
     opacity: 1;
 }
@@ -136,6 +139,11 @@
     gap: 5px;
     align-items: center;
     letter-spacing: 1px;
+}
+
+.mineral-slider .slider-handle {
+    font-size: 10px;
+    height: 10px;
 }
 
 .palette {

@@ -19,13 +19,18 @@ type SliderProps = {
     setValue: (v: number) => void,
     min: number,
     max: number,
-    format?: SliderTextFormatter
-    customClass?: string,
     customElements?: SliderCustomElements,
+    format?: SliderTextFormatter,
+    customClass?: string,
+    customHandle?: ReactElement
 }
 
 function Slider (
-    { value, setValue, min, max, format = DEFAULT_FORMATTER, customClass = '', customElements }: SliderProps
+    {
+        value, setValue, min, max, customElements, customHandle,
+        format = DEFAULT_FORMATTER,
+        customClass = ''
+    }: SliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
@@ -132,7 +137,9 @@ function Slider (
                 <div
                     className={'slider-value'}
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
-                ></div>
+                >
+                    {customHandle && customHandle}
+                </div>
             </div>
             <div className={'slider-elements'}>
                 { customElements

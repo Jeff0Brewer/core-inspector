@@ -113,6 +113,11 @@ function MineralSlider (
                         <ColorSwatch color={color} mineral={null} />
                     </div>
                 ]}
+                customHandle={
+                    <div className={'slider-handle'}>
+                        <IoCaretDownSharp />
+                    </div>
+                }
             />
         </div>
     )
@@ -165,6 +170,26 @@ type MineralBlendProps = {
 function MineralBlend (
     { minerals, palettes, blendParams, setBlendParams }: MineralBlendProps
 ): ReactElement {
+    const setPalette = (p: GenericPalette): void => {
+        blendParams.palette = p
+        setBlendParams({ ...blendParams })
+    }
+
+    const setBlendMode = (m: BlendMode): void => {
+        blendParams.mode = m
+        setBlendParams({ ...blendParams })
+    }
+
+    const setSaturation = (s: number): void => {
+        blendParams.saturation = s
+        setBlendParams({ ...blendParams })
+    }
+
+    const setThreshold = (t: number): void => {
+        blendParams.threshold = t
+        setBlendParams({ ...blendParams })
+    }
+
     return (
         <section className={'blend-menu'}>
             <p>color+mineral presets</p>
@@ -174,10 +199,7 @@ function MineralBlend (
                     selected={blendParams.palette.type === 'labelled'
                         ? blendParams.palette
                         : null}
-                    setSelected={p => {
-                        blendParams.palette = p
-                        setBlendParams({ ...blendParams })
-                    }}
+                    setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
                 />
@@ -189,10 +211,7 @@ function MineralBlend (
                     selected={blendParams.palette.type === 'unlabelled'
                         ? blendParams.palette
                         : null}
-                    setSelected={p => {
-                        blendParams.palette = p
-                        setBlendParams({ ...blendParams })
-                    }}
+                    setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
                 />
@@ -213,20 +232,14 @@ function MineralBlend (
             <Dropdown<BlendMode>
                 items={['additive', 'maximum']}
                 selected={blendParams.mode}
-                setSelected={m => {
-                    blendParams.mode = m
-                    setBlendParams({ ...blendParams })
-                }}
+                setSelected={setBlendMode}
                 customClass={'blend-mode-dropdown'}
             />
             <div className={'params'}>
                 <p>saturation</p>
                 <ParamSlider
                     value={blendParams.saturation}
-                    setValue={s => {
-                        blendParams.saturation = s
-                        setBlendParams({ ...blendParams })
-                    }}
+                    setValue={setSaturation}
                     min={0.1}
                     max={2}
                     defaultValue={1}
@@ -234,10 +247,7 @@ function MineralBlend (
                 <p>threshold</p>
                 <ParamSlider
                     value={blendParams.threshold}
-                    setValue={t => {
-                        blendParams.threshold = t
-                        setBlendParams({ ...blendParams })
-                    }}
+                    setValue={setThreshold}
                     min={0}
                     max={0.99}
                     defaultValue={0}
