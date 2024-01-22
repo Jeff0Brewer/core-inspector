@@ -311,6 +311,7 @@ function ParamSlider (
     return (
         <div className={'param-input'}>
             <Slider
+                customClass={'param-slider'}
                 value={value}
                 setValue={setValue}
                 min={min}

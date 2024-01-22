@@ -265,11 +265,6 @@
     height: 18px;
 }
 
-.param-input .slider-bar {
-    border-radius: 5px;
-    overflow: hidden;
-}
-
 .param-input button {
     position: relative;
     display: grid;
@@ -290,4 +285,9 @@
 
 .param-input button:hover {
     background-color: #303030;
+}
+
+.param-input .param-slider .slider-bar {
+    border-radius: 5px;
+    overflow: hidden;
 }
