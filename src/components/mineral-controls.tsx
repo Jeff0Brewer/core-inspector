@@ -18,7 +18,8 @@ function MineralControls (
         palette: COLOR_PRESETS[0],
         saturation: 1,
         threshold: 0,
-        mode: 'additive'
+        mode: 'additive',
+        monochrome: false
     })
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
 
@@ -35,6 +36,7 @@ function MineralControls (
         return () => {
             blendParams.visibilities.fill(false)
             blendParams.visibilities[i] = true
+            blendParams.monochrome = true
             vis?.setBlending({ ...blendParams })
         }
     }

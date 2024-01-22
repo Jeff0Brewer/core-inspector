@@ -93,7 +93,8 @@ type BlendParams = {
     palette: GenericPalette,
     saturation: number,
     threshold: number,
-    mode: BlendMode
+    mode: BlendMode,
+    monochrome: boolean
 }
 
 const MINERALS = [
@@ -109,16 +110,17 @@ const MINERALS = [
 ]
 
 function getBlendColor (params: BlendParams, mineral: string, index: number): vec3 | null {
-    const { palette, visibilities } = params
+    const { palette, visibilities, monochrome } = params
     if (!visibilities[index]) {
         return null
+    }
+    if (monochrome && visibilities.filter(v => v).length === 1) {
+        return [1, 1, 1]
     }
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
     } else {
-        const priorNumVisible = visibilities
-            .slice(0, index)
-            .reduce((prev, curr) => (curr ? 1 : 0) + prev, 0)
+        const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
         return palette.colors[priorNumVisible] || null
     }
 }
