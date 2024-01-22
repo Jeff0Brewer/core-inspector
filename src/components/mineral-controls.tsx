@@ -26,11 +26,25 @@ function MineralControls (
     useEffect(() => {
         if (!vis) { return }
         vis.uiState.setBlending = setBlendParams
+
+        vis?.setBlending(blendParams)
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
     useEffect(() => {
-        vis?.setBlending(blendParams)
-    }, [vis, blendParams])
+        const keydown = (e: KeyboardEvent): void => {
+            const key = parseInt(e.key)
+            if (key > 0 && key <= MINERALS.length) {
+                blendParams.visibilities[key - 1] = !blendParams.visibilities[key - 1]
+                setBlendParams({ ...blendParams })
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [blendParams])
 
     useEffect(() => {
         if (blendParams.palette.type === 'labelled') {
