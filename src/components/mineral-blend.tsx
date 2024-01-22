@@ -309,21 +309,21 @@ function ParamSlider (
     }
 
     return (
-        <div className={'param-input'}>
-            <Slider
-                customClass={'param-slider'}
-                value={value}
-                setValue={setValue}
-                min={min}
-                max={max}
-            />
-            <button
-                data-visible={defaultValue !== undefined && value !== defaultValue}
-                onClick={resetValue}
-            >
-                <MdOutlineRefresh />
-            </button>
-        </div>
+        <Slider
+            customClass={'param-slider'}
+            value={value}
+            setValue={setValue}
+            min={min}
+            max={max}
+            afterElements={[
+                <button
+                    data-visible={defaultValue !== undefined && value !== defaultValue}
+                    onClick={resetValue}
+                >
+                    <MdOutlineRefresh />
+                </button>
+            ]}
+        />
     )
 }
 

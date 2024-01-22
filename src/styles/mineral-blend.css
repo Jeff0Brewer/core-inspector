@@ -257,7 +257,7 @@
     margin-top: 5px;
 }
 
-.param-input {
+.param-slider {
     position: relative;
     display: flex;
     gap: 5px;
@@ -265,7 +265,7 @@
     height: 18px;
 }
 
-.param-input button {
+.param-slider button {
     position: relative;
     display: grid;
     place-content: center;
@@ -279,15 +279,15 @@
         background-color var(--transition-param);
 }
 
-.param-input button[data-visible="false"] {
+.param-slider button[data-visible="false"] {
     opacity: 0;
 }
 
-.param-input button:hover {
+.param-slider button:hover {
     background-color: #303030;
 }
 
-.param-input .param-slider .slider-bar {
+.param-slider .slider-bar {
     border-radius: 5px;
     overflow: hidden;
 }

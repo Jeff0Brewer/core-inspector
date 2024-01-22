@@ -8,11 +8,13 @@ type SliderProps = {
     min: number,
     max: number,
     formatValue?: (v: number) => string,
-    customClass?: string
+    customClass?: string,
+    beforeElements?: Array<ReactElement>
+    afterElements?: Array<ReactElement>
 }
 
 function Slider (
-    { value, setValue, min, max, formatValue = formatFloat, customClass = '' }: SliderProps
+    { value, setValue, min, max, formatValue = formatFloat, customClass = '', beforeElements, afterElements }: SliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
@@ -103,6 +105,7 @@ function Slider (
 
     return (
         <div className={`slider-wrap ${customClass}`}>
+            { beforeElements && beforeElements.map(el => el) }
             <div
                 ref={sliderRef}
                 className={'slider-bar'}
@@ -120,6 +123,7 @@ function Slider (
                 onInput={updateFromText}
                 defaultValue={lastValidTextRef.current}
             />
+            { afterElements && afterElements.map(el => el) }
         </div>
     )
 }
