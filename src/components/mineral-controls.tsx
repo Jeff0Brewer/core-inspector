@@ -37,14 +37,14 @@ function MineralControls (
             const key = parseInt(e.key)
             if (key > 0 && key <= MINERALS.length) {
                 blendParams.visibilities[key - 1] = !blendParams.visibilities[key - 1]
-                setBlendParams({ ...blendParams })
+                vis?.setBlending({ ...blendParams })
             }
         }
         window.addEventListener('keydown', keydown)
         return () => {
             window.removeEventListener('keydown', keydown)
         }
-    }, [blendParams])
+    }, [blendParams, vis])
 
     useEffect(() => {
         if (blendParams.palette.type === 'labelled') {
@@ -55,11 +55,10 @@ function MineralControls (
             blendParams.visibilities.fill(true)
             blendParams.visibilities.fill(false, numVisible)
         }
-        setBlendParams({ ...blendParams })
+        vis?.setBlending({ ...blendParams })
 
-        // only want to update visiblities on palette change
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [blendParams.palette])
+    }, [blendParams.palette, vis])
 
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
