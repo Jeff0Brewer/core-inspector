@@ -5,6 +5,7 @@ import { vec3 } from 'gl-matrix'
 import { clamp, vecToHex, formatPercent, formatFloat } from '../lib/util'
 import { BlendParams, BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
+import Slider from '../components/slider'
 import '../styles/mineral-blend.css'
 
 const getColorHex = (color: vec3 | null): string => {
@@ -298,112 +299,22 @@ type ParamSliderProps = {
     defaultValue?: number
 }
 
-// TODO: add generic slider component for both mineral and params
-// currently lots of same logic in both
 function ParamSlider (
     { value, setValue, defaultValue, min, max }: ParamSliderProps
 ): ReactElement {
-    const [dragging, setDragging] = useState<boolean>(false)
-    const sliderRef = useRef<HTMLDivElement>(null)
-    const textInputRef = useRef<HTMLInputElement>(null)
-
-    // store valid text value to revert if user input invalid
-    const lastValidTextRef = useRef<string>(formatFloat(value))
-    const cleanTextTimeoutIdRef = useRef<number>(-1)
-
-    useEffect(() => {
-        const slider = sliderRef.current
-        const textInput = textInputRef.current
-        if (!slider || !textInput) {
-            throw new Error('No reference to input elements')
-        }
-
-        const updatePercentageMouse = (e: MouseEvent): void => {
-            const { left, right } = slider.getBoundingClientRect()
-            const clickPercentage = clamp((e.clientX - left) / (right - left), 0, 1)
-            const value = clickPercentage * (max - min) + min
-            setValue(value)
-
-            // update text input with value from mouse
-            const formatted = formatFloat(value)
-            textInput.value = formatted
-            lastValidTextRef.current = formatted
-        }
-
-        if (!dragging) {
-            // if not dragging, only need handler to start drag on mouse down
-            const mousedown = (e: MouseEvent): void => {
-                updatePercentageMouse(e)
-                setDragging(true)
-            }
-            slider.addEventListener('mousedown', mousedown)
-            return () => {
-                slider.removeEventListener('mousedown', mousedown)
-            }
-        } else {
-            // attach dragging events to window so drag can extend past
-            // slider bounds once started
-            const mouseup = (): void => { setDragging(false) }
-            const mouseleave = (): void => { setDragging(false) }
-            const mousemove = (e: MouseEvent): void => {
-                updatePercentageMouse(e)
-            }
-            window.addEventListener('mouseup', mouseup)
-            window.addEventListener('mouseleave', mouseleave)
-            window.addEventListener('mousemove', mousemove)
-            return () => {
-                window.removeEventListener('mouseup', mouseup)
-                window.removeEventListener('mouseleave', mouseleave)
-                window.removeEventListener('mousemove', mousemove)
-            }
-        }
-    }, [dragging, setValue, min, max])
-
-    const updateValueText = (): void => {
-        if (!textInputRef.current) {
-            throw new Error('No reference to text input element')
-        }
-
-        const value = parseFloat(textInputRef.current.value)
-        if (!Number.isNaN(value)) {
-            const clampedValue = clamp(value, min, max)
-            setValue(clampedValue)
-            lastValidTextRef.current = formatFloat(clampedValue)
-        }
-
-        // revert to valid text value after period of no user input
-        window.clearTimeout(cleanTextTimeoutIdRef.current)
-        cleanTextTimeoutIdRef.current = window.setTimeout((): void => {
-            if (textInputRef.current) {
-                textInputRef.current.value = lastValidTextRef.current
-            }
-        }, 5000)
-    }
-
     const resetValue = (): void => {
-        if (defaultValue === undefined || !textInputRef.current) { return }
-        setValue(defaultValue)
-        const formatted = formatFloat(defaultValue)
-        textInputRef.current.value = formatted
-        lastValidTextRef.current = formatted
+        if (defaultValue !== undefined) {
+            setValue(defaultValue)
+        }
     }
 
     return (
-        <div
-            className={'param'}
-            data-dragging={dragging}
-        >
-            <div
-                ref={sliderRef}
-                className={'slider'}
-            >
-                <div style={{ width: `${(value - min) / (max - min) * 100}%` }}></div>
-            </div>
-            <input
-                ref={textInputRef}
-                type={'text'}
-                defaultValue={lastValidTextRef.current}
-                onInput={updateValueText}
+        <div>
+            <Slider
+                value={value}
+                setValue={setValue}
+                min={min}
+                max={max}
             />
             <button
                 data-visible={defaultValue !== undefined && value !== defaultValue}
