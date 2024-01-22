@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../lib/util'
 import '../styles/slider.css'
 
+type SliderElement = 'textInput' | ReactElement
+
 type SliderProps = {
     value: number,
     setValue: (v: number) => void,
@@ -9,12 +11,11 @@ type SliderProps = {
     max: number,
     formatValue?: (v: number) => string,
     customClass?: string,
-    beforeElements?: Array<ReactElement>
-    afterElements?: Array<ReactElement>
+    customElements?: Array<SliderElement>
 }
 
 function Slider (
-    { value, setValue, min, max, formatValue = formatFloat, customClass = '', beforeElements, afterElements }: SliderProps
+    { value, setValue, min, max, formatValue = formatFloat, customClass = '', customElements = ['textInput'] }: SliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
@@ -105,7 +106,6 @@ function Slider (
 
     return (
         <div className={`slider-wrap ${customClass}`}>
-            { beforeElements && beforeElements.map(el => el) }
             <div
                 ref={sliderRef}
                 className={'slider-bar'}
@@ -116,14 +116,19 @@ function Slider (
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
                 ></div>
             </div>
-            <input
-                ref={textInputRef}
-                className={'text-input'}
-                type={'text'}
-                onInput={updateFromText}
-                defaultValue={lastValidTextRef.current}
-            />
-            { afterElements && afterElements.map(el => el) }
+            <div className={'slider-elements'}>
+                { customElements.map(element =>
+                    element !== 'textInput'
+                        ? element
+                        : <input
+                            ref={textInputRef}
+                            className={'text-input'}
+                            type={'text'}
+                            onInput={updateFromText}
+                            defaultValue={lastValidTextRef.current}
+                        />
+                ) }
+            </div>
         </div>
     )
 }

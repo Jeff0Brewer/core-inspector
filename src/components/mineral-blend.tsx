@@ -315,7 +315,8 @@ function ParamSlider (
             setValue={setValue}
             min={min}
             max={max}
-            afterElements={[
+            customElements={[
+                'textInput',
                 <button
                     data-visible={defaultValue !== undefined && value !== defaultValue}
                     onClick={resetValue}
