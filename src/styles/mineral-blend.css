@@ -1,49 +1,31 @@
-.blend > button {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: grid;
-    place-items: center;
-    margin: 6px;
-    font-size: 16px;
-    height: 20px;
-    width: 30px;
-    border-radius: var(--radius);
-}
-
-.blend input[type="range"] {
+.blend-menu input[type="range"] {
     width: 80%;
     margin-top: 5px;
 }
 
-.blend .menu {
-    position: absolute;
-
-    right: 0;
+.blend-menu {
+    position: relative;
     display: flex;
     flex-direction: column;
-
-    bottom: 32px;
     padding: 10px;
-
     background-color: var(--menu-bg-color);
 }
 
-.blend .menu > div {
+.blend-menu > div {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.blend .menu > p {
+.blend-menu > p {
     padding: 5px 0;
 }
 
-.blend .menu > p:not(:first-of-type) {
+.blend-menu > p:not(:first-of-type) {
     margin-top: 15px;
 }
 
-.blend p {
+.blend-menu p {
     text-transform: uppercase;
 }
 
@@ -72,38 +54,35 @@
     justify-content: flex-start;
 }
 
-.mineral {
+.mineral-input {
     position: relative;
     width: 300px;
     height: 22px;
-    user-select: none;
 }
 
-.mineral[data-visible="false"] a {
-    color: var(--color2);
+.mineral-input .text-input,
+.mineral-input .slider-bar,
+.mineral-input .shortcut,
+.mineral-input .slider-handle{
+    transition: opacity var(--transition-param);
 }
 
-.mineral .top {
-    position: relative;
-    display: flex;
-    height: 20px;
-    width: 100%;
-    justify-content: space-between;
-    background-color: var(--color0);
-    pointer-events: none;
+.mineral-input[data-visible="false"] .text-input,
+.mineral-input[data-visible="false"] .slider-value,
+.mineral-input .slider-bar,
+.mineral-input .shortcut,
+.mineral-input .slider-handle {
+    opacity: 0;
 }
 
-.mineral .top a, .mineral .top .percentage {
-    pointer-events: auto;
+.mineral-input:hover .slider-bar,
+.mineral-input:hover .shortcut,
+.mineral-input .slider-bar[data-dragging="true"] .slider-handle,
+.mineral-input .slider-bar[data-dragging="true"] {
+    opacity: 1;
 }
 
-.mineral .top > div {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.mineral .top a {
+.mineral-slider .visibility-button {
     display: grid;
     place-content: center;
     width: 20px;
@@ -112,88 +91,59 @@
     transition: color var(--transition-param);
 }
 
-.mineral .top p {
-    font-size: 0.65rem;
-    letter-spacing: 0.05rem;
-    font-weight: 300;
+.mineral-input[data-visible="false"] .visibility-button {
+    color: var(--color2);
 }
 
-.mineral .shortcut {
-    opacity: 0;
-    margin-left: 5px;
-    transition: opacity var(--transition-param);
-}
-
-.mineral:hover .shortcut {
-    opacity: 1;
-}
-
-.mineral .top .percentage {
-    color: var(--color3);
-    opacity: 1;
-    transition: opacity var(--transition-param);
-}
-
-.mineral[data-visible="false"] .top .percentage {
-    pointer-events: none;
-    opacity: 0;
-}
-
-.mineral .top .percentage input[type="text"] {
-    background-color: transparent;
-    border: 1px solid var(--color1);
-    height: 16px;
-    width: 30px;
-    margin-right: 2px;
+.mineral-slider .text-input {
     text-align: right;
-    padding: 4px;
+    width: 35px;
+    padding-right: 3px;
 }
 
-.mineral .slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+.mineral-slider .slider-bar {
     background-color: var(--color1);
-    opacity: 0;
-    transition: opacity var(--transition-param);
+    border: none;
 }
 
-.mineral:hover .slider,
-.mineral[data-dragging="true"] .slider,
-.mineral:focus-within .slider {
-    opacity: 1;
-}
-
-.mineral .slider:before {
-    content: "";
-    display: block;
-    height: 100%;
-    width: 100%;
-    background-color: #fff;
-    transition: background-color var(--transition-param);
-}
-
-.mineral[data-visible="false"] .slider:before {
-    background-color: transparent;
-}
-
-.mineral .slider .arrow {
-    padding: inherit;
+.mineral-slider .slider-elements {
     position: absolute;
-    z-index: 200;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
     right: 0;
-    bottom: 0;
-    width: 0;
-    height: 10px;
-    transform: translateX(-5px);
-    opacity: 1;
-    transition: opacity var(--transition-param);
+    top: 0;
+    padding: 2px;
+    height: 20px;
+    background-color: var(--color0);
+    pointer-events: none;
 }
 
-.mineral[data-dragging="false"] .slider .arrow {
-    opacity: 0;
+.mineral-slider input[type="text"], .mineral-slider button {
+    pointer-events: auto;
+}
+
+.mineral-slider .swatch {
+    margin: 0;
+}
+
+.mineral-slider .slider-elements > div {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 5px;
+}
+
+.mineral-slider .label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    letter-spacing: 1px;
+}
+
+.mineral-slider .slider-handle {
+    font-size: 10px;
+    height: 10px;
 }
 
 .palette {
@@ -261,7 +211,7 @@
     margin-top: 1px;
 }
 
-.blend .menu .params {
+.blend-menu .params {
     display: block;
     flex-direction: column;
     margin-top: 15px;
@@ -275,62 +225,57 @@
     margin-top: 5px;
 }
 
-.param {
+.param-slider {
     position: relative;
     display: flex;
     gap: 5px;
     width: 100%;
     height: 18px;
-    overflow: hidden;
 }
 
-.param .slider, .param input[type="text"], .param button {
-    background-color: var(--color0);
-    border: 1px solid var(--color1);
-}
-
-.param .slider {
+.param-slider button {
     position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-.param .slider > div {
-    width: 100%;
-    height: 100%;
-    background-color: #fff;
-}
-
-.param[data-dragging="false"] .slider > div {
-    transition: width var(--transition-param);
-}
-
-.param input[type="text"] {
-    line-height: 100%;
-    text-align: center;
-    height: 100%;
-    width: 30px;
-    color: var(--color3);
-}
-
-.param button {
     display: grid;
     place-content: center;
     width: 20px;
     height: 100%;
     font-size: 12px;
-    overflow: hidden;
+    border: 1px solid var(--color1);
+    background-color: var(--color0);
     transition:
         opacity var(--transition-param),
         background-color var(--transition-param);
 }
 
-.param button[data-visible="false"] {
+.param-slider button[data-visible="false"] {
     opacity: 0;
 }
 
-.param button:hover {
+.param-slider button:hover {
     background-color: #303030;
+}
+
+.param-slider .slider-bar {
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.monochrome-toggle {
+    /* temp positioning */
+    position: absolute;
+    right: 20px;
+    top: 30px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #000;
+    overflow: hidden;
+}
+
+.monochrome-toggle:before {
+    content: "";
+    display: block;
+    width: 50%;
+    height: 100%;
+    background-color: #000;
 }

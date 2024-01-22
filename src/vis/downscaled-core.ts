@@ -11,7 +11,7 @@ class DownscaledCoreRenderer {
     program: WebGLProgram
     spiralPosBuffer: WebGLBuffer
     columnPosBuffer: WebGLBuffer
-    texBuffer: WebGLBuffer
+    texCoordBuffer: WebGLBuffer
     bindSpiralPos: () => void
     bindColumnPos: () => void
     bindTexCoords: () => void
@@ -31,7 +31,7 @@ class DownscaledCoreRenderer {
 
         this.program = initProgram(gl, vertSource, fragSource)
 
-        this.texBuffer = initBuffer(gl)
+        this.texCoordBuffer = initBuffer(gl)
         gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW)
         this.numVertex = texCoords.length / TEX_FPV
 
@@ -82,24 +82,20 @@ class DownscaledCoreRenderer {
     draw (
         gl: WebGLRenderingContext,
         view: mat4,
-        mineralIndex: number,
         shapeT: number
     ): void {
         gl.useProgram(this.program)
 
+        this.minerals.bind(gl)
         gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
         this.bindSpiralPos()
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
         this.bindColumnPos()
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.texBuffer)
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
         this.bindTexCoords()
 
         this.setView(view)
         this.setShapeT(shapeT)
-
-        this.minerals.bind(gl, mineralIndex)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
@@ -150,7 +146,7 @@ const addDownscaledSpiralPositions = (
     currAngle: number,
     tileRadius: number,
     tileAngle: number,
-    bandWidth: number
+    tileWidth: number
 ): void => {
     const angleInc = tileAngle / TILE_DETAIL
     const radiusInc = tileRadius / TILE_DETAIL
@@ -160,13 +156,13 @@ const addDownscaledSpiralPositions = (
         const radius = currRadius + radiusInc * i
 
         const inner = [
-            Math.cos(angle) * (radius + bandWidth * 0.5),
-            Math.sin(angle) * (radius + bandWidth * 0.5)
+            Math.cos(angle) * (radius + tileWidth * 0.5),
+            Math.sin(angle) * (radius + tileWidth * 0.5)
         ]
 
         const outer = [
-            Math.cos(angle) * (radius - bandWidth * 0.5),
-            Math.sin(angle) * (radius - bandWidth * 0.5)
+            Math.cos(angle) * (radius - tileWidth * 0.5),
+            Math.sin(angle) * (radius - tileWidth * 0.5)
         ]
 
         return [inner, outer]
@@ -177,19 +173,19 @@ const addDownscaledSpiralPositions = (
 
 const addDownscaledColumnPositions = (
     out: Array<number>,
-    currColX: number,
-    currColY: number,
+    currColumnX: number,
+    currColumnY: number,
     tileHeight: number,
-    bandWidth: number
+    tileWidth: number
 ): void => {
-    const colYInc = tileHeight / TILE_DETAIL
+    const columnYInc = tileHeight / TILE_DETAIL
 
     const getRowColumnPositions = (i: number): [Array<number>, Array<number>] => {
-        const colY = currColY - colYInc * i
-        const colX = currColX
+        const columnY = currColumnY - columnYInc * i
+        const columnX = currColumnX
 
-        const inner = [colX, colY]
-        const outer = [colX + bandWidth, colY]
+        const inner = [columnX, columnY]
+        const outer = [columnX + tileWidth, columnY]
         return [inner, outer]
     }
 

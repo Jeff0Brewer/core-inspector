@@ -1,0 +1,37 @@
+.mineral-bar {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.mineral-bar button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    min-width: 100px;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+}
+
+.blend-menu-wrap {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+}
+
+.mineral-bar .blend-menu-toggle {
+    position: absolute;
+    display: grid;
+    place-content: center;
+    right: 0;
+    bottom: 0;
+    min-width: 0;
+    width: 30px;
+    font-size: 14px;
+    border-radius: var(--radius);
+}

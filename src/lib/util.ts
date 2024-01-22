@@ -20,7 +20,11 @@ const vecToHex = (v: Array<number> | vec2 | vec3 | vec4): string => {
 }
 
 const formatPercent = (p: number): string => {
-    return (p * 100).toFixed()
+    return (p * 100).toFixed() + '%'
+}
+
+const parsePercent = (p: string): number => {
+    return parseFloat(p.replace('%', '')) * 0.01
 }
 
 const formatFloat = (f: number): string => {
@@ -47,8 +51,9 @@ export {
     ease,
     clamp,
     vecToHex,
-    formatPercent,
     formatFloat,
+    formatPercent,
+    parsePercent,
     padZeros
 }
 export type { BoundRect }
