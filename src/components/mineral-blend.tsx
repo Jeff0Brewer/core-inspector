@@ -309,7 +309,7 @@ function ParamSlider (
     }
 
     return (
-        <div>
+        <div className={'param-input'}>
             <Slider
                 value={value}
                 setValue={setValue}
