@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { clamp, vecToHex, formatPercent, formatFloat } from '../lib/util'
+import { vecToHex } from '../lib/util'
 import { BlendParams, BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import Slider from '../components/slider'
@@ -69,6 +69,17 @@ function MineralSlider (
     const [color, setColor] = useState<vec3 | null>(null)
 
     useEffect(() => {
+        if (blendParams.magnitudes[index] !== magnitude) {
+            if (blendParams.magnitudes[index] === 0) {
+                setVisible(false)
+            } else {
+                setVisible(true)
+                setMagnitude(blendParams.magnitudes[index])
+            }
+        }
+    }, [blendParams, magnitude, index])
+
+    useEffect(() => {
         if (blendParams.palette.type === 'labelled') {
             const visibleMinerals = Object.keys(blendParams.palette.colors)
             setVisible(visibleMinerals.includes(mineral))
@@ -97,7 +108,10 @@ function MineralSlider (
         >
             <Slider
                 value={magnitude}
-                setValue={setMagnitude}
+                setValue={v => {
+                    setMagnitude(v)
+                    setVisible(true)
+                }}
                 min={0}
                 max={1}
                 customClass={'mineral-slider'}

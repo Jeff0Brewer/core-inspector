@@ -82,7 +82,8 @@
     opacity: 0;
 }
 
-.mineral-input:hover .slider-bar {
+.mineral-input:hover .slider-bar,
+.mineral-input .slider-bar[data-dragging="true"] {
     opacity: 1;
 }
 
@@ -132,130 +133,6 @@
     height: 100%;
     font-size: 14px;
     transition: color var(--transition-param);
-}
-
-.mineral {
-    position: relative;
-    width: 300px;
-    height: 22px;
-    user-select: none;
-}
-
-.mineral[data-visible="false"] a {
-    color: var(--color2);
-}
-
-.mineral .top {
-    position: relative;
-    display: flex;
-    height: 20px;
-    width: 100%;
-    justify-content: space-between;
-    background-color: var(--color0);
-    pointer-events: none;
-}
-
-.mineral .top a, .mineral .top .percentage {
-    pointer-events: auto;
-}
-
-.mineral .top > div {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.mineral .top a {
-    display: grid;
-    place-content: center;
-    width: 20px;
-    height: 100%;
-    font-size: 14px;
-    transition: color var(--transition-param);
-}
-
-.mineral .top p {
-    font-size: 0.65rem;
-    letter-spacing: 0.05rem;
-    font-weight: 300;
-}
-
-.mineral .shortcut {
-    opacity: 0;
-    margin-left: 5px;
-    transition: opacity var(--transition-param);
-}
-
-.mineral:hover .shortcut {
-    opacity: 1;
-}
-
-.mineral .top .percentage {
-    color: var(--color3);
-    opacity: 1;
-    transition: opacity var(--transition-param);
-}
-
-.mineral[data-visible="false"] .top .percentage {
-    pointer-events: none;
-    opacity: 0;
-}
-
-.mineral .top .percentage input[type="text"] {
-    background-color: transparent;
-    border: 1px solid var(--color1);
-    height: 16px;
-    width: 30px;
-    margin-right: 2px;
-    text-align: right;
-    padding: 4px;
-}
-
-.mineral .slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--color1);
-    opacity: 0;
-    transition: opacity var(--transition-param);
-}
-
-.mineral:hover .slider,
-.mineral[data-dragging="true"] .slider,
-.mineral:focus-within .slider {
-    opacity: 1;
-}
-
-.mineral .slider:before {
-    content: "";
-    display: block;
-    height: 100%;
-    width: 100%;
-    background-color: #fff;
-    transition: background-color var(--transition-param);
-}
-
-.mineral[data-visible="false"] .slider:before {
-    background-color: transparent;
-}
-
-.mineral .slider .arrow {
-    padding: inherit;
-    position: absolute;
-    z-index: 200;
-    right: 0;
-    bottom: 0;
-    width: 0;
-    height: 10px;
-    transform: translateX(-5px);
-    opacity: 1;
-    transition: opacity var(--transition-param);
-}
-
-.mineral[data-dragging="false"] .slider .arrow {
-    opacity: 0;
 }
 
 .palette {

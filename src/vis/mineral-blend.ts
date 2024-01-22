@@ -109,12 +109,12 @@ const MINERALS = [
 
 function getBlendColor (params: BlendParams, mineral: string, index: number): vec3 | null {
     const { palette, magnitudes } = params
+    if (magnitudes[index] === 0) {
+        return null
+    }
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
     } else {
-        if (magnitudes[index] === 0) {
-            return null
-        }
         const priorNumVisible = magnitudes.slice(0, index).reduce((prev, curr) => Math.ceil(curr) + prev, 0)
         return palette.colors[priorNumVisible] || null
     }
