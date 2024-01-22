@@ -64,8 +64,27 @@ type MineralSliderProps = {
 function MineralSlider (
     { mineral, index, blendParams, setBlendParams }: MineralSliderProps
 ): ReactElement {
-    const [color, setColor] = useState<vec3 | null>(null)
+    const [magnitude, setMagnitude] = useState<number>(blendParams.magnitudes[index])
     const [visible, setVisible] = useState<boolean>(true)
+    const [color, setColor] = useState<vec3 | null>(null)
+
+    useEffect(() => {
+        if (blendParams.palette.type === 'labelled') {
+            const visibleMinerals = Object.keys(blendParams.palette.colors)
+            setVisible(visibleMinerals.includes(mineral))
+        } else {
+            const numColors = blendParams.palette.colors.length
+            setVisible(index < numColors)
+        }
+    }, [blendParams.palette, mineral, index])
+
+    useEffect(() => {
+        const newMagnitude = visible ? magnitude : 0
+        if (newMagnitude !== blendParams.magnitudes[index]) {
+            blendParams.magnitudes[index] = newMagnitude
+            setBlendParams({ ...blendParams })
+        }
+    }, [magnitude, visible, index, blendParams, setBlendParams])
 
     useEffect(() => {
         setColor(getBlendColor(blendParams, mineral, index))
@@ -77,11 +96,8 @@ function MineralSlider (
             data-visible={visible}
         >
             <Slider
-                value={blendParams.magnitudes[index]}
-                setValue={v => {
-                    blendParams.magnitudes[index] = v
-                    setBlendParams({ ...blendParams })
-                }}
+                value={magnitude}
+                setValue={setMagnitude}
                 min={0}
                 max={1}
                 customClass={'mineral-slider'}
@@ -107,6 +123,43 @@ function MineralSlider (
                 ]}
             />
         </div>
+    )
+}
+
+type ParamSliderProps = {
+    value: number,
+    setValue: (v: number) => void,
+    min: number,
+    max: number,
+    defaultValue?: number
+}
+
+function ParamSlider (
+    { value, setValue, defaultValue, min, max }: ParamSliderProps
+): ReactElement {
+    const resetValue = (): void => {
+        if (defaultValue !== undefined) {
+            setValue(defaultValue)
+        }
+    }
+
+    return (
+        <Slider
+            customClass={'param-slider'}
+            value={value}
+            setValue={setValue}
+            min={min}
+            max={max}
+            customElements={textInput => [
+                textInput,
+                <button
+                    data-visible={defaultValue !== undefined && value !== defaultValue}
+                    onClick={resetValue}
+                >
+                    <MdOutlineRefresh />
+                </button>
+            ]}
+        />
     )
 }
 
@@ -199,43 +252,6 @@ function MineralBlend (
                 />
             </div>
         </section>
-    )
-}
-
-type ParamSliderProps = {
-    value: number,
-    setValue: (v: number) => void,
-    min: number,
-    max: number,
-    defaultValue?: number
-}
-
-function ParamSlider (
-    { value, setValue, defaultValue, min, max }: ParamSliderProps
-): ReactElement {
-    const resetValue = (): void => {
-        if (defaultValue !== undefined) {
-            setValue(defaultValue)
-        }
-    }
-
-    return (
-        <Slider
-            customClass={'param-slider'}
-            value={value}
-            setValue={setValue}
-            min={min}
-            max={max}
-            customElements={textInput => [
-                textInput,
-                <button
-                    data-visible={defaultValue !== undefined && value !== defaultValue}
-                    onClick={resetValue}
-                >
-                    <MdOutlineRefresh />
-                </button>
-            ]}
-        />
     )
 }
 

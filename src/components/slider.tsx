@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../lib/util'
 import '../styles/slider.css'
 
@@ -24,8 +24,6 @@ function Slider (
 
     const sliderRef = useRef<HTMLDivElement>(null)
     const textInputRef = useRef<HTMLInputElement>(null)
-
-    useEffect(() => { console.log(value) }, [value])
 
     useEffect(() => {
         if (value > max || value < min) {
@@ -128,7 +126,11 @@ function Slider (
             </div>
             <div className={'slider-elements'}>
                 { customElements
-                    ? customElements(getTextInputElement()).map(element => element)
+                    ? customElements(getTextInputElement()).map((element, i) =>
+                        <React.Fragment key={i}>
+                            {element}
+                        </React.Fragment>
+                    )
                     : getTextInputElement() }
             </div>
         </div>

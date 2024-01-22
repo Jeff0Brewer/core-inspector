@@ -17,13 +17,14 @@
     width: 100%;
     height: 100%;
     background-color: #fff;
-    transition: background-color var(--transition-param);
+    opacity: 1;
+    transition: opacity var(--transition-param);
 }
 
 .slider-wrap > .slider-bar[data-dragging="false"] > .slider-value {
     transition:
         width var(--transition-param),
-        background-color var(--transition-param);
+        opacity var(--transition-param);
 }
 
 .slider-wrap > .slider-elements {

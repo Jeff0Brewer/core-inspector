@@ -60,16 +60,25 @@
     height: 22px;
 }
 
-.mineral-input[data-visible="false"] .visibility-button {
-    color: var(--color2);
-}
-
-.mineral-input[data-visible="false"] .slider-value {
-    background-color: transparent;
+.mineral-input .text-input {
+    transition: opacity var(--transition-param);
+    opacity: 1;
 }
 
 .mineral-input .slider-bar {
     transition: opacity var(--transition-param);
+    opacity: 0;
+}
+
+.mineral-input[data-visible="false"] .visibility-button {
+    color: var(--color2);
+}
+
+.mineral-input[data-visible="false"] .text-input {
+    opacity: 0;
+}
+
+.mineral-input[data-visible="false"] .slider-value {
     opacity: 0;
 }
 
