@@ -82,6 +82,7 @@ function MineralControls (
             )) }
             <button
                 className={'blend-menu-toggle'}
+                data-active={menuOpen}
                 onClick={() => setMenuOpen(!menuOpen)}
             >
                 <MdColorLens />

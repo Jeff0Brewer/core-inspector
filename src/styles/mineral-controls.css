@@ -23,3 +23,15 @@
     right: 0;
     bottom: 100%;
 }
+
+.mineral-bar .blend-menu-toggle {
+    position: absolute;
+    display: grid;
+    place-content: center;
+    right: 0;
+    bottom: 0;
+    min-width: 0;
+    width: 30px;
+    font-size: 14px;
+    border-radius: var(--radius);
+}
