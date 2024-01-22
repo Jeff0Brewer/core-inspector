@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../lib/util'
 import '../styles/slider.css'
 
-type SliderElement = 'textInput' | ReactElement
+type SliderCustomElements = (textInput: ReactElement) => Array<ReactElement>
 
 type SliderProps = {
     value: number,
@@ -11,11 +11,11 @@ type SliderProps = {
     max: number,
     formatValue?: (v: number) => string,
     customClass?: string,
-    customElements?: Array<SliderElement>
+    customElements?: SliderCustomElements
 }
 
 function Slider (
-    { value, setValue, min, max, formatValue = formatFloat, customClass = '', customElements = ['textInput'] }: SliderProps
+    { value, setValue, min, max, formatValue = formatFloat, customClass = '', customElements }: SliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
@@ -104,6 +104,16 @@ function Slider (
         }, 5000)
     }
 
+    const getTextInputElement = (): ReactElement => {
+        return <input
+            ref={textInputRef}
+            className={'text-input'}
+            type={'text'}
+            onInput={updateFromText}
+            defaultValue={lastValidTextRef.current}
+        />
+    }
+
     return (
         <div className={`slider-wrap ${customClass}`}>
             <div
@@ -117,17 +127,9 @@ function Slider (
                 ></div>
             </div>
             <div className={'slider-elements'}>
-                { customElements.map(element =>
-                    element !== 'textInput'
-                        ? element
-                        : <input
-                            ref={textInputRef}
-                            className={'text-input'}
-                            type={'text'}
-                            onInput={updateFromText}
-                            defaultValue={lastValidTextRef.current}
-                        />
-                ) }
+                { customElements
+                    ? customElements(getTextInputElement()).map(element => element)
+                    : getTextInputElement() }
             </div>
         </div>
     )

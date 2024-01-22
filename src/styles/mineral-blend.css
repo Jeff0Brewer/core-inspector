@@ -54,6 +54,77 @@
     justify-content: flex-start;
 }
 
+.mineral-input {
+    position: relative;
+    width: 300px;
+    height: 22px;
+}
+
+.mineral-input[data-visible="false"] .visibility-button {
+    color: var(--color2);
+}
+
+.mineral-input[data-visible="false"] .slider-value {
+    background-color: transparent;
+}
+
+.mineral-input .slider-bar {
+    transition: opacity var(--transition-param);
+    opacity: 0;
+}
+
+.mineral-input:hover .slider-bar {
+    opacity: 1;
+}
+
+.mineral-slider .slider-bar {
+    background-color: var(--color1);
+    border: none;
+}
+
+.mineral-slider .slider-elements {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
+    right: 0;
+    top: 0;
+    padding: 2px;
+    height: 20px;
+    background-color: var(--color0);
+    pointer-events: none;
+}
+
+.mineral-slider input[type="text"], .mineral-slider button {
+    pointer-events: auto;
+}
+
+.mineral-slider .swatch {
+    margin: 0;
+}
+
+.mineral-slider .slider-elements > div {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 5px;
+}
+
+.mineral-slider .label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.mineral-slider .visibility-button {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 14px;
+    transition: color var(--transition-param);
+}
+
 .mineral {
     position: relative;
     width: 300px;
