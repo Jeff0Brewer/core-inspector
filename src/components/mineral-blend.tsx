@@ -2,7 +2,7 @@ import { useState, useEffect, ReactElement } from 'react'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { vecToHex } from '../lib/util'
+import { vecToHex, formatPercent, parsePercent } from '../lib/util'
 import { BlendParams, BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import Slider from '../components/slider'
@@ -91,6 +91,7 @@ function MineralSlider (
                 setValue={setMagnitude}
                 min={0}
                 max={1}
+                format={{ render: formatPercent, parse: parsePercent }}
                 customClass={'mineral-slider'}
                 customElements={textInput => [
                     <div>

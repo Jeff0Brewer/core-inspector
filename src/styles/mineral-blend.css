@@ -92,6 +92,12 @@
     color: var(--color2);
 }
 
+.mineral-slider .text-input {
+    text-align: right;
+    width: 35px;
+    padding-right: 3px;
+}
+
 .mineral-slider .slider-bar {
     background-color: var(--color1);
     border: none;

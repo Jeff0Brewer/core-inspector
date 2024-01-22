@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../lib/util'
 import '../styles/slider.css'
 
+type SliderTextFormatter = {
+    render: (v: number) => string,
+    parse: (v: string) => number
+}
+
+const DEFAULT_FORMATTER: SliderTextFormatter = {
+    render: formatFloat,
+    parse: parseFloat
+}
+
 type SliderCustomElements = (textInput: ReactElement) => Array<ReactElement>
 
 type SliderProps = {
@@ -9,17 +19,17 @@ type SliderProps = {
     setValue: (v: number) => void,
     min: number,
     max: number,
-    formatValue?: (v: number) => string,
+    format?: SliderTextFormatter
     customClass?: string,
-    customElements?: SliderCustomElements
+    customElements?: SliderCustomElements,
 }
 
 function Slider (
-    { value, setValue, min, max, formatValue = formatFloat, customClass = '', customElements }: SliderProps
+    { value, setValue, min, max, format = DEFAULT_FORMATTER, customClass = '', customElements }: SliderProps
 ): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
-    const lastValidTextRef = useRef<string>(formatValue(value))
+    const lastValidTextRef = useRef<string>(format.render(value))
     const validateTextTimeoutRef = useRef<number>(-1)
 
     const sliderRef = useRef<HTMLDivElement>(null)
@@ -34,12 +44,12 @@ function Slider (
         if (!textInput || textInput === document.activeElement) {
             return
         }
-        if (textInput.valueAsNumber !== value) {
-            const formatted = formatValue(value)
+        if (format.parse(textInput.value) !== value) {
+            const formatted = format.render(value)
             textInput.value = formatted
             lastValidTextRef.current = formatted
         }
-    }, [value, max, min, formatValue])
+    }, [value, max, min, format])
 
     useEffect(() => {
         const slider = sliderRef.current
@@ -77,7 +87,7 @@ function Slider (
                 window.removeEventListener('mousemove', mousemove)
             }
         }
-    }, [dragging, min, max, setValue, formatValue])
+    }, [dragging, min, max, setValue])
 
     const updateFromText = (): void => {
         if (!textInputRef.current) {
@@ -85,12 +95,12 @@ function Slider (
         }
 
         // set current value if input text is valid number
-        const value = parseFloat(textInputRef.current.value)
+        const value = format.parse(textInputRef.current.value)
         if (!Number.isNaN(value)) {
             const clamped = clamp(value, min, max)
             setValue(clamped)
             // store valid input to revert to on invalid input
-            lastValidTextRef.current = formatValue(clamped)
+            lastValidTextRef.current = format.render(clamped)
         }
 
         // revert to valid text input after period of no user input
