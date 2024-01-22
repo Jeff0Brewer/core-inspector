@@ -32,6 +32,21 @@ function MineralControls (
         vis?.setBlending(blendParams)
     }, [vis, blendParams])
 
+    useEffect(() => {
+        if (blendParams.palette.type === 'labelled') {
+            const visibleMinerals = Object.keys(blendParams.palette.colors)
+            blendParams.visibilities = MINERALS.map(mineral => visibleMinerals.includes(mineral))
+        } else {
+            const numVisible = blendParams.palette.colors.length
+            blendParams.visibilities.fill(true)
+            blendParams.visibilities.fill(false, numVisible)
+        }
+        setBlendParams({ ...blendParams })
+
+        // only want to update visiblities on palette change
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [blendParams.palette])
+
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
             blendParams.visibilities.fill(false)
