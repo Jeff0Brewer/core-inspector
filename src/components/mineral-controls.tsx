@@ -14,6 +14,7 @@ function MineralControls (
 ): ReactElement {
     const [blendParams, setBlendParams] = useState<BlendParams>({
         magnitudes: new Array(MINERALS.length).fill(1),
+        visibilities: new Array(MINERALS.length).fill(true),
         palette: COLOR_PRESETS[0],
         saturation: 1,
         threshold: 0,
@@ -32,8 +33,8 @@ function MineralControls (
 
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
-            blendParams.magnitudes.fill(0)
-            blendParams.magnitudes[i] = 1
+            blendParams.visibilities.fill(false)
+            blendParams.visibilities[i] = true
             vis?.setBlending({ ...blendParams })
         }
     }
@@ -43,7 +44,7 @@ function MineralControls (
             { MINERALS.map((mineral, i) => (
                 <button
                     onClick={getMineralSetter(i)}
-                    data-active={blendParams.magnitudes[i] > 0}
+                    data-active={blendParams.visibilities[i]}
                     key={i}
                 >
                     {mineral}

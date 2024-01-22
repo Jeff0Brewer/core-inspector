@@ -89,6 +89,7 @@ type BlendMode = keyof typeof BLEND_MODES
 
 type BlendParams = {
     magnitudes: Array<number>,
+    visibilities: Array<boolean>,
     palette: GenericPalette,
     saturation: number,
     threshold: number,
@@ -108,14 +109,16 @@ const MINERALS = [
 ]
 
 function getBlendColor (params: BlendParams, mineral: string, index: number): vec3 | null {
-    const { palette, magnitudes } = params
-    if (magnitudes[index] === 0) {
+    const { palette, visibilities } = params
+    if (!visibilities[index]) {
         return null
     }
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
     } else {
-        const priorNumVisible = magnitudes.slice(0, index).reduce((prev, curr) => Math.ceil(curr) + prev, 0)
+        const priorNumVisible = visibilities
+            .slice(0, index)
+            .reduce((prev, curr) => (curr ? 1 : 0) + prev, 0)
         return palette.colors[priorNumVisible] || null
     }
 }

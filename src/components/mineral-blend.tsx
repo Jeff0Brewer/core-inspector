@@ -64,38 +64,18 @@ type MineralSliderProps = {
 function MineralSlider (
     { mineral, index, blendParams, setBlendParams }: MineralSliderProps
 ): ReactElement {
-    const [magnitude, setMagnitude] = useState<number>(blendParams.magnitudes[index])
-    const [visible, setVisible] = useState<boolean>(true)
     const [color, setColor] = useState<vec3 | null>(null)
 
-    useEffect(() => {
-        if (blendParams.magnitudes[index] !== magnitude) {
-            if (blendParams.magnitudes[index] === 0) {
-                setVisible(false)
-            } else {
-                setVisible(true)
-                setMagnitude(blendParams.magnitudes[index])
-            }
-        }
-    }, [blendParams, magnitude, index])
+    const setMagnitude = (m: number): void => {
+        blendParams.magnitudes[index] = m
+        blendParams.visibilities[index] = true
+        setBlendParams({ ...blendParams })
+    }
 
-    useEffect(() => {
-        if (blendParams.palette.type === 'labelled') {
-            const visibleMinerals = Object.keys(blendParams.palette.colors)
-            setVisible(visibleMinerals.includes(mineral))
-        } else {
-            const numColors = blendParams.palette.colors.length
-            setVisible(index < numColors)
-        }
-    }, [blendParams.palette, mineral, index])
-
-    useEffect(() => {
-        const newMagnitude = visible ? magnitude : 0
-        if (newMagnitude !== blendParams.magnitudes[index]) {
-            blendParams.magnitudes[index] = newMagnitude
-            setBlendParams({ ...blendParams })
-        }
-    }, [magnitude, visible, index, blendParams, setBlendParams])
+    const setVisible = (v: boolean): void => {
+        blendParams.visibilities[index] = v
+        setBlendParams({ ...blendParams })
+    }
 
     useEffect(() => {
         setColor(getBlendColor(blendParams, mineral, index))
@@ -104,14 +84,11 @@ function MineralSlider (
     return (
         <div
             className={'mineral-input'}
-            data-visible={visible}
+            data-visible={blendParams.visibilities[index]}
         >
             <Slider
-                value={magnitude}
-                setValue={v => {
-                    setMagnitude(v)
-                    setVisible(true)
-                }}
+                value={blendParams.magnitudes[index]}
+                setValue={setMagnitude}
                 min={0}
                 max={1}
                 customClass={'mineral-slider'}
@@ -119,7 +96,7 @@ function MineralSlider (
                     <div>
                         <button
                             className={'visibility-button'}
-                            onClick={() => setVisible(!visible)}
+                            onClick={() => setVisible(!blendParams.visibilities[index])}
                         >
                             <MdRemoveRedEye />
                         </button>
