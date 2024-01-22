@@ -29,9 +29,11 @@ function MineralControls (
         vis.uiState.setBlending = setBlendParams
         vis?.setBlending(blendParams)
 
+        // only want to update blending / set ui state when vis changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
+    // setup shortcuts to toggle mineral visibilities
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
             const key = parseInt(e.key)
@@ -46,6 +48,7 @@ function MineralControls (
         }
     }, [blendParams, vis])
 
+    // update visibilities to match newly selected palette on change
     useEffect(() => {
         if (blendParams.palette.type === 'labelled') {
             const visibleMinerals = Object.keys(blendParams.palette.colors)
@@ -57,9 +60,11 @@ function MineralControls (
         }
         vis?.setBlending({ ...blendParams })
 
+        // only want to align visibilities with palette on palette / vis change
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [blendParams.palette, vis])
 
+    // sets parameters to show one channel in monochrome
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
             blendParams.visibilities.fill(false)
