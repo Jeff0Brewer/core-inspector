@@ -135,6 +135,7 @@
     display: flex;
     gap: 5px;
     align-items: center;
+    letter-spacing: 1px;
 }
 
 .palette {
