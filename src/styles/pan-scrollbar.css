@@ -4,8 +4,22 @@
     z-index: 200;
     bottom: 35px;
     left: 0;
-    width: 100%;
+    right: 0;
     height: 2px;
+    overflow: hidden;
+    transition: opacity var(--transition-param);
+}
+
+.scrollbar-wrap[data-visible="false"] {
+    opacity: 0;
+}
+
+/* add transitions + delay to width / left to persist last state during animation */
+.scrollbar-wrap[data-visible="false"] .scrollbar-handle {
+    transition:
+        width var(--transition-param),
+        left var(--transition-param);
+    transition-delay: 500ms;
 }
 
 .scrollbar-handle {

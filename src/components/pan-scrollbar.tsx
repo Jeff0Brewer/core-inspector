@@ -20,14 +20,17 @@ function PanScrollbar (
     }, [vis])
 
     return (
-        <div className={'scrollbar-wrap'}>
-            { panWidth !== null && panLeft !== null && <div
+        <div
+            className={'scrollbar-wrap'}
+            data-visible={panWidth !== null && panLeft !== null && panWidth < 1}
+        >
+            <div
                 className={'scrollbar-handle'}
                 style={{
-                    width: `${panWidth * 100}%`,
-                    left: `${panLeft * 100}%`
+                    width: `${(panWidth || 0) * 100}%`,
+                    left: `${(panLeft || 0) * 100}%`
                 }}
-            ></div> }
+            ></div>
         </div>
     )
 }
