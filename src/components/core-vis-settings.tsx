@@ -9,21 +9,29 @@ import ToggleSelect from '../components/generic/toggle-select'
 import Dropdown from '../components/generic/dropdown'
 import '../styles/core-vis-settings.css'
 
-const SECTION_PAD_LEN = 4
-
 type CoreVisSettingsProps = {
     vis: VisRenderer | null,
     cores: Array<string>,
-    currentCore: string,
-    setCurrentCore: (c: string) => void,
+    core: string,
+    setCore: (c: string) => void,
 }
 
 function CoreVisSettings (
-    { vis, cores, currentCore, setCurrentCore }: CoreVisSettingsProps
+    { vis, cores, core, setCore }: CoreVisSettingsProps
 ): ReactElement {
     const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
     const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
     const [data, setData] = useState<CoreMetadata | null>(null)
+
+    useEffect(() => {
+        const getData = async (): Promise<void> => {
+            const basePath = `./data/${core}`
+            const res = await fetch(`${basePath}/core-metadata.json`)
+            const data = await res.json() as CoreMetadata
+            setData(data)
+        }
+        getData()
+    }, [core])
 
     useEffect(() => {
         if (!vis) { return }
@@ -38,16 +46,6 @@ function CoreVisSettings (
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
-
-    useEffect(() => {
-        const getData = async (): Promise<void> => {
-            const basePath = `./data/${currentCore}`
-            const data = await fetch(`${basePath}/core-metadata.json`)
-                .then(res => res.json()) as CoreMetadata
-            setData(data)
-        }
-        getData()
-    }, [currentCore])
 
     return <>
         <ToggleSelect<CoreShape>
@@ -66,22 +64,18 @@ function CoreVisSettings (
             <p>core</p>
             <Dropdown
                 items={cores}
-                selected={currentCore}
-                setSelected={setCurrentCore}
+                selected={core}
+                setSelected={setCore}
                 customClass={'core-dropdown'}
             />
             { data && <>
                 <p>
-                sections
-                    <span>
-                        {padZeros(1, SECTION_PAD_LEN)} - {padZeros(data.numSection, SECTION_PAD_LEN)}
-                    </span>
+                    sections
+                    <span>{padZeros(1)} - {padZeros(data.numSection)}</span>
                 </p>
                 <p>
                     depth
-                    <span>
-                        {data.topDepth}m - {data.bottomDepth}m
-                    </span>
+                    <span>{data.topDepth}m - {data.bottomDepth}m</span>
                 </p>
             </>}
         </div>

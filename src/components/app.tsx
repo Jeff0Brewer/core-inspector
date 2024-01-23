@@ -65,15 +65,19 @@ function App (): ReactElement {
                     <CoreVisSettings
                         vis={vis}
                         cores={CORES}
-                        currentCore={core}
-                        setCurrentCore={setCore}
+                        core={core}
+                        setCore={setCore}
                     />
                 </div>
                 <div className={'side-bar'}>
                     <CoreViewSliders vis={vis} />
                 </div>
                 <div className={'bottom-bar'}>
-                    <MineralControls vis={vis} minerals={MINERALS} palettes={COLOR_PRESETS} />
+                    <MineralControls
+                        vis={vis}
+                        minerals={MINERALS}
+                        palettes={COLOR_PRESETS}
+                    />
                 </div>
             </div>
         </main>
