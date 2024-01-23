@@ -44,17 +44,17 @@ class Camera2D {
     }
 
     updatePanState (
-        setPanWidth?: (w: number | null) => void,
-        setPanLeft?: (l: number | null) => void
+        setPan?: (l: number) => void,
+        setPanWidth?: (w: number) => void
     ): void {
         if (this.mode === 'column' && this.viewportBounds && this.visBounds) {
             const visWidth = this.visBounds.right - this.visBounds.left
             const viewportWidth = this.viewportBounds.right - this.viewportBounds.left
+            setPan?.(this.getCurrentX() / visWidth)
             setPanWidth?.(viewportWidth / visWidth)
-            setPanLeft?.(this.getCurrentX() / visWidth)
         } else {
-            setPanWidth?.(null)
-            setPanLeft?.(null)
+            setPan?.(0)
+            setPanWidth?.(0)
         }
     }
 
@@ -98,6 +98,13 @@ class Camera2D {
     setMode (mode: CameraMode): void {
         this.mode = mode
         this.resetFocus()
+    }
+
+    setPan (t: number): void {
+        if (!this.visBounds) { return }
+        const visWidth = this.visBounds.right - this.visBounds.left
+        this.focus[0] = t * visWidth
+        this.eye[0] = t * visWidth
     }
 
     pan (x: number, y: number): void {

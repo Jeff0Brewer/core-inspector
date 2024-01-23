@@ -16,8 +16,8 @@ type UiState = {
     setZoom?: (z: number) => void,
     setHovered?: (h: string | undefined) => void,
     setBlending?: (p: BlendParams) => void,
-    setPanLeft?: (l: number | null) => void,
-    setPanWidth?: (w: number | null) => void
+    setPan?: (t: number) => void,
+    setPanWidth?: (w: number) => void
 }
 
 const PROJECTION_PARAMS = {
@@ -85,6 +85,11 @@ class VisRenderer {
         this.uiState.setZoom?.(t)
 
         this.core.wrapColumns(this.gl, this.getViewportBounds())
+    }
+
+    setPan (t: number): void {
+        this.camera.setPan(t)
+        this.uiState.setPan?.(t)
     }
 
     setShape (s: CoreShape): void {
@@ -198,7 +203,7 @@ class VisRenderer {
 
     draw (elapsed: number): void {
         this.camera.update(elapsed)
-        this.camera.updatePanState(this.uiState.setPanWidth, this.uiState.setPanLeft)
+        this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
