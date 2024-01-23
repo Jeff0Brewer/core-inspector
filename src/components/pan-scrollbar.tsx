@@ -23,10 +23,6 @@ function PanScrollbar (
 
         vis.uiState.setPan = setPan
         vis.uiState.setPanWidth = setPanWidth
-
-        vis?.setPan(pan)
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
     useEffect(() => {
