@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import '../styles/toggle-select.css'
+import '../../styles/toggle-select.css'
 
 type ToggleItem<T> = {
     value: T,

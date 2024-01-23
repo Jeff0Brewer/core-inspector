@@ -1,5 +1,5 @@
 import { useEffect, useRef, ReactElement } from 'react'
-import '../styles/vertical-slider.css'
+import '../../styles/vertical-slider.css'
 
 const DEFAULT_MIN = 0
 const DEFAULT_MAX = 1

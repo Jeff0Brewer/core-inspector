@@ -1,6 +1,6 @@
 import { useState, ReactElement } from 'react'
 import { PiCaretDownBold } from 'react-icons/pi'
-import '../styles/dropdown.css'
+import '../../styles/dropdown.css'
 
 function checkStringType (v: unknown): string {
     const vType = typeof v

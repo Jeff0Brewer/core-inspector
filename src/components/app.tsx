@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../lib/load'
-import LoadIcon from '../components/load-icon'
+import LoadIcon from '../components/generic/load-icon'
 import Vis from '../components/vis'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'

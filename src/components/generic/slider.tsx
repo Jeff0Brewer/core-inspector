@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
-import { clamp, formatFloat } from '../lib/util'
-import '../styles/slider.css'
+import { clamp, formatFloat } from '../../lib/util'
+import '../../styles/slider.css'
 
 type SliderTextFormatter = {
     apply: (v: number) => string,

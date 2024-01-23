@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { padZeros } from '../lib/util'
 import { CoreMetadata } from '../lib/metadata'
-import Dropdown from '../components/dropdown'
+import Dropdown from '../components/generic/dropdown'
 import '../styles/core-select.css'
 
 const SECTION_PAD_LEN = 4

@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
-import VerticalSlider from '../components/vertical-slider'
+import VerticalSlider from '../components/generic/vertical-slider'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/core-view-sliders.css'
 
