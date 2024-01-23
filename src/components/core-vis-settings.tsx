@@ -1,11 +1,15 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
+import { padZeros } from '../lib/util'
 import { CoreViewMode, CoreShape } from '../vis/core'
-import ToggleSelect from '../components/generic/toggle-select'
-import CoreSelect from '../components/core-select'
+import { CoreMetadata } from '../lib/metadata'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
+import ToggleSelect from '../components/generic/toggle-select'
+import Dropdown from '../components/generic/dropdown'
 import '../styles/core-vis-settings.css'
+
+const SECTION_PAD_LEN = 4
 
 type CoreVisSettingsProps = {
     vis: VisRenderer | null,
@@ -19,6 +23,7 @@ function CoreVisSettings (
 ): ReactElement {
     const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
     const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
+    const [data, setData] = useState<CoreMetadata | null>(null)
 
     useEffect(() => {
         if (!vis) { return }
@@ -34,6 +39,16 @@ function CoreVisSettings (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
+    useEffect(() => {
+        const getData = async (): Promise<void> => {
+            const basePath = `./data/${currentCore}`
+            const data = await fetch(`${basePath}/core-metadata.json`)
+                .then(res => res.json()) as CoreMetadata
+            setData(data)
+        }
+        getData()
+    }, [currentCore])
+
     return <>
         <ToggleSelect<CoreShape>
             currValue={shape}
@@ -47,11 +62,29 @@ function CoreVisSettings (
             item0={{ value: 'downscaled', icon: ICONS.downscaled }}
             item1={{ value: 'punchcard', icon: ICONS.punchcard }}
         />
-        <CoreSelect
-            cores={cores}
-            selected={currentCore}
-            setSelected={setCurrentCore}
-        />
+        <div className={'core-info'}>
+            <p>core</p>
+            <Dropdown
+                items={cores}
+                selected={currentCore}
+                setSelected={setCurrentCore}
+                customClass={'core-dropdown'}
+            />
+            { data && <>
+                <p>
+                sections
+                    <span>
+                        {padZeros(1, SECTION_PAD_LEN)} - {padZeros(data.numSection, SECTION_PAD_LEN)}
+                    </span>
+                </p>
+                <p>
+                    depth
+                    <span>
+                        {data.topDepth}m - {data.bottomDepth}m
+                    </span>
+                </p>
+            </>}
+        </div>
     </>
 }
 
