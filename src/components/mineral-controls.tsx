@@ -33,13 +33,18 @@ function MineralControls (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
-    // setup shortcuts to toggle mineral visibilities
+    // setup keyboard shortcuts
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
-            const key = parseInt(e.key)
-            if (key > 0 && key <= MINERALS.length) {
-                blendParams.visibilities[key - 1] = !blendParams.visibilities[key - 1]
+            if (e.key === 'b') {
+                blendParams.monochrome = !blendParams.monochrome
                 vis?.setBlending({ ...blendParams })
+            } else {
+                const numKey = parseInt(e.key)
+                if (numKey > 0 && numKey <= MINERALS.length) {
+                    blendParams.visibilities[numKey - 1] = !blendParams.visibilities[numKey - 1]
+                    vis?.setBlending({ ...blendParams })
+                }
             }
         }
         window.addEventListener('keydown', keydown)

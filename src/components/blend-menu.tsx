@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { ReactElement } from 'react'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
@@ -49,37 +49,23 @@ function ColorPalette (
 type MineralSliderProps = {
     mineral: string,
     index: number,
-    blendParams: BlendParams,
-    setBlendParams: (p: BlendParams) => void
+    color: vec3 | null,
+    magnitude: number,
+    setMagnitude: (m: number) => void,
+    visible: boolean,
+    setVisible: (v: boolean) => void,
 }
 
 function MineralSlider (
-    { mineral, index, blendParams, setBlendParams }: MineralSliderProps
+    { mineral, index, color, magnitude, setMagnitude, visible, setVisible }: MineralSliderProps
 ): ReactElement {
-    const [color, setColor] = useState<vec3 | null>(null)
-
-    const setMagnitude = (m: number): void => {
-        blendParams.magnitudes[index] = m
-        blendParams.visibilities[index] = true
-        setBlendParams({ ...blendParams })
-    }
-
-    const setVisible = (v: boolean): void => {
-        blendParams.visibilities[index] = v
-        setBlendParams({ ...blendParams })
-    }
-
-    useEffect(() => {
-        setColor(getBlendColor(blendParams, mineral, index))
-    }, [blendParams, mineral, index])
-
     return (
         <div
             className={'mineral-input'}
-            data-visible={blendParams.visibilities[index]}
+            data-visible={visible}
         >
             <Slider
-                value={blendParams.magnitudes[index]}
+                value={magnitude}
                 setValue={setMagnitude}
                 min={0}
                 max={1}
@@ -89,7 +75,7 @@ function MineralSlider (
                     <div>
                         <button
                             className={'visibility-button'}
-                            onClick={() => setVisible(!blendParams.visibilities[index])}
+                            onClick={() => setVisible(!visible)}
                         >
                             <MdRemoveRedEye />
                         </button>
@@ -165,18 +151,6 @@ function MonochromeToggle (
         ? getCssColor(Object.values(palette.colors)[0])
         : '#fff'
 
-    useEffect(() => {
-        const keydown = (e: KeyboardEvent): void => {
-            if (e.key === 'b') {
-                setMonochrome(!monochrome)
-            }
-        }
-        window.addEventListener('keydown', keydown)
-        return () => {
-            window.removeEventListener('keydown', keydown)
-        }
-    }, [monochrome, setMonochrome])
-
     return (
         <button
             className={'monochrome-toggle'}
@@ -186,7 +160,7 @@ function MonochromeToggle (
     )
 }
 
-type MineralBlendProps = {
+type BlendMenuProps = {
     minerals: Array<string>,
     palettes: Array<GenericPalette>
     blendParams: BlendParams,
@@ -194,7 +168,7 @@ type MineralBlendProps = {
 }
 
 function BlendMenu (
-    { minerals, palettes, blendParams, setBlendParams }: MineralBlendProps
+    { minerals, palettes, blendParams, setBlendParams }: BlendMenuProps
 ): ReactElement {
     const setPalette = (p: GenericPalette): void => {
         blendParams.palette = p
@@ -219,6 +193,21 @@ function BlendMenu (
     const setMonochrome = (m: boolean): void => {
         blendParams.monochrome = m
         setBlendParams({ ...blendParams })
+    }
+
+    const getMagnitudeSetter = (index: number): ((m: number) => void) => {
+        return (m: number) => {
+            blendParams.magnitudes[index] = m
+            blendParams.visibilities[index] = true
+            setBlendParams({ ...blendParams })
+        }
+    }
+
+    const getVisibilitySetter = (index: number): ((v: boolean) => void) => {
+        return (v: boolean) => {
+            blendParams.visibilities[index] = v
+            setBlendParams({ ...blendParams })
+        }
     }
 
     return (
@@ -258,8 +247,11 @@ function BlendMenu (
                     <MineralSlider
                         mineral={mineral}
                         index={i}
-                        blendParams={blendParams}
-                        setBlendParams={setBlendParams}
+                        color={getBlendColor(blendParams, mineral, i)}
+                        magnitude={blendParams.magnitudes[i]}
+                        setMagnitude={getMagnitudeSetter(i)}
+                        visible={blendParams.visibilities[i]}
+                        setVisible={getVisibilitySetter(i)}
                         key={i}
                     />
                 ) }
