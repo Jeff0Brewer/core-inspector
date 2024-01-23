@@ -203,6 +203,7 @@ class VisRenderer {
 
     draw (elapsed: number): void {
         this.camera.update(elapsed)
+        // temporary, should only be updated with pan / bounds change
         this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
