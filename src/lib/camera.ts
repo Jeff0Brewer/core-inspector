@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { clamp, ease } from '../lib/util'
+import { clamp, ease, BoundRect } from '../lib/util'
 import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
 
 const MOUSE_PAN_SPEED = 0.003
@@ -21,6 +21,9 @@ class Camera2D {
     targetFocus: vec3
     targetFocusT: number
 
+    visBounds: BoundRect | null
+    viewportBounds: BoundRect | null
+
     constructor (zoomT: number, shape: CoreShape) {
         this.zoomT = zoomT
 
@@ -32,8 +35,12 @@ class Camera2D {
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
 
         this.mode = shape
+
         this.targetFocus = vec3.clone(this.focus)
         this.targetFocusT = 1
+
+        this.visBounds = null
+        this.viewportBounds = null
     }
 
     resetFocus (): void {
@@ -42,7 +49,11 @@ class Camera2D {
         this.targetFocus = vec3.fromValues(0, 0, 0)
     }
 
-    update (elapsed: number): void {
+    update (
+        elapsed: number,
+        setPanWidth?: (w: number | null) => void,
+        setPanLeft?: (l: number | null) => void
+    ): void {
         if (this.targetFocusT < 1) {
             const focus = vec3.create()
             vec3.lerp(focus, this.focus, this.targetFocus, ease(this.targetFocusT))
@@ -53,6 +64,16 @@ class Camera2D {
             if (this.targetFocusT >= 1) {
                 vec3.copy(this.focus, this.targetFocus)
                 vec3.copy(this.eye, [this.focus[0], this.focus[1], this.zoomDistance()])
+            }
+
+            if (this.mode === 'column' && this.viewportBounds && this.visBounds) {
+                const visWidth = this.visBounds.right - this.visBounds.left
+                const viewportWidth = this.viewportBounds.right - this.viewportBounds.left
+                setPanWidth?.(viewportWidth / visWidth)
+                setPanLeft?.((this.viewportBounds.left + this.focus[0]) / visWidth)
+            } else {
+                setPanWidth?.(null)
+                setPanLeft?.(null)
             }
         } else {
             mat4.lookAt(this.matrix, this.eye, this.focus, this.up)

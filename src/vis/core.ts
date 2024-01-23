@@ -35,6 +35,7 @@ class CoreRenderer {
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
+    setVertexBounds: (b: BoundRect) => void
 
     constructor (
         gl: WebGLRenderingContext,
@@ -42,7 +43,8 @@ class CoreRenderer {
         punchMineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
-        bounds: BoundRect
+        bounds: BoundRect,
+        setVertexBounds: (b: BoundRect) => void
     ) {
         // can be set to anything, will be aligned with ui state on load
         this.currSpacing = [0, 0]
@@ -91,6 +93,8 @@ class CoreRenderer {
             tileMetadata,
             idMetadata
         )
+
+        this.setVertexBounds = setVertexBounds
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {
@@ -143,11 +147,11 @@ class CoreRenderer {
         }
     }
 
-    genVerts (gl: WebGLRenderingContext, bounds: BoundRect): void {
-        const { downPositions, punchPositions } = getCorePositions(
+    genVerts (gl: WebGLRenderingContext, viewportBounds: BoundRect): void {
+        const { downPositions, punchPositions, vertexBounds } = getCorePositions(
             this.metadata,
             this.currSpacing,
-            bounds,
+            viewportBounds,
             this.targetShape,
             this.viewMode
         )
@@ -157,6 +161,8 @@ class CoreRenderer {
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.setPositions(downPositions)
+
+        this.setVertexBounds(vertexBounds)
     }
 
     draw (
@@ -219,12 +225,13 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
 const getCorePositions = (
     metadata: TileTextureMetadata,
     spacing: [number, number],
-    bounds: BoundRect,
+    viewportBounds: BoundRect,
     shape: CoreShape,
     viewMode: CoreViewMode
 ): {
     downPositions: Float32Array,
-    punchPositions: Float32Array
+    punchPositions: Float32Array,
+    vertexBounds: BoundRect
 } => {
     const downPositions: Array<number> = []
     const punchPositions: Array<number> = []
@@ -238,8 +245,8 @@ const getCorePositions = (
 
     let radius = MIN_RADIUS
     let angle = 0
-    let columnX = bounds.left
-    let columnY = bounds.top
+    let columnX = viewportBounds.left
+    let columnY = viewportBounds.top
 
     for (let i = 0; i < metadata.numTiles; i++) {
         const downRect = metadata.downTiles[i]
@@ -252,10 +259,10 @@ const getCorePositions = (
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
-        // check if tile within bounds, wrap to next column if outside
-        if (columnY - tileHeight <= bounds.bottom) {
+        // check if tile within viewport bounds, wrap to next column if outside
+        if (columnY - tileHeight <= viewportBounds.bottom) {
             columnX += TILE_WIDTH + horizontalSpacing
-            columnY = bounds.top
+            columnY = viewportBounds.top
         }
 
         if (shape === 'spiral') {
@@ -307,9 +314,24 @@ const getCorePositions = (
         radius += tileRadius
     }
 
+    const vertexBounds = shape === 'spiral'
+        ? {
+            left: -radius,
+            right: radius,
+            top: -radius,
+            bottom: radius
+        }
+        : {
+            left: viewportBounds.left,
+            right: columnX,
+            top: viewportBounds.top,
+            bottom: viewportBounds.bottom
+        }
+
     return {
         downPositions: new Float32Array(downPositions),
-        punchPositions: new Float32Array(punchPositions)
+        punchPositions: new Float32Array(punchPositions),
+        vertexBounds
     }
 }
 
