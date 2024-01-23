@@ -28,10 +28,14 @@
     position: relative;
     background-color: #fff;
     height: 2px;
-    transition: height var(--transition-param);
+    border-radius: 0;
+    transition:
+        height var(--transition-param),
+        border-radius var(--transition-param);
 }
 
 .scrollbar-wrap:hover .scrollbar-handle,
 .scrollbar-wrap[data-dragging="true"] .scrollbar-handle {
     height: 6px;
+    border-radius: 3px;
 }
