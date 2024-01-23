@@ -13,8 +13,8 @@ function MineralControls (
     { vis }: MineralControlsProps
 ): ReactElement {
     const [palette, setPalette] = useState<GenericPalette>(COLOR_PRESETS[0])
-    const [magnitudes, setMagnitudes] = useState<Array<number>>(new Array(MINERALS.length).fill(1))
-    const [visibilities, setVisibilities] = useState<Array<boolean>>(new Array(MINERALS.length).fill(true))
+    const [magnitudes, setMagnitudes] = useState<Array<number>>(Array(MINERALS.length).fill(1))
+    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(MINERALS.length).fill(true))
     const [saturation, setSaturation] = useState<number>(1)
     const [threshold, setThreshold] = useState<number>(0)
     const [blendMode, setBlendMode] = useState<BlendMode>('additive')

@@ -41,22 +41,6 @@ function Slider (
     const textInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
-        if (value > max || value < min) {
-            throw new Error('Value set outside input bounds')
-        }
-        const textInput = textInputRef.current
-        // do not update text input value if currently focused
-        if (!textInput || textInput === document.activeElement) {
-            return
-        }
-        if (format.parse(textInput.value) !== value) {
-            const formatted = format.render(value)
-            textInput.value = formatted
-            lastValidTextRef.current = formatted
-        }
-    }, [value, max, min, format])
-
-    useEffect(() => {
         const slider = sliderRef.current
         const textInput = textInputRef.current
         if (!slider || !textInput) {
@@ -93,6 +77,23 @@ function Slider (
             }
         }
     }, [dragging, min, max, setValue])
+
+    // update text input value when value state changes
+    useEffect(() => {
+        if (value > max || value < min) {
+            throw new Error('Value set outside input bounds')
+        }
+        const textInput = textInputRef.current
+        // do not update text input if currently focused
+        if (!textInput || textInput === document.activeElement) {
+            return
+        }
+        if (format.parse(textInput.value) !== value) {
+            const formatted = format.render(value)
+            textInput.value = formatted
+            lastValidTextRef.current = formatted
+        }
+    }, [value, max, min, format])
 
     const updateFromText = (): void => {
         if (!textInputRef.current) {
@@ -142,7 +143,7 @@ function Slider (
                 </div>
             </div>
             <div className={'slider-elements'}>
-                { customElements
+                { customElements !== undefined
                     ? customElements(getTextInputElement()).map((element, i) =>
                         <React.Fragment key={i}>
                             {element}

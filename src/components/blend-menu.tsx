@@ -40,7 +40,8 @@ function ColorPalette (
                 <ColorSwatch
                     mineral={item.type === 'labelled' ? mineral : null}
                     color={color}
-                    key={i} />
+                    key={i}
+                />
             ) }
         </div>
     )
@@ -213,9 +214,7 @@ function BlendMenu (
             <div>
                 <Dropdown
                     items={palettes.filter(p => p.type === 'labelled')}
-                    selected={palette.type === 'labelled'
-                        ? palette
-                        : null}
+                    selected={palette.type === 'labelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
@@ -225,9 +224,7 @@ function BlendMenu (
             <div>
                 <Dropdown
                     items={palettes.filter(p => p.type === 'unlabelled')}
-                    selected={palette.type === 'unlabelled'
-                        ? palette
-                        : null}
+                    selected={palette.type === 'unlabelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
