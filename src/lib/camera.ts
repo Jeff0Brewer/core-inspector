@@ -10,6 +10,7 @@ const MAX_ZOOM = 1.75
 
 type CameraMode = CoreShape
 
+// TODO: simplify camera / factor state into react heirarchy
 class Camera2D {
     zoomT: number
     eye: vec3
