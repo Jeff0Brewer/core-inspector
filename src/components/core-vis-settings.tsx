@@ -4,7 +4,7 @@ import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { padZeros } from '../lib/util'
 import { CoreViewMode, CoreShape } from '../vis/core'
 import { CoreMetadata } from '../lib/metadata'
-import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
+import VisRenderer from '../vis/vis'
 import ToggleSelect from '../components/generic/toggle-select'
 import Dropdown from '../components/generic/dropdown'
 import '../styles/core-vis-settings.css'
@@ -19,8 +19,8 @@ type CoreVisSettingsProps = {
 function CoreVisSettings (
     { vis, cores, core, setCore }: CoreVisSettingsProps
 ): ReactElement {
-    const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
-    const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
+    const [shape, setShape] = useState<CoreShape>('column')
+    const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
     const [metadata, setMetadata] = useState<CoreMetadata | null>(null)
 
     useEffect(() => {

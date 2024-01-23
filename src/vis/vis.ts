@@ -4,28 +4,10 @@ import { initGl } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import { BlendParams } from '../vis/mineral-blend'
-import CoreRenderer, { CoreShape, CoreViewMode, CoreSettings } from '../vis/core'
-import Camera2D, { CameraSettings } from '../lib/camera'
+import CoreRenderer, { CoreShape, CoreViewMode } from '../vis/core'
+import Camera2D from '../lib/camera'
 
 const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
-
-type VisSettings = {
-    core: CoreSettings,
-    camera: CameraSettings
-}
-
-const VIS_DEFAULTS: VisSettings = {
-    core: {
-        spacing: [0.5, 0.5],
-        viewMode: 'downscaled',
-        shape: 'column',
-        pointSize: 3.5,
-        hovered: undefined
-    },
-    camera: {
-        zoom: 0.5
-    }
-}
 
 type UiState = {
     setShape?: (s: CoreShape) => void,
@@ -65,7 +47,7 @@ class VisRenderer {
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
-        this.camera = new Camera2D(VIS_DEFAULTS.camera.zoom, VIS_DEFAULTS.core.shape)
+        this.camera = new Camera2D(0, 'spiral')
         const aspect = window.innerWidth / window.innerHeight
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
@@ -76,8 +58,7 @@ class VisRenderer {
             punchcardMaps,
             tileMetadata,
             idMetadata,
-            this.getViewportBounds(),
-            VIS_DEFAULTS.core
+            this.getViewportBounds()
         )
 
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -221,4 +202,3 @@ class VisRenderer {
 
 export default VisRenderer
 export type { UiState }
-export { VIS_DEFAULTS }
