@@ -3,11 +3,12 @@ import '../../styles/load-icon.css'
 
 type LoadIconProps = {
     loading: boolean,
-    showDelayMs?: number
+    showDelayMs?: number,
+    removeDelayMs?: number
 }
 
 function LoadIcon (
-    { loading, showDelayMs = 150 }: LoadIconProps
+    { loading, showDelayMs = 150, removeDelayMs = 500 }: LoadIconProps
 ): ReactElement {
     const [visible, setVisible] = useState<boolean>(false)
     const [render, setRender] = useState<boolean>(false)
@@ -18,19 +19,27 @@ function LoadIcon (
         window.clearTimeout(timeoutIdRef.current)
 
         if (loading) {
+            // render icon to dom immediately on load start
+            setRender(true)
+
+            // delay initial visibility setting
+            // to prevent icon appearing for short load times
             timeoutIdRef.current = window.setTimeout(
                 () => setVisible(true),
                 showDelayMs
             )
-            setRender(true)
         } else {
+            // hide icon immediately on load finish
+            setVisible(false)
+
+            // delay dom removal to allow css transition to
+            // complete before stopping render
             timeoutIdRef.current = window.setTimeout(
                 () => setRender(false),
-                500
+                removeDelayMs
             )
-            setVisible(false)
         }
-    }, [loading, showDelayMs])
+    }, [loading, showDelayMs, removeDelayMs])
 
     // remove from dom when not needed
     if (!render) {
