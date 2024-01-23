@@ -21,16 +21,16 @@ function CoreVisSettings (
 ): ReactElement {
     const [shape, setShape] = useState<CoreShape>(VIS_DEFAULTS.core.shape)
     const [viewMode, setViewMode] = useState<CoreViewMode>(VIS_DEFAULTS.core.viewMode)
-    const [data, setData] = useState<CoreMetadata | null>(null)
+    const [metadata, setMetadata] = useState<CoreMetadata | null>(null)
 
     useEffect(() => {
-        const getData = async (): Promise<void> => {
+        const getMetadata = async (): Promise<void> => {
             const basePath = `./data/${core}`
             const res = await fetch(`${basePath}/core-metadata.json`)
-            const data = await res.json() as CoreMetadata
-            setData(data)
+            const metadata = await res.json() as CoreMetadata
+            setMetadata(metadata)
         }
-        getData()
+        getMetadata()
     }, [core])
 
     useEffect(() => {
@@ -68,14 +68,14 @@ function CoreVisSettings (
                 setSelected={setCore}
                 customClass={'core-dropdown'}
             />
-            { data && <>
+            { metadata && <>
                 <p>
                     sections
-                    <span>{padZeros(1)} - {padZeros(data.numSection)}</span>
+                    <span>{padZeros(1)} - {padZeros(metadata.numSection)}</span>
                 </p>
                 <p>
                     depth
-                    <span>{data.topDepth}m - {data.bottomDepth}m</span>
+                    <span>{metadata.topDepth}m - {metadata.bottomDepth}m</span>
                 </p>
             </>}
         </div>
