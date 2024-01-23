@@ -37,7 +37,7 @@ function formatFloat (f: number): string {
     return f.toFixed(2)
 }
 
-function padZeros (n: number | string, len: number): string {
+function padZeros (n: number | string, len: number = 4): string {
     const str = n.toString()
     if (str.length > len) {
         return str
