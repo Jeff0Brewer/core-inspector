@@ -17,6 +17,7 @@
     display: flex;
     width: 100%;
     height: 100%;
+    cursor: pointer;
 }
 
 .generic-dropdown .selected {
@@ -49,7 +50,7 @@
         border-radius var(--transition-param);
 }
 
-.generic-dropdown button:hover {
+.generic-dropdown .label:hover button {
     background-color: #303030;
 }
 

@@ -36,7 +36,8 @@
     font-size: 10px;
 }
 
-.core-dropdown button:hover {
+.core-dropdown .label:hover button {
+    background-color: transparent;
     color: var(--color2);
 }
 
