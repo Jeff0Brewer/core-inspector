@@ -2,10 +2,17 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../../lib/util'
 import '../../styles/slider.css'
 
+// closure that takes slider's coordinated text input as an argument
+// and returns full custom dom for slider supplemental elements
+//
+// affords custom feature set for different sliders with text input logic already handled
 type SliderCustomElement = (textInput: ReactElement) => ReactElement
 
+// defaults to only including text input as supplemental element
 const DEFAULT_ELEMENT: SliderCustomElement = textInput => textInput
 
+// formatter with conversion to and from string,
+// used to coordinate and style text input values
 type SliderTextFormatter = {
     apply: (v: number) => string,
     parse: (v: string) => number
@@ -22,14 +29,15 @@ type SliderProps = {
     min: number,
     max: number,
     customClass?: string,
-    customElement?: SliderCustomElement,
     customHandle?: ReactElement
+    customElement?: SliderCustomElement,
     format?: SliderTextFormatter,
 }
 
 function Slider ({
-    value, setValue, min, max, customHandle,
+    value, setValue, min, max,
     customClass = '',
+    customHandle = <></>,
     customElement = DEFAULT_ELEMENT,
     format = DEFAULT_FORMATTER
 }: SliderProps): ReactElement {
@@ -43,23 +51,23 @@ function Slider ({
 
     useEffect(() => {
         const slider = sliderRef.current
-        const textInput = textInputRef.current
-        if (!slider || !textInput) {
-            throw new Error('No reference to input elements')
+        if (!slider) {
+            throw new Error('No reference to slider element')
         }
 
         const updateFromMouse = (e: MouseEvent): void => {
             const { left, right } = slider.getBoundingClientRect()
             const clickPercent = clamp((e.clientX - left) / (right - left), 0, 1)
-            const value = clickPercent * (max - min) + min
-            setValue(value)
+            setValue(clickPercent * (max - min) + min)
         }
 
         if (!dragging) {
+            // if not dragging, only need event to start drag
             const mousedown = (e: MouseEvent): void => {
                 updateFromMouse(e)
                 setDragging(true)
             }
+
             slider.addEventListener('mousedown', mousedown)
             return () => {
                 slider.removeEventListener('mousedown', mousedown)
@@ -68,6 +76,9 @@ function Slider ({
             const mouseup = (): void => { setDragging(false) }
             const mouseleave = (): void => { setDragging(false) }
             const mousemove = (e: MouseEvent): void => { updateFromMouse(e) }
+
+            // attach drag event handlers to window so that drag can extend
+            // past slider's bounds once started
             window.addEventListener('mouseup', mouseup)
             window.addEventListener('mouseleave', mouseleave)
             window.addEventListener('mousemove', mousemove)
@@ -79,7 +90,7 @@ function Slider ({
         }
     }, [dragging, min, max, setValue])
 
-    // update text input value when value state changes
+    // align text input value with current value on state change
     useEffect(() => {
         const textInput = textInputRef.current
 
@@ -88,8 +99,9 @@ function Slider ({
             return
         }
 
-        if (format.parse(textInput.value) !== value) {
-            const formatted = format.apply(value)
+        // ensure text input contains correct formatted value
+        const formatted = format.apply(value)
+        if (textInput.value !== formatted) {
             textInput.value = formatted
             lastValidTextRef.current = formatted
         }
@@ -128,7 +140,7 @@ function Slider ({
                     className={'slider-value'}
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
                 >
-                    {customHandle !== undefined && customHandle}
+                    {customHandle}
                 </div>
             </div>
             <div className={'slider-elements'}>
