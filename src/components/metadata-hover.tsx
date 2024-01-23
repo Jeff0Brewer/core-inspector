@@ -14,6 +14,7 @@ type MetadataHoverProps = {
 function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
     const [x, setX] = useState<number>(0)
     const [y, setY] = useState<number>(0)
+    const [hoveredSide, setHoveredSide] = useState<'right' | 'left'>('left')
     const [data, setData] = useState<DisplayMetadata>({})
 
     // fetch all metadata fields and update display data
@@ -36,6 +37,12 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         const mousemove = (e: MouseEvent): void => {
             setX(e.clientX)
             setY(e.clientY)
+
+            // check which side of window mouse is over
+            // to position hover element horizontally
+            setHoveredSide(
+                e.clientX > window.innerWidth * 0.5 ? 'right' : 'left'
+            )
         }
         window.addEventListener('mousemove', mousemove)
         return () => {
@@ -43,19 +50,12 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    // check which side of window mouse is on to position hover element
-    const checkSide = (): string => {
-        return x > window.innerWidth * 0.5
-            ? 'right'
-            : 'left'
-    }
-
     return <>
         { hovered !== undefined &&
             <div
                 className={'metadata'}
                 style={{ left: `${x}px`, top: `${y}px` }}
-                data-side={checkSide()}
+                data-side={hoveredSide}
             >
                 <div className={'id'}>
                     { formatId(hovered) }
