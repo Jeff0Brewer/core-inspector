@@ -43,20 +43,45 @@ class Camera2D {
         this.viewportBounds = null
     }
 
+    updatePanState (
+        setPanWidth?: (w: number | null) => void,
+        setPanLeft?: (l: number | null) => void
+    ): void {
+        if (this.mode === 'column' && this.viewportBounds && this.visBounds) {
+            const visWidth = this.visBounds.right - this.visBounds.left
+            const viewportWidth = this.viewportBounds.right - this.viewportBounds.left
+            setPanWidth?.(viewportWidth / visWidth)
+            setPanLeft?.(this.getCurrentX() / visWidth)
+        } else {
+            setPanWidth?.(null)
+            setPanLeft?.(null)
+        }
+    }
+
     resetFocus (): void {
         vec3.lerp(this.focus, this.focus, this.targetFocus, ease(this.targetFocusT))
         this.targetFocusT = 0
         this.targetFocus = vec3.fromValues(0, 0, 0)
     }
 
-    update (
-        elapsed: number,
-        setPanWidth?: (w: number | null) => void,
-        setPanLeft?: (l: number | null) => void
-    ): void {
+    getCurrentX (): number {
+        if (this.targetFocusT < 1) {
+            const focus = vec3.lerp(
+                vec3.create(),
+                this.focus,
+                this.targetFocus,
+                ease(this.targetFocusT)
+            )
+            return focus[0]
+        }
+        return this.focus[0]
+    }
+
+    update (elapsed: number): void {
         if (this.targetFocusT < 1) {
             const focus = vec3.create()
             vec3.lerp(focus, this.focus, this.targetFocus, ease(this.targetFocusT))
+
             const eye = vec3.fromValues(focus[0], focus[1], this.zoomDistance())
             mat4.lookAt(this.matrix, eye, focus, this.up)
 
@@ -64,16 +89,6 @@ class Camera2D {
             if (this.targetFocusT >= 1) {
                 vec3.copy(this.focus, this.targetFocus)
                 vec3.copy(this.eye, [this.focus[0], this.focus[1], this.zoomDistance()])
-            }
-
-            if (this.mode === 'column' && this.viewportBounds && this.visBounds) {
-                const visWidth = this.visBounds.right - this.visBounds.left
-                const viewportWidth = this.viewportBounds.right - this.viewportBounds.left
-                setPanWidth?.(viewportWidth / visWidth)
-                setPanLeft?.((this.viewportBounds.left + this.focus[0]) / visWidth)
-            } else {
-                setPanWidth?.(null)
-                setPanLeft?.(null)
             }
         } else {
             mat4.lookAt(this.matrix, this.eye, this.focus, this.up)

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import MetadataHover from '../components/metadata-hover'
+import PanScrollbar from '../components/pan-scrollbar'
 import VisRenderer from '../vis/vis'
 import '../styles/vis.css'
 
@@ -44,6 +45,7 @@ function Vis (
 
     return <>
         <MetadataHover core={core} hovered={hovered} />
+        <PanScrollbar vis={vis} />
     </>
 }
 

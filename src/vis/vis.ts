@@ -197,11 +197,8 @@ class VisRenderer {
     }
 
     draw (elapsed: number): void {
-        this.camera.update(
-            elapsed,
-            this.uiState.setPanWidth,
-            this.uiState.setPanLeft
-        )
+        this.camera.update(elapsed)
+        this.camera.updatePanState(this.uiState.setPanWidth, this.uiState.setPanLeft)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
