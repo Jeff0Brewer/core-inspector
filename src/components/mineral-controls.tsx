@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import BlendMenu from '../components/blend-menu'
-import { BlendParams, MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
+import { GenericPalette, BlendMode, MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import VisRenderer from '../vis/vis'
 import '../styles/mineral-controls.css'
 
@@ -12,38 +12,37 @@ type MineralControlsProps = {
 function MineralControls (
     { vis }: MineralControlsProps
 ): ReactElement {
-    const [blendParams, setBlendParams] = useState<BlendParams>({
-        magnitudes: new Array(MINERALS.length).fill(1),
-        visibilities: new Array(MINERALS.length).fill(true),
-        palette: COLOR_PRESETS[0],
-        saturation: 1,
-        threshold: 0,
-        mode: 'additive',
-        monochrome: false
-    })
+    const [palette, setPalette] = useState<GenericPalette>(COLOR_PRESETS[0])
+    const [magnitudes, setMagnitudes] = useState<Array<number>>(new Array(MINERALS.length).fill(1))
+    const [visibilities, setVisibilities] = useState<Array<boolean>>(new Array(MINERALS.length).fill(true))
+    const [saturation, setSaturation] = useState<number>(1)
+    const [threshold, setThreshold] = useState<number>(0)
+    const [blendMode, setBlendMode] = useState<BlendMode>('additive')
+    const [monochrome, setMonochrome] = useState<boolean>(false)
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
 
     useEffect(() => {
-        if (!vis) { return }
-
-        vis.uiState.setBlending = setBlendParams
-        vis?.setBlending(blendParams)
-
-        // only want to update blending / set ui state when vis changes
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [vis])
+        vis?.setBlending({
+            palette,
+            magnitudes,
+            visibilities,
+            saturation,
+            threshold,
+            mode: blendMode,
+            monochrome
+        })
+    }, [vis, magnitudes, visibilities, palette, saturation, threshold, blendMode, monochrome])
 
     // setup keyboard shortcuts
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
             if (e.key === 'b') {
-                blendParams.monochrome = !blendParams.monochrome
-                vis?.setBlending({ ...blendParams })
+                setMonochrome(!monochrome)
             } else {
                 const numKey = parseInt(e.key)
                 if (numKey > 0 && numKey <= MINERALS.length) {
-                    blendParams.visibilities[numKey - 1] = !blendParams.visibilities[numKey - 1]
-                    vis?.setBlending({ ...blendParams })
+                    visibilities[numKey - 1] = !visibilities[numKey - 1]
+                    setVisibilities([...visibilities])
                 }
             }
         }
@@ -51,31 +50,26 @@ function MineralControls (
         return () => {
             window.removeEventListener('keydown', keydown)
         }
-    }, [blendParams, vis])
+    }, [monochrome, visibilities])
 
     // update visibilities to match newly selected palette on change
     useEffect(() => {
-        if (blendParams.palette.type === 'labelled') {
-            const visibleMinerals = Object.keys(blendParams.palette.colors)
-            blendParams.visibilities = MINERALS.map(mineral => visibleMinerals.includes(mineral))
+        if (palette.type === 'labelled') {
+            const visibleMinerals = Object.keys(palette.colors)
+            setVisibilities(MINERALS.map(mineral => visibleMinerals.includes(mineral)))
         } else {
-            const numVisible = blendParams.palette.colors.length
-            blendParams.visibilities.fill(true)
-            blendParams.visibilities.fill(false, numVisible)
+            const numVisible = palette.colors.length
+            setVisibilities(MINERALS.map((_, i) => i < numVisible))
         }
-        vis?.setBlending({ ...blendParams })
-
-        // only want to align visibilities with palette on palette / vis change
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [blendParams.palette, vis])
+    }, [palette, vis])
 
     // sets parameters to show one channel in monochrome
     const getMineralSetter = (i: number): (() => void) => {
         return () => {
-            blendParams.visibilities.fill(false)
-            blendParams.visibilities[i] = true
-            blendParams.monochrome = true
-            vis?.setBlending({ ...blendParams })
+            visibilities.fill(false)
+            visibilities[i] = true
+            setVisibilities([...visibilities])
+            setMonochrome(true)
         }
     }
 
@@ -84,7 +78,7 @@ function MineralControls (
             { MINERALS.map((mineral, i) => (
                 <button
                     onClick={getMineralSetter(i)}
-                    data-active={blendParams.visibilities[i]}
+                    data-active={visibilities[i]}
                     key={i}
                 >
                     {mineral}
@@ -102,8 +96,20 @@ function MineralControls (
             { menuOpen && <BlendMenu
                 minerals={MINERALS}
                 palettes={COLOR_PRESETS}
-                blendParams={blendParams}
-                setBlendParams={b => vis?.setBlending(b)}
+                magnitudes={magnitudes}
+                setMagnitudes={setMagnitudes}
+                visibilities={visibilities}
+                setVisibilities={setVisibilities}
+                palette={palette}
+                setPalette={setPalette}
+                blendMode={blendMode}
+                setBlendMode={setBlendMode}
+                saturation={saturation}
+                setSaturation={setSaturation}
+                threshold={threshold}
+                setThreshold={setThreshold}
+                monochrome={monochrome}
+                setMonochrome={setMonochrome}
             /> }
         </div>
     </>
