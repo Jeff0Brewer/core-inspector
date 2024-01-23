@@ -79,6 +79,7 @@ function MineralControls (
         }
     }
 
+    // sets magnitude for single index, used in mineral sliders
     const getMagnitudeSetter = (index: number): ((m: number) => void) => {
         return (m: number) => {
             magnitudes[index] = m
@@ -88,6 +89,7 @@ function MineralControls (
         }
     }
 
+    // sets visiblility for single index, used in mineral sliders
     const getVisibilitySetter = (index: number): ((v: boolean) => void) => {
         return (v: boolean) => {
             visibilities[index] = v
