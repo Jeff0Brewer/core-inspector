@@ -1,37 +1,37 @@
-import React, { useState, useRef, useEffect, ReactElement } from 'react'
+import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../lib/util'
 import '../styles/slider.css'
 
 type SliderTextFormatter = {
-    render: (v: number) => string,
+    apply: (v: number) => string,
     parse: (v: string) => number
 }
 
 const DEFAULT_FORMATTER: SliderTextFormatter = {
-    render: formatFloat,
+    apply: formatFloat,
     parse: parseFloat
 }
 
-type SliderCustomElements = (textInput: ReactElement) => Array<ReactElement>
+type SliderCustomElement = (textInput: ReactElement) => ReactElement
 
 type SliderProps = {
     value: number,
     setValue: (v: number) => void,
     min: number,
     max: number,
-    customElements?: SliderCustomElements,
+    customElement?: SliderCustomElement,
     customHandle?: ReactElement
     format?: SliderTextFormatter,
     customClass?: string,
 }
 
 function Slider ({
-    value, setValue, min, max, customElements, customHandle,
+    value, setValue, min, max, customElement, customHandle,
     format = DEFAULT_FORMATTER, customClass = ''
 }: SliderProps): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
-    const lastValidTextRef = useRef<string>(format.render(value))
+    const lastValidTextRef = useRef<string>(format.apply(value))
     const validateTextTimeoutRef = useRef<number>(-1)
 
     const sliderRef = useRef<HTMLDivElement>(null)
@@ -77,16 +77,15 @@ function Slider ({
 
     // update text input value when value state changes
     useEffect(() => {
-        if (value > max || value < min) {
-            throw new Error('Value set outside input bounds')
-        }
         const textInput = textInputRef.current
+
         // do not update text input if currently focused
         if (!textInput || textInput === document.activeElement) {
             return
         }
+
         if (format.parse(textInput.value) !== value) {
-            const formatted = format.render(value)
+            const formatted = format.apply(value)
             textInput.value = formatted
             lastValidTextRef.current = formatted
         }
@@ -97,13 +96,12 @@ function Slider ({
             throw new Error('No reference to text input element')
         }
 
-        // set current value if input text is valid number
         const value = format.parse(textInputRef.current.value)
         if (!Number.isNaN(value)) {
             const clamped = clamp(value, min, max)
             setValue(clamped)
             // store valid input to revert to on invalid input
-            lastValidTextRef.current = format.render(clamped)
+            lastValidTextRef.current = format.apply(clamped)
         }
 
         // revert to valid text input after period of no user input
@@ -115,6 +113,7 @@ function Slider ({
         }, 5000)
     }
 
+    // store text input here to conditionally pass into custom element
     const textInput = (
         <input
             ref={textInputRef}
@@ -129,9 +128,9 @@ function Slider ({
     return (
         <div className={`slider-wrap ${customClass}`}>
             <div
-                ref={sliderRef}
                 className={'slider-bar'}
                 data-dragging={dragging}
+                ref={sliderRef}
             >
                 <div
                     className={'slider-value'}
@@ -141,12 +140,8 @@ function Slider ({
                 </div>
             </div>
             <div className={'slider-elements'}>
-                { customElements !== undefined
-                    ? customElements(textInput).map((element, i) =>
-                        <React.Fragment key={i}>
-                            {element}
-                        </React.Fragment>
-                    )
+                { customElement !== undefined
+                    ? customElement(textInput)
                     : textInput }
             </div>
         </div>

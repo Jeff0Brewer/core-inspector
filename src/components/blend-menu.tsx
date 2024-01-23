@@ -70,9 +70,9 @@ function MineralSlider (
                 setValue={setMagnitude}
                 min={0}
                 max={1}
-                format={{ render: formatPercent, parse: parsePercent }}
+                format={{ apply: formatPercent, parse: parsePercent }}
                 customClass={'mineral-slider'}
-                customElements={textInput => [
+                customElement={textInput => <>
                     <div>
                         <button
                             className={'visibility-button'}
@@ -86,12 +86,12 @@ function MineralSlider (
                                 ({index + 1})
                             </span>
                         </p>
-                    </div>,
+                    </div>
                     <div>
                         {textInput}
                         <ColorSwatch color={color} mineral={null} />
                     </div>
-                ]}
+                </>}
                 customHandle={
                     <div className={'slider-handle'}>
                         <IoCaretDownSharp />
@@ -126,15 +126,15 @@ function ParamSlider (
             setValue={setValue}
             min={min}
             max={max}
-            customElements={textInput => [
-                textInput,
+            customElement={textInput => <>
+                {textInput}
                 <button
                     data-visible={defaultValue !== undefined && value !== defaultValue}
                     onClick={resetValue}
                 >
                     <MdOutlineRefresh />
                 </button>
-            ]}
+            </>}
         />
     )
 }
