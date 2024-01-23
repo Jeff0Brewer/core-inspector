@@ -2,19 +2,11 @@ import { useState, useEffect, ReactElement } from 'react'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { vecToHex, formatPercent, parsePercent } from '../lib/util'
+import { getCssColor, formatPercent, parsePercent } from '../lib/util'
 import { BlendParams, BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import Slider from '../components/slider'
 import '../styles/mineral-blend.css'
-
-const getColorHex = (color: vec3 | null): string => {
-    if (!color) { return 'transparent' }
-    const colorU8 = vec3.create()
-    vec3.scale(colorU8, color, 255)
-    vec3.floor(colorU8, colorU8)
-    return `#${vecToHex(colorU8)}`
-}
 
 type ColorSwatchProps = {
     color: vec3 | null,
@@ -27,7 +19,7 @@ function ColorSwatch (
     return (
         <div
             className={'swatch'}
-            style={{ backgroundColor: getColorHex(color) }}
+            style={{ backgroundColor: getCssColor(color) }}
             data-color={!!color}
         >
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
@@ -169,9 +161,9 @@ type MonochromeToggleProps = {
 function MonochromeToggle (
     { palette, monochrome, setMonochrome }: MonochromeToggleProps
 ): ReactElement {
-    const color = monochrome
-        ? '#fff'
-        : getColorHex(Object.values(palette.colors)[0] as vec3)
+    const color = !monochrome
+        ? getCssColor(Object.values(palette.colors)[0])
+        : '#fff'
 
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
