@@ -16,15 +16,16 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
     const [y, setY] = useState<number>(0)
     const [data, setData] = useState<DisplayMetadata>({})
 
+    // fetch all metadata fields and update display data
     useEffect(() => {
         const getData = async (): Promise<void> => {
             const data: DisplayMetadata = {}
 
             const basePath = `./data/${core}`
-            const hydrationMetadata = await fetch(`${basePath}/hydration-metadata.json`)
-                .then(res => res.json())
+            const res = await fetch(`${basePath}/hydration-metadata.json`)
+            const { hydration } = await res.json()
 
-            data.hydration = hydrationMetadata.hydration
+            data.hydration = hydration
             setData({ ...data })
         }
         getData()
@@ -42,11 +43,7 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    const formatId = (id: string): string => {
-        const [section, part] = id.split('_')
-        return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
-    }
-
+    // check which side of window mouse is on to position hover element
     const checkSide = (): string => {
         return x > window.innerWidth * 0.5
             ? 'right'
@@ -66,11 +63,16 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
                 { data.hydration && data.hydration[hovered] && <p>
                     hydration:
                     <span>
-                        {formatHydration(data.hydration[hovered])}
+                        { formatHydration(data.hydration[hovered]) }
                     </span>
                 </p> }
             </div> }
     </>
+}
+
+function formatId (id: string): string {
+    const [section, part] = id.split('_')
+    return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
 }
 
 function formatHydration (h: number): string {
