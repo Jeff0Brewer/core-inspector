@@ -53,6 +53,14 @@ function getCssColor (color: vec3 | null): string {
     return `#${floatsToHex([color[0], color[1], color[2]])}`
 }
 
+function checkStringType (v: unknown): string {
+    const vType = typeof v
+    if (vType !== 'string') {
+        throw new Error(`Expected type string, got ${vType}`)
+    }
+    return v as 'string'
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -69,6 +77,7 @@ export {
     formatPercent,
     parsePercent,
     padZeros,
-    getCssColor
+    getCssColor,
+    checkStringType
 }
 export type { BoundRect }
