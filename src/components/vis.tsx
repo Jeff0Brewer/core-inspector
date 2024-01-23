@@ -16,15 +16,15 @@ function Vis (
 
     useEffect(() => {
         if (!vis) { return }
-        vis.uiState.setHovered = setHovered
 
+        vis.uiState.setHovered = setHovered
         vis.setHovered(undefined)
 
         return vis.setupEventListeners()
     }, [vis])
 
     useEffect(() => {
-        if (vis === null) { return }
+        if (!vis) { return }
 
         let lastT = 0
         const tick = (t: number): void => {
@@ -32,6 +32,7 @@ function Vis (
             lastT = t
 
             vis.draw(elapsed)
+
             frameIdRef.current = window.requestAnimationFrame(tick)
         }
 
