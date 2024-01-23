@@ -20,18 +20,15 @@ type SliderProps = {
     min: number,
     max: number,
     customElements?: SliderCustomElements,
+    customHandle?: ReactElement
     format?: SliderTextFormatter,
     customClass?: string,
-    customHandle?: ReactElement
 }
 
-function Slider (
-    {
-        value, setValue, min, max, customElements, customHandle,
-        format = DEFAULT_FORMATTER,
-        customClass = ''
-    }: SliderProps
-): ReactElement {
+function Slider ({
+    value, setValue, min, max, customElements, customHandle,
+    format = DEFAULT_FORMATTER, customClass = ''
+}: SliderProps): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
     const lastValidTextRef = useRef<string>(format.render(value))
@@ -118,15 +115,16 @@ function Slider (
         }, 5000)
     }
 
-    const getTextInputElement = (): ReactElement => {
-        return <input
+    const textInput = (
+        <input
             ref={textInputRef}
             className={'text-input'}
             type={'text'}
             onInput={updateFromText}
             defaultValue={lastValidTextRef.current}
         />
-    }
+
+    )
 
     return (
         <div className={`slider-wrap ${customClass}`}>
@@ -139,17 +137,17 @@ function Slider (
                     className={'slider-value'}
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
                 >
-                    {customHandle && customHandle}
+                    {customHandle !== undefined && customHandle}
                 </div>
             </div>
             <div className={'slider-elements'}>
                 { customElements !== undefined
-                    ? customElements(getTextInputElement()).map((element, i) =>
+                    ? customElements(textInput).map((element, i) =>
                         <React.Fragment key={i}>
                             {element}
                         </React.Fragment>
                     )
-                    : getTextInputElement() }
+                    : textInput }
             </div>
         </div>
     )

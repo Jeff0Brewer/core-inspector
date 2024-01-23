@@ -38,12 +38,12 @@ function MineralControls (
         const keydown = (e: KeyboardEvent): void => {
             if (e.key === 'b') {
                 setMonochrome(!monochrome)
-            } else {
-                const numKey = parseInt(e.key)
-                if (numKey > 0 && numKey <= MINERALS.length) {
-                    visibilities[numKey - 1] = !visibilities[numKey - 1]
-                    setVisibilities([...visibilities])
-                }
+                return
+            }
+            const numKey = parseInt(e.key)
+            if (numKey > 0 && numKey <= MINERALS.length) {
+                visibilities[numKey - 1] = !visibilities[numKey - 1]
+                setVisibilities([...visibilities])
             }
         }
         window.addEventListener('keydown', keydown)
