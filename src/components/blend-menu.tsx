@@ -1,20 +1,12 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { ReactElement } from 'react'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { vec3 } from 'gl-matrix'
-import { vecToHex, formatPercent, parsePercent } from '../lib/util'
-import { BlendParams, BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
+import { getCssColor, formatPercent, parsePercent } from '../lib/util'
+import { BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import Slider from '../components/slider'
-import '../styles/mineral-blend.css'
-
-const getColorHex = (color: vec3 | null): string => {
-    if (!color) { return 'transparent' }
-    const colorU8 = vec3.create()
-    vec3.scale(colorU8, color, 255)
-    vec3.floor(colorU8, colorU8)
-    return `#${vecToHex(colorU8)}`
-}
+import '../styles/blend-menu.css'
 
 type ColorSwatchProps = {
     color: vec3 | null,
@@ -27,7 +19,7 @@ function ColorSwatch (
     return (
         <div
             className={'swatch'}
-            style={{ backgroundColor: getColorHex(color) }}
+            style={{ backgroundColor: getCssColor(color) }}
             data-color={!!color}
         >
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
@@ -48,7 +40,8 @@ function ColorPalette (
                 <ColorSwatch
                     mineral={item.type === 'labelled' ? mineral : null}
                     color={color}
-                    key={i} />
+                    key={i}
+                />
             ) }
         </div>
     )
@@ -57,37 +50,23 @@ function ColorPalette (
 type MineralSliderProps = {
     mineral: string,
     index: number,
-    blendParams: BlendParams,
-    setBlendParams: (p: BlendParams) => void
+    color: vec3 | null,
+    magnitude: number,
+    setMagnitude: (m: number) => void,
+    visible: boolean,
+    setVisible: (v: boolean) => void,
 }
 
 function MineralSlider (
-    { mineral, index, blendParams, setBlendParams }: MineralSliderProps
+    { mineral, index, color, magnitude, setMagnitude, visible, setVisible }: MineralSliderProps
 ): ReactElement {
-    const [color, setColor] = useState<vec3 | null>(null)
-
-    const setMagnitude = (m: number): void => {
-        blendParams.magnitudes[index] = m
-        blendParams.visibilities[index] = true
-        setBlendParams({ ...blendParams })
-    }
-
-    const setVisible = (v: boolean): void => {
-        blendParams.visibilities[index] = v
-        setBlendParams({ ...blendParams })
-    }
-
-    useEffect(() => {
-        setColor(getBlendColor(blendParams, mineral, index))
-    }, [blendParams, mineral, index])
-
     return (
         <div
             className={'mineral-input'}
-            data-visible={blendParams.visibilities[index]}
+            data-visible={visible}
         >
             <Slider
-                value={blendParams.magnitudes[index]}
+                value={magnitude}
                 setValue={setMagnitude}
                 min={0}
                 max={1}
@@ -97,7 +76,7 @@ function MineralSlider (
                     <div>
                         <button
                             className={'visibility-button'}
-                            onClick={() => setVisible(!blendParams.visibilities[index])}
+                            onClick={() => setVisible(!visible)}
                         >
                             <MdRemoveRedEye />
                         </button>
@@ -169,21 +148,9 @@ type MonochromeToggleProps = {
 function MonochromeToggle (
     { palette, monochrome, setMonochrome }: MonochromeToggleProps
 ): ReactElement {
-    const color = monochrome
-        ? '#fff'
-        : getColorHex(Object.values(palette.colors)[0] as vec3)
-
-    useEffect(() => {
-        const keydown = (e: KeyboardEvent): void => {
-            if (e.key === 'b') {
-                setMonochrome(!monochrome)
-            }
-        }
-        window.addEventListener('keydown', keydown)
-        return () => {
-            window.removeEventListener('keydown', keydown)
-        }
-    }, [monochrome, setMonochrome])
+    const color = !monochrome
+        ? getCssColor(Object.values(palette.colors)[0])
+        : '#fff'
 
     return (
         <button
@@ -194,55 +161,60 @@ function MonochromeToggle (
     )
 }
 
-type MineralBlendProps = {
+type BlendMenuProps = {
     minerals: Array<string>,
     palettes: Array<GenericPalette>
-    blendParams: BlendParams,
-    setBlendParams: (p: BlendParams) => void
+    magnitudes: Array<number>
+    setMagnitudes: (m: Array<number>) => void,
+    visibilities: Array<boolean>
+    setVisibilities: (m: Array<boolean>) => void,
+    palette: GenericPalette,
+    setPalette: (p: GenericPalette) => void,
+    blendMode: BlendMode,
+    setBlendMode: (m: BlendMode) => void,
+    saturation: number,
+    setSaturation: (s: number) => void,
+    threshold: number,
+    setThreshold: (s: number) => void,
+    monochrome: boolean,
+    setMonochrome: (s: boolean) => void,
 }
 
 function BlendMenu (
-    { minerals, palettes, blendParams, setBlendParams }: MineralBlendProps
+    {
+        minerals, palettes, magnitudes, setMagnitudes, visibilities, setVisibilities,
+        palette, setPalette, blendMode, setBlendMode, saturation, setSaturation,
+        threshold, setThreshold, monochrome, setMonochrome
+    }: BlendMenuProps
 ): ReactElement {
-    const setPalette = (p: GenericPalette): void => {
-        blendParams.palette = p
-        setBlendParams({ ...blendParams })
+    const getMagnitudeSetter = (index: number): ((m: number) => void) => {
+        return (m: number) => {
+            magnitudes[index] = m
+            visibilities[index] = true
+            setMagnitudes([...magnitudes])
+            setVisibilities([...visibilities])
+        }
     }
 
-    const setBlendMode = (m: BlendMode): void => {
-        blendParams.mode = m
-        setBlendParams({ ...blendParams })
-    }
-
-    const setSaturation = (s: number): void => {
-        blendParams.saturation = s
-        setBlendParams({ ...blendParams })
-    }
-
-    const setThreshold = (t: number): void => {
-        blendParams.threshold = t
-        setBlendParams({ ...blendParams })
-    }
-
-    const setMonochrome = (m: boolean): void => {
-        blendParams.monochrome = m
-        setBlendParams({ ...blendParams })
+    const getVisibilitySetter = (index: number): ((v: boolean) => void) => {
+        return (v: boolean) => {
+            visibilities[index] = v
+            setVisibilities([...visibilities])
+        }
     }
 
     return (
         <section className={'blend-menu'}>
             <MonochromeToggle
-                palette={blendParams.palette}
-                monochrome={blendParams.monochrome}
+                palette={palette}
+                monochrome={monochrome}
                 setMonochrome={setMonochrome}
             />
             <p>color+mineral presets</p>
             <div>
                 <Dropdown
                     items={palettes.filter(p => p.type === 'labelled')}
-                    selected={blendParams.palette.type === 'labelled'
-                        ? blendParams.palette
-                        : null}
+                    selected={palette.type === 'labelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
@@ -252,9 +224,7 @@ function BlendMenu (
             <div>
                 <Dropdown
                     items={palettes.filter(p => p.type === 'unlabelled')}
-                    selected={blendParams.palette.type === 'unlabelled'
-                        ? blendParams.palette
-                        : null}
+                    selected={palette.type === 'unlabelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
                     customClass={'palette-dropdown'}
@@ -266,8 +236,11 @@ function BlendMenu (
                     <MineralSlider
                         mineral={mineral}
                         index={i}
-                        blendParams={blendParams}
-                        setBlendParams={setBlendParams}
+                        color={getBlendColor(palette, visibilities, monochrome, mineral, i)}
+                        magnitude={magnitudes[i]}
+                        setMagnitude={getMagnitudeSetter(i)}
+                        visible={visibilities[i]}
+                        setVisible={getVisibilitySetter(i)}
                         key={i}
                     />
                 ) }
@@ -275,14 +248,14 @@ function BlendMenu (
             <p>composite mode</p>
             <Dropdown<BlendMode>
                 items={['additive', 'maximum']}
-                selected={blendParams.mode}
+                selected={blendMode}
                 setSelected={setBlendMode}
                 customClass={'blend-mode-dropdown'}
             />
             <div className={'params'}>
                 <p>saturation</p>
                 <ParamSlider
-                    value={blendParams.saturation}
+                    value={saturation}
                     setValue={setSaturation}
                     min={0.1}
                     max={2}
@@ -290,7 +263,7 @@ function BlendMenu (
                 />
                 <p>threshold</p>
                 <ParamSlider
-                    value={blendParams.threshold}
+                    value={threshold}
                     setValue={setThreshold}
                     min={0}
                     max={0.99}

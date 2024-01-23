@@ -1,6 +1,6 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
-import { vecToHex } from '../lib/util'
+import { bytesToHex } from '../lib/util'
 import { POS_FPV } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -138,7 +138,7 @@ class StencilCoreRenderer {
         const pixels = new Uint8Array(4)
         gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
-        const colorHex = vecToHex([pixels[0], pixels[1]])
+        const colorHex = bytesToHex([pixels[0], pixels[1]])
         const newHovered = this.colorIdMap[colorHex]
         if (this.currHovered !== newHovered) {
             this.currHovered = newHovered
@@ -181,7 +181,7 @@ const indToColor = (i: number): { vec: vec2, hex: string } => {
     const mod = ind % 256
     const fract = Math.floor((ind - mod) / 255)
     const vec: vec2 = [mod, fract]
-    const hex = vecToHex(vec)
+    const hex = bytesToHex(vec)
 
     return { vec, hex }
 }

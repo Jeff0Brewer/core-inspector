@@ -109,8 +109,13 @@ const MINERALS = [
     'kaolinite-montmorillinite'
 ]
 
-function getBlendColor (params: BlendParams, mineral: string, index: number): vec3 | null {
-    const { palette, visibilities, monochrome } = params
+function getBlendColor (
+    palette: GenericPalette,
+    visibilities: Array<boolean>,
+    monochrome: boolean,
+    mineral: string,
+    index: number
+): vec3 | null {
     if (!visibilities[index]) {
         return null
     }
@@ -217,8 +222,11 @@ class MineralBlender {
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
-        const { magnitudes, saturation, threshold, mode } = params
-        const colors = MINERALS.map((mineral, i) => getBlendColor(params, mineral, i))
+        const { palette, magnitudes, visibilities, saturation, threshold, mode, monochrome } = params
+
+        const colors = MINERALS.map((mineral, i) =>
+            getBlendColor(palette, visibilities, monochrome, mineral, i)
+        )
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
         gl.viewport(0, 0, this.width, this.height)
