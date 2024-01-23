@@ -1,40 +1,49 @@
-import React, { useState, useRef, useEffect, ReactElement } from 'react'
-import { clamp, formatFloat } from '../lib/util'
-import '../styles/slider.css'
+import { useState, useRef, useEffect, ReactElement } from 'react'
+import { clamp, formatFloat } from '../../lib/util'
+import '../../styles/slider.css'
 
+// closure that takes slider's coordinated text input as an argument
+// and returns full custom dom for slider supplemental elements
+//
+// affords custom feature set for different sliders with text input logic already handled
+type SliderCustomElement = (textInput: ReactElement) => ReactElement
+
+// defaults to only including text input as supplemental element
+const DEFAULT_ELEMENT: SliderCustomElement = textInput => textInput
+
+// formatter with conversion to and from string,
+// used to coordinate and style text input values
 type SliderTextFormatter = {
-    render: (v: number) => string,
+    apply: (v: number) => string,
     parse: (v: string) => number
 }
 
 const DEFAULT_FORMATTER: SliderTextFormatter = {
-    render: formatFloat,
+    apply: formatFloat,
     parse: parseFloat
 }
-
-type SliderCustomElements = (textInput: ReactElement) => Array<ReactElement>
 
 type SliderProps = {
     value: number,
     setValue: (v: number) => void,
     min: number,
     max: number,
-    customElements?: SliderCustomElements,
-    format?: SliderTextFormatter,
     customClass?: string,
     customHandle?: ReactElement
+    customElement?: SliderCustomElement,
+    format?: SliderTextFormatter,
 }
 
-function Slider (
-    {
-        value, setValue, min, max, customElements, customHandle,
-        format = DEFAULT_FORMATTER,
-        customClass = ''
-    }: SliderProps
-): ReactElement {
+function Slider ({
+    value, setValue, min, max,
+    customClass = '',
+    customHandle = <></>,
+    customElement = DEFAULT_ELEMENT,
+    format = DEFAULT_FORMATTER
+}: SliderProps): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
-    const lastValidTextRef = useRef<string>(format.render(value))
+    const lastValidTextRef = useRef<string>(format.apply(value))
     const validateTextTimeoutRef = useRef<number>(-1)
 
     const sliderRef = useRef<HTMLDivElement>(null)
@@ -42,23 +51,23 @@ function Slider (
 
     useEffect(() => {
         const slider = sliderRef.current
-        const textInput = textInputRef.current
-        if (!slider || !textInput) {
-            throw new Error('No reference to input elements')
+        if (!slider) {
+            throw new Error('No reference to slider element')
         }
 
         const updateFromMouse = (e: MouseEvent): void => {
             const { left, right } = slider.getBoundingClientRect()
             const clickPercent = clamp((e.clientX - left) / (right - left), 0, 1)
-            const value = clickPercent * (max - min) + min
-            setValue(value)
+            setValue(clickPercent * (max - min) + min)
         }
 
         if (!dragging) {
+            // if not dragging, only need event to start drag
             const mousedown = (e: MouseEvent): void => {
                 updateFromMouse(e)
                 setDragging(true)
             }
+
             slider.addEventListener('mousedown', mousedown)
             return () => {
                 slider.removeEventListener('mousedown', mousedown)
@@ -67,6 +76,9 @@ function Slider (
             const mouseup = (): void => { setDragging(false) }
             const mouseleave = (): void => { setDragging(false) }
             const mousemove = (e: MouseEvent): void => { updateFromMouse(e) }
+
+            // attach drag event handlers to window so that drag can extend
+            // past slider's bounds once started
             window.addEventListener('mouseup', mouseup)
             window.addEventListener('mouseleave', mouseleave)
             window.addEventListener('mousemove', mousemove)
@@ -78,18 +90,18 @@ function Slider (
         }
     }, [dragging, min, max, setValue])
 
-    // update text input value when value state changes
+    // align text input value with current value on state change
     useEffect(() => {
-        if (value > max || value < min) {
-            throw new Error('Value set outside input bounds')
-        }
         const textInput = textInputRef.current
+
         // do not update text input if currently focused
         if (!textInput || textInput === document.activeElement) {
             return
         }
-        if (format.parse(textInput.value) !== value) {
-            const formatted = format.render(value)
+
+        // ensure text input contains correct formatted value
+        const formatted = format.apply(value)
+        if (textInput.value !== formatted) {
             textInput.value = formatted
             lastValidTextRef.current = formatted
         }
@@ -100,13 +112,12 @@ function Slider (
             throw new Error('No reference to text input element')
         }
 
-        // set current value if input text is valid number
         const value = format.parse(textInputRef.current.value)
         if (!Number.isNaN(value)) {
             const clamped = clamp(value, min, max)
             setValue(clamped)
             // store valid input to revert to on invalid input
-            lastValidTextRef.current = format.render(clamped)
+            lastValidTextRef.current = format.apply(clamped)
         }
 
         // revert to valid text input after period of no user input
@@ -118,38 +129,30 @@ function Slider (
         }, 5000)
     }
 
-    const getTextInputElement = (): ReactElement => {
-        return <input
-            ref={textInputRef}
-            className={'text-input'}
-            type={'text'}
-            onInput={updateFromText}
-            defaultValue={lastValidTextRef.current}
-        />
-    }
-
     return (
         <div className={`slider-wrap ${customClass}`}>
             <div
-                ref={sliderRef}
                 className={'slider-bar'}
                 data-dragging={dragging}
+                ref={sliderRef}
             >
                 <div
                     className={'slider-value'}
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
                 >
-                    {customHandle && customHandle}
+                    {customHandle}
                 </div>
             </div>
             <div className={'slider-elements'}>
-                { customElements !== undefined
-                    ? customElements(getTextInputElement()).map((element, i) =>
-                        <React.Fragment key={i}>
-                            {element}
-                        </React.Fragment>
-                    )
-                    : getTextInputElement() }
+                { customElement(
+                    <input
+                        className={'text-input'}
+                        ref={textInputRef}
+                        type={'text'}
+                        onInput={updateFromText}
+                        defaultValue={lastValidTextRef.current}
+                    />
+                ) }
             </div>
         </div>
     )

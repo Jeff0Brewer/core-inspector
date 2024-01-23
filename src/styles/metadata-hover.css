@@ -10,8 +10,11 @@
     user-select: none;
     overflow: hidden;
 
-    transform: translate(20%, -50%);
     transition: transform var(--transition-param);
+}
+
+.metadata[data-side="left"] {
+    transform: translate(20%, -50%);
 }
 
 .metadata[data-side="right"] {

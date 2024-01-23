@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../lib/load'
-import LoadIcon from '../components/load-icon'
+import LoadIcon from '../components/generic/load-icon'
 import Vis from '../components/vis'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
 import VisRenderer from '../vis/vis'
+import { MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -64,15 +65,19 @@ function App (): ReactElement {
                     <CoreVisSettings
                         vis={vis}
                         cores={CORES}
-                        currentCore={core}
-                        setCurrentCore={setCore}
+                        core={core}
+                        setCore={setCore}
                     />
                 </div>
                 <div className={'side-bar'}>
                     <CoreViewSliders vis={vis} />
                 </div>
                 <div className={'bottom-bar'}>
-                    <MineralControls vis={vis} />
+                    <MineralControls
+                        vis={vis}
+                        minerals={MINERALS}
+                        palettes={COLOR_PRESETS}
+                    />
                 </div>
             </div>
         </main>

@@ -37,7 +37,7 @@ function formatFloat (f: number): string {
     return f.toFixed(2)
 }
 
-function padZeros (n: number | string, len: number): string {
+function padZeros (n: number | string, len: number = 4): string {
     const str = n.toString()
     if (str.length > len) {
         return str
@@ -51,6 +51,14 @@ function getCssColor (color: vec3 | null): string {
         return 'transparent'
     }
     return `#${floatsToHex([color[0], color[1], color[2]])}`
+}
+
+function checkStringType (v: unknown): string {
+    const vType = typeof v
+    if (vType !== 'string') {
+        throw new Error(`Expected type string, got ${vType}`)
+    }
+    return v as 'string'
 }
 
 type BoundRect = {
@@ -69,6 +77,7 @@ export {
     formatPercent,
     parsePercent,
     padZeros,
-    getCssColor
+    getCssColor,
+    checkStringType
 }
 export type { BoundRect }

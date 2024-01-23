@@ -1,15 +1,10 @@
 import { useState, ReactElement } from 'react'
 import { PiCaretDownBold } from 'react-icons/pi'
-import '../styles/dropdown.css'
+import { checkStringType } from '../../lib/util'
+import '../../styles/dropdown.css'
 
-function checkStringType (v: unknown): string {
-    const vType = typeof v
-    if (vType !== 'string') {
-        throw new Error(`Expected type string, got ${vType}`)
-    }
-    return v as 'string'
-}
-
+// default item renderer for dropdown
+// uses generic type for flexibility but must be castable to string
 type StringItemProps<T> = {
     item: T
 }
@@ -32,9 +27,11 @@ type DropdownProps<T> = {
     customClass?: string
 }
 
-function Dropdown<T> (
-    { items, selected, setSelected, Element = StringItem, customClass = '' }: DropdownProps<T>
-): ReactElement {
+function Dropdown<T> ({
+    items, selected, setSelected,
+    Element = StringItem,
+    customClass = ''
+}: DropdownProps<T>): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
 
     return (
@@ -43,11 +40,11 @@ function Dropdown<T> (
             data-open={open}
             data-selected={!!selected}
         >
-            <div className={'label'}>
+            <div className={'label'} onClick={() => setOpen(!open)}>
                 <div className={'selected'}>
                     { selected && <Element item={selected} />}
                 </div>
-                <button onClick={() => setOpen(!open)}>
+                <button>
                     <PiCaretDownBold />
                 </button>
             </div>

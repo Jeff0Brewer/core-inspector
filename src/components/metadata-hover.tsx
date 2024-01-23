@@ -12,19 +12,21 @@ type MetadataHoverProps = {
 }
 
 function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
+    const [data, setData] = useState<DisplayMetadata>({})
     const [x, setX] = useState<number>(0)
     const [y, setY] = useState<number>(0)
-    const [data, setData] = useState<DisplayMetadata>({})
+    const [hoveredSide, setHoveredSide] = useState<'right' | 'left'>('left')
 
+    // fetch all metadata fields and update display data
     useEffect(() => {
         const getData = async (): Promise<void> => {
             const data: DisplayMetadata = {}
 
             const basePath = `./data/${core}`
-            const hydrationMetadata = await fetch(`${basePath}/hydration-metadata.json`)
-                .then(res => res.json())
+            const res = await fetch(`${basePath}/hydration-metadata.json`)
+            const { hydration } = await res.json()
 
-            data.hydration = hydrationMetadata.hydration
+            data.hydration = hydration
             setData({ ...data })
         }
         getData()
@@ -35,6 +37,12 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         const mousemove = (e: MouseEvent): void => {
             setX(e.clientX)
             setY(e.clientY)
+
+            // check which side of window mouse is over
+            // to position hover element horizontally
+            setHoveredSide(
+                e.clientX > window.innerWidth * 0.5 ? 'right' : 'left'
+            )
         }
         window.addEventListener('mousemove', mousemove)
         return () => {
@@ -42,23 +50,12 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    const formatId = (id: string): string => {
-        const [section, part] = id.split('_')
-        return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
-    }
-
-    const checkSide = (): string => {
-        return x > window.innerWidth * 0.5
-            ? 'right'
-            : 'left'
-    }
-
     return <>
         { hovered !== undefined &&
             <div
                 className={'metadata'}
                 style={{ left: `${x}px`, top: `${y}px` }}
-                data-side={checkSide()}
+                data-side={hoveredSide}
             >
                 <div className={'id'}>
                     { formatId(hovered) }
@@ -66,11 +63,16 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
                 { data.hydration && data.hydration[hovered] && <p>
                     hydration:
                     <span>
-                        {formatHydration(data.hydration[hovered])}
+                        { formatHydration(data.hydration[hovered]) }
                     </span>
                 </p> }
             </div> }
     </>
+}
+
+function formatId (id: string): string {
+    const [section, part] = id.split('_')
+    return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
 }
 
 function formatHydration (h: number): string {

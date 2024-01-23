@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
-import VerticalSlider from '../components/vertical-slider'
+import VerticalSlider from '../components/generic/vertical-slider'
 import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
 import '../styles/core-view-sliders.css'
 
@@ -31,31 +31,31 @@ function CoreViewSliders (
 
     return <>
         <VerticalSlider
-            currValue={zoom}
+            value={zoom}
             setValue={v => vis?.setZoom(v)}
-            min={0}
-            max={1}
-            step={0.01}
             label={'zoom'}
             icon={ICONS.zoom}
-        />
-        <VerticalSlider
-            currValue={spacing[0]}
-            setValue={v => vis?.setSpacing([v, spacing[1]])}
             min={0}
             max={1}
             step={0.01}
+        />
+        <VerticalSlider
+            value={spacing[0]}
+            setValue={v => vis?.setSpacing([v, spacing[1]])}
             label={'horizontal distance'}
             icon={ICONS.horizontalDist}
-        />
-        <VerticalSlider
-            currValue={spacing[1]}
-            setValue={v => vis?.setSpacing([spacing[0], v])}
             min={0}
             max={1}
             step={0.01}
+        />
+        <VerticalSlider
+            value={spacing[1]}
+            setValue={v => vis?.setSpacing([spacing[0], v])}
             label={'vertical distance'}
             icon={ICONS.verticalDist}
+            min={0}
+            max={1}
+            step={0.01}
         />
     </>
 }
