@@ -12,10 +12,10 @@ type MetadataHoverProps = {
 }
 
 function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
+    const [data, setData] = useState<DisplayMetadata>({})
     const [x, setX] = useState<number>(0)
     const [y, setY] = useState<number>(0)
     const [hoveredSide, setHoveredSide] = useState<'right' | 'left'>('left')
-    const [data, setData] = useState<DisplayMetadata>({})
 
     // fetch all metadata fields and update display data
     useEffect(() => {
