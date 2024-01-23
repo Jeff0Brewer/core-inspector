@@ -35,3 +35,288 @@
     font-size: 14px;
     border-radius: var(--radius);
 }
+
+.blend-menu {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: var(--menu-bg-color);
+}
+
+
+.blend-menu input[type="range"] {
+    width: 80%;
+    margin-top: 5px;
+}
+
+.blend-menu > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.blend-menu > p {
+    padding: 5px 0;
+}
+
+.blend-menu > p:not(:first-of-type) {
+    margin-top: 15px;
+}
+
+.blend-menu p {
+    text-transform: uppercase;
+}
+
+.monochrome-icon {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    overflow: hidden;
+    border: 1px solid #000;
+    border-radius: 50%;
+    transition: background-color var(--transition-param);
+}
+
+.monochrome-icon:before {
+    content: "";
+    display: block;
+    width: 50%;
+    height: 100%;
+    background-color: #000;
+}
+
+.mineral-mixer {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: flex-start;
+}
+
+.mineral-input {
+    position: relative;
+    width: 300px;
+    height: 22px;
+}
+
+.mineral-input .text-input,
+.mineral-input .slider-bar,
+.mineral-input .shortcut,
+.mineral-input .slider-handle{
+    transition: opacity var(--transition-param);
+}
+
+.mineral-input[data-visible="false"] .text-input,
+.mineral-input[data-visible="false"] .slider-value,
+.mineral-input .slider-bar,
+.mineral-input .shortcut,
+.mineral-input .slider-handle {
+    opacity: 0;
+}
+
+.mineral-input:hover .slider-bar,
+.mineral-input:hover .shortcut,
+.mineral-input .slider-bar[data-dragging="true"] .slider-handle,
+.mineral-input .slider-bar[data-dragging="true"] {
+    opacity: 1;
+}
+
+.mineral-slider .visibility-button {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 14px;
+    transition: color var(--transition-param);
+}
+
+.mineral-input[data-visible="false"] .visibility-button {
+    color: var(--color2);
+}
+
+.mineral-slider .text-input {
+    text-align: right;
+    width: 35px;
+    padding-right: 3px;
+}
+
+.mineral-slider .slider-bar {
+    background-color: var(--color1);
+    border: none;
+}
+
+.mineral-slider .slider-elements {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
+    right: 0;
+    top: 0;
+    padding: 2px;
+    height: 20px;
+    background-color: var(--color0);
+    pointer-events: none;
+}
+
+.mineral-slider input[type="text"], .mineral-slider button {
+    pointer-events: auto;
+}
+
+.mineral-slider .swatch {
+    margin: 0;
+}
+
+.mineral-slider .slider-elements > div {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 5px;
+}
+
+.mineral-slider .label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    letter-spacing: 1px;
+}
+
+.mineral-slider .slider-handle {
+    font-size: 10px;
+    height: 10px;
+}
+
+.palette {
+    display: flex;
+    width: 100%;
+    padding: 1px;
+}
+
+.swatch {
+    position: relative;
+    display: grid;
+    place-content: center;
+    width: 16px;
+    height: 16px;
+    margin: 1px;
+    transition: background-color var(--transition-param);
+}
+
+.swatch p {
+    background-color: #000;
+    width: 100%;
+    height: 60%;
+    border-top: 1px solid var(--color0);
+    position: absolute;
+    bottom: 0;
+    font-size: 0.4rem;
+    display: grid;
+    place-content: center;
+}
+
+.swatch:before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    background-color: #111;
+    transition: opacity var(--transition-param);
+    opacity: 0;
+}
+
+.swatch[data-color="false"]:before {
+    opacity: 1;
+}
+
+.palette-dropdown {
+    --height: 22px;
+    width: 220px;
+    height: var(--height);
+}
+
+.palette-dropdown .selected {
+    border: 1px solid var(--color2);
+}
+
+.blend-mode-dropdown .label, .blend-mode-dropdown .items {
+    border: 1px solid var(--color1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.blend-mode-dropdown .label * {
+    border: none;
+}
+
+.blend-mode-dropdown .items {
+    margin-top: 1px;
+}
+
+.blend-menu .params {
+    display: block;
+    flex-direction: column;
+    margin-top: 15px;
+}
+
+.params > p {
+    padding: 5px 0;
+}
+
+.params > p:not(:first-of-type) {
+    margin-top: 5px;
+}
+
+.param-slider {
+    position: relative;
+    display: flex;
+    gap: 5px;
+    width: 100%;
+    height: 18px;
+}
+
+.param-slider button {
+    position: relative;
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 12px;
+    border: 1px solid var(--color1);
+    background-color: var(--color0);
+    transition:
+        opacity var(--transition-param),
+        background-color var(--transition-param);
+}
+
+.param-slider button[data-visible="false"] {
+    opacity: 0;
+}
+
+.param-slider button:hover {
+    background-color: #303030;
+}
+
+.param-slider .slider-bar {
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.monochrome-toggle {
+    /* temp positioning */
+    position: absolute;
+    right: 20px;
+    top: 30px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #000;
+    overflow: hidden;
+}
+
+.monochrome-toggle:before {
+    content: "";
+    display: block;
+    width: 50%;
+    height: 100%;
+    background-color: #000;
+}

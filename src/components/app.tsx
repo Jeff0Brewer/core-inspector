@@ -6,6 +6,7 @@ import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
 import VisRenderer from '../vis/vis'
+import { MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -72,7 +73,7 @@ function App (): ReactElement {
                     <CoreViewSliders vis={vis} />
                 </div>
                 <div className={'bottom-bar'}>
-                    <MineralControls vis={vis} />
+                    <MineralControls vis={vis} minerals={MINERALS} palettes={COLOR_PRESETS} />
                 </div>
             </div>
         </main>
