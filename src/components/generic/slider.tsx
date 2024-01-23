@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat } from '../../lib/util'
 import '../../styles/slider.css'
 
+type SliderCustomElement = (textInput: ReactElement) => ReactElement
+
+const DEFAULT_ELEMENT: SliderCustomElement = textInput => textInput
+
 type SliderTextFormatter = {
     apply: (v: number) => string,
     parse: (v: string) => number
@@ -12,22 +16,22 @@ const DEFAULT_FORMATTER: SliderTextFormatter = {
     parse: parseFloat
 }
 
-type SliderCustomElement = (textInput: ReactElement) => ReactElement
-
 type SliderProps = {
     value: number,
     setValue: (v: number) => void,
     min: number,
     max: number,
+    customClass?: string,
     customElement?: SliderCustomElement,
     customHandle?: ReactElement
     format?: SliderTextFormatter,
-    customClass?: string,
 }
 
 function Slider ({
-    value, setValue, min, max, customElement, customHandle,
-    format = DEFAULT_FORMATTER, customClass = ''
+    value, setValue, min, max, customHandle,
+    customClass = '',
+    customElement = DEFAULT_ELEMENT,
+    format = DEFAULT_FORMATTER
 }: SliderProps): ReactElement {
     const [dragging, setDragging] = useState<boolean>(false)
 
@@ -113,18 +117,6 @@ function Slider ({
         }, 5000)
     }
 
-    // store text input here to conditionally pass into custom element
-    const textInput = (
-        <input
-            ref={textInputRef}
-            className={'text-input'}
-            type={'text'}
-            onInput={updateFromText}
-            defaultValue={lastValidTextRef.current}
-        />
-
-    )
-
     return (
         <div className={`slider-wrap ${customClass}`}>
             <div
@@ -140,9 +132,15 @@ function Slider ({
                 </div>
             </div>
             <div className={'slider-elements'}>
-                { customElement !== undefined
-                    ? customElement(textInput)
-                    : textInput }
+                { customElement(
+                    <input
+                        className={'text-input'}
+                        ref={textInputRef}
+                        type={'text'}
+                        onInput={updateFromText}
+                        defaultValue={lastValidTextRef.current}
+                    />
+                ) }
             </div>
         </div>
     )
