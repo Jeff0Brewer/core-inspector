@@ -6,7 +6,7 @@ import { getCssColor, formatPercent, parsePercent } from '../lib/util'
 import { BlendMode, GenericPalette, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/dropdown'
 import Slider from '../components/slider'
-import '../styles/mineral-blend.css'
+import '../styles/blend-menu.css'
 
 type ColorSwatchProps = {
     color: vec3 | null,
