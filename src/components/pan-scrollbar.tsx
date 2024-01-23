@@ -75,6 +75,7 @@ function PanScrollbar (
         <div
             className={'scrollbar-wrap'}
             data-visible={panWidth > 0 && panWidth < 1}
+            data-dragging={dragging}
             ref={scrollbarWrapRef}
         >
             <div

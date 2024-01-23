@@ -104,6 +104,7 @@ class Camera2D {
         if (!this.visBounds) { return }
         const visWidth = this.visBounds.right - this.visBounds.left
         this.focus[0] = t * visWidth
+        this.targetFocus[0] = t * visWidth
         this.eye[0] = t * visWidth
     }
 
