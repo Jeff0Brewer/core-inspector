@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import MetadataHover from '../components/metadata-hover'
-import VisRenderer, { VIS_DEFAULTS } from '../vis/vis'
+import VisRenderer from '../vis/vis'
 import '../styles/vis.css'
 
 type VisProps = {
@@ -11,7 +11,7 @@ type VisProps = {
 function Vis (
     { vis, core }: VisProps
 ): ReactElement {
-    const [hovered, setHovered] = useState<string | undefined>(VIS_DEFAULTS.core.hovered)
+    const [hovered, setHovered] = useState<string | undefined>(undefined)
     const frameIdRef = useRef<number>(-1)
 
     useEffect(() => {

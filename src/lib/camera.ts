@@ -10,10 +10,6 @@ const MAX_ZOOM = 1.75
 
 type CameraMode = CoreShape
 
-type CameraSettings = {
-    zoom: number
-}
-
 class Camera2D {
     zoomT: number
     eye: vec3
@@ -111,4 +107,3 @@ class Camera2D {
 }
 
 export default Camera2D
-export type { CameraSettings }

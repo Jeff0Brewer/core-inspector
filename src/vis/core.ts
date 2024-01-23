@@ -25,14 +25,6 @@ const SHAPE_T_VALUES = { column: 0, spiral: 1 } as const
 type CoreShape = keyof typeof SHAPE_T_VALUES
 type CoreViewMode = 'punchcard' | 'downscaled'
 
-type CoreSettings = {
-    spacing: [number, number],
-    viewMode: CoreViewMode,
-    shape: CoreShape,
-    pointSize: number,
-    hovered: string | undefined
-}
-
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
@@ -50,12 +42,12 @@ class CoreRenderer {
         punchMineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
-        bounds: BoundRect,
-        coreSettings: CoreSettings
+        bounds: BoundRect
     ) {
-        this.currSpacing = coreSettings.spacing
-        this.viewMode = coreSettings.viewMode
-        this.targetShape = coreSettings.shape
+        // can be set to anything, will be aligned with ui state on load
+        this.currSpacing = [0, 0]
+        this.viewMode = 'downscaled'
+        this.targetShape = 'column'
 
         this.shapeT = SHAPE_T_VALUES[this.targetShape]
         this.metadata = tileMetadata
@@ -83,7 +75,7 @@ class CoreRenderer {
             new MineralBlender(gl, punchMineralMaps),
             punchPositions,
             punchTexCoords,
-            coreSettings.pointSize,
+            3.5,
             this.targetShape
         )
         this.stencilRenderer = new StencilCoreRenderer(
@@ -91,7 +83,7 @@ class CoreRenderer {
             downPositions,
             tileMetadata,
             idMetadata,
-            coreSettings.hovered
+            undefined
         )
         this.highlightRenderer = new HoverHighlightRenderer(
             gl,
@@ -329,6 +321,5 @@ export {
 }
 export type {
     CoreViewMode,
-    CoreShape,
-    CoreSettings
+    CoreShape
 }
