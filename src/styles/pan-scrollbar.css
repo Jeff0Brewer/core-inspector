@@ -1,0 +1,41 @@
+.scrollbar-wrap {
+    position: absolute;
+    z-index: 2;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-bottom: 35px;
+    padding-top: 5px;
+    overflow: hidden;
+    transition:
+        opacity var(--transition-param),
+        height var(--transition-param);
+}
+
+.scrollbar-wrap[data-visible="false"] {
+    opacity: 0;
+}
+
+/* add transitions + delay to width / left to persist last state during animation */
+.scrollbar-wrap[data-visible="false"] .scrollbar-handle {
+    transition:
+        width var(--transition-param),
+        left var(--transition-param);
+    transition-delay: 500ms;
+}
+
+.scrollbar-handle {
+    position: relative;
+    background-color: #fff;
+    height: 2px;
+    border-radius: 0;
+    transition:
+        height var(--transition-param),
+        border-radius var(--transition-param);
+}
+
+.scrollbar-wrap:hover .scrollbar-handle,
+.scrollbar-wrap[data-dragging="true"] .scrollbar-handle {
+    height: 6px;
+    border-radius: 3px;
+}

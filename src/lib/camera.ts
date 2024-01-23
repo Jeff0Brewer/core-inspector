@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import { clamp, ease } from '../lib/util'
+import { clamp, ease, BoundRect } from '../lib/util'
 import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
 
 const MOUSE_PAN_SPEED = 0.003
@@ -10,6 +10,7 @@ const MAX_ZOOM = 1.75
 
 type CameraMode = CoreShape
 
+// TODO: simplify camera / factor state into react heirarchy
 class Camera2D {
     zoomT: number
     eye: vec3
@@ -20,6 +21,9 @@ class Camera2D {
 
     targetFocus: vec3
     targetFocusT: number
+
+    visBounds: BoundRect | null
+    viewportBounds: BoundRect | null
 
     constructor (zoomT: number, shape: CoreShape) {
         this.zoomT = zoomT
@@ -32,8 +36,27 @@ class Camera2D {
         mat4.lookAt(this.matrix, this.eye, this.focus, this.up)
 
         this.mode = shape
+
         this.targetFocus = vec3.clone(this.focus)
         this.targetFocusT = 1
+
+        this.visBounds = null
+        this.viewportBounds = null
+    }
+
+    updatePanState (
+        setPan?: (l: number) => void,
+        setPanWidth?: (w: number) => void
+    ): void {
+        if (this.mode === 'column' && this.viewportBounds && this.visBounds) {
+            const visWidth = this.visBounds.right - this.visBounds.left
+            const viewportWidth = this.viewportBounds.right - this.viewportBounds.left
+            setPan?.(this.getCurrentX() / visWidth)
+            setPanWidth?.(viewportWidth / visWidth)
+        } else {
+            setPan?.(0)
+            setPanWidth?.(0)
+        }
     }
 
     resetFocus (): void {
@@ -42,10 +65,24 @@ class Camera2D {
         this.targetFocus = vec3.fromValues(0, 0, 0)
     }
 
+    getCurrentX (): number {
+        if (this.targetFocusT < 1) {
+            const focus = vec3.lerp(
+                vec3.create(),
+                this.focus,
+                this.targetFocus,
+                ease(this.targetFocusT)
+            )
+            return focus[0]
+        }
+        return this.focus[0]
+    }
+
     update (elapsed: number): void {
         if (this.targetFocusT < 1) {
             const focus = vec3.create()
             vec3.lerp(focus, this.focus, this.targetFocus, ease(this.targetFocusT))
+
             const eye = vec3.fromValues(focus[0], focus[1], this.zoomDistance())
             mat4.lookAt(this.matrix, eye, focus, this.up)
 
@@ -62,6 +99,14 @@ class Camera2D {
     setMode (mode: CameraMode): void {
         this.mode = mode
         this.resetFocus()
+    }
+
+    setPan (t: number): void {
+        if (!this.visBounds) { return }
+        const visWidth = this.visBounds.right - this.visBounds.left
+        this.focus[0] = t * visWidth
+        this.targetFocus[0] = t * visWidth
+        this.eye[0] = t * visWidth
     }
 
     pan (x: number, y: number): void {

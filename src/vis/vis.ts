@@ -15,7 +15,9 @@ type UiState = {
     setSpacing?: (s: [number, number]) => void,
     setZoom?: (z: number) => void,
     setHovered?: (h: string | undefined) => void,
-    setBlending?: (p: BlendParams) => void
+    setBlending?: (p: BlendParams) => void,
+    setPan?: (t: number) => void,
+    setPanWidth?: (w: number) => void
 }
 
 const PROJECTION_PARAMS = {
@@ -58,7 +60,8 @@ class VisRenderer {
             punchcardMaps,
             tileMetadata,
             idMetadata,
-            this.getViewportBounds()
+            this.getViewportBounds(),
+            this.setVertexBounds.bind(this)
         )
 
         this.resize() // init canvas size, gl viewport, proj matrix
@@ -84,6 +87,11 @@ class VisRenderer {
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
+    setPan (t: number): void {
+        this.camera.setPan(t)
+        this.uiState.setPan?.(t)
+    }
+
     setShape (s: CoreShape): void {
         this.core.setShape(this.gl, s, this.getViewportBounds())
         this.camera.setMode(s)
@@ -100,6 +108,10 @@ class VisRenderer {
         this.uiState.setSpacing?.(spacing)
     }
 
+    setVertexBounds (bounds: BoundRect): void {
+        this.camera.visBounds = bounds
+    }
+
     getViewportBounds (): BoundRect {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
@@ -108,7 +120,12 @@ class VisRenderer {
         const [xPad, yPad] = VIEWPORT_PADDING
         const x = xBound * xPad
         const y = yBound * yPad
-        return { top: y, bottom: -y, left: -x, right: x }
+
+        const bounds = { top: y, bottom: -y, left: -x, right: x }
+
+        this.camera.viewportBounds = bounds
+
+        return bounds
     }
 
     resize (): void {
@@ -186,6 +203,8 @@ class VisRenderer {
 
     draw (elapsed: number): void {
         this.camera.update(elapsed)
+        // temporary, should only be updated with pan / bounds change
+        this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
