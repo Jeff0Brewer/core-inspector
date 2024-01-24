@@ -1,10 +1,10 @@
 import { vec3 } from 'gl-matrix'
 import {
-    initProgram,
-    initBuffer,
-    initTextureFramebuffer,
-    initTexture,
-    initAttribute,
+    GlContext,
+    GlProgram,
+    GlBuffer,
+    GlTexture,
+    GlTextureFramebuffer,
     getTextureAttachments
 } from '../lib/gl-wrap'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
@@ -131,14 +131,12 @@ function getBlendColor (
 }
 
 class MineralBlender {
-    program: WebGLProgram
-    buffer: WebGLBuffer
-    bindAttrib: () => void
+    program: GlProgram
+    buffer: GlBuffer
     textureAttachments: Array<number>
 
-    sources: Array<WebGLTexture>
-    output: WebGLTexture
-    framebuffer: WebGLFramebuffer
+    sources: Array<GlTexture>
+    framebuffer: GlTextureFramebuffer
 
     setMode: (m: BlendMode) => void
     setSaturation: (s: number) => void
@@ -156,18 +154,13 @@ class MineralBlender {
         this.height = sources[0].height
 
         const fragSource = getBlendFrag(sources.length)
-        this.program = initProgram(gl, vertSource, fragSource)
+        this.program = new GlProgram(gl, vertSource, fragSource)
 
-        this.buffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, FULLSCREEN_RECT, gl.STATIC_DRAW)
+        this.buffer = new GlBuffer(gl)
+        this.buffer.setData(gl, FULLSCREEN_RECT)
+        this.buffer.addAttribute(gl, this.program, 'position', POS_FPV, STRIDE, 0)
+        this.buffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
         this.numVertex = FULLSCREEN_RECT.length / STRIDE
-
-        const bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, STRIDE, 0)
-        const bindTexCoord = initAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
-        this.bindAttrib = (): void => {
-            bindPosition()
-            bindTexCoord()
-        }
 
         // get attachments for source textures and output,
         // first attachment reserved for output texture
@@ -176,40 +169,36 @@ class MineralBlender {
         this.sources = []
         for (let i = 0; i < sources.length; i++) {
             // add one to attachment ind to skip output attachment
-            gl.activeTexture(this.textureAttachments[i + 1])
-            const texture = initTexture(gl)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, sources[i])
+            const texture = new GlTexture(gl, this.textureAttachments[i + 1])
+            texture.setData(gl, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, sources[i])
             this.sources.push(texture)
         }
 
         // init texture framebuffer of same size as source textures for blended output
-        const { texture, framebuffer } = initTextureFramebuffer(gl, this.width, this.height)
-        this.output = texture
-        this.framebuffer = framebuffer
+        this.framebuffer = new GlTextureFramebuffer(gl, this.width, this.height)
 
-        const saturationLoc = gl.getUniformLocation(this.program, 'saturation')
+        const saturationLoc = this.program.getUniformLocation(gl, 'saturation')
+        const thresholdLoc = this.program.getUniformLocation(gl, 'threshold')
+        const modeLoc = this.program.getUniformLocation(gl, 'mode')
         this.setSaturation = (s: number): void => { gl.uniform1f(saturationLoc, s) }
-
-        const thresholdLoc = gl.getUniformLocation(this.program, 'threshold')
         this.setThreshold = (t: number): void => { gl.uniform1f(thresholdLoc, t) }
-
-        const modeLoc = gl.getUniformLocation(this.program, 'mode')
         this.setMode = (m: BlendMode): void => { gl.uniform1f(modeLoc, BLEND_MODES[m]) }
 
+        this.program.bind(gl)
         this.setMagUniform = []
         this.setColUniform = []
         for (let i = 0; i < sources.length; i++) {
             // init texture uniforms statically
-            const textureLoc = gl.getUniformLocation(this.program, `texture${i}`)
+            const textureLoc = this.program.getUniformLocation(gl, `texture${i}`)
             gl.uniform1i(textureLoc, i + 1) // add one since attachment 0 is reserved for output
 
             // get closures to set each magnitude / color uniforms easily on update
-            const magnitudeLoc = gl.getUniformLocation(this.program, `magnitude${i}`)
+            const magnitudeLoc = this.program.getUniformLocation(gl, `magnitude${i}`)
             this.setMagUniform.push((m: number) => {
                 gl.uniform1f(magnitudeLoc, m)
             })
 
-            const colorLoc = gl.getUniformLocation(this.program, `color${i}`)
+            const colorLoc = this.program.getUniformLocation(gl, `color${i}`)
             this.setColUniform.push((c: vec3) => {
                 gl.uniform3fv(colorLoc, c)
             })
@@ -217,8 +206,7 @@ class MineralBlender {
     }
 
     bind (gl: WebGLRenderingContext): void {
-        gl.activeTexture(this.textureAttachments[0])
-        gl.bindTexture(gl.TEXTURE_2D, this.output)
+        this.framebuffer.bindTexture(gl)
     }
 
     update (gl: WebGLRenderingContext, params: BlendParams): void {
@@ -228,22 +216,20 @@ class MineralBlender {
             getBlendColor(palette, visibilities, monochrome, mineral, i)
         )
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
-        gl.viewport(0, 0, this.width, this.height)
-        gl.useProgram(this.program)
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer)
-        this.bindAttrib()
+        this.framebuffer.bind(gl)
+        this.program.bind(gl)
+        this.buffer.bind(gl)
         this.setSaturation(saturation)
         this.setThreshold(threshold)
         this.setMode(mode)
+
         for (let i = 0; i < this.sources.length; i++) {
-            gl.activeTexture(this.textureAttachments[i + 1])
-            gl.bindTexture(gl.TEXTURE_2D, this.sources[i])
+            this.sources[i].bind(gl)
             this.setMagUniform[i](colors[i] !== null ? magnitudes[i] : 0)
             this.setColUniform[i](colors[i] || [0, 0, 0])
         }
 
+        gl.viewport(0, 0, this.width, this.height)
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
         gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     }
