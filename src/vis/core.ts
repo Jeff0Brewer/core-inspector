@@ -115,7 +115,7 @@ class CoreRenderer {
         this.downRenderer.program.bind(gl)
         this.downRenderer.setProj(m)
 
-        gl.useProgram(this.punchRenderer.program)
+        this.punchRenderer.program.bind(gl)
         this.punchRenderer.setProj(m)
         this.punchRenderer.setDpr(window.devicePixelRatio)
 
