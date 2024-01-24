@@ -122,7 +122,7 @@ class CoreRenderer {
         gl.useProgram(this.stencilRenderer.program)
         this.stencilRenderer.setProj(m)
 
-        gl.useProgram(this.highlightRenderer.program)
+        this.highlightRenderer.program.bind(gl)
         this.highlightRenderer.setProj(m)
 
         gl.useProgram(this.accentRenderer.program)
