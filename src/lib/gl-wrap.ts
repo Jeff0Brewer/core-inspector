@@ -45,6 +45,7 @@ class GlProgram {
     constructor (gl: GlContext, vertSource: string, fragSource: string) {
         const vert = initShader(gl, gl.VERTEX_SHADER, vertSource)
         const frag = initShader(gl, gl.FRAGMENT_SHADER, fragSource)
+
         const program = gl.createProgram()
         if (!program) {
             throw new Error('Program creation failed')
@@ -52,11 +53,15 @@ class GlProgram {
         gl.attachShader(program, vert)
         gl.attachShader(program, frag)
         gl.linkProgram(program)
+
         const linkSuccess = gl.getProgramParameter(program, gl.LINK_STATUS)
         if (!linkSuccess) {
             const log = gl.getProgramInfoLog(program)
             throw new Error(`Program linking failed: ${log}`)
         }
+
+        gl.deleteShader(vert)
+        gl.deleteShader(frag)
 
         this.id = program
     }
@@ -67,6 +72,10 @@ class GlProgram {
 
     getUniformLocation (gl: GlContext, name: string): WebGLUniformLocation | null {
         return gl.getUniformLocation(this.id, name)
+    }
+
+    drop (gl: GlContext): void {
+        gl.deleteProgram(this.id)
     }
 }
 
@@ -137,6 +146,10 @@ class GlBuffer {
 
         this.attributes.push(bindAttrib)
     }
+
+    drop (gl: GlContext): void {
+        gl.deleteBuffer(this.id)
+    }
 }
 
 class GlTexture {
@@ -186,6 +199,10 @@ class GlTexture {
     ): void {
         this.bind(gl)
         gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, format, type, pixels)
+    }
+
+    drop (gl: GlContext): void {
+        gl.deleteTexture(this.id)
     }
 }
 
@@ -245,6 +262,11 @@ class GlTextureFramebuffer {
     bindTexture (gl: GlContext): void {
         gl.activeTexture(this.attachment)
         gl.bindTexture(gl.TEXTURE_2D, this.texture)
+    }
+
+    drop (gl: GlContext): void {
+        gl.deleteFramebuffer(this.framebuffer)
+        gl.deleteTexture(this.texture)
     }
 }
 export {
