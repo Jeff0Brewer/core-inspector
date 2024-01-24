@@ -227,6 +227,10 @@ class GlTextureFramebuffer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
     }
 
+    unbind (gl: GlContext): void {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    }
+
     bindTexture (gl: GlContext): void {
         gl.activeTexture(this.attachment)
         gl.bindTexture(gl.TEXTURE_2D, this.texture)
