@@ -125,7 +125,7 @@ class CoreRenderer {
         this.highlightRenderer.program.bind(gl)
         this.highlightRenderer.setProj(m)
 
-        gl.useProgram(this.accentRenderer.program)
+        this.accentRenderer.program.bind(gl)
         this.accentRenderer.setProj(m)
     }
 

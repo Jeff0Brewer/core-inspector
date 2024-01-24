@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
+import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV, CoreShape } from '../vis/core'
 import vertSource from '../shaders/accent-line-vert.glsl?raw'
 import fragSource from '../shaders/accent-line-frag.glsl?raw'
@@ -7,83 +7,75 @@ import fragSource from '../shaders/accent-line-frag.glsl?raw'
 const LEN_FPV = 1
 
 class AccentLineRenderer {
-    program: WebGLProgram
-    spiralPosBuffer: WebGLBuffer
-    columnPosBuffer: WebGLBuffer
-    lineLengthBuffer: WebGLBuffer
-    bindSpiralPos: () => void
-    bindColumnPos: () => void
-    bindLineLength: () => void
+    program: GlProgram
+    spiralPosBuffer: GlBuffer
+    columnPosBuffer: GlBuffer
+    lineLengthBuffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     numVertex: number
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         positions: Float32Array,
         shape: CoreShape
     ) {
-        this.program = initProgram(gl, vertSource, fragSource)
+        this.program = new GlProgram(gl, vertSource, fragSource)
 
         this.numVertex = positions.length / POS_FPV
-        this.spiralPosBuffer = initBuffer(gl)
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            shape === 'spiral' ? positions : new Float32Array(positions.length),
-            gl.STATIC_DRAW
+        this.spiralPosBuffer = new GlBuffer(gl)
+        this.spiralPosBuffer.setData(
+            gl,
+            shape === 'spiral'
+                ? positions
+                : new Float32Array(positions.length)
         )
+        this.spiralPosBuffer.addAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
 
-        this.columnPosBuffer = initBuffer(gl)
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            shape === 'column' ? positions : new Float32Array(positions.length),
-            gl.STATIC_DRAW
+        this.columnPosBuffer = new GlBuffer(gl)
+        this.columnPosBuffer.setData(
+            gl,
+            shape === 'column'
+                ? positions
+                : new Float32Array(positions.length)
         )
+        this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
-        this.lineLengthBuffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, getLineLengths(this.numVertex), gl.STATIC_DRAW)
+        this.lineLengthBuffer = new GlBuffer(gl)
+        this.lineLengthBuffer.setData(gl, getLineLengths(this.numVertex))
+        this.lineLengthBuffer.addAttribute(gl, this.program, 'lineLength', LEN_FPV, LEN_FPV, 0)
 
-        this.bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
-        this.bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
-        this.bindLineLength = initAttribute(gl, this.program, 'lineLength', LEN_FPV, LEN_FPV, 0)
-
-        const projLoc = gl.getUniformLocation(this.program, 'proj')
-        const viewLoc = gl.getUniformLocation(this.program, 'view')
-        const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
+        const projLoc = this.program.getUniformLocation(gl, 'proj')
+        const viewLoc = this.program.getUniformLocation(gl, 'view')
+        const shapeTLoc = this.program.getUniformLocation(gl, 'shapeT')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
 
     setPositions (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         positions: Float32Array,
         shape: CoreShape
     ): void {
-        gl.bindBuffer(gl.ARRAY_BUFFER, shape === 'spiral'
-            ? this.spiralPosBuffer
-            : this.columnPosBuffer
-        )
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+        if (shape === 'spiral') {
+            this.spiralPosBuffer.setData(gl, positions)
+        } else {
+            this.columnPosBuffer.setData(gl, positions)
+        }
     }
 
     draw (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         view: mat4,
         shapeT: number
     ): void {
-        gl.useProgram(this.program)
+        this.program.bind(gl)
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
-        this.bindSpiralPos()
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
-        this.bindColumnPos()
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.lineLengthBuffer)
-        this.bindLineLength()
-
+        this.spiralPosBuffer.bind(gl)
+        this.columnPosBuffer.bind(gl)
+        this.lineLengthBuffer.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
