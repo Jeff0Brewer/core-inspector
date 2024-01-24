@@ -117,19 +117,23 @@ class PunchcardCoreRenderer {
 const POINT_PER_ROW = 3
 
 const addPunchcardAttrib = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     getPointAttrib: (i: number, j: number) => Array<number>,
     numRows: number
 ): void => {
+    const attribs = []
     for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < POINT_PER_ROW; j++) {
-            out.push(...getPointAttrib(i, j))
+            attribs.push(...getPointAttrib(i, j))
         }
     }
+    out.set(attribs, offset)
 }
 
 const addPunchcardTexCoords = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     rect: TileRect,
     textureHeight: number
 ): void => {
@@ -143,11 +147,12 @@ const addPunchcardTexCoords = (
             rect.top + heightInc * i
         ]
     }
-    addPunchcardAttrib(out, getPointCoords, numRows)
+    addPunchcardAttrib(out, offset, getPointCoords, numRows)
 }
 
 const addPunchcardSpiralPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currRadius: number,
     currAngle: number,
     tileRadius: number,
@@ -173,11 +178,12 @@ const addPunchcardSpiralPositions = (
         ]
     }
 
-    addPunchcardAttrib(out, getSpiralPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getSpiralPointPositions, numRows)
 }
 
 const addPunchcardColumnPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currColumnX: number,
     currColumnY: number,
     tileHeight: number,
@@ -197,12 +203,13 @@ const addPunchcardColumnPositions = (
         return [columnX, columnY]
     }
 
-    addPunchcardAttrib(out, getPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getPointPositions, numRows)
 }
 
 export default PunchcardCoreRenderer
 export {
     addPunchcardSpiralPositions,
     addPunchcardColumnPositions,
-    addPunchcardTexCoords
+    addPunchcardTexCoords,
+    POINT_PER_ROW
 }

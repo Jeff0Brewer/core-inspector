@@ -104,13 +104,15 @@ class DownscaledCoreRenderer {
 const TILE_DETAIL = 12
 
 const addDownscaledAttrib = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     getRowAttrib: (i: number) => [Array<number>, Array<number>]
 ): void => {
+    const attribs = []
     for (let i = 0; i < TILE_DETAIL; i++) {
         const [inner, outer] = getRowAttrib(i)
         const [nextInner, nextOuter] = getRowAttrib(i + 1)
-        out.push(
+        attribs.push(
             ...inner,
             ...outer,
             ...nextOuter,
@@ -119,10 +121,12 @@ const addDownscaledAttrib = (
             ...inner
         )
     }
+    out.set(attribs, offset)
 }
 
 const addDownscaledTexCoords = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     rect: TileRect
 ): void => {
     const heightInc = rect.height / TILE_DETAIL
@@ -137,11 +141,12 @@ const addDownscaledTexCoords = (
         ]
         return [inner, outer]
     }
-    addDownscaledAttrib(out, getRowCoords)
+    addDownscaledAttrib(out, offset, getRowCoords)
 }
 
 const addDownscaledSpiralPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currRadius: number,
     currAngle: number,
     tileRadius: number,
@@ -168,11 +173,12 @@ const addDownscaledSpiralPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, getRowSpiralPositions)
+    addDownscaledAttrib(out, offset, getRowSpiralPositions)
 }
 
 const addDownscaledColumnPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currColumnX: number,
     currColumnY: number,
     tileHeight: number,
@@ -189,12 +195,13 @@ const addDownscaledColumnPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, getRowColumnPositions)
+    addDownscaledAttrib(out, offset, getRowColumnPositions)
 }
 
 export default DownscaledCoreRenderer
 export {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
-    addDownscaledTexCoords
+    addDownscaledTexCoords,
+    TILE_DETAIL
 }
