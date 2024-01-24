@@ -1,4 +1,5 @@
 import { mat4 } from 'gl-matrix'
+import { GlContext } from '../lib/gl-wrap'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -47,7 +48,7 @@ class CoreRenderer {
     setVertexBounds: (b: BoundRect) => void
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         downMineralMaps: Array<HTMLImageElement>,
         punchMineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
@@ -111,7 +112,7 @@ class CoreRenderer {
         this.setVertexBounds = setVertexBounds
     }
 
-    setProj (gl: WebGLRenderingContext, m: mat4): void {
+    setProj (gl: GlContext, m: mat4): void {
         this.downRenderer.program.bind(gl)
         this.downRenderer.setProj(m)
 
@@ -129,27 +130,27 @@ class CoreRenderer {
         this.accentRenderer.setProj(m)
     }
 
-    setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
+    setBlending (gl: GlContext, params: BlendParams): void {
         this.downRenderer.minerals.update(gl, params)
         this.punchRenderer.minerals.update(gl, params)
     }
 
-    setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
+    setHovered (gl: GlContext, id: string | undefined): void {
         this.highlightRenderer.setHovered(gl, id)
         this.stencilRenderer.setHovered(id)
     }
 
-    setSpacing (gl: WebGLRenderingContext, spacing: [number, number], bounds: BoundRect): void {
+    setSpacing (gl: GlContext, spacing: [number, number], bounds: BoundRect): void {
         this.currSpacing = spacing
         this.genVerts(gl, bounds)
     }
 
-    setShape (gl: WebGLRenderingContext, shape: CoreShape, bounds: BoundRect): void {
+    setShape (gl: GlContext, shape: CoreShape, bounds: BoundRect): void {
         this.targetShape = shape
         this.genVerts(gl, bounds)
     }
 
-    setViewMode (gl: WebGLRenderingContext, v: CoreViewMode, bounds: BoundRect): void {
+    setViewMode (gl: GlContext, v: CoreViewMode, bounds: BoundRect): void {
         this.viewMode = v
         // since downscaled verts used in stencil / hover regardless of view mode
         // only need to ensure that punchcard verts are updated
@@ -158,13 +159,13 @@ class CoreRenderer {
         }
     }
 
-    wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
+    wrapColumns (gl: GlContext, bounds: BoundRect): void {
         if (this.targetShape === 'column') {
             this.genVerts(gl, bounds)
         }
     }
 
-    genVerts (gl: WebGLRenderingContext, viewportBounds: BoundRect): void {
+    genVerts (gl: GlContext, viewportBounds: BoundRect): void {
         const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
             this.currSpacing,
@@ -184,7 +185,7 @@ class CoreRenderer {
     }
 
     draw (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         view: mat4,
         elapsed: number,
         mousePos: [number, number],
@@ -206,6 +207,14 @@ class CoreRenderer {
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
         this.highlightRenderer.draw(gl, view)
         this.accentRenderer.draw(gl, view, easedShapeT)
+    }
+
+    drop (gl: GlContext): void {
+        this.downRenderer.drop(gl)
+        this.punchRenderer.drop(gl)
+        this.accentRenderer.drop(gl)
+        this.stencilRenderer.drop(gl)
+        this.highlightRenderer.drop(gl)
     }
 }
 

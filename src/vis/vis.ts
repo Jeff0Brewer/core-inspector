@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
-import { initGl } from '../lib/gl-wrap'
+import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import { BlendParams } from '../vis/mineral-blend'
@@ -28,12 +28,13 @@ const PROJECTION_PARAMS = {
 
 class VisRenderer {
     canvas: HTMLCanvasElement
-    gl: WebGLRenderingContext
+    gl: GlContext
     core: CoreRenderer
     camera: Camera2D
     proj: mat4
     mousePos: [number, number]
     uiState: UiState
+    dropped: boolean
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -68,6 +69,8 @@ class VisRenderer {
 
         this.mousePos = [0, 0]
         this.uiState = uiState || {}
+
+        this.dropped = false
     }
 
     setBlending (params: BlendParams): void {
@@ -202,6 +205,9 @@ class VisRenderer {
     }
 
     draw (elapsed: number): void {
+        // don't draw if gl resources have been freed
+        if (this.dropped) { return }
+
         this.camera.update(elapsed)
         // temporary, should only be updated with pan / bounds change
         this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
@@ -216,6 +222,11 @@ class VisRenderer {
             this.mousePos,
             this.setHovered.bind(this)
         )
+    }
+
+    drop (): void {
+        this.core.drop(this.gl)
+        this.dropped = true
     }
 }
 

@@ -81,6 +81,13 @@ class AccentLineRenderer {
 
         gl.drawArrays(gl.LINES, 0, this.numVertex)
     }
+
+    drop (gl: GlContext): void {
+        this.program.drop(gl)
+        this.spiralPosBuffer.drop(gl)
+        this.columnPosBuffer.drop(gl)
+        this.lineLengthBuffer.drop(gl)
+    }
 }
 
 const getLineLengths = (numVertex: number): Float32Array => {

@@ -133,11 +133,8 @@ function getBlendColor (
 class MineralBlender {
     program: GlProgram
     buffer: GlBuffer
-    textureAttachments: Array<number>
-
-    sources: Array<GlTexture>
     framebuffer: GlTextureFramebuffer
-
+    sources: Array<GlTexture>
     setMode: (m: BlendMode) => void
     setSaturation: (s: number) => void
     setThreshold: (t: number) => void
@@ -148,7 +145,7 @@ class MineralBlender {
     width: number
     height: number
 
-    constructor (gl: WebGLRenderingContext, sources: Array<HTMLImageElement>) {
+    constructor (gl: GlContext, sources: Array<HTMLImageElement>) {
         // store width / height for output / viewport size
         this.width = sources[0].width
         this.height = sources[0].height
@@ -164,12 +161,12 @@ class MineralBlender {
 
         // get attachments for source textures and output,
         // first attachment reserved for output texture
-        this.textureAttachments = getTextureAttachments(gl, sources.length + 1)
+        const textureAttachments = getTextureAttachments(gl, sources.length + 1)
 
         this.sources = []
         for (let i = 0; i < sources.length; i++) {
             // add one to attachment ind to skip output attachment
-            const texture = new GlTexture(gl, this.textureAttachments[i + 1])
+            const texture = new GlTexture(gl, textureAttachments[i + 1])
             texture.setData(gl, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, sources[i])
             this.sources.push(texture)
         }
@@ -205,11 +202,18 @@ class MineralBlender {
         }
     }
 
-    bind (gl: WebGLRenderingContext): void {
+    bind (gl: GlContext): void {
         this.framebuffer.bindTexture(gl)
     }
 
-    update (gl: WebGLRenderingContext, params: BlendParams): void {
+    drop (gl: GlContext): void {
+        this.program.drop(gl)
+        this.buffer.drop(gl)
+        this.framebuffer.drop(gl)
+        this.sources.forEach(source => source.drop(gl))
+    }
+
+    update (gl: GlContext, params: BlendParams): void {
         const { palette, magnitudes, visibilities, saturation, threshold, mode, monochrome } = params
 
         const colors = MINERALS.map((mineral, i) =>

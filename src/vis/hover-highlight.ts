@@ -79,6 +79,11 @@ class HoverHighlightRenderer {
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
+
+    drop (gl: GlContext): void {
+        this.program.drop(gl)
+        this.buffer.drop(gl)
+    }
 }
 
 export default HoverHighlightRenderer

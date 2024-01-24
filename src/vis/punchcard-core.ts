@@ -11,7 +11,7 @@ class PunchcardCoreRenderer {
     program: GlProgram
     spiralPosBuffer: GlBuffer
     columnPosBuffer: GlBuffer
-    texBuffer: GlBuffer
+    texCoordBuffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
@@ -32,9 +32,9 @@ class PunchcardCoreRenderer {
 
         this.program = new GlProgram(gl, vertSource, fragSource)
 
-        this.texBuffer = new GlBuffer(gl)
-        this.texBuffer.setData(gl, texCoords)
-        this.texBuffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
+        this.texCoordBuffer = new GlBuffer(gl)
+        this.texCoordBuffer.setData(gl, texCoords)
+        this.texCoordBuffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
 
         this.spiralPosBuffer = new GlBuffer(gl)
         this.spiralPosBuffer.setData(
@@ -92,11 +92,19 @@ class PunchcardCoreRenderer {
         this.minerals.bind(gl)
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
-        this.texBuffer.bind(gl)
+        this.texCoordBuffer.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
         gl.drawArrays(gl.POINTS, 0, this.numVertex)
+    }
+
+    drop (gl: GlContext): void {
+        this.minerals.drop(gl)
+        this.program.drop(gl)
+        this.spiralPosBuffer.drop(gl)
+        this.columnPosBuffer.drop(gl)
+        this.texCoordBuffer.drop(gl)
     }
 }
 

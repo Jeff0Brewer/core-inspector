@@ -85,6 +85,14 @@ class DownscaledCoreRenderer {
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
+
+    drop (gl: GlContext): void {
+        this.minerals.drop(gl)
+        this.program.drop(gl)
+        this.spiralPosBuffer.drop(gl)
+        this.columnPosBuffer.drop(gl)
+        this.texCoordBuffer.drop(gl)
+    }
 }
 
 const NUM_ROWS = 12

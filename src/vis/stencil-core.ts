@@ -127,6 +127,13 @@ class StencilCoreRenderer {
 
         this.framebuffer.unbind(gl)
     }
+
+    drop (gl: GlContext): void {
+        this.framebuffer.drop(gl)
+        this.program.drop(gl)
+        this.positionBuffer.drop(gl)
+        this.colorBuffer.drop(gl)
+    }
 }
 
 // get unique color for each tile id, return buffer for rendering and
