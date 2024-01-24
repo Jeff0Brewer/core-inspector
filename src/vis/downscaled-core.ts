@@ -68,10 +68,6 @@ class DownscaledCoreRenderer {
         positions: Float32Array,
         shape: CoreShape
     ): void {
-        const newNumVertex = positions.length / POS_FPV
-        if (newNumVertex !== this.numVertex) {
-            throw new Error('Incorrect number of new position vertices')
-        }
         gl.bindBuffer(gl.ARRAY_BUFFER, shape === 'spiral'
             ? this.spiralPosBuffer
             : this.columnPosBuffer

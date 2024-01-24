@@ -16,6 +16,11 @@ import PunchcardCoreRenderer, {
     addPunchcardTexCoords,
     POINT_PER_ROW
 } from '../vis/punchcard-core'
+import AccentLineRenderer, {
+    addAccentLineSpiralPositions,
+    addAccentLineColumnPositions,
+    VERT_PER_LINE
+} from '../vis/accent-lines'
 import StencilCoreRenderer from '../vis/stencil-core'
 import HoverHighlightRenderer from '../vis/hover-highlight'
 
@@ -31,6 +36,7 @@ type CoreViewMode = 'punchcard' | 'downscaled'
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
+    accentRenderer: AccentLineRenderer
     stencilRenderer: StencilCoreRenderer
     highlightRenderer: HoverHighlightRenderer
     metadata: TileTextureMetadata
@@ -58,7 +64,7 @@ class CoreRenderer {
         this.metadata = tileMetadata
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
-        const { downPositions, punchPositions } = getCorePositions(
+        const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
             this.currSpacing,
             bounds,
@@ -81,6 +87,11 @@ class CoreRenderer {
             punchPositions,
             punchTexCoords,
             3.5,
+            this.targetShape
+        )
+        this.accentRenderer = new AccentLineRenderer(
+            gl,
+            accentPositions,
             this.targetShape
         )
         this.stencilRenderer = new StencilCoreRenderer(
@@ -113,6 +124,9 @@ class CoreRenderer {
 
         gl.useProgram(this.highlightRenderer.program)
         this.highlightRenderer.setProj(m)
+
+        gl.useProgram(this.accentRenderer.program)
+        this.accentRenderer.setProj(m)
     }
 
     setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
@@ -151,7 +165,7 @@ class CoreRenderer {
     }
 
     genVerts (gl: WebGLRenderingContext, viewportBounds: BoundRect): void {
-        const { downPositions, punchPositions, vertexBounds } = getCorePositions(
+        const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
             this.currSpacing,
             viewportBounds,
@@ -161,6 +175,7 @@ class CoreRenderer {
         if (punchPositions.length > 0) {
             this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
         }
+        this.accentRenderer.setPositions(gl, accentPositions, this.targetShape)
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.setPositions(downPositions)
@@ -190,6 +205,7 @@ class CoreRenderer {
 
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
         this.highlightRenderer.draw(gl, view)
+        this.accentRenderer.draw(gl, view, easedShapeT)
     }
 }
 
@@ -245,13 +261,16 @@ const getCorePositions = (
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array,
+    accentPositions: Float32Array,
     vertexBounds: BoundRect
 } => {
     const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * POS_FPV
     const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * POS_FPV
+    const accentFloatPerTile = VERT_PER_LINE * POS_FPV
 
     const downPositions = new Float32Array(metadata.numTiles * downFloatPerTile)
     const punchPositions = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))
+    const accentPositions = new Float32Array(metadata.numTiles * accentFloatPerTile)
 
     // get spacing from percentage of tile width
     const [horizontalSpacing, verticalSpacing] = spacing.map(s => s * TILE_WIDTH)
@@ -267,6 +286,7 @@ const getCorePositions = (
 
     let downOffset = 0
     let punchOffset = 0
+    let accentOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
         // use downscaled tile dimensions to determine layout for
@@ -287,6 +307,16 @@ const getCorePositions = (
             addDownscaledSpiralPositions(
                 downPositions,
                 downOffset,
+                radius,
+                angle,
+                tileRadius,
+                tileAngle,
+                TILE_WIDTH
+            )
+
+            addAccentLineSpiralPositions(
+                accentPositions,
+                accentOffset,
                 radius,
                 angle,
                 tileRadius,
@@ -316,6 +346,15 @@ const getCorePositions = (
                 TILE_WIDTH
             )
 
+            addAccentLineColumnPositions(
+                accentPositions,
+                accentOffset,
+                columnX,
+                columnY,
+                tileHeight,
+                TILE_WIDTH
+            )
+
             if (viewMode === 'punchcard') {
                 addPunchcardColumnPositions(
                     punchPositions,
@@ -335,6 +374,7 @@ const getCorePositions = (
 
         downOffset += downFloatPerTile
         punchOffset += punchFloatPerTile(metadata.punchNumRows[i])
+        accentOffset += accentFloatPerTile
     }
 
     const vertexBounds = shape === 'spiral'
@@ -354,6 +394,7 @@ const getCorePositions = (
     return {
         downPositions,
         punchPositions,
+        accentPositions,
         vertexBounds
     }
 }
