@@ -112,7 +112,7 @@ class CoreRenderer {
     }
 
     setProj (gl: WebGLRenderingContext, m: mat4): void {
-        gl.useProgram(this.downRenderer.program)
+        this.downRenderer.program.bind(gl)
         this.downRenderer.setProj(m)
 
         gl.useProgram(this.punchRenderer.program)
