@@ -135,9 +135,8 @@ const addPunchcardTexCoords = (
     out: Float32Array,
     offset: number,
     rect: TileRect,
-    textureHeight: number
+    numRows: number
 ): void => {
-    const numRows = Math.round(rect.height * textureHeight)
     const heightInc = rect.height / numRows
     const widthInc = rect.width / POINT_PER_ROW
 
@@ -158,10 +157,8 @@ const addPunchcardSpiralPositions = (
     tileRadius: number,
     tileAngle: number,
     tileWidth: number,
-    rect: TileRect,
-    textureHeight: number
+    numRows: number
 ): void => {
-    const numRows = Math.round(rect.height * textureHeight)
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
 
@@ -188,10 +185,8 @@ const addPunchcardColumnPositions = (
     currColumnY: number,
     tileHeight: number,
     tileWidth: number,
-    rect: TileRect,
-    textureHeight: number
+    numRows: number
 ): void => {
-    const numRows = Math.round(rect.height * textureHeight)
     const columnYInc = -1 * tileHeight / numRows
 
     const startColumnY = currColumnY + columnYInc * 0.5

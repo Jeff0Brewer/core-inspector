@@ -39,8 +39,6 @@ class CoreRenderer {
     shapeT: number
     setVertexBounds: (b: BoundRect) => void
 
-    tempNumRows: number
-
     constructor (
         gl: WebGLRenderingContext,
         downMineralMaps: Array<HTMLImageElement>,
@@ -50,12 +48,6 @@ class CoreRenderer {
         bounds: BoundRect,
         setVertexBounds: (b: BoundRect) => void
     ) {
-        const textureHeight = tileMetadata.punchDims[1]
-        this.tempNumRows = tileMetadata.punchTiles.reduce((numRows, rect) => {
-            const thisNumRows = Math.round(rect.height * textureHeight)
-            return numRows + thisNumRows
-        }, 0)
-
         // can be set to anything, will be aligned with ui state on load
         this.currSpacing = [0, 0]
         this.viewMode = 'downscaled'
@@ -64,7 +56,7 @@ class CoreRenderer {
         this.shapeT = SHAPE_T_VALUES[this.targetShape]
         this.metadata = tileMetadata
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata, this.tempNumRows)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
         const { downPositions, punchPositions } = getCorePositions(
             tileMetadata,
             this.currSpacing,
@@ -72,8 +64,7 @@ class CoreRenderer {
             this.targetShape,
             // always punchcard view mode to ensure punchcard vertices are
             // initialized regardless of initial view mode
-            'punchcard',
-            this.tempNumRows
+            'punchcard'
         )
 
         this.downRenderer = new DownscaledCoreRenderer(
@@ -164,8 +155,7 @@ class CoreRenderer {
             this.currSpacing,
             viewportBounds,
             this.targetShape,
-            this.viewMode,
-            this.tempNumRows
+            this.viewMode
         )
         if (punchPositions.length > 0) {
             this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
@@ -207,12 +197,12 @@ const MIN_RADIUS = TILE_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
-const getCoreTexCoords = (metadata: TileTextureMetadata, tempNumRows: number): {
+const getCoreTexCoords = (metadata: TileTextureMetadata): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
     const downCoords = new Float32Array(metadata.numTiles * TILE_DETAIL * 6 * TEX_FPV)
-    const punchCoords = new Float32Array(tempNumRows * POINT_PER_ROW * TEX_FPV)
+    const punchCoords = new Float32Array(metadata.punchTotalRows * POINT_PER_ROW * TEX_FPV)
 
     let downOffset = 0
     let punchOffset = 0
@@ -227,7 +217,7 @@ const getCoreTexCoords = (metadata: TileTextureMetadata, tempNumRows: number): {
             punchCoords,
             punchOffset,
             metadata.punchTiles[i],
-            metadata.punchDims[1]
+            metadata.punchNumRows[i]
         )
 
         downOffset += TILE_DETAIL * 6 * TEX_FPV
@@ -248,15 +238,14 @@ const getCorePositions = (
     spacing: [number, number],
     viewportBounds: BoundRect,
     shape: CoreShape,
-    viewMode: CoreViewMode,
-    tempNumRows: number
+    viewMode: CoreViewMode
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array,
     vertexBounds: BoundRect
 } => {
     const downPositions = new Float32Array(metadata.numTiles * TILE_DETAIL * 6 * POS_FPV)
-    const punchPositions = new Float32Array(tempNumRows * POINT_PER_ROW * POS_FPV)
+    const punchPositions = new Float32Array(metadata.punchTotalRows * POINT_PER_ROW * POS_FPV)
 
     // get spacing from percentage of tile width
     const [horizontalSpacing, verticalSpacing] = spacing.map(s => s * TILE_WIDTH)
@@ -274,13 +263,11 @@ const getCorePositions = (
     let punchOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
-        const downRect = metadata.downTiles[i]
-        const punchRect = metadata.punchTiles[i]
-
         // use downscaled tile dimensions to determine layout for
         // both representations, ensuring alignment
         // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
-        const tileHeight = 2 * TILE_WIDTH * (downRect.height / downRect.width)
+        const { height, width } = metadata.downTiles[i]
+        const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
@@ -310,8 +297,7 @@ const getCorePositions = (
                     tileRadius,
                     tileAngle,
                     TILE_WIDTH,
-                    punchRect,
-                    metadata.punchDims[1]
+                    metadata.punchNumRows[i]
                 )
             }
         } else {
@@ -332,8 +318,7 @@ const getCorePositions = (
                     columnY,
                     tileHeight,
                     TILE_WIDTH,
-                    punchRect,
-                    metadata.punchDims[1]
+                    metadata.punchNumRows[i]
                 )
             }
         }
@@ -343,8 +328,7 @@ const getCorePositions = (
         radius += tileRadius
 
         downOffset += TILE_DETAIL * 6 * POS_FPV
-        const numRows = Math.round(metadata.punchTiles[i].height * metadata.punchDims[1])
-        punchOffset += numRows * POINT_PER_ROW * POS_FPV
+        punchOffset += metadata.punchNumRows[i] * POINT_PER_ROW * POS_FPV
     }
 
     const vertexBounds = shape === 'spiral'
