@@ -1,4 +1,5 @@
 import { mat4 } from 'gl-matrix'
+import { GlContext } from '../lib/gl-wrap'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -6,13 +7,21 @@ import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import DownscaledCoreRenderer, {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
-    addDownscaledTexCoords
+    addDownscaledTexCoords,
+    NUM_ROWS,
+    VERT_PER_ROW
 } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, {
     addPunchcardSpiralPositions,
     addPunchcardColumnPositions,
-    addPunchcardTexCoords
+    addPunchcardTexCoords,
+    POINT_PER_ROW
 } from '../vis/punchcard-core'
+import AccentLineRenderer, {
+    addAccentLineSpiralPositions,
+    addAccentLineColumnPositions,
+    VERT_PER_LINE
+} from '../vis/accent-lines'
 import StencilCoreRenderer from '../vis/stencil-core'
 import HoverHighlightRenderer from '../vis/hover-highlight'
 
@@ -28,6 +37,7 @@ type CoreViewMode = 'punchcard' | 'downscaled'
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
     punchRenderer: PunchcardCoreRenderer
+    accentRenderer: AccentLineRenderer
     stencilRenderer: StencilCoreRenderer
     highlightRenderer: HoverHighlightRenderer
     metadata: TileTextureMetadata
@@ -38,7 +48,7 @@ class CoreRenderer {
     setVertexBounds: (b: BoundRect) => void
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         downMineralMaps: Array<HTMLImageElement>,
         punchMineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
@@ -55,7 +65,7 @@ class CoreRenderer {
         this.metadata = tileMetadata
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
-        const { downPositions, punchPositions } = getCorePositions(
+        const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
             this.currSpacing,
             bounds,
@@ -80,6 +90,11 @@ class CoreRenderer {
             3.5,
             this.targetShape
         )
+        this.accentRenderer = new AccentLineRenderer(
+            gl,
+            accentPositions,
+            this.targetShape
+        )
         this.stencilRenderer = new StencilCoreRenderer(
             gl,
             downPositions,
@@ -97,42 +112,45 @@ class CoreRenderer {
         this.setVertexBounds = setVertexBounds
     }
 
-    setProj (gl: WebGLRenderingContext, m: mat4): void {
-        gl.useProgram(this.downRenderer.program)
+    setProj (gl: GlContext, m: mat4): void {
+        this.downRenderer.program.bind(gl)
         this.downRenderer.setProj(m)
 
-        gl.useProgram(this.punchRenderer.program)
+        this.punchRenderer.program.bind(gl)
         this.punchRenderer.setProj(m)
         this.punchRenderer.setDpr(window.devicePixelRatio)
 
-        gl.useProgram(this.stencilRenderer.program)
+        this.stencilRenderer.program.bind(gl)
         this.stencilRenderer.setProj(m)
 
-        gl.useProgram(this.highlightRenderer.program)
+        this.highlightRenderer.program.bind(gl)
         this.highlightRenderer.setProj(m)
+
+        this.accentRenderer.program.bind(gl)
+        this.accentRenderer.setProj(m)
     }
 
-    setBlending (gl: WebGLRenderingContext, params: BlendParams): void {
+    setBlending (gl: GlContext, params: BlendParams): void {
         this.downRenderer.minerals.update(gl, params)
         this.punchRenderer.minerals.update(gl, params)
     }
 
-    setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
+    setHovered (gl: GlContext, id: string | undefined): void {
         this.highlightRenderer.setHovered(gl, id)
         this.stencilRenderer.setHovered(id)
     }
 
-    setSpacing (gl: WebGLRenderingContext, spacing: [number, number], bounds: BoundRect): void {
+    setSpacing (gl: GlContext, spacing: [number, number], bounds: BoundRect): void {
         this.currSpacing = spacing
         this.genVerts(gl, bounds)
     }
 
-    setShape (gl: WebGLRenderingContext, shape: CoreShape, bounds: BoundRect): void {
+    setShape (gl: GlContext, shape: CoreShape, bounds: BoundRect): void {
         this.targetShape = shape
         this.genVerts(gl, bounds)
     }
 
-    setViewMode (gl: WebGLRenderingContext, v: CoreViewMode, bounds: BoundRect): void {
+    setViewMode (gl: GlContext, v: CoreViewMode, bounds: BoundRect): void {
         this.viewMode = v
         // since downscaled verts used in stencil / hover regardless of view mode
         // only need to ensure that punchcard verts are updated
@@ -141,14 +159,14 @@ class CoreRenderer {
         }
     }
 
-    wrapColumns (gl: WebGLRenderingContext, bounds: BoundRect): void {
+    wrapColumns (gl: GlContext, bounds: BoundRect): void {
         if (this.targetShape === 'column') {
             this.genVerts(gl, bounds)
         }
     }
 
-    genVerts (gl: WebGLRenderingContext, viewportBounds: BoundRect): void {
-        const { downPositions, punchPositions, vertexBounds } = getCorePositions(
+    genVerts (gl: GlContext, viewportBounds: BoundRect): void {
+        const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
             this.currSpacing,
             viewportBounds,
@@ -158,6 +176,7 @@ class CoreRenderer {
         if (punchPositions.length > 0) {
             this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
         }
+        this.accentRenderer.setPositions(gl, accentPositions, this.targetShape)
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.setPositions(downPositions)
@@ -166,7 +185,7 @@ class CoreRenderer {
     }
 
     draw (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         view: mat4,
         elapsed: number,
         mousePos: [number, number],
@@ -187,6 +206,15 @@ class CoreRenderer {
 
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
         this.highlightRenderer.draw(gl, view)
+        this.accentRenderer.draw(gl, view, easedShapeT)
+    }
+
+    drop (gl: GlContext): void {
+        this.downRenderer.drop(gl)
+        this.punchRenderer.drop(gl)
+        this.accentRenderer.drop(gl)
+        this.stencilRenderer.drop(gl)
+        this.highlightRenderer.drop(gl)
     }
 }
 
@@ -199,19 +227,30 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
-    const downCoords: Array<number> = []
-    const punchCoords: Array<number> = []
+    const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * TEX_FPV
+    const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * TEX_FPV
+
+    const downCoords = new Float32Array(metadata.numTiles * downFloatPerTile)
+    const punchCoords = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))
+
+    let downOffset = 0
+    let punchOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
         addDownscaledTexCoords(
             downCoords,
+            downOffset,
             metadata.downTiles[i]
         )
         addPunchcardTexCoords(
             punchCoords,
+            punchOffset,
             metadata.punchTiles[i],
-            metadata.punchDims[1]
+            metadata.punchNumRows[i]
         )
+
+        downOffset += downFloatPerTile
+        punchOffset += punchFloatPerTile(metadata.punchNumRows[i])
     }
 
     return {
@@ -231,10 +270,16 @@ const getCorePositions = (
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array,
+    accentPositions: Float32Array,
     vertexBounds: BoundRect
 } => {
-    const downPositions: Array<number> = []
-    const punchPositions: Array<number> = []
+    const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * POS_FPV
+    const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * POS_FPV
+    const accentFloatPerTile = VERT_PER_LINE * POS_FPV
+
+    const downPositions = new Float32Array(metadata.numTiles * downFloatPerTile)
+    const punchPositions = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))
+    const accentPositions = new Float32Array(metadata.numTiles * accentFloatPerTile)
 
     // get spacing from percentage of tile width
     const [horizontalSpacing, verticalSpacing] = spacing.map(s => s * TILE_WIDTH)
@@ -248,14 +293,16 @@ const getCorePositions = (
     let columnX = viewportBounds.left
     let columnY = viewportBounds.top
 
-    for (let i = 0; i < metadata.numTiles; i++) {
-        const downRect = metadata.downTiles[i]
-        const punchRect = metadata.punchTiles[i]
+    let downOffset = 0
+    let punchOffset = 0
+    let accentOffset = 0
 
+    for (let i = 0; i < metadata.numTiles; i++) {
         // use downscaled tile dimensions to determine layout for
         // both representations, ensuring alignment
         // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
-        const tileHeight = 2 * TILE_WIDTH * (downRect.height / downRect.width)
+        const { height, width } = metadata.downTiles[i]
+        const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
 
@@ -268,6 +315,17 @@ const getCorePositions = (
         if (shape === 'spiral') {
             addDownscaledSpiralPositions(
                 downPositions,
+                downOffset,
+                radius,
+                angle,
+                tileRadius,
+                tileAngle,
+                TILE_WIDTH
+            )
+
+            addAccentLineSpiralPositions(
+                accentPositions,
+                accentOffset,
                 radius,
                 angle,
                 tileRadius,
@@ -278,18 +336,28 @@ const getCorePositions = (
             if (viewMode === 'punchcard') {
                 addPunchcardSpiralPositions(
                     punchPositions,
+                    punchOffset,
                     radius,
                     angle,
                     tileRadius,
                     tileAngle,
                     TILE_WIDTH,
-                    punchRect,
-                    metadata.punchDims[1]
+                    metadata.punchNumRows[i]
                 )
             }
         } else {
             addDownscaledColumnPositions(
                 downPositions,
+                downOffset,
+                columnX,
+                columnY,
+                tileHeight,
+                TILE_WIDTH
+            )
+
+            addAccentLineColumnPositions(
+                accentPositions,
+                accentOffset,
                 columnX,
                 columnY,
                 tileHeight,
@@ -299,12 +367,12 @@ const getCorePositions = (
             if (viewMode === 'punchcard') {
                 addPunchcardColumnPositions(
                     punchPositions,
+                    punchOffset,
                     columnX,
                     columnY,
                     tileHeight,
                     TILE_WIDTH,
-                    punchRect,
-                    metadata.punchDims[1]
+                    metadata.punchNumRows[i]
                 )
             }
         }
@@ -312,6 +380,10 @@ const getCorePositions = (
         columnY -= tileHeight + verticalSpacing
         angle += tileAngle + (verticalSpacing / radius)
         radius += tileRadius
+
+        downOffset += downFloatPerTile
+        punchOffset += punchFloatPerTile(metadata.punchNumRows[i])
+        accentOffset += accentFloatPerTile
     }
 
     const vertexBounds = shape === 'spiral'
@@ -329,8 +401,9 @@ const getCorePositions = (
         }
 
     return {
-        downPositions: new Float32Array(downPositions),
-        punchPositions: new Float32Array(punchPositions),
+        downPositions,
+        punchPositions,
+        accentPositions,
         vertexBounds
     }
 }

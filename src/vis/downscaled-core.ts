@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
+import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV, TEX_FPV, CoreShape } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
 import MineralBlender from '../vis/mineral-blend'
@@ -8,54 +8,52 @@ import fragSource from '../shaders/downscaled-frag.glsl?raw'
 
 class DownscaledCoreRenderer {
     minerals: MineralBlender
-    program: WebGLProgram
-    spiralPosBuffer: WebGLBuffer
-    columnPosBuffer: WebGLBuffer
-    texCoordBuffer: WebGLBuffer
-    bindSpiralPos: () => void
-    bindColumnPos: () => void
-    bindTexCoords: () => void
+    program: GlProgram
+    spiralPosBuffer: GlBuffer
+    columnPosBuffer: GlBuffer
+    texCoordBuffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
     numVertex: number
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
         shape: CoreShape
     ) {
         this.minerals = minerals
-
-        this.program = initProgram(gl, vertSource, fragSource)
-
-        this.texCoordBuffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STATIC_DRAW)
         this.numVertex = texCoords.length / TEX_FPV
 
-        this.spiralPosBuffer = initBuffer(gl)
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            shape === 'spiral' ? positions : new Float32Array(positions.length),
-            gl.STATIC_DRAW
+        this.program = new GlProgram(gl, vertSource, fragSource)
+
+        this.texCoordBuffer = new GlBuffer(gl)
+        this.texCoordBuffer.setData(gl, texCoords)
+        this.texCoordBuffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
+
+        this.spiralPosBuffer = new GlBuffer(gl)
+        this.spiralPosBuffer.setData(
+            gl,
+            shape === 'spiral'
+                ? positions
+                : new Float32Array(positions.length)
         )
+        this.spiralPosBuffer.addAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
 
-        this.columnPosBuffer = initBuffer(gl)
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            shape === 'column' ? positions : new Float32Array(positions.length),
-            gl.STATIC_DRAW
+        this.columnPosBuffer = new GlBuffer(gl)
+        this.columnPosBuffer.setData(
+            gl,
+            shape === 'column'
+                ? positions
+                : new Float32Array(positions.length)
         )
+        this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
-        this.bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
-        this.bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
-        this.bindTexCoords = initAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
-
-        const projLoc = gl.getUniformLocation(this.program, 'proj')
-        const viewLoc = gl.getUniformLocation(this.program, 'view')
-        const shapeTLoc = gl.getUniformLocation(this.program, 'shapeT')
+        const projLoc = this.program.getUniformLocation(gl, 'proj')
+        const viewLoc = this.program.getUniformLocation(gl, 'view')
+        const shapeTLoc = this.program.getUniformLocation(gl, 'shapeT')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
@@ -63,54 +61,53 @@ class DownscaledCoreRenderer {
 
     // generate vertices externally to coordinate alignment between
     // punchcard and downscaled representations
-    setPositions (
-        gl: WebGLRenderingContext,
-        positions: Float32Array,
-        shape: CoreShape
-    ): void {
-        const newNumVertex = positions.length / POS_FPV
-        if (newNumVertex !== this.numVertex) {
-            throw new Error('Incorrect number of new position vertices')
+    setPositions (gl: GlContext, positions: Float32Array, shape: CoreShape): void {
+        if (shape === 'spiral') {
+            this.spiralPosBuffer.setData(gl, positions)
+        } else {
+            this.columnPosBuffer.setData(gl, positions)
         }
-        gl.bindBuffer(gl.ARRAY_BUFFER, shape === 'spiral'
-            ? this.spiralPosBuffer
-            : this.columnPosBuffer
-        )
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
     }
 
     draw (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         view: mat4,
         shapeT: number
     ): void {
-        gl.useProgram(this.program)
+        this.program.bind(gl)
 
         this.minerals.bind(gl)
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.spiralPosBuffer)
-        this.bindSpiralPos()
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
-        this.bindColumnPos()
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordBuffer)
-        this.bindTexCoords()
-
+        this.spiralPosBuffer.bind(gl)
+        this.columnPosBuffer.bind(gl)
+        this.texCoordBuffer.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
+
+    drop (gl: GlContext): void {
+        this.minerals.drop(gl)
+        this.program.drop(gl)
+        this.spiralPosBuffer.drop(gl)
+        this.columnPosBuffer.drop(gl)
+        this.texCoordBuffer.drop(gl)
+    }
 }
 
-const TILE_DETAIL = 12
+const NUM_ROWS = 12
+const VERT_PER_ROW = 6
 
 const addDownscaledAttrib = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     getRowAttrib: (i: number) => [Array<number>, Array<number>]
 ): void => {
-    for (let i = 0; i < TILE_DETAIL; i++) {
+    const attribs = []
+    for (let i = 0; i < NUM_ROWS; i++) {
         const [inner, outer] = getRowAttrib(i)
         const [nextInner, nextOuter] = getRowAttrib(i + 1)
-        out.push(
+        attribs.push(
             ...inner,
             ...outer,
             ...nextOuter,
@@ -119,13 +116,15 @@ const addDownscaledAttrib = (
             ...inner
         )
     }
+    out.set(attribs, offset)
 }
 
 const addDownscaledTexCoords = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     rect: TileRect
 ): void => {
-    const heightInc = rect.height / TILE_DETAIL
+    const heightInc = rect.height / NUM_ROWS
     const getRowCoords = (i: number): [Array<number>, Array<number>] => {
         const inner = [
             rect.left,
@@ -137,19 +136,20 @@ const addDownscaledTexCoords = (
         ]
         return [inner, outer]
     }
-    addDownscaledAttrib(out, getRowCoords)
+    addDownscaledAttrib(out, offset, getRowCoords)
 }
 
 const addDownscaledSpiralPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currRadius: number,
     currAngle: number,
     tileRadius: number,
     tileAngle: number,
     tileWidth: number
 ): void => {
-    const angleInc = tileAngle / TILE_DETAIL
-    const radiusInc = tileRadius / TILE_DETAIL
+    const angleInc = tileAngle / NUM_ROWS
+    const radiusInc = tileRadius / NUM_ROWS
 
     const getRowSpiralPositions = (i: number): [Array<number>, Array<number>] => {
         const angle = currAngle + angleInc * i
@@ -168,17 +168,18 @@ const addDownscaledSpiralPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, getRowSpiralPositions)
+    addDownscaledAttrib(out, offset, getRowSpiralPositions)
 }
 
 const addDownscaledColumnPositions = (
-    out: Array<number>,
+    out: Float32Array,
+    offset: number,
     currColumnX: number,
     currColumnY: number,
     tileHeight: number,
     tileWidth: number
 ): void => {
-    const columnYInc = tileHeight / TILE_DETAIL
+    const columnYInc = tileHeight / NUM_ROWS
 
     const getRowColumnPositions = (i: number): [Array<number>, Array<number>] => {
         const columnY = currColumnY - columnYInc * i
@@ -189,12 +190,14 @@ const addDownscaledColumnPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, getRowColumnPositions)
+    addDownscaledAttrib(out, offset, getRowColumnPositions)
 }
 
 export default DownscaledCoreRenderer
 export {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
-    addDownscaledTexCoords
+    addDownscaledTexCoords,
+    NUM_ROWS,
+    VERT_PER_ROW
 }

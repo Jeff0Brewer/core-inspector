@@ -1,5 +1,5 @@
 import { mat4, vec2 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute, initTextureFramebuffer } from '../lib/gl-wrap'
+import { GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-wrap'
 import { bytesToHex } from '../lib/util'
 import { POS_FPV } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -17,53 +17,46 @@ const COL_FPV = 2
 // unique color and reads pixels under the mouse to determine which
 // segment is currently hovered
 class StencilCoreRenderer {
-    framebuffer: WebGLFramebuffer
-    program: WebGLProgram
-    positionBuffer: WebGLBuffer
-    colorBuffer: WebGLBuffer
-    bindPosition: () => void
-    bindColors: () => void
+    framebuffer: GlTextureFramebuffer
+    program: GlProgram
+    positionBuffer: GlBuffer
+    colorBuffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     numVertex: number
-
     colorIdMap: ColorIdMap
-
     currHovered: string | undefined
     lastMousePos: [number, number]
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
         currHovered: string | undefined
     ) {
-        // placeholder dimensions for framebuffer so init can happen before canvas resized
-        const { framebuffer } = initTextureFramebuffer(gl, 1, 1)
-        this.framebuffer = framebuffer
-
-        this.program = initProgram(gl, vertSource, fragSource)
-
         this.numVertex = positions.length / POS_FPV
         // assume same number of vertices for each tile
         const vertPerTile = this.numVertex / tileMetadata.numTiles
 
+        // placeholder dimensions for framebuffer so init can happen before canvas resized
+        this.framebuffer = new GlTextureFramebuffer(gl, 1, 1)
+        this.program = new GlProgram(gl, vertSource, fragSource)
+
         // positions passed in as argument since exactly the same as downscaled
         // representation, can reuse here and prevent extra vertex generation
-        this.positionBuffer = initBuffer(gl)
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+        this.positionBuffer = new GlBuffer(gl)
+        this.positionBuffer.setData(gl, positions)
+        this.positionBuffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
-        this.colorBuffer = initBuffer(gl)
         const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
-        gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
         this.colorIdMap = map
+        this.colorBuffer = new GlBuffer(gl)
+        this.colorBuffer.setData(gl, colors)
+        this.colorBuffer.addAttribute(gl, this.program, 'color', COL_FPV, COL_FPV, 0, gl.UNSIGNED_BYTE)
 
-        this.bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
-        this.bindColors = initAttribute(gl, this.program, 'color', COL_FPV, COL_FPV, 0, gl.UNSIGNED_BYTE)
-
-        const projLoc = gl.getUniformLocation(this.program, 'proj')
-        const viewLoc = gl.getUniformLocation(this.program, 'view')
+        const projLoc = this.program.getUniformLocation(gl, 'proj')
+        const viewLoc = this.program.getUniformLocation(gl, 'view')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
 
@@ -75,23 +68,14 @@ class StencilCoreRenderer {
         this.currHovered = id
     }
 
-    setPositions (
-        gl: WebGLRenderingContext,
-        positions: Float32Array
-    ): void {
-        const newNumVertex = positions.length / POS_FPV
-        if (newNumVertex !== this.numVertex) {
-            throw new Error('Incorrect number of new position vertices')
-        }
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
-        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW)
+    setPositions (gl: GlContext, positions: Float32Array): void {
+        this.positionBuffer.setData(gl, positions)
     }
 
     // need to call resize as well as update projection matrix when window changes
     // since stencil buffer is offscreen texture framebuffer and needs to match window size
-    resize (gl: WebGLRenderingContext, w: number, h: number): void {
-        const { framebuffer } = initTextureFramebuffer(gl, w, h)
-        this.framebuffer = framebuffer
+    resize (gl: GlContext, w: number, h: number): void {
+        this.framebuffer = new GlTextureFramebuffer(gl, w, h)
     }
 
     // check if stencil framebuffer should be updated, want to minimize draws and reads,
@@ -107,7 +91,7 @@ class StencilCoreRenderer {
     }
 
     draw (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         view: mat4,
         shapeT: number,
         mousePos: [number, number],
@@ -120,17 +104,13 @@ class StencilCoreRenderer {
         }
         this.lastMousePos = mousePos
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer)
-        gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
-
-        gl.useProgram(this.program)
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
-        this.bindPosition()
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer)
-        this.bindColors()
+        this.framebuffer.bind(gl)
+        this.program.bind(gl)
+        this.positionBuffer.bind(gl)
+        this.colorBuffer.bind(gl)
         this.setView(view)
 
+        gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 
         // read pixels immediately after draw to ensure render not in progress
@@ -145,7 +125,14 @@ class StencilCoreRenderer {
             setHovered(this.currHovered)
         }
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+        this.framebuffer.unbind(gl)
+    }
+
+    drop (gl: GlContext): void {
+        this.framebuffer.drop(gl)
+        this.program.drop(gl)
+        this.positionBuffer.drop(gl)
+        this.colorBuffer.drop(gl)
     }
 }
 

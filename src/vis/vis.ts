@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
-import { initGl } from '../lib/gl-wrap'
+import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import { BlendParams } from '../vis/mineral-blend'
@@ -28,12 +28,13 @@ const PROJECTION_PARAMS = {
 
 class VisRenderer {
     canvas: HTMLCanvasElement
-    gl: WebGLRenderingContext
+    gl: GlContext
     core: CoreRenderer
     camera: Camera2D
     proj: mat4
     mousePos: [number, number]
     uiState: UiState
+    dropped: boolean
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -41,15 +42,16 @@ class VisRenderer {
         punchcardMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
-        uiState?: UiState
+        uiState: UiState = {}
     ) {
         this.canvas = canvas
-        this.gl = initGl(this.canvas)
 
+        this.gl = initGl(this.canvas)
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
         this.camera = new Camera2D(0, 'spiral')
+
         const aspect = window.innerWidth / window.innerHeight
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
@@ -67,7 +69,9 @@ class VisRenderer {
         this.resize() // init canvas size, gl viewport, proj matrix
 
         this.mousePos = [0, 0]
-        this.uiState = uiState || {}
+        this.uiState = uiState
+
+        this.dropped = false
     }
 
     setBlending (params: BlendParams): void {
@@ -103,13 +107,13 @@ class VisRenderer {
         this.uiState.setViewMode?.(m)
     }
 
-    setSpacing (spacing: [number, number]): void {
-        this.core.setSpacing(this.gl, spacing, this.getViewportBounds())
-        this.uiState.setSpacing?.(spacing)
+    setSpacing (s: [number, number]): void {
+        this.core.setSpacing(this.gl, s, this.getViewportBounds())
+        this.uiState.setSpacing?.(s)
     }
 
-    setVertexBounds (bounds: BoundRect): void {
-        this.camera.visBounds = bounds
+    setVertexBounds (b: BoundRect): void {
+        this.camera.visBounds = b
     }
 
     getViewportBounds (): BoundRect {
@@ -202,8 +206,11 @@ class VisRenderer {
     }
 
     draw (elapsed: number): void {
+        // don't draw if gl resources have been freed
+        if (this.dropped) { return }
+
         this.camera.update(elapsed)
-        // temporary, should only be updated with pan / bounds change
+        // TODO: fix pan state, should only be updated with pan / bounds change
         this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
 
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
@@ -216,6 +223,11 @@ class VisRenderer {
             this.mousePos,
             this.setHovered.bind(this)
         )
+    }
+
+    drop (): void {
+        this.core.drop(this.gl)
+        this.dropped = true
     }
 }
 

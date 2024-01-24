@@ -1,5 +1,5 @@
 import { mat4 } from 'gl-matrix'
-import { initProgram, initBuffer, initAttribute } from '../lib/gl-wrap'
+import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
@@ -10,9 +10,8 @@ import fragSource from '../shaders/hover-highlight-frag.glsl?raw'
 type IdIndMap = { [id: string]: [number, number] }
 
 class HoverHighlightRenderer {
-    program: WebGLProgram
-    positionBuffer: WebGLBuffer
-    bindPosition: () => void
+    program: GlProgram
+    buffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     positions: Float32Array
@@ -21,7 +20,7 @@ class HoverHighlightRenderer {
     idIndMap: IdIndMap
 
     constructor (
-        gl: WebGLRenderingContext,
+        gl: GlContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata
@@ -42,13 +41,12 @@ class HoverHighlightRenderer {
         this.positions = positions
         this.numVertex = 0
 
-        this.program = initProgram(gl, vertSource, fragSource)
+        this.program = new GlProgram(gl, vertSource, fragSource)
+        this.buffer = new GlBuffer(gl)
+        this.buffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
-        this.positionBuffer = initBuffer(gl)
-        this.bindPosition = initAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
-
-        const projLoc = gl.getUniformLocation(this.program, 'proj')
-        const viewLoc = gl.getUniformLocation(this.program, 'view')
+        const projLoc = this.program.getUniformLocation(gl, 'proj')
+        const viewLoc = this.program.getUniformLocation(gl, 'view')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
 
@@ -56,7 +54,7 @@ class HoverHighlightRenderer {
     }
 
     // copy verts for current section from positions array into highlight buffer for drawing
-    setHovered (gl: WebGLRenderingContext, id: string | undefined): void {
+    setHovered (gl: GlContext, id: string | undefined): void {
         if (id === this.lastHovered) { return }
         this.lastHovered = id
 
@@ -65,25 +63,26 @@ class HoverHighlightRenderer {
             : new Float32Array()
 
         this.numVertex = sectionVerts.length / POS_FPV
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
-        gl.bufferData(gl.ARRAY_BUFFER, sectionVerts, gl.STATIC_DRAW)
+        this.buffer.setData(gl, sectionVerts)
     }
 
     setPositions (positions: Float32Array): void {
         this.positions = positions
     }
 
-    draw (gl: WebGLRenderingContext, view: mat4): void {
+    draw (gl: GlContext, view: mat4): void {
         if (this.numVertex === 0) { return }
 
-        gl.useProgram(this.program)
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer)
-        this.bindPosition()
-
+        this.program.bind(gl)
+        this.buffer.bind(gl)
         this.setView(view)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
+    }
+
+    drop (gl: GlContext): void {
+        this.program.drop(gl)
+        this.buffer.drop(gl)
     }
 }
 

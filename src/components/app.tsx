@@ -18,6 +18,10 @@ function App (): ReactElement {
 
     // load data and init vis renderer
     useEffect(() => {
+        if (!canvasRef.current) {
+            throw new Error('No reference to canvas')
+        }
+
         const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
             const basePath = `./data/${core}`
             const numMinerals = 9
@@ -47,12 +51,18 @@ function App (): ReactElement {
             )
         }
 
-        if (!canvasRef.current) {
-            throw new Error('No reference to canvas')
-        }
+        // free last visualization gl resources
+        vis?.drop()
 
+        // immediately set to null for loading state
         setVis(null)
+
         initVisRenderer(canvasRef.current)
+
+        // don't want to include vis in dependency array since vis
+        // is being set here, will cause loop
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [core])
 
     return (

@@ -11,6 +11,8 @@ type TileTextureMetadata = {
     downDims: [number, number],
     punchDims: [number, number],
     numTiles: number,
+    punchNumRows: Array<number>,
+    punchTotalRows: number
 }
 
 export type {
