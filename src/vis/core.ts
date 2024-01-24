@@ -7,7 +7,8 @@ import DownscaledCoreRenderer, {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
     addDownscaledTexCoords,
-    TILE_DETAIL
+    NUM_ROWS,
+    VERT_PER_ROW
 } from '../vis/downscaled-core'
 import PunchcardCoreRenderer, {
     addPunchcardSpiralPositions,
@@ -201,8 +202,11 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
-    const downCoords = new Float32Array(metadata.numTiles * TILE_DETAIL * 6 * TEX_FPV)
-    const punchCoords = new Float32Array(metadata.punchTotalRows * POINT_PER_ROW * TEX_FPV)
+    const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * TEX_FPV
+    const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * TEX_FPV
+
+    const downCoords = new Float32Array(metadata.numTiles * downFloatPerTile)
+    const punchCoords = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))
 
     let downOffset = 0
     let punchOffset = 0
@@ -220,9 +224,8 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
             metadata.punchNumRows[i]
         )
 
-        downOffset += TILE_DETAIL * 6 * TEX_FPV
-        const numRows = Math.round(metadata.punchTiles[i].height * metadata.punchDims[1])
-        punchOffset += numRows * POINT_PER_ROW * TEX_FPV
+        downOffset += downFloatPerTile
+        punchOffset += punchFloatPerTile(metadata.punchNumRows[i])
     }
 
     return {
@@ -244,8 +247,11 @@ const getCorePositions = (
     punchPositions: Float32Array,
     vertexBounds: BoundRect
 } => {
-    const downPositions = new Float32Array(metadata.numTiles * TILE_DETAIL * 6 * POS_FPV)
-    const punchPositions = new Float32Array(metadata.punchTotalRows * POINT_PER_ROW * POS_FPV)
+    const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * POS_FPV
+    const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * POS_FPV
+
+    const downPositions = new Float32Array(metadata.numTiles * downFloatPerTile)
+    const punchPositions = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))
 
     // get spacing from percentage of tile width
     const [horizontalSpacing, verticalSpacing] = spacing.map(s => s * TILE_WIDTH)
@@ -327,8 +333,8 @@ const getCorePositions = (
         angle += tileAngle + (verticalSpacing / radius)
         radius += tileRadius
 
-        downOffset += TILE_DETAIL * 6 * POS_FPV
-        punchOffset += metadata.punchNumRows[i] * POINT_PER_ROW * POS_FPV
+        downOffset += downFloatPerTile
+        punchOffset += punchFloatPerTile(metadata.punchNumRows[i])
     }
 
     const vertexBounds = shape === 'spiral'

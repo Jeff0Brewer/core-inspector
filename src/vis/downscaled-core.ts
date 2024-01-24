@@ -101,7 +101,8 @@ class DownscaledCoreRenderer {
     }
 }
 
-const TILE_DETAIL = 12
+const NUM_ROWS = 12
+const VERT_PER_ROW = 6
 
 const addDownscaledAttrib = (
     out: Float32Array,
@@ -109,7 +110,7 @@ const addDownscaledAttrib = (
     getRowAttrib: (i: number) => [Array<number>, Array<number>]
 ): void => {
     const attribs = []
-    for (let i = 0; i < TILE_DETAIL; i++) {
+    for (let i = 0; i < NUM_ROWS; i++) {
         const [inner, outer] = getRowAttrib(i)
         const [nextInner, nextOuter] = getRowAttrib(i + 1)
         attribs.push(
@@ -129,7 +130,7 @@ const addDownscaledTexCoords = (
     offset: number,
     rect: TileRect
 ): void => {
-    const heightInc = rect.height / TILE_DETAIL
+    const heightInc = rect.height / NUM_ROWS
     const getRowCoords = (i: number): [Array<number>, Array<number>] => {
         const inner = [
             rect.left,
@@ -153,8 +154,8 @@ const addDownscaledSpiralPositions = (
     tileAngle: number,
     tileWidth: number
 ): void => {
-    const angleInc = tileAngle / TILE_DETAIL
-    const radiusInc = tileRadius / TILE_DETAIL
+    const angleInc = tileAngle / NUM_ROWS
+    const radiusInc = tileRadius / NUM_ROWS
 
     const getRowSpiralPositions = (i: number): [Array<number>, Array<number>] => {
         const angle = currAngle + angleInc * i
@@ -184,7 +185,7 @@ const addDownscaledColumnPositions = (
     tileHeight: number,
     tileWidth: number
 ): void => {
-    const columnYInc = tileHeight / TILE_DETAIL
+    const columnYInc = tileHeight / NUM_ROWS
 
     const getRowColumnPositions = (i: number): [Array<number>, Array<number>] => {
         const columnY = currColumnY - columnYInc * i
@@ -203,5 +204,6 @@ export {
     addDownscaledSpiralPositions,
     addDownscaledColumnPositions,
     addDownscaledTexCoords,
-    TILE_DETAIL
+    NUM_ROWS,
+    VERT_PER_ROW
 }
