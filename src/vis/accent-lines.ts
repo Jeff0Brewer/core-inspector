@@ -4,12 +4,16 @@ import { POS_FPV, CoreShape } from '../vis/core'
 import vertSource from '../shaders/accent-line-vert.glsl?raw'
 import fragSource from '../shaders/accent-line-frag.glsl?raw'
 
+const LEN_FPV = 1
+
 class AccentLineRenderer {
     program: WebGLProgram
     spiralPosBuffer: WebGLBuffer
     columnPosBuffer: WebGLBuffer
+    lineLengthBuffer: WebGLBuffer
     bindSpiralPos: () => void
     bindColumnPos: () => void
+    bindLineLength: () => void
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
@@ -37,8 +41,12 @@ class AccentLineRenderer {
             gl.STATIC_DRAW
         )
 
+        this.lineLengthBuffer = initBuffer(gl)
+        gl.bufferData(gl.ARRAY_BUFFER, getLineLengths(this.numVertex), gl.STATIC_DRAW)
+
         this.bindSpiralPos = initAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
         this.bindColumnPos = initAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
+        this.bindLineLength = initAttribute(gl, this.program, 'lineLength', LEN_FPV, LEN_FPV, 0)
 
         const projLoc = gl.getUniformLocation(this.program, 'proj')
         const viewLoc = gl.getUniformLocation(this.program, 'view')
@@ -73,11 +81,22 @@ class AccentLineRenderer {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.columnPosBuffer)
         this.bindColumnPos()
 
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.lineLengthBuffer)
+        this.bindLineLength()
+
         this.setView(view)
         this.setShapeT(shapeT)
 
         gl.drawArrays(gl.LINES, 0, this.numVertex)
     }
+}
+
+const getLineLengths = (numVertex: number): Float32Array => {
+    const lineLengths = new Float32Array(numVertex * LEN_FPV)
+    for (let i = 0; i < lineLengths.length; i++) {
+        lineLengths[i] = i % 2
+    }
+    return lineLengths
 }
 
 const VERT_PER_LINE = 2
