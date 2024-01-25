@@ -114,12 +114,18 @@ const addPunchcardAttrib = (
     out: Float32Array,
     offset: number,
     getPointAttrib: (i: number, j: number) => Array<number>,
-    numRows: number
+    numRows: number,
+    floatsPerVertex: number
 ): void => {
-    const attribs = []
+    const numVertex = POINT_PER_ROW * numRows
+
+    let bufInd = 0
+    const attribs = new Float32Array(numVertex * floatsPerVertex)
     for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < POINT_PER_ROW; j++) {
-            attribs.push(...getPointAttrib(i, j))
+            const attrib = getPointAttrib(i, j)
+            attribs.set(attrib, bufInd)
+            bufInd += floatsPerVertex
         }
     }
     out.set(attribs, offset)
@@ -140,7 +146,7 @@ const addPunchcardTexCoords = (
             rect.top + heightInc * i
         ]
     }
-    addPunchcardAttrib(out, offset, getPointCoords, numRows)
+    addPunchcardAttrib(out, offset, getPointCoords, numRows, TEX_FPV)
 }
 
 const addPunchcardSpiralPositions = (
@@ -169,7 +175,7 @@ const addPunchcardSpiralPositions = (
         ]
     }
 
-    addPunchcardAttrib(out, offset, getSpiralPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getSpiralPointPositions, numRows, POS_FPV)
 }
 
 const addPunchcardColumnPositions = (
@@ -192,7 +198,7 @@ const addPunchcardColumnPositions = (
         return [columnX, columnY]
     }
 
-    addPunchcardAttrib(out, offset, getPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getPointPositions, numRows, POS_FPV)
 }
 
 export default PunchcardCoreRenderer
