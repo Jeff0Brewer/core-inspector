@@ -1,4 +1,4 @@
-import { mat4, vec2 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV, TEX_FPV, CoreShape } from '../vis/core'
 import { TileRect } from '../lib/tile-texture'
