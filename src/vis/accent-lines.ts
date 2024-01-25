@@ -111,6 +111,8 @@ const getLineLengths = (numVertex: number, metadata: TileTextureMetadata): Float
 
 const VERT_PER_LINE = 2
 
+const VERT_PER_TILE = VERT_PER_LINE + NUM_ROWS * VERT_PER_LINE
+
 const addAccentLineSpiralPositions = (
     out: Float32Array,
     offset: number,
@@ -123,28 +125,26 @@ const addAccentLineSpiralPositions = (
     const angleInc = tileAngle / NUM_ROWS
     const radiusInc = tileRadius / NUM_ROWS
 
-    const positions = []
+    let bufInd = 0
+    const positions = new Float32Array(VERT_PER_TILE * POS_FPV)
     for (let i = 0; i < NUM_ROWS; i++) {
-        const angle = currAngle + angleInc * i
-        const nextAngle = angle + angleInc
-        const radius = currRadius + radiusInc * i + tileWidth * 0.5
-        const nextRadius = radius + radiusInc
-        positions.push(
-            Math.cos(angle) * radius,
-            Math.sin(angle) * radius,
-            Math.cos(nextAngle) * nextRadius,
-            Math.sin(nextAngle) * nextRadius
-        )
+        let angle = currAngle + angleInc * i
+        let radius = currRadius + radiusInc * i + tileWidth * 0.5
+        positions[bufInd++] = Math.cos(angle) * radius
+        positions[bufInd++] = Math.sin(angle) * radius
+
+        angle += angleInc
+        radius += radiusInc
+        positions[bufInd++] = Math.cos(angle) * radius
+        positions[bufInd++] = Math.sin(angle) * radius
     }
 
     const angle = currAngle + tileAngle
     const radius = currRadius + tileRadius
-    positions.push(
-        Math.cos(angle) * (radius + tileWidth * 0.5),
-        Math.sin(angle) * (radius + tileWidth * 0.5),
-        Math.cos(angle) * (radius - tileWidth * 0.5),
-        Math.sin(angle) * (radius - tileWidth * 0.5)
-    )
+    positions[bufInd++] = Math.cos(angle) * (radius + tileWidth * 0.5)
+    positions[bufInd++] = Math.sin(angle) * (radius + tileWidth * 0.5)
+    positions[bufInd++] = Math.cos(angle) * (radius - tileWidth * 0.5)
+    positions[bufInd++] = Math.sin(angle) * (radius - tileWidth * 0.5)
 
     out.set(positions, offset)
 }
@@ -159,21 +159,19 @@ const addAccentLineColumnPositions = (
 ): void => {
     const columnYInc = tileHeight / NUM_ROWS
 
-    const positions = []
+    let bufInd = 0
+    const positions = new Float32Array(VERT_PER_TILE * POS_FPV)
     for (let i = 0; i < NUM_ROWS; i++) {
-        positions.push(
-            currColumnX,
-            currColumnY - columnYInc * i,
-            currColumnX,
-            currColumnY - columnYInc * (i + 1)
-        )
+        positions[bufInd++] = currColumnX
+        positions[bufInd++] = currColumnY - columnYInc * i
+        positions[bufInd++] = currColumnX
+        positions[bufInd++] = currColumnY - columnYInc * (i + 1)
     }
-    positions.push(
-        currColumnX,
-        currColumnY - tileHeight,
-        currColumnX + tileWidth,
-        currColumnY - tileHeight
-    )
+
+    positions[bufInd++] = currColumnX
+    positions[bufInd++] = currColumnY - tileHeight
+    positions[bufInd++] = currColumnX + tileWidth
+    positions[bufInd++] = currColumnY - tileHeight
 
     out.set(positions, offset)
 }
