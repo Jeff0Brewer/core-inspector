@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
-import { POS_FPV } from '../vis/core'
+import { POS_FPV } from '../lib/vert-gen'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
