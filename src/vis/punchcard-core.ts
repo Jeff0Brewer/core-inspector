@@ -113,14 +113,18 @@ const POINT_PER_ROW = 3
 const addPunchcardAttrib = (
     out: Float32Array,
     offset: number,
-    getPointAttrib: (i: number, j: number) => Array<number>,
-    numRows: number
+    getRowAttrib: (i: number) => Float32Array,
+    numRows: number,
+    floatsPerVertex: number
 ): void => {
-    const attribs = []
+    const numVertex = POINT_PER_ROW * numRows
+
+    let bufInd = 0
+    const attribs = new Float32Array(numVertex * floatsPerVertex)
     for (let i = 0; i < numRows; i++) {
-        for (let j = 0; j < POINT_PER_ROW; j++) {
-            attribs.push(...getPointAttrib(i, j))
-        }
+        const attrib = getRowAttrib(i)
+        attribs.set(attrib, bufInd)
+        bufInd += attrib.length
     }
     out.set(attribs, offset)
 }
@@ -134,13 +138,20 @@ const addPunchcardTexCoords = (
     const heightInc = rect.height / numRows
     const widthInc = rect.width / POINT_PER_ROW
 
-    const getPointCoords = (i: number, j: number): Array<number> => {
-        return [
-            rect.left + widthInc * j,
-            rect.top + heightInc * i
-        ]
+    const buffer = new Float32Array(6)
+
+    const getRowCoords = (i: number): Float32Array => {
+        const yCoord = rect.top + heightInc * i
+
+        buffer[0] = rect.left
+        buffer[1] = yCoord
+        buffer[2] = rect.left + widthInc
+        buffer[3] = yCoord
+        buffer[4] = rect.left + 2 * widthInc
+        buffer[5] = yCoord
+        return buffer
     }
-    addPunchcardAttrib(out, offset, getPointCoords, numRows)
+    addPunchcardAttrib(out, offset, getRowCoords, numRows, TEX_FPV)
 }
 
 const addPunchcardSpiralPositions = (
@@ -155,21 +166,28 @@ const addPunchcardSpiralPositions = (
 ): void => {
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
+    const acrossInc = tileWidth / POINT_PER_ROW
 
-    const startRadius = currRadius - tileWidth * 0.5
-    const startAngle = currAngle + angleInc * 0.5
+    const startRadius = currRadius + tileWidth * 0.5 - acrossInc * 0.5
 
-    const getSpiralPointPositions = (i: number, j: number): Array<number> => {
-        const angle = startAngle + angleInc * i
-        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
-        const radius = startRadius + i * radiusInc + (tileWidth - tileAcross)
-        return [
-            Math.cos(angle) * radius,
-            Math.sin(angle) * radius
-        ]
+    const buffer = new Float32Array(6)
+
+    const getRowPositions = (i: number): Float32Array => {
+        const radius = startRadius + radiusInc * i
+        const angle = currAngle + angleInc * (i + 0.5)
+        const sin = Math.sin(angle)
+        const cos = Math.cos(angle)
+
+        buffer[0] = cos * radius
+        buffer[1] = sin * radius
+        buffer[2] = cos * (radius - acrossInc)
+        buffer[3] = sin * (radius - acrossInc)
+        buffer[4] = cos * (radius - 2 * acrossInc)
+        buffer[5] = sin * (radius - 2 * acrossInc)
+        return buffer
     }
 
-    addPunchcardAttrib(out, offset, getSpiralPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getRowPositions, numRows, POS_FPV)
 }
 
 const addPunchcardColumnPositions = (
@@ -182,17 +200,24 @@ const addPunchcardColumnPositions = (
     numRows: number
 ): void => {
     const columnYInc = -1 * tileHeight / numRows
+    const columnXInc = tileWidth / POINT_PER_ROW
 
-    const startColumnY = currColumnY + columnYInc * 0.5
+    const buffer = new Float32Array(6)
 
-    const getPointPositions = (i: number, j: number): Array<number> => {
-        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
-        const columnY = startColumnY + columnYInc * i
-        const columnX = currColumnX + tileAcross
-        return [columnX, columnY]
+    const getRowPositions = (i: number): Float32Array => {
+        const columnY = currColumnY + columnYInc * (i + 0.5)
+        const columnX = currColumnX + columnXInc * 0.5
+
+        buffer[0] = columnX
+        buffer[1] = columnY
+        buffer[2] = columnX + columnXInc
+        buffer[3] = columnY
+        buffer[4] = columnX + 2 * columnXInc
+        buffer[5] = columnY
+        return buffer
     }
 
-    addPunchcardAttrib(out, offset, getPointPositions, numRows)
+    addPunchcardAttrib(out, offset, getRowPositions, numRows, POS_FPV)
 }
 
 export default PunchcardCoreRenderer

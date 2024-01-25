@@ -20,7 +20,7 @@ import PunchcardCoreRenderer, {
 import AccentLineRenderer, {
     addAccentLineSpiralPositions,
     addAccentLineColumnPositions,
-    VERT_PER_LINE
+    VERT_PER_TILE
 } from '../vis/accent-lines'
 import StencilCoreRenderer from '../vis/stencil-core'
 import HoverHighlightRenderer from '../vis/hover-highlight'
@@ -93,7 +93,8 @@ class CoreRenderer {
         this.accentRenderer = new AccentLineRenderer(
             gl,
             accentPositions,
-            this.targetShape
+            this.targetShape,
+            tileMetadata
         )
         this.stencilRenderer = new StencilCoreRenderer(
             gl,
@@ -275,7 +276,7 @@ const getCorePositions = (
 } => {
     const downFloatPerTile = NUM_ROWS * VERT_PER_ROW * POS_FPV
     const punchFloatPerTile = (numRows: number): number => numRows * POINT_PER_ROW * POS_FPV
-    const accentFloatPerTile = VERT_PER_LINE * POS_FPV
+    const accentFloatPerTile = VERT_PER_TILE * POS_FPV
 
     const downPositions = new Float32Array(metadata.numTiles * downFloatPerTile)
     const punchPositions = new Float32Array(punchFloatPerTile(metadata.punchTotalRows))

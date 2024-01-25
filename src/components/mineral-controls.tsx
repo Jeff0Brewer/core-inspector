@@ -67,7 +67,7 @@ function MineralControls (
             const numVisible = palette.colors.length
             setVisibilities(minerals.map((_, i) => i < numVisible))
         }
-    }, [palette, vis, minerals])
+    }, [palette, minerals])
 
     // sets parameters to show one channel in monochrome
     const getMineralSetter = (i: number): (() => void) => {

@@ -97,24 +97,38 @@ class DownscaledCoreRenderer {
 
 const NUM_ROWS = 12
 const VERT_PER_ROW = 6
+const VERT_PER_TILE = NUM_ROWS * VERT_PER_ROW
 
 const addDownscaledAttrib = (
     out: Float32Array,
     offset: number,
-    getRowAttrib: (i: number) => [Array<number>, Array<number>]
+    getRowAttrib: (i: number) => [Array<number>, Array<number>],
+    floatsPerVertex: number
 ): void => {
-    const attribs = []
+    let bufInd = 0
+    const attribs = new Float32Array(VERT_PER_TILE * floatsPerVertex)
+
     for (let i = 0; i < NUM_ROWS; i++) {
         const [inner, outer] = getRowAttrib(i)
         const [nextInner, nextOuter] = getRowAttrib(i + 1)
-        attribs.push(
-            ...inner,
-            ...outer,
-            ...nextOuter,
-            ...nextOuter,
-            ...nextInner,
-            ...inner
-        )
+
+        attribs.set(inner, bufInd)
+        bufInd += floatsPerVertex
+
+        attribs.set(outer, bufInd)
+        bufInd += floatsPerVertex
+
+        attribs.set(nextOuter, bufInd)
+        bufInd += floatsPerVertex
+
+        attribs.set(nextOuter, bufInd)
+        bufInd += floatsPerVertex
+
+        attribs.set(nextInner, bufInd)
+        bufInd += floatsPerVertex
+
+        attribs.set(inner, bufInd)
+        bufInd += floatsPerVertex
     }
     out.set(attribs, offset)
 }
@@ -136,7 +150,7 @@ const addDownscaledTexCoords = (
         ]
         return [inner, outer]
     }
-    addDownscaledAttrib(out, offset, getRowCoords)
+    addDownscaledAttrib(out, offset, getRowCoords, TEX_FPV)
 }
 
 const addDownscaledSpiralPositions = (
@@ -168,7 +182,7 @@ const addDownscaledSpiralPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, offset, getRowSpiralPositions)
+    addDownscaledAttrib(out, offset, getRowSpiralPositions, POS_FPV)
 }
 
 const addDownscaledColumnPositions = (
@@ -190,7 +204,7 @@ const addDownscaledColumnPositions = (
         return [inner, outer]
     }
 
-    addDownscaledAttrib(out, offset, getRowColumnPositions)
+    addDownscaledAttrib(out, offset, getRowColumnPositions, POS_FPV)
 }
 
 export default DownscaledCoreRenderer
