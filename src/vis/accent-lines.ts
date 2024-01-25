@@ -75,7 +75,7 @@ class AccentLineRenderer {
         this.setView(view)
         this.setShapeT(shapeT)
 
-        gl.drawArrays(gl.LINES, 0, this.numVertex)
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.numVertex)
     }
 
     drop (gl: GlContext): void {
@@ -87,31 +87,53 @@ class AccentLineRenderer {
 }
 
 const getLineLengths = (numVertex: number, metadata: TileTextureMetadata): Float32Array => {
-    const lineLengths = new Float32Array(numVertex * LEN_FPV)
-
     const SIDE_DASH_DENSITY = 150.0
 
-    let bufferInd = 0
+    let bufInd = 0
+    const lineLengths = new Float32Array(numVertex * LEN_FPV)
+
     for (const { height } of metadata.downTiles) {
         const heightInc = height / NUM_ROWS * SIDE_DASH_DENSITY
 
+        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
+
+        lineLengths[bufInd++] = 2
+
         // use representative height for side lines
-        for (let i = 0; i < NUM_ROWS; i++) {
-            lineLengths[bufferInd++] = 2 + heightInc * i
-            lineLengths[bufferInd++] = 2 + heightInc * (i + 1)
+        for (let i = 0; i <= NUM_ROWS; i++) {
+            lineLengths[bufInd++] = 2 + heightInc * i
+            lineLengths[bufInd++] = 2 + heightInc * i
         }
 
+        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
+
         // use constant length for bottom lines
-        lineLengths[bufferInd++] = 0
-        lineLengths[bufferInd++] = 1
+        lineLengths[bufInd++] = 0
+        lineLengths[bufInd++] = 0
+
+        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
+
+        lineLengths[bufInd++] = 1
+        lineLengths[bufInd++] = 1
+
+        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
     }
 
     return lineLengths
 }
 
-const VERT_PER_LINE = 2
+const LINE_WIDTH = 0.0015
+const VERT_PER_TILE = 2 * (4 + (NUM_ROWS + 1) + 2) + 1
 
-const VERT_PER_TILE = VERT_PER_LINE + NUM_ROWS * VERT_PER_LINE
+const addEmptyAttrib = (out: Float32Array, ind: number, floatPerVertex: number): number => {
+    if (ind < floatPerVertex) {
+        return ind + floatPerVertex * 2
+    }
+    for (let i = 0; i < floatPerVertex * 2; i++, ind++) {
+        out[ind] = out[ind - floatPerVertex]
+    }
+    return ind
+}
 
 const addAccentLineSpiralPositions = (
     out: Float32Array,
@@ -125,28 +147,44 @@ const addAccentLineSpiralPositions = (
     const angleInc = tileAngle / NUM_ROWS
     const radiusInc = tileRadius / NUM_ROWS
 
-    let bufInd = 0
-    const positions = new Float32Array(VERT_PER_TILE * POS_FPV)
-    for (let i = 0; i < NUM_ROWS; i++) {
-        let angle = currAngle + angleInc * i
-        let radius = currRadius + radiusInc * i + tileWidth * 0.5
-        positions[bufInd++] = Math.cos(angle) * radius
-        positions[bufInd++] = Math.sin(angle) * radius
+    offset = addEmptyAttrib(out, offset, POS_FPV)
 
-        angle += angleInc
-        radius += radiusInc
-        positions[bufInd++] = Math.cos(angle) * radius
-        positions[bufInd++] = Math.sin(angle) * radius
+    let angle = currAngle
+    let radius = currRadius + tileWidth * 0.5
+
+    out[offset++] = Math.cos(angle) * radius
+    out[offset++] = Math.sin(angle) * radius
+
+    for (let i = 0; i <= NUM_ROWS; i++) {
+        const angle = currAngle + angleInc * i
+        const radius = currRadius + radiusInc * i + tileWidth * 0.5
+        out[offset++] = Math.cos(angle) * radius
+        out[offset++] = Math.sin(angle) * radius
+        out[offset++] = Math.cos(angle) * (radius + LINE_WIDTH)
+        out[offset++] = Math.sin(angle) * (radius + LINE_WIDTH)
     }
 
-    const angle = currAngle + tileAngle
-    const radius = currRadius + tileRadius
-    positions[bufInd++] = Math.cos(angle) * (radius + tileWidth * 0.5)
-    positions[bufInd++] = Math.sin(angle) * (radius + tileWidth * 0.5)
-    positions[bufInd++] = Math.cos(angle) * (radius - tileWidth * 0.5)
-    positions[bufInd++] = Math.sin(angle) * (radius - tileWidth * 0.5)
+    offset = addEmptyAttrib(out, offset, POS_FPV)
 
-    out.set(positions, offset)
+    angle = currAngle + tileAngle
+    radius = currRadius + tileRadius
+    const tangentX = -Math.sin(angle)
+    const tangentY = Math.cos(angle)
+
+    out[offset++] = Math.cos(angle) * (radius + tileWidth * 0.5)
+    out[offset++] = Math.sin(angle) * (radius + tileWidth * 0.5)
+
+    offset = addEmptyAttrib(out, offset, POS_FPV)
+
+    out[offset++] = Math.cos(angle) * (radius + tileWidth * 0.5) + tangentX * LINE_WIDTH
+    out[offset++] = Math.sin(angle) * (radius + tileWidth * 0.5) + tangentY * LINE_WIDTH
+
+    out[offset++] = Math.cos(angle) * (radius - tileWidth * 0.5)
+    out[offset++] = Math.sin(angle) * (radius - tileWidth * 0.5)
+    out[offset++] = Math.cos(angle) * (radius - tileWidth * 0.5) + tangentX * LINE_WIDTH
+    out[offset++] = Math.sin(angle) * (radius - tileWidth * 0.5) + tangentY * LINE_WIDTH
+
+    offset = addEmptyAttrib(out, offset, POS_FPV)
 }
 
 const addAccentLineColumnPositions = (
@@ -159,26 +197,39 @@ const addAccentLineColumnPositions = (
 ): void => {
     const columnYInc = tileHeight / NUM_ROWS
 
-    let bufInd = 0
-    const positions = new Float32Array(VERT_PER_TILE * POS_FPV)
-    for (let i = 0; i < NUM_ROWS; i++) {
-        positions[bufInd++] = currColumnX
-        positions[bufInd++] = currColumnY - columnYInc * i
-        positions[bufInd++] = currColumnX
-        positions[bufInd++] = currColumnY - columnYInc * (i + 1)
+    offset = addEmptyAttrib(out, offset, POS_FPV)
+
+    out[offset++] = currColumnX
+    out[offset++] = currColumnY
+
+    for (let i = 0; i <= NUM_ROWS; i++) {
+        out[offset++] = currColumnX
+        out[offset++] = currColumnY - columnYInc * i
+        out[offset++] = currColumnX - LINE_WIDTH
+        out[offset++] = currColumnY - columnYInc * i
     }
 
-    positions[bufInd++] = currColumnX
-    positions[bufInd++] = currColumnY - tileHeight
-    positions[bufInd++] = currColumnX + tileWidth
-    positions[bufInd++] = currColumnY - tileHeight
+    offset = addEmptyAttrib(out, offset, POS_FPV)
 
-    out.set(positions, offset)
+    out[offset++] = currColumnX
+    out[offset++] = currColumnY - tileHeight
+
+    offset = addEmptyAttrib(out, offset, POS_FPV)
+
+    out[offset++] = currColumnX
+    out[offset++] = currColumnY - tileHeight - LINE_WIDTH
+
+    out[offset++] = currColumnX + tileWidth
+    out[offset++] = currColumnY - tileHeight
+    out[offset++] = currColumnX + tileWidth
+    out[offset++] = currColumnY - tileHeight - LINE_WIDTH
+
+    offset = addEmptyAttrib(out, offset, POS_FPV)
 }
 
 export default AccentLineRenderer
 export {
     addAccentLineSpiralPositions,
     addAccentLineColumnPositions,
-    VERT_PER_LINE
+    VERT_PER_TILE
 }
