@@ -168,7 +168,7 @@ const addPunchcardSpiralPositions = (
     const radiusInc = tileRadius / numRows
     const acrossInc = tileWidth / POINT_PER_ROW
 
-    const startRadius = currRadius - tileWidth * 0.5 + acrossInc * 0.5
+    const startRadius = currRadius + tileWidth * 0.5 - acrossInc * 0.5
 
     const buffer = new Float32Array(6)
 
@@ -180,10 +180,10 @@ const addPunchcardSpiralPositions = (
 
         buffer[0] = cos * radius
         buffer[1] = sin * radius
-        buffer[2] = cos * (radius + acrossInc)
-        buffer[3] = sin * (radius + acrossInc)
-        buffer[4] = cos * (radius + 2 * acrossInc)
-        buffer[5] = sin * (radius + 2 * acrossInc)
+        buffer[2] = cos * (radius - acrossInc)
+        buffer[3] = sin * (radius - acrossInc)
+        buffer[4] = cos * (radius - 2 * acrossInc)
+        buffer[5] = sin * (radius - 2 * acrossInc)
         return buffer
     }
 
