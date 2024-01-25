@@ -16,7 +16,7 @@ void main() {
     vLineLength = lineLength;
     vColor = mix(
         vec4(0.58, 0.46, 0.28, 0.9),
-        vec4(0.34, 0.45, 0.59, 0.7),
+        vec4(0.34, 0.45, 0.59, 0.7 * (1.0 - shapeT)),
         smoothstep(1.0, 1.0, lineLength)
     );
 }
