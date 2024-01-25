@@ -113,7 +113,7 @@ const POINT_PER_ROW = 3
 const addPunchcardAttrib = (
     out: Float32Array,
     offset: number,
-    getPointAttrib: (i: number, j: number) => Array<number>,
+    getRowAttrib: (i: number) => Array<number>,
     numRows: number,
     floatsPerVertex: number
 ): void => {
@@ -122,11 +122,9 @@ const addPunchcardAttrib = (
     let bufInd = 0
     const attribs = new Float32Array(numVertex * floatsPerVertex)
     for (let i = 0; i < numRows; i++) {
-        for (let j = 0; j < POINT_PER_ROW; j++) {
-            const attrib = getPointAttrib(i, j)
-            attribs.set(attrib, bufInd)
-            bufInd += floatsPerVertex
-        }
+        const attrib = getRowAttrib(i)
+        attribs.set(attrib, bufInd)
+        bufInd += attrib.length
     }
     out.set(attribs, offset)
 }
@@ -140,13 +138,18 @@ const addPunchcardTexCoords = (
     const heightInc = rect.height / numRows
     const widthInc = rect.width / POINT_PER_ROW
 
-    const getPointCoords = (i: number, j: number): Array<number> => {
+    const getRowCoords = (i: number): Array<number> => {
+        const yCoord = rect.top + heightInc * i
         return [
-            rect.left + widthInc * j,
-            rect.top + heightInc * i
+            rect.left,
+            yCoord,
+            rect.left + widthInc,
+            yCoord,
+            rect.left + 2 * widthInc,
+            yCoord
         ]
     }
-    addPunchcardAttrib(out, offset, getPointCoords, numRows, TEX_FPV)
+    addPunchcardAttrib(out, offset, getRowCoords, numRows, TEX_FPV)
 }
 
 const addPunchcardSpiralPositions = (
@@ -161,21 +164,26 @@ const addPunchcardSpiralPositions = (
 ): void => {
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
+    const acrossInc = tileWidth / POINT_PER_ROW
 
-    const startRadius = currRadius - tileWidth * 0.5
-    const startAngle = currAngle + angleInc * 0.5
+    const startRadius = currRadius - tileWidth * 0.5 + acrossInc * 0.5
 
-    const getSpiralPointPositions = (i: number, j: number): Array<number> => {
-        const angle = startAngle + angleInc * i
-        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
-        const radius = startRadius + i * radiusInc + (tileWidth - tileAcross)
+    const getRowPositions = (i: number): Array<number> => {
+        const radius = startRadius + radiusInc * i
+        const angle = currAngle + angleInc * (i + 0.5)
+        const sin = Math.sin(angle)
+        const cos = Math.cos(angle)
         return [
-            Math.cos(angle) * radius,
-            Math.sin(angle) * radius
+            cos * radius,
+            sin * radius,
+            cos * (radius + acrossInc),
+            sin * (radius + acrossInc),
+            cos * (radius + 2 * acrossInc),
+            sin * (radius + 2 * acrossInc)
         ]
     }
 
-    addPunchcardAttrib(out, offset, getSpiralPointPositions, numRows, POS_FPV)
+    addPunchcardAttrib(out, offset, getRowPositions, numRows, POS_FPV)
 }
 
 const addPunchcardColumnPositions = (
@@ -188,17 +196,22 @@ const addPunchcardColumnPositions = (
     numRows: number
 ): void => {
     const columnYInc = -1 * tileHeight / numRows
+    const columnXInc = tileWidth / POINT_PER_ROW
 
-    const startColumnY = currColumnY + columnYInc * 0.5
-
-    const getPointPositions = (i: number, j: number): Array<number> => {
-        const tileAcross = tileWidth * (j + 0.5) / POINT_PER_ROW
-        const columnY = startColumnY + columnYInc * i
-        const columnX = currColumnX + tileAcross
-        return [columnX, columnY]
+    const getRowPositions = (i: number): Array<number> => {
+        const columnY = currColumnY + columnYInc * (i + 0.5)
+        const columnX = currColumnX + columnXInc * 0.5
+        return [
+            columnX,
+            columnY,
+            columnX + columnXInc,
+            columnY,
+            columnX + 2 * columnXInc,
+            columnY
+        ]
     }
 
-    addPunchcardAttrib(out, offset, getPointPositions, numRows, POS_FPV)
+    addPunchcardAttrib(out, offset, getRowPositions, numRows, POS_FPV)
 }
 
 export default PunchcardCoreRenderer
