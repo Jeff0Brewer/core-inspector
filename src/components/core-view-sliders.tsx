@@ -46,7 +46,7 @@ function CoreViewSliders (
             icon={ICONS.horizontalDist}
             min={0}
             max={1}
-            step={0.01}
+            step={0.002}
         />
         <VerticalSlider
             value={spacing[1]}
@@ -55,7 +55,7 @@ function CoreViewSliders (
             icon={ICONS.verticalDist}
             min={0}
             max={1}
-            step={0.01}
+            step={0.002}
         />
     </>
 }
