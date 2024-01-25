@@ -27,9 +27,9 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
 } => {
     const downCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
     const punchCoords = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * TEX_FPV)
-
     let downOffset = 0
     let punchOffset = 0
+
     for (let i = 0; i < metadata.numTiles; i++) {
         downOffset = addDownscaledTexCoords(
             downCoords,
@@ -65,10 +65,12 @@ const getCorePositions = (
     const downPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * POS_FPV)
     const punchPositions = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * POS_FPV)
     const accentPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_LINE * POS_FPV)
+    let downOffset = 0
+    let punchOffset = 0
+    let accentOffset = 0
 
     const horizontalSpacing = spacing[0] * TILE_WIDTH
     const verticalSpacing = spacing[1] * TILE_WIDTH
-
     const numRotation = RADIUS_RANGE / (TILE_WIDTH + horizontalSpacing)
     const avgAngleSpacing = verticalSpacing / (MIN_RADIUS + RADIUS_RANGE * 0.5)
     const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.numTiles
@@ -77,10 +79,6 @@ const getCorePositions = (
     let angle = 0
     let columnX = viewportBounds.left
     let columnY = viewportBounds.top
-
-    let downOffset = 0
-    let punchOffset = 0
-    let accentOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
         // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
@@ -193,9 +191,9 @@ const addDownscaledAttrib = (
     floatsPerVertex: number
 ): number => {
     const inner = new Float32Array(floatsPerVertex)
-    const outer = inner.slice()
-    const nextInner = inner.slice()
-    const nextOuter = inner.slice()
+    const outer = new Float32Array(floatsPerVertex)
+    const nextInner = new Float32Array(floatsPerVertex)
+    const nextOuter = new Float32Array(floatsPerVertex)
 
     for (let i = 0; i < ROW_PER_TILE; i++) {
         getRowAttrib(i, inner, outer)
@@ -371,42 +369,6 @@ const addPunchcardColumnPositions = (
     return offset
 }
 
-const getLineLengths = (numVertex: number, metadata: TileTextureMetadata): Float32Array => {
-    const SIDE_DASH_DENSITY = 150.0
-
-    let bufInd = 0
-    const lineLengths = new Float32Array(numVertex * LEN_FPV)
-
-    for (const { height } of metadata.downTiles) {
-        const heightInc = height / ROW_PER_TILE * SIDE_DASH_DENSITY
-
-        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
-
-        lineLengths[bufInd++] = 2
-
-        // use representative height for side lines
-        for (let i = 0; i <= ROW_PER_TILE; i++) {
-            lineLengths[bufInd++] = 2 + heightInc * i
-            lineLengths[bufInd++] = 2 + heightInc * i
-        }
-
-        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
-
-        // use constant length for bottom lines
-        lineLengths[bufInd++] = 0
-        lineLengths[bufInd++] = 0
-
-        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
-
-        lineLengths[bufInd++] = 1
-        lineLengths[bufInd++] = 1
-
-        bufInd = addEmptyAttrib(lineLengths, bufInd, LEN_FPV)
-    }
-
-    return lineLengths
-}
-
 const addEmptyAttrib = (out: Float32Array, ind: number, floatPerVertex: number): number => {
     if (ind < floatPerVertex) {
         return ind + floatPerVertex * 2
@@ -415,6 +377,42 @@ const addEmptyAttrib = (out: Float32Array, ind: number, floatPerVertex: number):
         out[ind] = out[ind - floatPerVertex]
     }
     return ind
+}
+
+const getLineLengths = (numVertex: number, metadata: TileTextureMetadata): Float32Array => {
+    const SIDE_DASH_DENSITY = 150.0
+
+    let bufInd = 0
+    const out = new Float32Array(numVertex * LEN_FPV)
+
+    for (const { height } of metadata.downTiles) {
+        const heightInc = height / ROW_PER_TILE * SIDE_DASH_DENSITY
+
+        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
+
+        out[bufInd++] = 2
+
+        // use representative height for side lines
+        for (let i = 0; i <= ROW_PER_TILE; i++) {
+            out[bufInd++] = 2 + heightInc * i
+            out[bufInd++] = 2 + heightInc * i
+        }
+
+        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
+
+        // use constant length for bottom lines
+        out[bufInd++] = 0
+        out[bufInd++] = 0
+
+        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
+
+        out[bufInd++] = 1
+        out[bufInd++] = 1
+
+        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
+    }
+
+    return out
 }
 
 const addAccentLineSpiralPositions = (
