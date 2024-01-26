@@ -102,7 +102,6 @@ const getCorePositions = (
         // calculate tile layout using downscaled tile dimensions as source of truth
         // for all vis elements, ensuring alignment
         const { height, width } = metadata.downTiles[i]
-        // TODO: investigate tile dims in metadata, shouldn't have to scale tile height by 2
         const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
@@ -455,8 +454,7 @@ const addPunchcardColumnPositions = (
  * - takes parameters from full core generators and calculates line geometry
  * - uses same level of detail as downscaled representation to align properly
  * - renders as single triangle strip, so requires duplicating vertices at the start
- *   and end of every line segment to set line width to 0 and hide when between segments,
- *   preventing continuity / artifacts
+ *   and end of every line segment to set line width to 0 and hide when between segments
  */
 
 // copies first vertex in line segment to hide continuation from last segment
