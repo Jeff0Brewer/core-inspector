@@ -38,29 +38,26 @@ const getCoreTexCoords = (metadata: TileTextureMetadata): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
-    const downCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
-    const punchCoords = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * TEX_FPV)
+    const downTexCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
+    const punchTexCoords = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * TEX_FPV)
     let downOffset = 0
     let punchOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
         downOffset = addDownscaledTexCoords(
-            downCoords,
+            downTexCoords,
             downOffset,
             metadata.downTiles[i]
         )
         punchOffset = addPunchcardTexCoords(
-            punchCoords,
+            punchTexCoords,
             punchOffset,
             metadata.punchTiles[i],
             metadata.punchNumRows[i]
         )
     }
 
-    return {
-        downTexCoords: new Float32Array(downCoords),
-        punchTexCoords: new Float32Array(punchCoords)
-    }
+    return { downTexCoords, punchTexCoords }
 }
 
 // gets positions for all full core visualization elements.
