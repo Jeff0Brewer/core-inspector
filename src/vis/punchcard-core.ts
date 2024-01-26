@@ -25,34 +25,28 @@ class PunchcardCoreRenderer {
         positions: Float32Array,
         texCoords: Float32Array,
         pointSize: number,
-        shape: CoreShape
+        currentShape: CoreShape
     ) {
         this.minerals = minerals
-        this.numVertex = texCoords.length / TEX_FPV
+        this.numVertex = positions.length / POS_FPV
 
         this.program = new GlProgram(gl, vertSource, fragSource)
+
+        // positions for only one core shape passed to constructor,
+        // must fill other shape with empty buffer
+        const emptyBuffer = new Float32Array(positions.length)
+
+        this.spiralPosBuffer = new GlBuffer(gl)
+        this.spiralPosBuffer.setData(gl, currentShape === 'spiral' ? positions : emptyBuffer)
+        this.spiralPosBuffer.addAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
+
+        this.columnPosBuffer = new GlBuffer(gl)
+        this.columnPosBuffer.setData(gl, currentShape === 'column' ? positions : emptyBuffer)
+        this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
         this.texCoordBuffer = new GlBuffer(gl)
         this.texCoordBuffer.setData(gl, texCoords)
         this.texCoordBuffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, TEX_FPV, 0)
-
-        this.spiralPosBuffer = new GlBuffer(gl)
-        this.spiralPosBuffer.setData(
-            gl,
-            shape === 'spiral'
-                ? positions
-                : new Float32Array(positions.length)
-        )
-        this.spiralPosBuffer.addAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
-
-        this.columnPosBuffer = new GlBuffer(gl)
-        this.columnPosBuffer.setData(
-            gl,
-            shape === 'column'
-                ? positions
-                : new Float32Array(positions.length)
-        )
-        this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
@@ -74,19 +68,15 @@ class PunchcardCoreRenderer {
 
     // generate vertices externally to coordinate alignment between
     // punchcard and downscaled representations
-    setPositions (gl: GlContext, positions: Float32Array, shape: CoreShape): void {
-        if (shape === 'spiral') {
+    setPositions (gl: GlContext, positions: Float32Array, currentShape: CoreShape): void {
+        if (currentShape === 'spiral') {
             this.spiralPosBuffer.setData(gl, positions)
         } else {
             this.columnPosBuffer.setData(gl, positions)
         }
     }
 
-    draw (
-        gl: GlContext,
-        view: mat4,
-        shapeT: number
-    ): void {
+    draw (gl: GlContext, view: mat4, shapeT: number): void {
         this.program.bind(gl)
 
         this.minerals.bind(gl)
