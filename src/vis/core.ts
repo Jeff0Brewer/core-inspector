@@ -167,7 +167,6 @@ class CoreRenderer {
             this.viewMode
         )
 
-        // downscaled / accent line vertices always generated since always visible
         this.downRenderer.setPositions(gl, downPositions, this.targetShape)
         this.stencilRenderer.setPositions(gl, downPositions)
         this.highlightRenderer.setPositions(downPositions)
@@ -198,7 +197,6 @@ class CoreRenderer {
     }
 
     draw (gl: GlContext, elapsed: number, view: mat4, mousePos: [number, number]): void {
-        // update shapeT based on current target shape for transition
         const incSign = Math.sign(CORE_SHAPES[this.targetShape] - this.shapeT)
         this.shapeT += incSign * TRANSFORM_SPEED * elapsed
         this.shapeT = clamp(this.shapeT, 0, 1)
