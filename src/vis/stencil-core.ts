@@ -24,17 +24,17 @@ class StencilCoreRenderer {
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     numVertex: number
-    colorIdMap: ColorIdMap
-    currHovered: string | undefined
     lastMousePos: [number, number]
+    colorIdMap: ColorIdMap
 
     constructor (
         gl: GlContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata,
-        currHovered: string | undefined
+        idMetadata: SectionIdMetadata
     ) {
+        this.lastMousePos = [-1, -1]
+
         this.numVertex = positions.length / POS_FPV
         // assume same number of vertices for each tile
         const vertPerTile = this.numVertex / tileMetadata.numTiles
@@ -59,15 +59,10 @@ class StencilCoreRenderer {
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-
-        this.currHovered = currHovered
-        this.lastMousePos = [-1, -1]
     }
 
-    setHovered (id: string | undefined): void {
-        this.currHovered = id
-    }
-
+    // set positions externally because using same triangle vertices as
+    // downscaled representation, can reuse here
     setPositions (gl: GlContext, positions: Float32Array): void {
         this.positionBuffer.setData(gl, positions)
     }
@@ -87,6 +82,9 @@ class StencilCoreRenderer {
             this.lastMousePos[0] !== mousePos[0] ||
             this.lastMousePos[1] !== mousePos[1]
 
+        // store mouse pos for next comparison
+        this.lastMousePos = mousePos
+
         return mousePosChanged && shapeNotChanging
     }
 
@@ -102,7 +100,6 @@ class StencilCoreRenderer {
         if (!this.checkHoverChange(shapeT, mousePos)) {
             return
         }
-        this.lastMousePos = mousePos
 
         this.framebuffer.bind(gl)
         this.program.bind(gl)
@@ -113,18 +110,16 @@ class StencilCoreRenderer {
         gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT)
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
 
-        // read pixels immediately after draw to ensure render not in progress
-        // and colors are readable
+        // read pixels immediately after draw to ensure render not
+        // in progress and colors are readable
         const pixels = new Uint8Array(4)
         gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
+        // get hovered id from color and update state
         const colorHex = bytesToHex([pixels[0], pixels[1]])
-        const newHovered = this.colorIdMap[colorHex]
-        if (this.currHovered !== newHovered) {
-            this.currHovered = newHovered
-            setHovered(this.currHovered)
-        }
+        setHovered(this.colorIdMap[colorHex])
 
+        // reset to default framebuffer once completed
         this.framebuffer.unbind(gl)
     }
 
@@ -136,8 +131,8 @@ class StencilCoreRenderer {
     }
 }
 
-// get unique color for each tile id, return buffer for rendering and
-// map for converting rendered color to original id
+// get unique color for each tile id, return buffer for rendering colors
+// and map for converting rendered color to original id
 const getStencilColors = (
     tileMetadata: TileTextureMetadata,
     idMetadata: SectionIdMetadata,
@@ -146,20 +141,26 @@ const getStencilColors = (
     colors: Uint8Array,
     map: ColorIdMap
 } => {
-    const colors = []
     const map: ColorIdMap = {}
+    const colors = new Uint8Array(tileMetadata.numTiles * vertPerTile * COL_FPV)
+    let offset = 0
+
     for (let i = 0; i < tileMetadata.numTiles; i++) {
-        const { vec, hex } = indToColor(i)
-        const tileVerts = Array(vertPerTile).fill(vec).flat()
-        colors.push(...tileVerts)
+        const { hex, vec } = indToColor(i)
+
         map[hex] = idMetadata.ids[i]
+
+        // fill buffer with same color for all vertices of tile
+        const tileColors = Array(vertPerTile).fill(vec).flat()
+        colors.set(tileColors, offset)
+        offset += tileColors.length
     }
-    return {
-        colors: new Uint8Array(colors),
-        map
-    }
+
+    return { colors, map }
 }
 
+// converts index to unique color, returns vec representation for use in
+// color buffer and hex representation for use in hash map
 const indToColor = (i: number): { vec: vec2, hex: string } => {
     // scale index to make colors more distinct,
     // add one to index to prevent [0, 0] color
@@ -167,6 +168,7 @@ const indToColor = (i: number): { vec: vec2, hex: string } => {
 
     const mod = ind % 256
     const fract = Math.floor((ind - mod) / 255)
+
     const vec: vec2 = [mod, fract]
     const hex = bytesToHex(vec)
 

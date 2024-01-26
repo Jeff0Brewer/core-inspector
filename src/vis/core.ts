@@ -83,8 +83,7 @@ class CoreRenderer {
             gl,
             downPositions,
             tileMetadata,
-            idMetadata,
-            undefined
+            idMetadata
         )
         this.highlightRenderer = new HoverHighlightRenderer(
             gl,
@@ -121,7 +120,6 @@ class CoreRenderer {
 
     setHovered (gl: GlContext, id: string | undefined): void {
         this.highlightRenderer.setHovered(gl, id)
-        this.stencilRenderer.setHovered(id)
     }
 
     setSpacing (gl: GlContext, spacing: [number, number], bounds: BoundRect): void {
