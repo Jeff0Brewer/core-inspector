@@ -1,20 +1,7 @@
 import { vec3 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTexture, GlTextureFramebuffer, getTextureAttachments } from '../lib/gl-wrap'
-import { COLOR_PRESETS, GenericPalette } from '../lib/palettes'
+import { GenericPalette } from '../lib/palettes'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
-
-const POS_FPV = 2
-const TEX_FPV = 2
-const STRIDE = POS_FPV + TEX_FPV
-
-// rectangle with texture coordinates to fill full viewport.
-// used to render fragments in full viewport for blending
-const FULLSCREEN_RECT = new Float32Array([
-    -1, -1, 0, 0,
-    1, -1, 1, 0,
-    -1, 1, 0, 1,
-    1, 1, 1, 1
-])
 
 // get enum for blend modes since must send as uniform to shader
 const BLEND_MODES = { additive: 0, maximum: 1 } as const
@@ -30,26 +17,17 @@ type BlendParams = {
     monochrome: boolean
 }
 
-function getBlendColor (
-    palette: GenericPalette,
-    visibilities: Array<boolean>,
-    monochrome: boolean,
-    mineral: string,
-    index: number
-): vec3 | null {
-    if (!visibilities[index]) {
-        return null
-    }
-    if (monochrome && visibilities.filter(v => v).length === 1) {
-        return [1, 1, 1]
-    }
-    if (palette.type === 'labelled') {
-        return palette.colors[mineral] || null
-    } else {
-        const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
-        return palette.colors[priorNumVisible] || null
-    }
-}
+// rectangle with texture coordinates to fill full viewport.
+// used to render fragments in full viewport for blending
+const FULLSCREEN_RECT = new Float32Array([
+    -1, -1, 0, 0,
+    1, -1, 1, 0,
+    -1, 1, 0, 1,
+    1, 1, 1, 1
+])
+const POS_FPV = 2
+const TEX_FPV = 2
+const STRIDE = POS_FPV + TEX_FPV
 
 class MineralBlender {
     program: GlProgram
@@ -165,9 +143,31 @@ class MineralBlender {
     }
 }
 
+// maps colors to minerals based on blend params
+function getBlendColor (
+    palette: GenericPalette,
+    visibilities: Array<boolean>,
+    monochrome: boolean,
+    mineral: string,
+    index: number
+): vec3 | null {
+    if (!visibilities[index]) {
+        return null
+    }
+    if (monochrome && visibilities.filter(v => v).length === 1) {
+        return [1, 1, 1]
+    }
+    if (palette.type === 'labelled') {
+        return palette.colors[mineral] || null
+    } else {
+        const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
+        return palette.colors[priorNumVisible] || null
+    }
+}
+
 // create fragment shader dynamically to blend textures based from
 // variable number of input textures
-const getBlendFrag = (numTexture: number): string => {
+function getBlendFrag (numTexture: number): string {
     const uniforms = [
         'uniform float saturation;',
         'uniform float threshold;',
@@ -216,17 +216,14 @@ const getBlendFrag = (numTexture: number): string => {
         ...calcs,
         'gl_FragColor = vec4(color * saturation, 1.0);',
         '}'
-    ]
-    return fragSource.join('\n')
+    ].join('\n')
+
+    return fragSource
 }
 
 export default MineralBlender
-export {
-    getBlendColor,
-    COLOR_PRESETS
-}
+export { getBlendColor }
 export type {
     BlendParams,
-    BlendMode,
-    GenericPalette
+    BlendMode
 }
