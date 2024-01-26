@@ -26,10 +26,7 @@ class HoverHighlightRenderer {
         idMetadata: SectionIdMetadata
     ) {
         this.positions = positions
-
         this.lastHovered = undefined
-
-        // no vertices at start since no section hovered
         this.numVertex = 0
 
         // get map from section id to section start and end indices in position buffer,
@@ -75,8 +72,7 @@ class HoverHighlightRenderer {
     }
 
     // store reference to triangle section vertices from downscaled representation
-    // so that single section can be pulled out and placed in highlight position buffer
-    // on hover change
+    // so that single section can be copied into highlight position buffer on hover change
     setPositions (positions: Float32Array): void {
         this.positions = positions
     }
