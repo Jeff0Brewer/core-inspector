@@ -24,7 +24,6 @@ class PunchcardCoreRenderer {
         minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
-        pointSize: number,
         currentShape: CoreShape
     ) {
         this.minerals = minerals
@@ -57,6 +56,8 @@ class PunchcardCoreRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
         this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
 
+        // temporary point size adjustment
+        let pointSize = 3.5
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
         this.incPointSize = (delta: number): void => {
             this.program.bind(gl)

@@ -26,13 +26,16 @@ class StencilCoreRenderer {
     numVertex: number
     lastMousePos: [number, number]
     colorIdMap: ColorIdMap
+    setHovered: (id: string | undefined) => void
 
     constructor (
         gl: GlContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata
+        idMetadata: SectionIdMetadata,
+        setHovered: (id: string | undefined) => void
     ) {
+        this.setHovered = setHovered
         this.lastMousePos = [-1, -1]
 
         this.numVertex = positions.length / POS_FPV
@@ -88,13 +91,7 @@ class StencilCoreRenderer {
         return mousePosChanged && shapeNotChanging
     }
 
-    draw (
-        gl: GlContext,
-        view: mat4,
-        shapeT: number,
-        mousePos: [number, number],
-        setHovered: (id: string) => void
-    ): void {
+    draw (gl: GlContext, view: mat4, shapeT: number, mousePos: [number, number]): void {
         // only update stencil framebuffer and read pixels if
         // hover has potentially changed
         if (!this.checkHoverChange(shapeT, mousePos)) {
@@ -117,7 +114,7 @@ class StencilCoreRenderer {
 
         // get hovered id from color and update state
         const colorHex = bytesToHex([pixels[0], pixels[1]])
-        setHovered(this.colorIdMap[colorHex])
+        this.setHovered(this.colorIdMap[colorHex])
 
         // reset to default framebuffer once completed
         this.framebuffer.unbind(gl)

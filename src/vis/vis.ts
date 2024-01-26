@@ -46,16 +46,19 @@ class VisRenderer {
         uiState: UiState = {}
     ) {
         this.canvas = canvas
+        this.uiState = uiState
+        this.mousePos = [0, 0]
+        this.dropped = false
 
         this.gl = initGl(this.canvas)
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
-        this.camera = new Camera2D(0, 'spiral')
-
         const aspect = window.innerWidth / window.innerHeight
         const { fov, near, far } = PROJECTION_PARAMS
         this.proj = mat4.perspective(mat4.create(), fov, aspect, near, far)
+
+        this.camera = new Camera2D(0, 'spiral')
 
         this.core = new CoreRenderer(
             this.gl,
@@ -65,15 +68,12 @@ class VisRenderer {
             idMetadata,
             minerals,
             this.getViewportBounds(),
-            this.setVertexBounds.bind(this)
+            this.setVertexBounds.bind(this),
+            this.setHovered.bind(this)
         )
 
-        this.resize() // init canvas size, gl viewport, proj matrix
-
-        this.mousePos = [0, 0]
-        this.uiState = uiState
-
-        this.dropped = false
+        // init canvas size, gl viewport, proj matrix
+        this.resize()
     }
 
     setBlending (params: BlendParams): void {
@@ -215,16 +215,11 @@ class VisRenderer {
         // TODO: fix pan state, should only be updated with pan / bounds change
         this.camera.updatePanState(this.uiState.setPan, this.uiState.setPanWidth)
 
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
 
-        this.core.draw(
-            this.gl,
-            this.camera.matrix,
-            elapsed,
-            this.mousePos,
-            this.setHovered.bind(this)
-        )
+        this.core.draw(this.gl, elapsed, this.camera.matrix, this.mousePos)
     }
 
     drop (): void {

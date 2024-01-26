@@ -11,11 +11,14 @@ import StencilCoreRenderer from '../vis/stencil-core'
 import HoverHighlightRenderer from '../vis/hover-highlight'
 import { getCorePositions, getCoreTexCoords } from '../lib/vert-gen'
 
-const TRANSFORM_SPEED = 1
-const SHAPE_T_VALUES = { column: 0, spiral: 1 } as const
+// get enum for core shape since numeric values used as
+// uniform in shader to control shape transition
+const CORE_SHAPES = { column: 0, spiral: 1 } as const
+type CoreShape = keyof typeof CORE_SHAPES
 
-type CoreShape = keyof typeof SHAPE_T_VALUES
 type CoreViewMode = 'punchcard' | 'downscaled'
+
+const TRANSFORM_SPEED = 1
 
 class CoreRenderer {
     downRenderer: DownscaledCoreRenderer
@@ -38,15 +41,20 @@ class CoreRenderer {
         idMetadata: SectionIdMetadata,
         minerals: Array<string>,
         bounds: BoundRect,
-        setVertexBounds: (b: BoundRect) => void
+        setVertexBounds: (b: BoundRect) => void,
+        setHovered: (id: string | undefined) => void
     ) {
         // can be set to anything, will be aligned with ui state on load
         this.currSpacing = [0, 0]
         this.viewMode = 'downscaled'
         this.targetShape = 'column'
-
-        this.shapeT = SHAPE_T_VALUES[this.targetShape]
         this.metadata = tileMetadata
+        this.setVertexBounds = setVertexBounds
+
+        // shapeT is t value used in linear interpolation between
+        // core shapes in shader for transition, smoothly transitions
+        // from current t value to target shape t value
+        this.shapeT = CORE_SHAPES[this.targetShape]
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
@@ -71,7 +79,6 @@ class CoreRenderer {
             new MineralBlender(gl, punchMineralMaps, minerals),
             punchPositions,
             punchTexCoords,
-            3.5,
             this.targetShape
         )
         this.accentRenderer = new AccentLineRenderer(
@@ -84,7 +91,8 @@ class CoreRenderer {
             gl,
             downPositions,
             tileMetadata,
-            idMetadata
+            idMetadata,
+            setHovered
         )
         this.highlightRenderer = new HoverHighlightRenderer(
             gl,
@@ -92,8 +100,6 @@ class CoreRenderer {
             tileMetadata,
             idMetadata
         )
-
-        this.setVertexBounds = setVertexBounds
     }
 
     setProj (gl: GlContext, m: mat4): void {
@@ -148,11 +154,38 @@ class CoreRenderer {
         }
     }
 
+    // regenerates full core vertices required for current visualization state.
+    // must be called on changes to layout parameters (spacing, vp bounds / zoom) to update layout,
+    // or representation parameters (view mode, shape) to ensure representation
+    // specific vertices have been generated with latest layout params
     genVerts (gl: GlContext, viewportBounds: BoundRect): void {
-        // check if currently transitioning, must generate both shapes for punchcard
-        // if in middle of transition because values may have not been generated yet
-        if (Math.round(this.shapeT) !== this.shapeT && this.viewMode === 'punchcard') {
+        const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
+            this.metadata,
+            this.currSpacing,
+            viewportBounds,
+            this.targetShape,
+            this.viewMode
+        )
+
+        // downscaled / accent line vertices always generated since always visible
+        this.downRenderer.setPositions(gl, downPositions, this.targetShape)
+        this.stencilRenderer.setPositions(gl, downPositions)
+        this.highlightRenderer.setPositions(downPositions)
+        this.accentRenderer.setPositions(gl, accentPositions, this.targetShape)
+
+        // punchcard vertices only generated if currently in punchcard view
+        if (this.viewMode === 'punchcard') {
+            this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
+        }
+
+        this.setVertexBounds(vertexBounds)
+
+        // must generate both shapes for punchcard if in middle of transition
+        // because vertices may not have been generated yet
+        if (this.viewMode === 'punchcard' && Math.round(this.shapeT) !== this.shapeT) {
             const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
+            // this is mega slow, generates vertices for all visualization elements,
+            // but still < 16ms and this edge case happens very rarely so fine for now
             const { punchPositions } = getCorePositions(
                 this.metadata,
                 this.currSpacing,
@@ -162,39 +195,14 @@ class CoreRenderer {
             )
             this.punchRenderer.setPositions(gl, punchPositions, otherShape)
         }
-
-        const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
-            this.metadata,
-            this.currSpacing,
-            viewportBounds,
-            this.targetShape,
-            this.viewMode
-        )
-
-        if (this.viewMode === 'punchcard') {
-            this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
-        }
-        this.accentRenderer.setPositions(gl, accentPositions, this.targetShape)
-        this.downRenderer.setPositions(gl, downPositions, this.targetShape)
-        this.stencilRenderer.setPositions(gl, downPositions)
-        this.highlightRenderer.setPositions(downPositions)
-
-        this.setVertexBounds(vertexBounds)
     }
 
-    draw (
-        gl: GlContext,
-        view: mat4,
-        elapsed: number,
-        mousePos: [number, number],
-        setHovered: (id: string | undefined) => void
-    ): void {
-        const incSign = Math.sign(SHAPE_T_VALUES[this.targetShape] - this.shapeT)
+    draw (gl: GlContext, elapsed: number, view: mat4, mousePos: [number, number]): void {
+        // update shapeT based on current target shape for transition
+        const incSign = Math.sign(CORE_SHAPES[this.targetShape] - this.shapeT)
         this.shapeT += incSign * TRANSFORM_SPEED * elapsed
         this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
         if (this.viewMode === 'downscaled') {
             this.downRenderer.draw(gl, view, easedShapeT)
@@ -202,7 +210,7 @@ class CoreRenderer {
             this.punchRenderer.draw(gl, view, easedShapeT)
         }
 
-        this.stencilRenderer.draw(gl, view, easedShapeT, mousePos, setHovered)
+        this.stencilRenderer.draw(gl, view, easedShapeT, mousePos)
         this.highlightRenderer.draw(gl, view)
         this.accentRenderer.draw(gl, view, easedShapeT)
     }
