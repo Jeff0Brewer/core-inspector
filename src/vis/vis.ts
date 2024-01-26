@@ -7,19 +7,31 @@ import { BlendParams } from '../vis/mineral-blend'
 import CoreRenderer, { CoreShape, CoreViewMode } from '../vis/core'
 import Camera2D from '../lib/camera'
 
-const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
-
+/*
+ * UI STATE
+ * - react state setters to be passed into visualization reference
+ * - react / visualization state is coordinated by calling visualization
+ *   setter methods from react, which will then call the react state setter
+ *   from inside the visualization if one has been attached, propagating
+ *   state back to the ui
+ * - this prevents state updates if visualization is not initialized yet
+ *   and always keeps state coordinated so long as react setters are
+ *   attached
+ * - for state that doesn't get set anywhere from within the visualization
+ *   (i.e. blending parameters) the visualization setter method can be called
+ *   directly with react state passed in and nothing needs to be added here
+ */
 type UiState = {
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
     setSpacing?: (s: [number, number]) => void,
     setZoom?: (z: number) => void,
     setHovered?: (h: string | undefined) => void,
-    setBlending?: (p: BlendParams) => void,
     setPan?: (t: number) => void,
     setPanWidth?: (w: number) => void
 }
 
+const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
 const PROJECTION_PARAMS = {
     fov: 0.5 * Math.PI,
     near: 0.01,
@@ -76,11 +88,6 @@ class VisRenderer {
         this.resize()
     }
 
-    setBlending (params: BlendParams): void {
-        this.core.setBlending(this.gl, params)
-        this.uiState.setBlending?.(params)
-    }
-
     setHovered (id: string | undefined): void {
         this.core.setHovered(this.gl, id)
         this.uiState.setHovered?.(id)
@@ -89,7 +96,6 @@ class VisRenderer {
     setZoom (t: number): void {
         this.camera.zoom(t)
         this.uiState.setZoom?.(t)
-
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
@@ -114,43 +120,30 @@ class VisRenderer {
         this.uiState.setSpacing?.(s)
     }
 
+    setBlending (params: BlendParams): void {
+        this.core.setBlending(this.gl, params)
+    }
+
     setVertexBounds (b: BoundRect): void {
         this.camera.visBounds = b
     }
 
+    // get bounds of current viewport in gl units, needed for wrapping
+    // columns to fit viewport during vertex generation
     getViewportBounds (): BoundRect {
         const { fov } = PROJECTION_PARAMS
         const yBound = Math.tan(fov * 0.5) * this.camera.zoomDistance()
         const xBound = window.innerWidth / window.innerHeight * yBound
 
+        // add padding to viewport as percentage of available space
         const [xPad, yPad] = VIEWPORT_PADDING
         const x = xBound * xPad
         const y = yBound * yPad
 
         const bounds = { top: y, bottom: -y, left: -x, right: x }
-
         this.camera.viewportBounds = bounds
 
         return bounds
-    }
-
-    resize (): void {
-        const w = window.innerWidth * window.devicePixelRatio
-        const h = window.innerHeight * window.devicePixelRatio
-
-        this.canvas.width = w
-        this.canvas.height = h
-
-        this.gl.viewport(0, 0, w, h)
-
-        const aspect = w / h
-        const { fov, near, far } = PROJECTION_PARAMS
-        mat4.perspective(this.proj, fov, aspect, near, far)
-
-        this.core.setProj(this.gl, this.proj)
-        this.core.stencilRenderer.resize(this.gl, w, h)
-
-        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setupEventListeners (): (() => void) {
@@ -205,6 +198,25 @@ class VisRenderer {
             window.removeEventListener('keydown', keydown)
             window.removeEventListener('resize', resize)
         }
+    }
+
+    resize (): void {
+        const w = window.innerWidth * window.devicePixelRatio
+        const h = window.innerHeight * window.devicePixelRatio
+
+        this.canvas.width = w
+        this.canvas.height = h
+
+        this.gl.viewport(0, 0, w, h)
+
+        const aspect = w / h
+        const { fov, near, far } = PROJECTION_PARAMS
+        mat4.perspective(this.proj, fov, aspect, near, far)
+
+        this.core.setProj(this.gl, this.proj)
+        this.core.stencilRenderer.resize(this.gl, w, h)
+
+        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     draw (elapsed: number): void {
