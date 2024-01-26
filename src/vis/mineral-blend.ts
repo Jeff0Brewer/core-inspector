@@ -165,55 +165,62 @@ function getBlendColor (
     }
 }
 
-// create fragment shader dynamically to blend textures based from
-// variable number of input textures
+// create fragment shader dynamically to blend from variable number of input textures.
 function getBlendFrag (numTexture: number): string {
     const uniforms = [
         'uniform float saturation;',
         'uniform float threshold;',
         'uniform float mode;'
     ]
-    const values = [
+    const variables = [
+        `bool isMaximumMode = abs(mode - ${BLEND_MODES.maximum.toFixed(1)}) < 0.001;`,
         'float maxValue = 0.0;'
     ]
-    const calcs = []
+    const abundances = []
+    const values = []
+    const maxCalcs = []
+    const blendCalcs = []
 
     for (let i = 0; i < numTexture; i++) {
-        // add uniform for each channel's source texture, blend color, and blend magnitude
+        // add uniforms for each channel's texture / color / blend magnitude
         uniforms.push(
             `uniform sampler2D texture${i};`,
             `uniform vec3 color${i};`,
             `uniform float magnitude${i};`
         )
-        // get value from each channel's source texture and apply threshold
-        // also get max value to compare to if in maximum blend mode
-        values.push(
-            `float abundance${i} = texture2D(texture${i}, vTexCoord).x;`,
-            `float value${i} = magnitude${i} * smoothstep(threshold, 1.0, abundance${i});`,
-            `maxValue = max(maxValue, value${i});`
-        )
+
+        // get mineral abundance from texture
+        abundances.push(`float abundance${i} = texture2D(texture${i}, vTexCoord).x;`)
+
+        // get blend value from abundance / blend magnitude / threshold
+        values.push(`float value${i} = magnitude${i} * smoothstep(threshold, 1.0, abundance${i});`)
+
+        // get maximum blend value for comparison in maximum mode
+        maxCalcs.push(`maxValue = max(maxValue, value${i});`)
 
         // get on / off value to control if all sources are added together
         // or if only the maximum should be used
-        const isMaxumumMode = `(abs(mode - ${BLEND_MODES.maximum.toFixed(1)}) < 0.001)`
         const isMaximumValue = `(maxValue == value${i})`
-        const checkMax = `((!${isMaxumumMode} || ${isMaximumValue}) ? 1.0 : 0.0)`
+        const checkMax = `((!isMaximumMode || ${isMaximumValue}) ? 1.0 : 0.0)`
 
         // get final blended color by summing texture values with params applied
         const semicolonOrPlus = i === numTexture - 1 ? ';' : ' +'
-        calcs.push(
+        blendCalcs.push(
             `${checkMax} * value${i} * color${i}${semicolonOrPlus}`
         )
     }
 
     const fragSource = [
         'precision highp float;',
-        ...uniforms,
         'varying vec2 vTexCoord;',
+        ...uniforms,
         'void main() {',
+        ...variables,
+        ...abundances,
         ...values,
+        ...maxCalcs,
         'vec3 color =',
-        ...calcs,
+        ...blendCalcs,
         'gl_FragColor = vec4(color * saturation, 1.0);',
         '}'
     ].join('\n')
