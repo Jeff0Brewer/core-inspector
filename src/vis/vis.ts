@@ -42,6 +42,7 @@ class VisRenderer {
         punchcardMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
+        minerals: Array<string>,
         uiState: UiState = {}
     ) {
         this.canvas = canvas
@@ -62,6 +63,7 @@ class VisRenderer {
             punchcardMaps,
             tileMetadata,
             idMetadata,
+            minerals,
             this.getViewportBounds(),
             this.setVertexBounds.bind(this)
         )

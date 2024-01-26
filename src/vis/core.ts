@@ -36,6 +36,7 @@ class CoreRenderer {
         punchMineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
+        minerals: Array<string>,
         bounds: BoundRect,
         setVertexBounds: (b: BoundRect) => void
     ) {
@@ -60,14 +61,14 @@ class CoreRenderer {
 
         this.downRenderer = new DownscaledCoreRenderer(
             gl,
-            new MineralBlender(gl, downMineralMaps),
+            new MineralBlender(gl, downMineralMaps, minerals),
             downPositions,
             downTexCoords,
             this.targetShape
         )
         this.punchRenderer = new PunchcardCoreRenderer(
             gl,
-            new MineralBlender(gl, punchMineralMaps),
+            new MineralBlender(gl, punchMineralMaps, minerals),
             punchPositions,
             punchTexCoords,
             3.5,
