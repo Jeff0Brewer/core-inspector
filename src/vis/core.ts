@@ -150,6 +150,20 @@ class CoreRenderer {
     }
 
     genVerts (gl: GlContext, viewportBounds: BoundRect): void {
+        // check if currently transitioning, must generate both shapes for punchcard
+        // if in middle of transition because values may have not been generated yet
+        if (Math.round(this.shapeT) !== this.shapeT && this.viewMode === 'punchcard') {
+            const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
+            const { punchPositions } = getCorePositions(
+                this.metadata,
+                this.currSpacing,
+                viewportBounds,
+                otherShape,
+                this.viewMode
+            )
+            this.punchRenderer.setPositions(gl, punchPositions, otherShape)
+        }
+
         const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
             this.currSpacing,
@@ -157,7 +171,8 @@ class CoreRenderer {
             this.targetShape,
             this.viewMode
         )
-        if (punchPositions.length > 0) {
+
+        if (this.viewMode === 'punchcard') {
             this.punchRenderer.setPositions(gl, punchPositions, this.targetShape)
         }
         this.accentRenderer.setPositions(gl, accentPositions, this.targetShape)
