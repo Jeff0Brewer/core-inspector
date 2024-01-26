@@ -1,15 +1,26 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../lib/load'
+import { COLOR_PRESETS } from '../lib/palettes'
 import LoadIcon from '../components/generic/load-icon'
 import Vis from '../components/vis'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
 import VisRenderer from '../vis/vis'
-import { MINERALS, COLOR_PRESETS } from '../vis/mineral-blend'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
+const MINERALS = [
+    'chlorite',
+    'epidote',
+    'prehnite',
+    'zeolite',
+    'amphibole',
+    'pyroxene',
+    'gypsum',
+    'carbonate',
+    'kaolinite-montmorillinite'
+]
 
 function App (): ReactElement {
     const [vis, setVis] = useState<VisRenderer | null>(null)
@@ -46,7 +57,8 @@ function App (): ReactElement {
                     downscaledImgs,
                     punchcardImgs,
                     tileMetadata,
-                    idMetadata
+                    idMetadata,
+                    MINERALS
                 )
             )
         }

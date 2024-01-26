@@ -7,6 +7,7 @@ import vertSource from '../shaders/accent-line-vert.glsl?raw'
 import fragSource from '../shaders/accent-line-frag.glsl?raw'
 
 const LEN_FPV = 1
+const SIDE_DOT_DENSITY = 150
 
 class AccentLineRenderer {
     program: GlProgram
@@ -21,21 +22,23 @@ class AccentLineRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        shape: CoreShape,
+        currentShape: CoreShape,
         tileMetadata: TileTextureMetadata
     ) {
         this.numVertex = positions.length / POS_FPV
 
         this.program = new GlProgram(gl, vertSource, fragSource)
 
+        // positions for only one core shape passed to constructor,
+        // must fill other shape with empty buffer
         const emptyBuffer = new Float32Array(positions.length)
 
         this.spiralPosBuffer = new GlBuffer(gl)
-        this.spiralPosBuffer.setData(gl, shape === 'spiral' ? positions : emptyBuffer)
+        this.spiralPosBuffer.setData(gl, currentShape === 'spiral' ? positions : emptyBuffer)
         this.spiralPosBuffer.addAttribute(gl, this.program, 'spiralPos', POS_FPV, POS_FPV, 0)
 
         this.columnPosBuffer = new GlBuffer(gl)
-        this.columnPosBuffer.setData(gl, shape === 'column' ? positions : emptyBuffer)
+        this.columnPosBuffer.setData(gl, currentShape === 'column' ? positions : emptyBuffer)
         this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
         this.lineLengthBuffer = new GlBuffer(gl)
@@ -50,23 +53,15 @@ class AccentLineRenderer {
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
 
-    setPositions (
-        gl: GlContext,
-        positions: Float32Array,
-        shape: CoreShape
-    ): void {
-        if (shape === 'spiral') {
+    setPositions (gl: GlContext, positions: Float32Array, currentShape: CoreShape): void {
+        if (currentShape === 'spiral') {
             this.spiralPosBuffer.setData(gl, positions)
         } else {
             this.columnPosBuffer.setData(gl, positions)
         }
     }
 
-    draw (
-        gl: GlContext,
-        view: mat4,
-        shapeT: number
-    ): void {
+    draw (gl: GlContext, view: mat4, shapeT: number): void {
         this.program.bind(gl)
 
         this.spiralPosBuffer.bind(gl)
@@ -86,34 +81,42 @@ class AccentLineRenderer {
     }
 }
 
+// get line length attribute for rendered lines.
+// represents the total length of the line from start
+// to current position, needed to render dashed lines.
+// length doesn't need to start at 0, since only the delta between
+// fragments in shader is important.
 const getLineLengths = (
     metadata: TileTextureMetadata,
     numVertex: number
 ): Float32Array => {
-    const SIDE_DASH_DENSITY = 150.0
-
-    let offset = 0
     const out = new Float32Array(numVertex * LEN_FPV)
+    let offset = 0
 
     for (const { height } of metadata.downTiles) {
-        const heightInc = height / ROW_PER_TILE * SIDE_DASH_DENSITY
-
-        offset = startLine(out, offset, new Float32Array([2]))
-        out[offset++] = 2
-
-        // use representative height for side lines
-        for (let i = 1; i <= ROW_PER_TILE; i++) {
-            out[offset++] = 2 + heightInc * i
-            out[offset++] = 2 + heightInc * i
-        }
-
-        offset = endLine(out, offset, LEN_FPV)
+        // use representative length for accent lines along side of tile
+        const heightInc = height / ROW_PER_TILE * SIDE_DOT_DENSITY
 
         offset = startLine(out, offset, new Float32Array([0]))
         out[offset++] = 0
 
-        out[offset++] = 1
-        out[offset++] = 1
+        for (let i = 1; i <= ROW_PER_TILE; i++) {
+            out[offset++] = heightInc * i
+            out[offset++] = heightInc * i
+        }
+
+        offset = endLine(out, offset, LEN_FPV)
+
+        // use constant length for bottom accent lines since all are same length.
+        // bottom line lengths are set to negative values to differentiate side
+        // edge lines from bottom edge lines in shader.
+        // this is a bit obtuse, but don't really need to add an extra attribute / render
+        // pass to differentiate between these two line types currently.
+        offset = startLine(out, offset, new Float32Array([-1]))
+        out[offset++] = -1
+
+        out[offset++] = -2
+        out[offset++] = -2
 
         offset = endLine(out, offset, LEN_FPV)
     }

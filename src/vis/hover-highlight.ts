@@ -25,8 +25,16 @@ class HoverHighlightRenderer {
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata
     ) {
+        this.positions = positions
+
+        this.lastHovered = undefined
+
+        // no vertices at start since no section hovered
+        this.numVertex = 0
+
         // get map from section id to section start and end indices in position buffer,
-        // useful when getting offsets into position buffer for highlighted section
+        // useful when getting offsets into position buffer for highlighted section vertices.
+        // assumes that all tiles have same number of vertices
         const floatPerTile = positions.length / tileMetadata.numTiles
         this.idIndMap = {}
         Object.entries(idMetadata.ids).forEach(
@@ -38,10 +46,8 @@ class HoverHighlightRenderer {
             }
         )
 
-        this.positions = positions
-        this.numVertex = 0
-
         this.program = new GlProgram(gl, vertSource, fragSource)
+
         this.buffer = new GlBuffer(gl)
         this.buffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
@@ -49,23 +55,28 @@ class HoverHighlightRenderer {
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
-
-        this.lastHovered = undefined
     }
 
-    // copy verts for current section from positions array into highlight buffer for drawing
+    // copy verts for current hovered section from positions array
+    // into highlight buffer for drawing
     setHovered (gl: GlContext, id: string | undefined): void {
+        // don't update if hovered id hasn't changed
         if (id === this.lastHovered) { return }
         this.lastHovered = id
 
-        const sectionVerts = id !== undefined
-            ? this.positions.slice(...this.idIndMap[id])
-            : new Float32Array()
-
-        this.numVertex = sectionVerts.length / POS_FPV
-        this.buffer.setData(gl, sectionVerts)
+        if (id === undefined) {
+            this.buffer.setData(gl, new Float32Array())
+            this.numVertex = 0
+        } else {
+            const sectionVerts = this.positions.slice(...this.idIndMap[id])
+            this.buffer.setData(gl, sectionVerts)
+            this.numVertex = sectionVerts.length / POS_FPV
+        }
     }
 
+    // store reference to triangle section vertices from downscaled representation
+    // so that single section can be pulled out and placed in highlight position buffer
+    // on hover change
     setPositions (positions: Float32Array): void {
         this.positions = positions
     }
