@@ -1,25 +1,27 @@
-import { TileTextureMetadata, TileRect } from '../lib/tile-texture'
 import { BoundRect } from '../lib/util'
+import { TileTextureMetadata, TileRect } from '../lib/tile-texture'
 import { CoreShape, CoreViewMode } from '../vis/core'
 
+// number of floats per vertex for position / tex coord attributes
 const POS_FPV = 2
 const TEX_FPV = 2
-const LEN_FPV = 1
 
+// sizing / layout parameters
 const TILE_WIDTH = 0.025
-
+const LINE_WIDTH = 0.0015
 const MIN_RADIUS = TILE_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS
 
+// detail of triangle / line representations
 const ROW_PER_TILE = 12
+
+// vertex count definitions, number of vertices
+// generated in different functions below
+const VERT_PER_ROW_POINT = 3
 const VERT_PER_ROW_TRI = 6
 const VERT_PER_TILE_TRI = ROW_PER_TILE * VERT_PER_ROW_TRI
-
-const VERT_PER_ROW_POINT = 3
-
-const LINE_WIDTH = 0.0015
-const VERT_PER_TILE_LINE = 2 * (4 + (ROW_PER_TILE + 1) + 2) + 1
+const VERT_PER_TILE_LINE = 2 * 2 + 2 + 4 + (ROW_PER_TILE * 2)
 
 /*
  * FULL CORE
@@ -120,8 +122,7 @@ const getCorePositions = (
                 radius,
                 angle,
                 tileRadius,
-                tileAngle,
-                TILE_WIDTH
+                tileAngle
             )
 
             accentOffset = addAccentLineSpiralPositions(
@@ -130,8 +131,7 @@ const getCorePositions = (
                 radius,
                 angle,
                 tileRadius,
-                tileAngle,
-                TILE_WIDTH
+                tileAngle
             )
 
             if (viewMode === 'punchcard') {
@@ -142,7 +142,6 @@ const getCorePositions = (
                     angle,
                     tileRadius,
                     tileAngle,
-                    TILE_WIDTH,
                     metadata.punchNumRows[i]
                 )
             }
@@ -152,8 +151,7 @@ const getCorePositions = (
                 downOffset,
                 columnX,
                 columnY,
-                tileHeight,
-                TILE_WIDTH
+                tileHeight
             )
 
             accentOffset = addAccentLineColumnPositions(
@@ -161,8 +159,7 @@ const getCorePositions = (
                 accentOffset,
                 columnX,
                 columnY,
-                tileHeight,
-                TILE_WIDTH
+                tileHeight
             )
 
             if (viewMode === 'punchcard') {
@@ -172,7 +169,6 @@ const getCorePositions = (
                     columnX,
                     columnY,
                     tileHeight,
-                    TILE_WIDTH,
                     metadata.punchNumRows[i]
                 )
             }
@@ -232,7 +228,7 @@ const addDownscaledAttrib = (
 
     // lays out attributes for two triangles per row
     for (let i = 0; i < ROW_PER_TILE; i++) {
-        // only need 4 unique values per row, but 6 vertices
+        // only need 4 unique values per row, but 6 vertices,
         // so store values in intermediate buffers and copy
         // into main buffer in correct order
         getRowAttrib(i, inner, outer)
@@ -286,8 +282,7 @@ const addDownscaledSpiralPositions = (
     currRadius: number,
     currAngle: number,
     tileRadius: number,
-    tileAngle: number,
-    tileWidth: number
+    tileAngle: number
 ): number => {
     const angleInc = tileAngle / ROW_PER_TILE
     const radiusInc = tileRadius / ROW_PER_TILE
@@ -302,8 +297,8 @@ const addDownscaledSpiralPositions = (
 
         const cos = Math.cos(angle)
         const sin = Math.sin(angle)
-        const innerRadius = radius + tileWidth * 0.5
-        const outerRadius = radius - tileWidth * 0.5
+        const innerRadius = radius + TILE_WIDTH * 0.5
+        const outerRadius = radius - TILE_WIDTH * 0.5
 
         inner[0] = cos * innerRadius
         inner[1] = sin * innerRadius
@@ -322,8 +317,7 @@ const addDownscaledColumnPositions = (
     offset: number,
     currColumnX: number,
     currColumnY: number,
-    tileHeight: number,
-    tileWidth: number
+    tileHeight: number
 ): number => {
     const columnYInc = tileHeight / ROW_PER_TILE
 
@@ -337,7 +331,7 @@ const addDownscaledColumnPositions = (
         inner[0] = currColumnX
         inner[1] = columnY
 
-        outer[0] = currColumnX + tileWidth
+        outer[0] = currColumnX + TILE_WIDTH
         outer[1] = columnY
     }
 
@@ -393,17 +387,16 @@ const addPunchcardSpiralPositions = (
     currAngle: number,
     tileRadius: number,
     tileAngle: number,
-    tileWidth: number,
     numRows: number
 ): number => {
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
-    const acrossInc = tileWidth / VERT_PER_ROW_POINT
+    const acrossInc = TILE_WIDTH / VERT_PER_ROW_POINT
 
     // offset by 0.5 spacing to center points in tile bounds
     const startAngle = currAngle + angleInc * 0.5
     // move to edge of tile but again offset inwards to center in tile bounds
-    const startRadius = currRadius + tileWidth * 0.5 - acrossInc * 0.5
+    const startRadius = currRadius + TILE_WIDTH * 0.5 - acrossInc * 0.5
 
     for (let i = 0; i < numRows; i++) {
         const radius = startRadius + radiusInc * i
@@ -432,18 +425,17 @@ const addPunchcardColumnPositions = (
     currColumnX: number,
     currColumnY: number,
     tileHeight: number,
-    tileWidth: number,
     numRows: number
 ): number => {
-    const columnYInc = -1 * tileHeight / numRows
-    const columnXInc = tileWidth / VERT_PER_ROW_POINT
+    const columnYInc = tileHeight / numRows
+    const columnXInc = TILE_WIDTH / VERT_PER_ROW_POINT
 
     // offset by 0.5 spacing to center points in tile bounds
     const columnX = currColumnX + columnXInc * 0.5
-    const startColumnY = currColumnY + columnYInc * 0.5
+    const startColumnY = currColumnY - columnYInc * 0.5
 
     for (let i = 0; i < numRows; i++) {
-        const columnY = startColumnY + columnYInc * i
+        const columnY = startColumnY - columnYInc * i
 
         out[offset++] = columnX
         out[offset++] = columnY
@@ -460,146 +452,144 @@ const addPunchcardColumnPositions = (
 
 /*
  * ACCENT LINES
+ * - takes parameters from full core generators and calculates line geometry
+ * - uses same level of detail as downscaled representation to align properly
+ * - renders as single triangle strip, so requires duplicating vertices at the start
+ *   and end of every line segment to set line width to 0 and hide when between segments,
+ *   preventing continuity / artifacts
  */
 
-const addEmptyAttrib = (out: Float32Array, ind: number, floatPerVertex: number): number => {
-    if (ind < floatPerVertex) {
-        return ind + floatPerVertex * 2
-    }
-    for (let i = 0; i < floatPerVertex * 2; i++, ind++) {
-        out[ind] = out[ind - floatPerVertex]
-    }
-    return ind
+// copies first vertex in line segment to hide continuation from last segment
+const startLine = (out: Float32Array, offset: number, values: Float32Array): number => {
+    out.set(values, offset)
+    out.set(values, offset + values.length)
+    return offset + 2 * values.length
 }
 
-const getLineLengths = (numVertex: number, metadata: TileTextureMetadata): Float32Array => {
-    const SIDE_DASH_DENSITY = 150.0
-
-    let bufInd = 0
-    const out = new Float32Array(numVertex * LEN_FPV)
-
-    for (const { height } of metadata.downTiles) {
-        const heightInc = height / ROW_PER_TILE * SIDE_DASH_DENSITY
-
-        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
-
-        out[bufInd++] = 2
-
-        // use representative height for side lines
-        for (let i = 0; i <= ROW_PER_TILE; i++) {
-            out[bufInd++] = 2 + heightInc * i
-            out[bufInd++] = 2 + heightInc * i
-        }
-
-        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
-
-        // use constant length for bottom lines
-        out[bufInd++] = 0
-        out[bufInd++] = 0
-
-        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
-
-        out[bufInd++] = 1
-        out[bufInd++] = 1
-
-        bufInd = addEmptyAttrib(out, bufInd, LEN_FPV)
+// copies last vertex in line segment to hide continuation to next segment
+const endLine = (out: Float32Array, offset: number, floatPerVertex: number): number => {
+    for (let i = 0; i < floatPerVertex; i++, offset++) {
+        out[offset] = out[offset - floatPerVertex]
     }
-
-    return out
+    return offset
 }
 
+// generates lines along side and bottom of spiral tile given
+// layout params from full core generator
 const addAccentLineSpiralPositions = (
     out: Float32Array,
     offset: number,
     currRadius: number,
     currAngle: number,
     tileRadius: number,
-    tileAngle: number,
-    tileWidth: number
+    tileAngle: number
 ): number => {
     const angleInc = tileAngle / ROW_PER_TILE
     const radiusInc = tileRadius / ROW_PER_TILE
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
-
     let angle = currAngle
-    let radius = currRadius + tileWidth * 0.5
+    let radius = currRadius + TILE_WIDTH * 0.5
 
-    out[offset++] = Math.cos(angle) * radius
-    out[offset++] = Math.sin(angle) * radius
+    // add vertices for line along side of tile.
+    // set first position here to duplicate first vertex and
+    // hide any continuation from prior segment in triangle strip
+    offset = startLine(out, offset, new Float32Array([
+        Math.cos(angle) * radius,
+        Math.sin(angle) * radius
+    ]))
+    out[offset++] = Math.cos(angle) * (radius + LINE_WIDTH)
+    out[offset++] = Math.sin(angle) * (radius + LINE_WIDTH)
 
-    for (let i = 0; i <= ROW_PER_TILE; i++) {
+    // add remaining vertices along side of tile
+    for (let i = 1; i <= ROW_PER_TILE; i++) {
         const angle = currAngle + angleInc * i
-        const radius = currRadius + radiusInc * i + tileWidth * 0.5
-        out[offset++] = Math.cos(angle) * radius
-        out[offset++] = Math.sin(angle) * radius
-        out[offset++] = Math.cos(angle) * (radius + LINE_WIDTH)
-        out[offset++] = Math.sin(angle) * (radius + LINE_WIDTH)
+        const radius = currRadius + radiusInc * i + TILE_WIDTH * 0.5
+
+        const cos = Math.cos(angle)
+        const sin = Math.sin(angle)
+
+        out[offset++] = cos * radius
+        out[offset++] = sin * radius
+
+        out[offset++] = cos * (radius + LINE_WIDTH)
+        out[offset++] = sin * (radius + LINE_WIDTH)
     }
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
+    offset = endLine(out, offset, POS_FPV)
 
     angle = currAngle + tileAngle
     radius = currRadius + tileRadius
-    const tangentX = -Math.sin(angle)
-    const tangentY = Math.cos(angle)
+    const tangentX = -Math.sin(angle) * LINE_WIDTH
+    const tangentY = Math.cos(angle) * LINE_WIDTH
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const innerRadius = radius + TILE_WIDTH * 0.5
+    const outerRadius = radius - TILE_WIDTH * 0.5
 
-    out[offset++] = Math.cos(angle) * (radius + tileWidth * 0.5)
-    out[offset++] = Math.sin(angle) * (radius + tileWidth * 0.5)
+    // add vertices for line along bottom of tile
+    offset = startLine(out, offset, new Float32Array([
+        cos * innerRadius,
+        sin * innerRadius
+    ]))
+    out[offset++] = cos * innerRadius + tangentX
+    out[offset++] = sin * innerRadius + tangentY
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
+    out[offset++] = cos * outerRadius
+    out[offset++] = sin * outerRadius
 
-    out[offset++] = Math.cos(angle) * (radius + tileWidth * 0.5) + tangentX * LINE_WIDTH
-    out[offset++] = Math.sin(angle) * (radius + tileWidth * 0.5) + tangentY * LINE_WIDTH
+    out[offset++] = cos * outerRadius + tangentX
+    out[offset++] = sin * outerRadius + tangentY
 
-    out[offset++] = Math.cos(angle) * (radius - tileWidth * 0.5)
-    out[offset++] = Math.sin(angle) * (radius - tileWidth * 0.5)
-    out[offset++] = Math.cos(angle) * (radius - tileWidth * 0.5) + tangentX * LINE_WIDTH
-    out[offset++] = Math.sin(angle) * (radius - tileWidth * 0.5) + tangentY * LINE_WIDTH
-
-    offset = addEmptyAttrib(out, offset, POS_FPV)
+    offset = endLine(out, offset, POS_FPV)
 
     return offset
 }
 
+// generates lines along side and bottom of column tile given
+// layout params from full core generator
 const addAccentLineColumnPositions = (
     out: Float32Array,
     offset: number,
     currColumnX: number,
     currColumnY: number,
-    tileHeight: number,
-    tileWidth: number
+    tileHeight: number
 ): number => {
     const columnYInc = tileHeight / ROW_PER_TILE
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
-
-    out[offset++] = currColumnX
+    // add vertices for line along side of tile.
+    // set first position here to duplicate first vertex and
+    // hide any prior segment in triangle strip
+    offset = startLine(out, offset, new Float32Array([
+        currColumnX,
+        currColumnY
+    ]))
+    out[offset++] = currColumnX - LINE_WIDTH
     out[offset++] = currColumnY
 
-    for (let i = 0; i <= ROW_PER_TILE; i++) {
+    // add remaining vertices for along side of tile
+    for (let i = 1; i <= ROW_PER_TILE; i++) {
         out[offset++] = currColumnX
         out[offset++] = currColumnY - columnYInc * i
         out[offset++] = currColumnX - LINE_WIDTH
         out[offset++] = currColumnY - columnYInc * i
     }
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
+    offset = endLine(out, offset, POS_FPV)
 
-    out[offset++] = currColumnX
-    out[offset++] = currColumnY - tileHeight
-
-    offset = addEmptyAttrib(out, offset, POS_FPV)
-
+    // add vertices for line along bottom of tile
+    offset = startLine(out, offset, new Float32Array([
+        currColumnX,
+        currColumnY - tileHeight
+    ]))
     out[offset++] = currColumnX
     out[offset++] = currColumnY - tileHeight - LINE_WIDTH
 
-    out[offset++] = currColumnX + tileWidth
+    out[offset++] = currColumnX + TILE_WIDTH
     out[offset++] = currColumnY - tileHeight
-    out[offset++] = currColumnX + tileWidth
+    out[offset++] = currColumnX + TILE_WIDTH
     out[offset++] = currColumnY - tileHeight - LINE_WIDTH
 
-    offset = addEmptyAttrib(out, offset, POS_FPV)
+    offset = endLine(out, offset, POS_FPV)
 
     return offset
 }
@@ -607,8 +597,9 @@ const addAccentLineColumnPositions = (
 export {
     getCorePositions,
     getCoreTexCoords,
-    getLineLengths,
+    startLine,
+    endLine,
+    ROW_PER_TILE,
     POS_FPV,
-    TEX_FPV,
-    LEN_FPV
+    TEX_FPV
 }
