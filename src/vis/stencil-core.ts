@@ -1,7 +1,7 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-wrap'
 import { bytesToHex } from '../lib/util'
-import { POS_FPV } from '../vis/core'
+import { POS_FPV } from '../lib/vert-gen'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
