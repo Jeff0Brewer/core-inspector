@@ -15,8 +15,8 @@ class PunchcardCoreRenderer {
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     setShapeT: (t: number) => void
-    setDpr: (r: number) => void
     incPointSize: (d: number) => void
+    setWindowHeight: (h: number) => void
     numVertex: number
 
     constructor (
@@ -50,11 +50,14 @@ class PunchcardCoreRenderer {
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         const shapeTLoc = this.program.getUniformLocation(gl, 'shapeT')
-        const dprLoc = this.program.getUniformLocation(gl, 'dpr')
+        const windowHeightLoc = this.program.getUniformLocation(gl, 'windowHeight')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
-        this.setDpr = (r: number): void => { gl.uniform1f(dprLoc, r) }
+        this.setWindowHeight = (h: number): void => {
+            this.program.bind(gl)
+            gl.uniform1f(windowHeightLoc, h)
+        }
 
         // temporary point size adjustment
         let pointSize = 3.5

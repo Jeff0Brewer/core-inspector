@@ -108,7 +108,6 @@ class CoreRenderer {
 
         this.punchRenderer.program.bind(gl)
         this.punchRenderer.setProj(m)
-        this.punchRenderer.setDpr(window.devicePixelRatio)
 
         this.stencilRenderer.program.bind(gl)
         this.stencilRenderer.setProj(m)
