@@ -13,14 +13,6 @@
     transition: transform var(--transition-param);
 }
 
-.metadata[data-side="left"] {
-    transform: translate(20%, -50%);
-}
-
-.metadata[data-side="right"] {
-    transform: translate(-120%, -50%);
-}
-
 .metadata > .id {
     width: 100%;
     padding: 5px;
@@ -39,6 +31,7 @@
 .metadata > .data > p {
     display: flex;
     justify-content: space-between;
+    white-space: nowrap;
     gap: 0 10px;
     color: var(--color5);
 }
