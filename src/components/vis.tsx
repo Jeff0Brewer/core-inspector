@@ -44,7 +44,7 @@ function Vis (
     }, [vis])
 
     return <>
-        <MetadataHover core={core} hovered={hovered} />
+        <MetadataHover core={core} id={hovered} />
         <PanScrollbar vis={vis} />
     </>
 }
