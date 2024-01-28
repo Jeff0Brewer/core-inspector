@@ -76,20 +76,18 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
                 {formatId(id)}
             </div> }
             { hasData && <div className={'data'}>
-                { depth[id] && <>
-                    <p>
-                        top depth
-                        <span>{ formatFloat(depth[id].topDepth) }m</span>
-                    </p>
-                    <p>
-                        length
-                        <span>{ formatFloat(depth[id].length) }m</span>
-                    </p>
-                </> }
-                { hydration[id] && <p>
-                    hydration
-                    <span>{ formatFloat(hydration[id] * 100) }%</span>
-                </p> }
+                { depth[id] && <div>
+                    <p>top depth</p>
+                    <span>{formatFloat(depth[id].topDepth)}m</span>
+                </div> }
+                { depth[id] && <div>
+                    <p>length</p>
+                    <span>{formatFloat(depth[id].length)}m</span>
+                </div> }
+                { hydration[id] && <div>
+                    <p>hydration</p>
+                    <span>{formatFloat(hydration[id] * 100)}%</span>
+                </div> }
             </div> }
         </div>
     )
