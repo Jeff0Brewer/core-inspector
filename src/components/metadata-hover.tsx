@@ -64,24 +64,26 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
                 <div className={'id'}>
                     { formatId(hovered) }
                 </div>
-                { data.hydration && data.hydration[hovered] && <p>
+                <div className={'data'}>
+                    { data.hydration && data.hydration[hovered] && <p>
                     hydration:
-                    <span>
-                        { formatHydration(data.hydration[hovered]) }
-                    </span>
-                </p> }
-                { data.depth && data.depth[hovered] && <p>
+                        <span>
+                            { formatHydration(data.hydration[hovered]) }
+                        </span>
+                    </p> }
+                    { data.depth && data.depth[hovered] && <p>
                     top depth:
-                    <span>
-                        { formatFloat(data.depth[hovered].topDepth) }m
-                    </span>
-                </p> }
-                { data.depth && data.depth[hovered] && <p>
+                        <span>
+                            { formatFloat(data.depth[hovered].topDepth) }m
+                        </span>
+                    </p> }
+                    { data.depth && data.depth[hovered] && <p>
                     length:
-                    <span>
-                        { formatFloat(data.depth[hovered].length) }m
-                    </span>
-                </p> }
+                        <span>
+                            { formatFloat(data.depth[hovered].length) }m
+                        </span>
+                    </p> }
+                </div>
             </div> }
     </>
 }

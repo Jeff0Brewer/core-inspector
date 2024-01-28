@@ -4,7 +4,6 @@
     background-color: var(--menu-bg-color);
     border-radius: var(--radius);
     text-transform: uppercase;
-    font-size: 10px;
 
     pointer-events: none;
     user-select: none;
@@ -21,7 +20,7 @@
     transform: translate(-120%, -50%);
 }
 
-.metadata .id {
+.metadata > .id {
     display: flex;
     gap: 10px;
     width: 100%;
@@ -29,12 +28,14 @@
     background-color: var(--color0);
 }
 
-.metadata > p {
+.metadata > .data {
     display: flex;
-    gap: 5px;
+    flex-direction: column;
+    flex-gap: 5px;
     padding: 5px;
 }
 
-.metadata > p:not(:last-of-type) {
-    margin-bottom: 2px;
+.metadata > .data > p {
+    display: flex;
+    gap: 0 5px;
 }
