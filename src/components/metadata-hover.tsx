@@ -54,32 +54,39 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    return <>
-        { hovered !== undefined &&
-            <div
-                className={'metadata'}
-                style={{ left: `${x}px`, top: `${y}px` }}
-                data-side={hoveredSide}
-            >
-                <div className={'id'}>
-                    { formatId(hovered) }
-                </div>
-                <div className={'data'}>
-                    { data.depth && data.depth[hovered] && <p>
-                    top depth
-                        <span>{formatFloat(data.depth[hovered].topDepth)}m</span>
-                    </p> }
-                    { data.depth && data.depth[hovered] && <p>
+    if (!hovered) {
+        return <></>
+    }
+
+    const depth = data.depth?.[hovered]
+    const hydration = data.hydration?.[hovered]
+    const hasData = !!depth || !!hydration
+
+    return (
+        <div
+            className={'metadata'}
+            style={{ left: `${x}px`, top: `${y}px` }}
+            data-side={hoveredSide}
+        >
+            <div className={'id'}>
+                { formatId(hovered) }
+            </div>
+            { hasData && <div className={'data'}>
+                { depth && <p>
                     length
-                        <span>{formatFloat(data.depth[hovered].length)}m</span>
-                    </p> }
-                    { data.hydration && data.hydration[hovered] && <p>
+                    <span>{formatFloat(depth.length)}m</span>
+                </p> }
+                { depth && <p>
+                    top depth
+                    <span>{formatFloat(depth.topDepth)}m</span>
+                </p> }
+                { hydration && <p>
                     hydration
-                        <span>{formatHydration(data.hydration[hovered])}</span>
-                    </p> }
-                </div>
+                    <span>{formatHydration(hydration)}</span>
+                </p> }
             </div> }
-    </>
+        </div>
+    )
 }
 
 function formatId (id: string): string {
