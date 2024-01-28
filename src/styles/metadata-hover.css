@@ -10,7 +10,16 @@
     user-select: none;
     overflow: hidden;
 
+    opacity: 0;
+
     transition: transform var(--transition-param);
+}
+
+.metadata[data-hovered="true"] {
+    opacity: 1;
+    transition:
+        transform var(--transition-param),
+        opacity 250ms ease 200ms;
 }
 
 .metadata > .id {

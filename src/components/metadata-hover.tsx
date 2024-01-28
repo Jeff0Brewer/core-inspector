@@ -74,7 +74,11 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
     const hasData = id && (depth[id] || hydration[id])
 
     return (
-        <div className={'metadata'} ref={popupRef}>
+        <div
+            className={'metadata'}
+            ref={popupRef}
+            data-hovered={!!id}
+        >
             { id && <div className={'id'}>
                 {formatId(id)}
             </div> }
