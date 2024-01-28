@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV } from '../lib/vert-gen'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -14,6 +14,8 @@ class HoverHighlightRenderer {
     buffer: GlBuffer
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
+    setMousePos: (p: vec2) => void
+    setWindowHeight: (h: number) => void
     positions: Float32Array
     numVertex: number
     lastHovered: string | undefined
@@ -50,8 +52,15 @@ class HoverHighlightRenderer {
 
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
+        const mousePosLoc = this.program.getUniformLocation(gl, 'mousePos')
+        const windowHeightLoc = this.program.getUniformLocation(gl, 'windowHeight')
         this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
+        this.setMousePos = (p: vec2): void => { gl.uniform2fv(mousePosLoc, p) }
+        this.setWindowHeight = (h: number): void => {
+            this.program.bind(gl)
+            gl.uniform1f(windowHeightLoc, h)
+        }
     }
 
     // copy verts for current hovered section from positions array
@@ -77,12 +86,13 @@ class HoverHighlightRenderer {
         this.positions = positions
     }
 
-    draw (gl: GlContext, view: mat4): void {
+    draw (gl: GlContext, view: mat4, mousePos: vec2): void {
         if (this.numVertex === 0) { return }
 
         this.program.bind(gl)
         this.buffer.bind(gl)
         this.setView(view)
+        this.setMousePos(mousePos)
 
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertex)
     }
