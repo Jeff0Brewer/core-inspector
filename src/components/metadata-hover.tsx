@@ -72,17 +72,16 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
                 { formatId(hovered) }
             </div>
             { hasData && <div className={'data'}>
-                { depth && <p>
-                    depth
-                    <span>{formatFloat(depth.topDepth)}m</span>
-                </p> }
-                { depth && <p>
-                    length
-                    <span>{formatFloat(depth.length)}m</span>
-                </p> }
+                { depth && <>
+                    <p>
+                        top depth <span>{formatFloat(depth.topDepth)}m</span>
+                    </p>
+                    <p>
+                        length <span>{formatFloat(depth.length)}m</span>
+                    </p>
+                </> }
                 { hydration && <p>
-                    hydration
-                    <span>{formatHydration(hydration)}</span>
+                    hydration <span>{formatFloat(hydration * 100)}%</span>
                 </p> }
             </div> }
         </div>
@@ -92,10 +91,6 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
 function formatId (id: string): string {
     const [section, part] = id.split('_')
     return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
-}
-
-function formatHydration (h: number): string {
-    return (h * 100).toFixed(3) + '%'
 }
 
 export default MetadataHover

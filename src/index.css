@@ -1,11 +1,11 @@
 :root {
-    --menu-bg-color: rgba(65, 65, 65, 0.85);
+    --menu-bg-color: rgba(65, 65, 65, 0.8);
     --color0: #202020;
     --color1: #303030;
     --color2: #606060;
     --color3: #808080;
     --color4: #a0a0a0;
-    --color5: #c0c0c0;
+    --color5: #b0b0b0;
     --radius: 3px;
     --transition-param: 150ms ease;
 }
