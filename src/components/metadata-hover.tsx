@@ -1,82 +1,108 @@
-import { useState, useEffect, ReactElement } from 'react'
-import { padZeros } from '../lib/util'
+import { useState, useEffect, useRef, ReactElement } from 'react'
+import { padZeros, formatFloat, formatPercent } from '../lib/util'
 import '../styles/metadata-hover.css'
 
-type DisplayMetadata = {
-    hydration?: {[id: string]: number}
+type HydrationMetadata = {
+    [id: string]: number
+}
+
+type DepthMetadata = {
+    [id: string]: {
+        topDepth: number,
+        length: number
+    }
 }
 
 type MetadataHoverProps = {
     core: string,
-    hovered: string | undefined
+    id: string | undefined
 }
 
-function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
-    const [data, setData] = useState<DisplayMetadata>({})
-    const [x, setX] = useState<number>(0)
-    const [y, setY] = useState<number>(0)
-    const [hoveredSide, setHoveredSide] = useState<'right' | 'left'>('left')
+function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
+    const [depth, setDepth] = useState<DepthMetadata>({})
+    const [hydration, setHydration] = useState<HydrationMetadata>({})
+    const popupRef = useRef<HTMLDivElement>(null)
 
-    // fetch all metadata fields and update display data
+    // get data for current core
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            const data: DisplayMetadata = {}
-
             const basePath = `./data/${core}`
-            const res = await fetch(`${basePath}/hydration-metadata.json`)
-            const { hydration } = await res.json()
+            const [{ depth }, { hydration }] = await Promise.all([
+                fetch(`${basePath}/depth-metadata.json`).then(res => res.json()),
+                fetch(`${basePath}/hydration-metadata.json`).then(res => res.json())
+            ])
 
-            data.hydration = hydration
-            setData({ ...data })
+            setDepth(depth)
+            setHydration(hydration)
         }
+
         getData()
     }, [core])
 
-    // track mouse for element positioning
+    // setup popup window positioning
     useEffect(() => {
-        const mousemove = (e: MouseEvent): void => {
-            setX(e.clientX)
-            setY(e.clientY)
-
-            // check which side of window mouse is over
-            // to position hover element horizontally
-            setHoveredSide(
-                e.clientX > window.innerWidth * 0.5 ? 'right' : 'left'
-            )
+        const popup = popupRef.current
+        if (!popup) {
+            throw new Error('No reference to popup element')
         }
+
+        const xTranslate = 0.2
+        const rightTransform = `translate(${formatPercent(xTranslate)}, -50%)`
+        const leftTransform = `translate(${formatPercent(-1 - xTranslate)}, -50%)`
+
+        popup.style.transform = rightTransform
+
+        const mousemove = (e: MouseEvent): void => {
+            popup.style.left = e.clientX + 'px'
+            popup.style.top = e.clientY + 'px'
+
+            // shift popup left / right to ensure it stays in window bounds
+            const popupWidth = (1 + xTranslate) * popup.getBoundingClientRect().width
+            if (e.clientX - popupWidth < 0) {
+                popup.style.transform = rightTransform
+            } else if (e.clientX + popupWidth > window.innerWidth) {
+                popup.style.transform = leftTransform
+            }
+        }
+
         window.addEventListener('mousemove', mousemove)
         return () => {
             window.removeEventListener('mousemove', mousemove)
         }
     }, [])
 
-    return <>
-        { hovered !== undefined &&
-            <div
-                className={'metadata'}
-                style={{ left: `${x}px`, top: `${y}px` }}
-                data-side={hoveredSide}
-            >
-                <div className={'id'}>
-                    { formatId(hovered) }
-                </div>
-                { data.hydration && data.hydration[hovered] && <p>
-                    hydration:
-                    <span>
-                        { formatHydration(data.hydration[hovered]) }
-                    </span>
-                </p> }
+    const hasData = id && (depth[id] || hydration[id])
+
+    return (
+        <div
+            className={'metadata'}
+            ref={popupRef}
+            data-hovered={!!id}
+        >
+            { id && <div className={'id'}>
+                {formatId(id)}
             </div> }
-    </>
+            { hasData && <div className={'data'}>
+                { depth[id] && <div>
+                    <p>top depth</p>
+                    <span>{formatFloat(depth[id].topDepth)}m</span>
+                </div> }
+                { depth[id] && <div>
+                    <p>length</p>
+                    <span>{formatFloat(depth[id].length)}m</span>
+                </div> }
+                { hydration[id] && <div>
+                    <p>hydration</p>
+                    <span>{formatFloat(hydration[id] * 100)}%</span>
+                </div> }
+            </div> }
+        </div>
+    )
 }
 
 function formatId (id: string): string {
     const [section, part] = id.split('_')
     return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
-}
-
-function formatHydration (h: number): string {
-    return (h * 100).toFixed(3) + '%'
 }
 
 export default MetadataHover

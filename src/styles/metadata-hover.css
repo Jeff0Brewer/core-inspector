@@ -1,40 +1,52 @@
 .metadata {
     position: absolute;
-    z-index: 999;
+    z-index: 6;
     background-color: var(--menu-bg-color);
     border-radius: var(--radius);
     text-transform: uppercase;
-    font-size: 10px;
+    font-size: 0.6rem;
 
     pointer-events: none;
     user-select: none;
     overflow: hidden;
 
+    opacity: 0;
     transition: transform var(--transition-param);
 }
 
-.metadata[data-side="left"] {
-    transform: translate(20%, -50%);
+.metadata[data-hovered="true"] {
+    opacity: 1;
+    transition:
+        transform var(--transition-param),
+        opacity 250ms ease 50ms;
 }
 
-.metadata[data-side="right"] {
-    transform: translate(-120%, -50%);
-}
-
-.metadata .id {
-    display: flex;
-    gap: 10px;
+.metadata > .id {
     width: 100%;
     padding: 5px;
     background-color: var(--color0);
 }
 
-.metadata > p {
+.metadata > .data {
     display: flex;
-    gap: 5px;
+    flex-direction: column;
+    flex-gap: 5px;
     padding: 5px;
+    padding-top: 2px;
+    font-size: 0.55rem;
 }
 
-.metadata > p:not(:last-of-type) {
-    margin-bottom: 2px;
+.metadata > .data > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0 10px;
+}
+
+.metadata > .data p {
+    white-space: nowrap;
+    color: var(--color5);
+}
+
+.metadata > .data span {
+    text-transform: lowercase;
 }

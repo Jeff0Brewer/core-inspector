@@ -1,8 +1,20 @@
 .mineral-bar {
+    display: grid;
+    grid-template-columns: 1fr 40px;
     position: relative;
     width: 100%;
+    overflow: hidden;
+}
+
+.mineral-bar > .minerals {
+    position: relative;
+    margin: 0 auto;
     display: flex;
     justify-content: center;
+    width: 100%;
+    min-width: 0;
+    max-width: 1000px;
+    overflow-x: scroll;
 }
 
 .mineral-bar button {
@@ -10,7 +22,11 @@
     align-items: center;
     justify-content: flex-start;
 
-    min-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+
+    min-width: 30px;
     height: 16px;
     padding: 10px;
     margin: 6px;
@@ -18,22 +34,20 @@
     text-transform: uppercase;
 }
 
+.mineral-bar .blend-menu-toggle {
+    position: relative;
+    margin-left: auto;
+    display: grid;
+    place-content: center;
+    max-width: 30px;
+    font-size: 14px;
+    border-radius: var(--radius);
+}
+
 .blend-menu-wrap {
     position: absolute;
     right: 0;
     bottom: 100%;
-}
-
-.mineral-bar .blend-menu-toggle {
-    position: absolute;
-    display: grid;
-    place-content: center;
-    right: 0;
-    bottom: 0;
-    min-width: 0;
-    width: 30px;
-    font-size: 14px;
-    border-radius: var(--radius);
 }
 
 .blend-menu {
@@ -133,7 +147,7 @@
 }
 
 .mineral-input[data-visible="false"] .visibility-button {
-    color: var(--color2);
+    color: var(--color3);
 }
 
 .mineral-slider .text-input {
@@ -143,7 +157,7 @@
 }
 
 .mineral-slider .slider-bar {
-    background-color: var(--color1);
+    background-color: var(--color2);
     border: none;
 }
 
@@ -235,11 +249,11 @@
 }
 
 .palette-dropdown .selected {
-    border: 1px solid var(--color2);
+    border: 1px solid var(--color3);
 }
 
 .blend-mode-dropdown .label, .blend-mode-dropdown .items {
-    border: 1px solid var(--color1);
+    border: 1px solid var(--color2);
     border-radius: 5px;
     overflow: hidden;
 }
@@ -281,7 +295,7 @@
     width: 20px;
     height: 100%;
     font-size: 12px;
-    border: 1px solid var(--color1);
+    border: 1px solid var(--color2);
     background-color: var(--color0);
     transition:
         opacity var(--transition-param),
@@ -293,7 +307,7 @@
 }
 
 .param-slider button:hover {
-    background-color: #303030;
+    background-color: var(--color1);
 }
 
 .param-slider .slider-bar {

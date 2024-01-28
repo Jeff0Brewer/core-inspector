@@ -40,6 +40,7 @@ canvas[data-visible="true"] {
 
 .side-bar {
     position: relative;
+    z-index: 5;
     width: fit-content;
     display: flex;
     flex-direction: column;

@@ -215,6 +215,7 @@ class VisRenderer {
 
         this.core.setProj(this.gl, this.proj)
         this.core.stencilRenderer.resize(this.gl, w, h)
+        this.core.punchRenderer.setWindowHeight(h)
 
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }

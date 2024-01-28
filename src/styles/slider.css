@@ -43,17 +43,17 @@
     height: 100%;
     line-height: 100%;
     text-align: center;
-    color: var(--color3);
+    color: var(--color4);
 }
 
 .slider-wrap .text-input, .slider-wrap > .slider-bar {
     background-color: var(--color0);
-    border: 1px solid var(--color1);
+    border: 1px solid var(--color2);
 }
 
 .slider-wrap .slider-value > * {
     position: absolute;
-    z-index: 200;
+    z-index: 6;
     right: 0;
     bottom: 0;
     transform: translateX(50%);

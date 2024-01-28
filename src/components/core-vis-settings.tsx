@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
-import { padZeros } from '../lib/util'
+import { padZeros, formatFloat } from '../lib/util'
 import { CoreViewMode, CoreShape } from '../vis/core'
 import { CoreMetadata } from '../lib/metadata'
 import VisRenderer from '../vis/vis'
@@ -75,7 +75,9 @@ function CoreVisSettings (
                 </p>
                 <p>
                     depth
-                    <span>{metadata.topDepth}m - {metadata.bottomDepth}m</span>
+                    <span>
+                        {formatFloat(metadata.topDepth)}m - {formatFloat(metadata.bottomDepth)}m
+                    </span>
                 </p>
             </>}
         </div>
