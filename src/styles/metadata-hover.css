@@ -46,4 +46,5 @@
 
 .metadata > .data > p > span {
     color: #fff;
+    text-transform: lowercase;
 }

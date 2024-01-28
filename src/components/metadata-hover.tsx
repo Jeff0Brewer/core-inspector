@@ -73,12 +73,12 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
             </div>
             { hasData && <div className={'data'}>
                 { depth && <p>
-                    length
-                    <span>{formatFloat(depth.length)}m</span>
+                    depth
+                    <span>{formatFloat(depth.topDepth)}m</span>
                 </p> }
                 { depth && <p>
-                    top depth
-                    <span>{formatFloat(depth.topDepth)}m</span>
+                    length
+                    <span>{formatFloat(depth.length)}m</span>
                 </p> }
                 { hydration && <p>
                     hydration
