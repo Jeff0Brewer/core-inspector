@@ -1,9 +1,10 @@
 import { useState, useEffect, ReactElement } from 'react'
-import { padZeros } from '../lib/util'
+import { padZeros, formatFloat } from '../lib/util'
 import '../styles/metadata-hover.css'
 
 type DisplayMetadata = {
-    hydration?: {[id: string]: number}
+    hydration?: { [id: string] : number},
+    depth?: { [id: string]: { topDepth: number, length: number } }
 }
 
 type MetadataHoverProps = {
@@ -23,10 +24,13 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
             const data: DisplayMetadata = {}
 
             const basePath = `./data/${core}`
-            const res = await fetch(`${basePath}/hydration-metadata.json`)
-            const { hydration } = await res.json()
+            const [{ hydration }, { depth }] = await Promise.all([
+                fetch(`${basePath}/hydration-metadata.json`).then(res => res.json()),
+                fetch(`${basePath}/depth-metadata.json`).then(res => res.json())
+            ])
 
             data.hydration = hydration
+            data.depth = depth
             setData({ ...data })
         }
         getData()
@@ -64,6 +68,18 @@ function MetadataHover ({ core, hovered }: MetadataHoverProps): ReactElement {
                     hydration:
                     <span>
                         { formatHydration(data.hydration[hovered]) }
+                    </span>
+                </p> }
+                { data.depth && data.depth[hovered] && <p>
+                    top depth:
+                    <span>
+                        { formatFloat(data.depth[hovered].topDepth) }m
+                    </span>
+                </p> }
+                { data.depth && data.depth[hovered] && <p>
+                    length:
+                    <span>
+                        { formatFloat(data.depth[hovered].length) }m
                     </span>
                 </p> }
             </div> }
