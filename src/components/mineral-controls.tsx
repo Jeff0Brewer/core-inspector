@@ -100,15 +100,17 @@ function MineralControls (
 
     return <>
         <div className={'mineral-bar'}>
-            { minerals.map((mineral, i) => (
-                <button
-                    onClick={getMineralSetter(i)}
-                    data-active={visibilities[i]}
-                    key={i}
-                >
-                    {mineral}
-                </button>
-            )) }
+            <div className={'minerals'}>
+                { minerals.map((mineral, i) => (
+                    <button
+                        onClick={getMineralSetter(i)}
+                        data-active={visibilities[i]}
+                        key={i}
+                    >
+                        {mineral}
+                    </button>
+                )) }
+            </div>
             <button
                 className={'blend-menu-toggle'}
                 data-active={menuOpen}
