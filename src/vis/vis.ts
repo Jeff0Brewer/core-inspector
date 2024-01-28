@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec2 } from 'gl-matrix'
 import { BoundRect } from '../lib/util'
 import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -44,7 +44,7 @@ class VisRenderer {
     core: CoreRenderer
     camera: Camera2D
     proj: mat4
-    mousePos: [number, number]
+    mousePos: vec2
     uiState: UiState
     dropped: boolean
 
@@ -216,6 +216,7 @@ class VisRenderer {
         this.core.setProj(this.gl, this.proj)
         this.core.stencilRenderer.resize(this.gl, w, h)
         this.core.punchRenderer.setWindowHeight(h)
+        this.core.highlightRenderer.setWindowHeight(h)
 
         this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
