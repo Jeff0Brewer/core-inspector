@@ -45,7 +45,7 @@
 
 .core-dropdown .label:hover button {
     background-color: transparent;
-    color: var(--color3);
+    color: var(--color4);
 }
 
 .core-dropdown .items {
