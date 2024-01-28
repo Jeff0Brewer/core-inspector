@@ -23,6 +23,7 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
     const [hydration, setHydration] = useState<HydrationMetadata>({})
     const popupRef = useRef<HTMLDivElement>(null)
 
+    // get data for current core
     useEffect(() => {
         const getData = async (): Promise<void> => {
             const basePath = `./data/${core}`
@@ -38,15 +39,16 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
         getData()
     }, [core])
 
+    // setup popup window positioning
     useEffect(() => {
         const popup = popupRef.current
         if (!popup) {
             throw new Error('No reference to popup element')
         }
 
-        const xOffset = 0.2
-        const rightTransform = `translate(${formatPercent(xOffset)}, -50%)`
-        const leftTranform = `translate(${formatPercent(-1 - xOffset)}, -50%)`
+        const xTranslate = 0.2
+        const rightTransform = `translate(${formatPercent(xTranslate)}, -50%)`
+        const leftTransform = `translate(${formatPercent(-1 - xTranslate)}, -50%)`
 
         popup.style.transform = rightTransform
 
@@ -54,11 +56,12 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
             popup.style.left = e.clientX + 'px'
             popup.style.top = e.clientY + 'px'
 
-            const popupWidth = (1 + xOffset) * popup.getBoundingClientRect().width
+            // shift popup left / right to ensure it stays in window bounds
+            const popupWidth = (1 + xTranslate) * popup.getBoundingClientRect().width
             if (e.clientX - popupWidth < 0) {
                 popup.style.transform = rightTransform
             } else if (e.clientX + popupWidth > window.innerWidth) {
-                popup.style.transform = leftTranform
+                popup.style.transform = leftTransform
             }
         }
 
