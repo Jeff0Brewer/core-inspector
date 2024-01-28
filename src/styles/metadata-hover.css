@@ -4,6 +4,7 @@
     background-color: var(--menu-bg-color);
     border-radius: var(--radius);
     text-transform: uppercase;
+    font-size: 0.6rem;
 
     pointer-events: none;
     user-select: none;
@@ -33,9 +34,16 @@
     flex-direction: column;
     flex-gap: 5px;
     padding: 5px;
+    padding-top: 2px;
+    font-size: 0.55rem;
 }
 
 .metadata > .data > p {
     display: flex;
     gap: 0 5px;
+    color: var(--color5);
+}
+
+.metadata > .data > p > span {
+    color: #fff;
 }
