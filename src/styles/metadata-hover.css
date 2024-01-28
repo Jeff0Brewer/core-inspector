@@ -28,15 +28,17 @@
     font-size: 0.55rem;
 }
 
-.metadata > .data > p {
+.metadata > .data > div {
     display: flex;
     justify-content: space-between;
-    white-space: nowrap;
     gap: 0 10px;
+}
+
+.metadata > .data p {
+    white-space: nowrap;
     color: var(--color5);
 }
 
-.metadata > .data > p > span {
-    color: #fff;
+.metadata > .data span {
     text-transform: lowercase;
 }
