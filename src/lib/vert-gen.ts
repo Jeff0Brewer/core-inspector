@@ -24,6 +24,7 @@ const VERT_PER_TILE_TRI = ROW_PER_TILE * VERT_PER_ROW_TRI
 const VERT_PER_TILE_LINE = 2 * 2 + 2 + 4 + (ROW_PER_TILE * 2)
 
 const CALIBRATION_HEIGHT = 0.01
+const CALIBRATION_POINT_HEIGHT = 4
 
 /*
  * FULL CORE
@@ -40,23 +41,24 @@ const getCoreTexCoords = (metadata: TileTextureMetadata, calibrationT: number): 
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
+    const numRows = metadata.punchTotalRows - metadata.numTiles * Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    const punchTexCoords = new Float32Array(numRows * VERT_PER_ROW_POINT * TEX_FPV)
     const downTexCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
-    const punchTexCoords = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * TEX_FPV)
-    let downOffset = 0
     let punchOffset = 0
+    let downOffset = 0
 
     for (let i = 0; i < metadata.numTiles; i++) {
-        downOffset = addDownscaledTexCoords(
-            downTexCoords,
-            downOffset,
-            metadata.downTiles[i],
-            calibrationT
-        )
         punchOffset = addPunchcardTexCoords(
             punchTexCoords,
             punchOffset,
             metadata.punchTiles[i],
             metadata.punchNumRows[i],
+            calibrationT
+        )
+        downOffset = addDownscaledTexCoords(
+            downTexCoords,
+            downOffset,
+            metadata.downTiles[i],
             calibrationT
         )
     }
@@ -80,11 +82,12 @@ const getCorePositions = (
     accentPositions: Float32Array,
     vertexBounds: BoundRect
 } => {
+    const numRows = metadata.punchTotalRows - metadata.numTiles * Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    const punchPositions = new Float32Array(numRows * VERT_PER_ROW_POINT * POS_FPV)
     const downPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * POS_FPV)
-    const punchPositions = new Float32Array(metadata.punchTotalRows * VERT_PER_ROW_POINT * POS_FPV)
     const accentPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_LINE * POS_FPV)
-    let downOffset = 0
     let punchOffset = 0
+    let downOffset = 0
     let accentOffset = 0
 
     // get variables needed for positioning inside loop
@@ -144,7 +147,8 @@ const getCorePositions = (
                     angle,
                     tileRadius,
                     tileAngle,
-                    metadata.punchNumRows[i]
+                    metadata.punchNumRows[i],
+                    calibrationT
                 )
             }
         } else {
@@ -171,7 +175,8 @@ const getCorePositions = (
                     columnX,
                     columnY,
                     tileHeight,
-                    metadata.punchNumRows[i]
+                    metadata.punchNumRows[i],
+                    calibrationT
                 )
             }
         }
@@ -360,6 +365,7 @@ const addPunchcardTexCoords = (
     numRows: number,
     calibrationT: number
 ): number => {
+    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
     const xInc = rect.width / VERT_PER_ROW_POINT
     const yInc = (rect.height - CALIBRATION_HEIGHT * calibrationT) / numRows
 
@@ -392,8 +398,11 @@ const addPunchcardSpiralPositions = (
     currAngle: number,
     tileRadius: number,
     tileAngle: number,
-    numRows: number
+    numRows: number,
+    calibrationT: number
 ): number => {
+    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
     const acrossInc = TILE_WIDTH / VERT_PER_ROW_POINT
@@ -430,8 +439,11 @@ const addPunchcardColumnPositions = (
     currColumnX: number,
     currColumnY: number,
     tileHeight: number,
-    numRows: number
+    numRows: number,
+    calibrationT: number
 ): number => {
+    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+
     const columnYInc = tileHeight / numRows
     const columnXInc = TILE_WIDTH / VERT_PER_ROW_POINT
 

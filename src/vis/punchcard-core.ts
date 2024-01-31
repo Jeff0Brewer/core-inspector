@@ -81,6 +81,7 @@ class PunchcardCoreRenderer {
         } else {
             this.columnPosBuffer.setData(gl, positions)
         }
+        this.numVertex = positions.length / POS_FPV
     }
 
     draw (gl: GlContext, view: mat4, shapeT: number): void {
