@@ -111,10 +111,7 @@ class FullCoreRenderer {
 
         this.camera = new Camera2D(0, 'spiral')
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-            tileMetadata,
-            CALIBRATION_OPTIONS[this.targetCalibration]
-        )
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata, this.calibrationT)
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
             this.spacing,
@@ -222,22 +219,17 @@ class FullCoreRenderer {
         this.uiState.setZoom?.(t)
     }
 
-    setShape (s: CoreShape): void {
-        this.targetShape = s
-        this.genVerts()
-        this.camera.setMode(s)
-        this.uiState.setShape?.(s)
-    }
-
     setSpacing (s: [number, number]): void {
         this.spacing = s
         this.genVerts()
         this.uiState.setSpacing?.(s)
     }
 
-    setCalibration (o: CalibrationOption): void {
-        this.targetCalibration = o
-        this.uiState.setCalibration?.(o)
+    setShape (s: CoreShape): void {
+        this.targetShape = s
+        this.genVerts()
+        this.camera.setMode(s)
+        this.uiState.setShape?.(s)
     }
 
     setViewMode (m: CoreViewMode): void {
@@ -248,6 +240,19 @@ class FullCoreRenderer {
             this.genVerts()
         }
         this.uiState.setViewMode?.(m)
+    }
+
+    setCalibration (o: CalibrationOption): void {
+        this.targetCalibration = o
+        this.uiState.setCalibration?.(o)
+    }
+
+    initCalibration (o: CalibrationOption): void {
+        this.targetCalibration = o
+        this.calibrationT = CALIBRATION_OPTIONS[o]
+        this.genVerts()
+        this.genTexCoords()
+        this.uiState.setCalibration?.(o)
     }
 
     // get bounds of current viewport in gl units, needed for wrapping

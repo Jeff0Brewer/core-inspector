@@ -41,7 +41,7 @@ function CoreVisSettings (
         vis.uiState.setShape = setShape
         vis.uiState.setViewMode = setViewMode
 
-        vis.setCalibration(calibration)
+        vis.initCalibration(calibration)
         vis.setShape(shape)
         vis.setViewMode(viewMode)
 
