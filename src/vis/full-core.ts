@@ -150,9 +150,52 @@ class FullCoreRenderer {
         this.resize()
     }
 
+    resize (): void {
+        const w = window.innerWidth * window.devicePixelRatio
+        const h = window.innerHeight * window.devicePixelRatio
+
+        this.canvas.width = w
+        this.canvas.height = h
+
+        this.gl.viewport(0, 0, w, h)
+
+        const aspect = w / h
+        const { fov, near, far } = PROJECTION_PARAMS
+        mat4.perspective(this.proj, fov, aspect, near, far)
+
+        this.downscaledCore.setProj(this.proj)
+
+        this.punchcardCore.setProj(this.proj)
+        this.punchcardCore.setWindowHeight(h)
+
+        this.stencilCore.setProj(this.proj)
+        this.stencilCore.resize(this.gl, w, h)
+
+        this.hoverHighlight.setProj(this.proj)
+        this.hoverHighlight.setWindowHeight(h)
+
+        this.accentLines.setProj(this.proj)
+
+        this.wrapColumns()
+    }
+
+    setVertexBounds (b: BoundRect): void {
+        this.camera.visBounds = b
+    }
+
+    setBlending (params: BlendParams): void {
+        this.downscaledCore.minerals.update(this.gl, params)
+        this.punchcardCore.minerals.update(this.gl, params)
+    }
+
     setHovered (id: string | undefined): void {
         this.hoverHighlight.setHovered(this.gl, id)
         this.uiState.setHovered?.(id)
+    }
+
+    setPan (t: number): void {
+        this.camera.setPan(t)
+        this.uiState.setPan?.(t)
     }
 
     setZoom (t: number): void {
@@ -161,16 +204,17 @@ class FullCoreRenderer {
         this.uiState.setZoom?.(t)
     }
 
-    setPan (t: number): void {
-        this.camera.setPan(t)
-        this.uiState.setPan?.(t)
-    }
-
     setShape (s: CoreShape): void {
         this.targetShape = s
         this.genVerts()
         this.camera.setMode(s)
         this.uiState.setShape?.(s)
+    }
+
+    setSpacing (s: [number, number]): void {
+        this.spacing = s
+        this.genVerts()
+        this.uiState.setSpacing?.(s)
     }
 
     setViewMode (m: CoreViewMode): void {
@@ -181,27 +225,6 @@ class FullCoreRenderer {
             this.genVerts()
         }
         this.uiState.setViewMode?.(m)
-    }
-
-    setSpacing (s: [number, number]): void {
-        this.spacing = s
-        this.genVerts()
-        this.uiState.setSpacing?.(s)
-    }
-
-    setBlending (params: BlendParams): void {
-        this.downscaledCore.minerals.update(this.gl, params)
-        this.punchcardCore.minerals.update(this.gl, params)
-    }
-
-    setVertexBounds (b: BoundRect): void {
-        this.camera.visBounds = b
-    }
-
-    wrapColumns (): void {
-        if (this.targetShape === 'column') {
-            this.genVerts()
-        }
     }
 
     // get bounds of current viewport in gl units, needed for wrapping
@@ -265,6 +288,12 @@ class FullCoreRenderer {
         }
     }
 
+    wrapColumns (): void {
+        if (this.targetShape === 'column') {
+            this.genVerts()
+        }
+    }
+
     setupEventListeners (): (() => void) {
         let dragging = false
         const mousedown = (): void => { dragging = true }
@@ -319,37 +348,7 @@ class FullCoreRenderer {
         }
     }
 
-    resize (): void {
-        const w = window.innerWidth * window.devicePixelRatio
-        const h = window.innerHeight * window.devicePixelRatio
-
-        this.canvas.width = w
-        this.canvas.height = h
-
-        this.gl.viewport(0, 0, w, h)
-
-        const aspect = w / h
-        const { fov, near, far } = PROJECTION_PARAMS
-        mat4.perspective(this.proj, fov, aspect, near, far)
-
-        this.downscaledCore.setProj(this.proj)
-
-        this.punchcardCore.setProj(this.proj)
-        this.punchcardCore.setWindowHeight(h)
-
-        this.stencilCore.setProj(this.proj)
-        this.stencilCore.resize(this.gl, w, h)
-
-        this.hoverHighlight.setProj(this.proj)
-        this.hoverHighlight.setWindowHeight(h)
-
-        this.accentLines.setProj(this.proj)
-
-        this.wrapColumns()
-    }
-
     draw (elapsed: number): void {
-        // don't draw if gl resources have been freed
         if (this.dropped) { return }
 
         this.camera.update(elapsed)
