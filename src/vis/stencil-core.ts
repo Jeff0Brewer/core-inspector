@@ -24,7 +24,7 @@ class StencilCoreRenderer {
     setProj: (m: mat4) => void
     setView: (m: mat4) => void
     numVertex: number
-    lastMousePos: [number, number]
+    lastMousePos: vec2
     colorIdMap: ColorIdMap
     setHovered: (id: string | undefined) => void
 
@@ -78,7 +78,7 @@ class StencilCoreRenderer {
 
     // check if stencil framebuffer should be updated, want to minimize draws and reads,
     // ensure mouse has moved and shape is not currently transforming
-    checkHoverChange (shapeT: number, mousePos: [number, number]): boolean {
+    checkHoverChange (shapeT: number, mousePos: vec2): boolean {
         const shapeNotChanging = shapeT === 0 || shapeT === 1
 
         const mousePosChanged =
@@ -91,7 +91,7 @@ class StencilCoreRenderer {
         return mousePosChanged && shapeNotChanging
     }
 
-    draw (gl: GlContext, view: mat4, shapeT: number, mousePos: [number, number]): void {
+    draw (gl: GlContext, view: mat4, shapeT: number, mousePos: vec2): void {
         // only update stencil framebuffer and read pixels if
         // hover has potentially changed
         if (!this.checkHoverChange(shapeT, mousePos)) {
@@ -110,7 +110,7 @@ class StencilCoreRenderer {
         // read pixels immediately after draw to ensure render not
         // in progress and colors are readable
         const pixels = new Uint8Array(4)
-        gl.readPixels(...mousePos, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+        gl.readPixels(mousePos[0], mousePos[1], 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
         // get hovered id from color and update state
         const colorHex = bytesToHex([pixels[0], pixels[1]])

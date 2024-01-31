@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec2 } from 'gl-matrix'
 import { GlContext } from '../lib/gl-wrap'
 import { clamp, ease, BoundRect } from '../lib/util'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -195,7 +195,7 @@ class CoreRenderer {
         }
     }
 
-    draw (gl: GlContext, elapsed: number, view: mat4, mousePos: [number, number]): void {
+    draw (gl: GlContext, elapsed: number, view: mat4, mousePos: vec2): void {
         const incSign = Math.sign(CORE_SHAPES[this.targetShape] - this.shapeT)
         this.shapeT += incSign * TRANSFORM_SPEED * elapsed
         this.shapeT = clamp(this.shapeT, 0, 1)
@@ -208,7 +208,7 @@ class CoreRenderer {
         }
 
         this.stencilRenderer.draw(gl, view, easedShapeT, mousePos)
-        this.highlightRenderer.draw(gl, view)
+        this.highlightRenderer.draw(gl, view, mousePos)
         this.accentRenderer.draw(gl, view, easedShapeT)
     }
 
