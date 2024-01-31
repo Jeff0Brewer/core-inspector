@@ -3,7 +3,7 @@ import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoGridSharp } from 'react-icons/io5'
 import { padZeros, formatFloat } from '../lib/util'
-import FullCoreRenderer, { CoreViewMode, CoreShape } from '../vis/full-core'
+import FullCoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../vis/full-core'
 import { CoreMetadata } from '../lib/metadata'
 import ToggleSelect from '../components/generic/toggle-select'
 import ToggleButton from '../components/generic/toggle-button'
@@ -20,7 +20,7 @@ type CoreVisSettingsProps = {
 function CoreVisSettings (
     { vis, cores, core, setCore }: CoreVisSettingsProps
 ): ReactElement {
-    const [removeCalibration, setRemoveCalibration] = useState<boolean>(false)
+    const [calibration, setCalibration] = useState<CalibrationOption>('show')
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
     const [metadata, setMetadata] = useState<CoreMetadata | null>(null)
@@ -37,11 +37,11 @@ function CoreVisSettings (
 
     useEffect(() => {
         if (!vis) { return }
-        vis.uiState.setRemoveCalibration = setRemoveCalibration
+        vis.uiState.setCalibration = setCalibration
         vis.uiState.setShape = setShape
         vis.uiState.setViewMode = setViewMode
 
-        vis.setRemoveCalibration(removeCalibration)
+        vis.setCalibration(calibration)
         vis.setShape(shape)
         vis.setViewMode(viewMode)
 
@@ -51,10 +51,18 @@ function CoreVisSettings (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
+    const toggleCalibration = (): void => {
+        if (calibration === 'show') {
+            vis?.setCalibration('remove')
+        } else {
+            vis?.setCalibration('show')
+        }
+    }
+
     return <>
         <ToggleButton
-            currValue={!removeCalibration}
-            setValue={r => vis?.setRemoveCalibration(!r)}
+            active={calibration === 'show'}
+            toggleValue={toggleCalibration}
             icon={ICONS.calibration}
         />
         <ToggleSelect<CoreShape>

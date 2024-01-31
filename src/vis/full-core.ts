@@ -12,6 +12,9 @@ import StencilCoreRenderer from '../vis/stencil-core'
 import HoverHighlightRenderer from '../vis/hover-highlight'
 import { getCorePositions, getCoreTexCoords } from '../lib/vert-gen'
 
+const CALIBRATION_OPTIONS = { show: 0, remove: 1 } as const
+type CalibrationOption = keyof typeof CALIBRATION_OPTIONS
+
 const CORE_SHAPES = { column: 0, spiral: 1 } as const
 type CoreShape = keyof typeof CORE_SHAPES
 
@@ -40,7 +43,7 @@ const PROJECTION_PARAMS = {
  *   directly with react state passed in and nothing needs to be added here
  */
 type UiState = {
-    setRemoveCalibration?: (r: boolean) => void,
+    setCalibration?: (o: CalibrationOption) => void,
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
     setSpacing?: (s: [number, number]) => void,
@@ -60,7 +63,7 @@ class FullCoreRenderer {
     accentLines: AccentLineRenderer
     metadata: TileTextureMetadata
     spacing: [number, number]
-    removeCalibration: boolean
+    calibration: CalibrationOption
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
@@ -81,7 +84,7 @@ class FullCoreRenderer {
     ) {
         this.canvas = canvas
         this.spacing = [0, 0]
-        this.removeCalibration = false
+        this.calibration = 'show'
         this.viewMode = 'downscaled'
         this.targetShape = 'column'
         this.shapeT = CORE_SHAPES[this.targetShape]
@@ -100,7 +103,10 @@ class FullCoreRenderer {
 
         this.camera = new Camera2D(0, 'spiral')
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
+            tileMetadata,
+            CALIBRATION_OPTIONS[this.calibration]
+        )
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
             this.spacing,
@@ -108,7 +114,8 @@ class FullCoreRenderer {
             this.targetShape,
             // always punchcard view mode to ensure punchcard vertices are
             // initialized regardless of initial view mode
-            'punchcard'
+            'punchcard',
+            CALIBRATION_OPTIONS[this.calibration]
         )
 
         this.downscaledCore = new DownscaledCoreRenderer(
@@ -220,16 +227,16 @@ class FullCoreRenderer {
         this.uiState.setSpacing?.(s)
     }
 
-    setRemoveCalibration (r: boolean): void {
-        this.removeCalibration = r
+    setCalibration (o: CalibrationOption): void {
+        this.calibration = o
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(
             this.metadata,
-            this.removeCalibration
+            CALIBRATION_OPTIONS[this.calibration]
         )
         this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
         this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
         this.genVerts()
-        this.uiState.setRemoveCalibration?.(r)
+        this.uiState.setCalibration?.(o)
     }
 
     setViewMode (m: CoreViewMode): void {
@@ -272,7 +279,7 @@ class FullCoreRenderer {
             viewportBounds,
             this.targetShape,
             this.viewMode,
-            this.removeCalibration
+            CALIBRATION_OPTIONS[this.calibration]
         )
 
         this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
@@ -298,7 +305,8 @@ class FullCoreRenderer {
                 this.spacing,
                 viewportBounds,
                 otherShape,
-                this.viewMode
+                this.viewMode,
+                CALIBRATION_OPTIONS[this.calibration]
             )
             this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
         }
@@ -407,5 +415,6 @@ export { TRANSFORM_SPEED }
 export type {
     UiState,
     CoreShape,
-    CoreViewMode
+    CoreViewMode,
+    CalibrationOption
 }

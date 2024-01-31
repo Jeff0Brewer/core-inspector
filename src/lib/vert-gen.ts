@@ -36,7 +36,7 @@ const CALIBRATION_HEIGHT = 0.01
  */
 
 // interpolates texture coordinates from metadata for downscaled and punchcard representations
-const getCoreTexCoords = (metadata: TileTextureMetadata, removeCalibration?: boolean): {
+const getCoreTexCoords = (metadata: TileTextureMetadata, calibrationT: number): {
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } => {
@@ -50,14 +50,14 @@ const getCoreTexCoords = (metadata: TileTextureMetadata, removeCalibration?: boo
             downTexCoords,
             downOffset,
             metadata.downTiles[i],
-            removeCalibration
+            calibrationT
         )
         punchOffset = addPunchcardTexCoords(
             punchTexCoords,
             punchOffset,
             metadata.punchTiles[i],
             metadata.punchNumRows[i],
-            removeCalibration
+            calibrationT
         )
     }
 
@@ -73,7 +73,7 @@ const getCorePositions = (
     viewportBounds: BoundRect,
     shape: CoreShape,
     viewMode: CoreViewMode,
-    removeCalibration?: boolean
+    calibrationT: number
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array,
@@ -104,9 +104,7 @@ const getCorePositions = (
         // calculate tile layout using downscaled tile dimensions as source of truth
         // for all vis elements, ensuring alignment
         let { height, width } = metadata.downTiles[i]
-        if (removeCalibration) {
-            height -= CALIBRATION_HEIGHT
-        }
+        height -= CALIBRATION_HEIGHT * calibrationT
         const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
@@ -258,14 +256,10 @@ const addDownscaledTexCoords = (
     out: Float32Array,
     offset: number,
     rect: TileRect,
-    removeCalibration?: boolean
+    calibrationT: number
 ): number => {
-    let yStart = rect.top
-    let yInc = rect.height / ROW_PER_TILE
-    if (removeCalibration) {
-        yStart += CALIBRATION_HEIGHT
-        yInc = (rect.height - CALIBRATION_HEIGHT) / ROW_PER_TILE
-    }
+    const yStart = rect.top + CALIBRATION_HEIGHT * calibrationT
+    const yInc = (rect.height - CALIBRATION_HEIGHT * calibrationT) / ROW_PER_TILE
 
     const getRowCoords = (
         i: number,
@@ -364,19 +358,14 @@ const addPunchcardTexCoords = (
     offset: number,
     rect: TileRect,
     numRows: number,
-    removeCalibration?: boolean
+    calibrationT: number
 ): number => {
     const xInc = rect.width / VERT_PER_ROW_POINT
-    let yInc = rect.height / numRows
+    const yInc = (rect.height - CALIBRATION_HEIGHT * calibrationT) / numRows
 
     // offset x and y by 0.5 to center coordinate on pixel in texture
     const x = rect.left + xInc * 0.5
-    let startY = rect.top + yInc * 0.5
-
-    if (removeCalibration) {
-        yInc = (rect.height - CALIBRATION_HEIGHT) / numRows
-        startY = (rect.top + CALIBRATION_HEIGHT) + yInc * 0.5
-    }
+    const startY = (rect.top + CALIBRATION_HEIGHT * calibrationT) + yInc * 0.5
 
     for (let i = 0; i < numRows; i++) {
         const y = startY + yInc * i

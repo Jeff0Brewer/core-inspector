@@ -2,19 +2,19 @@ import { ReactElement } from 'react'
 import '../../styles/toggle-button.css'
 
 type ToggleButtonProps = {
-    currValue: boolean,
-    setValue: (v: boolean) => void,
+    active: boolean,
+    toggleValue: () => void,
     icon: ReactElement
 }
 
 function ToggleButton (
-    { currValue, setValue, icon }: ToggleButtonProps
+    { active, toggleValue, icon }: ToggleButtonProps
 ): ReactElement {
     return (
         <button
             className={'toggle-button'}
-            data-active={currValue}
-            onClick={() => setValue(!currValue)}
+            data-active={active}
+            onClick={toggleValue}
         >
             {icon}
         </button>
