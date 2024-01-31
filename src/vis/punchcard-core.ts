@@ -81,7 +81,16 @@ class PunchcardCoreRenderer {
         } else {
             this.columnPosBuffer.setData(gl, positions)
         }
+        const lastNumVertex = this.numVertex
         this.numVertex = positions.length / POS_FPV
+        if (lastNumVertex < this.numVertex) {
+            const emptyBuffer = new Float32Array(positions.length)
+            if (currentShape === 'column') {
+                this.spiralPosBuffer.setData(gl, emptyBuffer)
+            } else {
+                this.columnPosBuffer.setData(gl, emptyBuffer)
+            }
+        }
     }
 
     draw (gl: GlContext, view: mat4, shapeT: number): void {
