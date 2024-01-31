@@ -40,6 +40,7 @@ const PROJECTION_PARAMS = {
  *   directly with react state passed in and nothing needs to be added here
  */
 type UiState = {
+    setRemoveCalibration?: (r: boolean) => void,
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
     setSpacing?: (s: [number, number]) => void,
@@ -219,6 +220,18 @@ class FullCoreRenderer {
         this.uiState.setSpacing?.(s)
     }
 
+    setRemoveCalibration (r: boolean): void {
+        this.removeCalibration = r
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
+            this.metadata,
+            this.removeCalibration
+        )
+        this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
+        this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
+        this.genVerts()
+        this.uiState.setRemoveCalibration?.(r)
+    }
+
     setViewMode (m: CoreViewMode): void {
         this.viewMode = m
         // since downscaled verts used in stencil / hover regardless of view mode
@@ -326,15 +339,6 @@ class FullCoreRenderer {
                 this.punchcardCore.incPointSize(0.2)
             } else if (e.key === '-' || e.key === '_') {
                 this.punchcardCore.incPointSize(-0.2)
-            } else if (e.key === 'c') {
-                this.removeCalibration = !this.removeCalibration
-                const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-                    this.metadata,
-                    this.removeCalibration
-                )
-                this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
-                this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
-                this.genVerts()
             }
         }
 

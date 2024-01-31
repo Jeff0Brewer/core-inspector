@@ -36,9 +36,11 @@ function CoreVisSettings (
 
     useEffect(() => {
         if (!vis) { return }
+        vis.uiState.setRemoveCalibration = setRemoveCalibration
         vis.uiState.setShape = setShape
         vis.uiState.setViewMode = setViewMode
 
+        vis.setRemoveCalibration(removeCalibration)
         vis.setShape(shape)
         vis.setViewMode(viewMode)
 
@@ -51,7 +53,7 @@ function CoreVisSettings (
     return <>
         <ToggleButton
             currValue={removeCalibration}
-            setValue={setRemoveCalibration}
+            setValue={r => vis?.setRemoveCalibration(r)}
             icon={<></>}
         />
         <ToggleSelect<CoreShape>
