@@ -2,11 +2,11 @@ import { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import VerticalSlider from '../components/generic/vertical-slider'
-import VisRenderer from '../vis/vis'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/core-view-sliders.css'
 
 type CoreViewSlidersProps = {
-    vis: VisRenderer | null
+    vis: FullCoreRenderer | null
 }
 
 function CoreViewSliders (

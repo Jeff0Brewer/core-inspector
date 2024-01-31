@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
-import { CoreShape } from '../vis/core'
+import { CoreShape } from '../vis/full-core'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/downscaled-vert.glsl?raw'
@@ -48,7 +48,10 @@ class DownscaledCoreRenderer {
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         const shapeTLoc = this.program.getUniformLocation(gl, 'shapeT')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setProj = (m: mat4): void => {
+            this.program.bind(gl)
+            gl.uniformMatrix4fv(projLoc, false, m)
+        }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }

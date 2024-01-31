@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { clamp } from '../lib/util'
-import VisRenderer from '../vis/vis'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/pan-scrollbar.css'
 
 type PanScrollbarProps = {
-    vis: VisRenderer | null
+    vis: FullCoreRenderer | null
 }
 
 function PanScrollbar (

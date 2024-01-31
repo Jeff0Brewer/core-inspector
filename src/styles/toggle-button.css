@@ -1,0 +1,8 @@
+.toggle-button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius);
+    overflow: hidden;
+}

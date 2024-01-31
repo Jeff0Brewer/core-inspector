@@ -7,11 +7,11 @@ import { GenericPalette } from '../lib/palettes'
 import { BlendMode, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
-import VisRenderer from '../vis/vis'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/mineral-controls.css'
 
 type MineralControlsProps = {
-    vis: VisRenderer | null,
+    vis: FullCoreRenderer | null,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
 }

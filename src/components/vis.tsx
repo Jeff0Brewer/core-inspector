@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import MetadataHover from '../components/metadata-hover'
 import PanScrollbar from '../components/pan-scrollbar'
-import VisRenderer from '../vis/vis'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/vis.css'
 
 type VisProps = {
-    vis: VisRenderer | null,
+    vis: FullCoreRenderer | null,
     core: string
 }
 
