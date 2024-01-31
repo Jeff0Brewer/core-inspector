@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix'
 import { clamp, ease, BoundRect } from '../lib/util'
-import { CoreShape, TRANSFORM_SPEED } from '../vis/core'
+import { CoreShape, TRANSFORM_SPEED } from '../vis/vis'
 
 const MOUSE_PAN_SPEED = 0.003
 const WHEEL_PAN_SPEED = 0.001

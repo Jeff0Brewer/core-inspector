@@ -1,11 +1,23 @@
 import { mat4, vec2 } from 'gl-matrix'
-import { BoundRect } from '../lib/util'
+import { BoundRect, clamp, ease } from '../lib/util'
 import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
 import { SectionIdMetadata } from '../lib/metadata'
-import { BlendParams } from '../vis/mineral-blend'
-import CoreRenderer, { CoreShape, CoreViewMode } from '../vis/core'
+import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import Camera2D from '../lib/camera'
+import DownscaledCoreRenderer from '../vis/downscaled-core'
+import PunchcardCoreRenderer from '../vis/punchcard-core'
+import AccentLineRenderer from '../vis/accent-lines'
+import StencilCoreRenderer from '../vis/stencil-core'
+import HoverHighlightRenderer from '../vis/hover-highlight'
+import { getCorePositions, getCoreTexCoords } from '../lib/vert-gen'
+
+const CORE_SHAPES = { column: 0, spiral: 1 } as const
+type CoreShape = keyof typeof CORE_SHAPES
+
+type CoreViewMode = 'punchcard' | 'downscaled'
+
+const TRANSFORM_SPEED = 1
 
 /*
  * UI STATE
@@ -41,7 +53,16 @@ const PROJECTION_PARAMS = {
 class VisRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
-    core: CoreRenderer
+    downscaledCore: DownscaledCoreRenderer
+    punchcardCore: PunchcardCoreRenderer
+    stencilCore: StencilCoreRenderer
+    hoverHighlight: HoverHighlightRenderer
+    accentLines: AccentLineRenderer
+    metadata: TileTextureMetadata
+    spacing: [number, number]
+    viewMode: CoreViewMode
+    targetShape: CoreShape
+    shapeT: number
     camera: Camera2D
     proj: mat4
     mousePos: vec2
@@ -58,6 +79,11 @@ class VisRenderer {
         uiState: UiState = {}
     ) {
         this.canvas = canvas
+        this.spacing = [0, 0]
+        this.viewMode = 'downscaled'
+        this.targetShape = 'column'
+        this.shapeT = CORE_SHAPES[this.targetShape]
+        this.metadata = tileMetadata
         this.uiState = uiState
         this.mousePos = [0, 0]
         this.dropped = false
@@ -72,16 +98,50 @@ class VisRenderer {
 
         this.camera = new Camera2D(0, 'spiral')
 
-        this.core = new CoreRenderer(
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata)
+        const { downPositions, punchPositions, accentPositions } = getCorePositions(
+            tileMetadata,
+            this.spacing,
+            this.getViewportBounds(),
+            this.targetShape,
+            // always punchcard view mode to ensure punchcard vertices are
+            // initialized regardless of initial view mode
+            'punchcard'
+        )
+
+        this.downscaledCore = new DownscaledCoreRenderer(
             this.gl,
-            downscaledMaps,
-            punchcardMaps,
+            new MineralBlender(this.gl, downscaledMaps, minerals),
+            downPositions,
+            downTexCoords,
+            this.targetShape
+        )
+        this.punchcardCore = new PunchcardCoreRenderer(
+            this.gl,
+            new MineralBlender(this.gl, punchcardMaps, minerals),
+            punchPositions,
+            punchTexCoords,
+            this.targetShape
+        )
+        this.stencilCore = new StencilCoreRenderer(
+            this.gl,
+            downPositions,
             tileMetadata,
             idMetadata,
-            minerals,
-            this.getViewportBounds(),
-            this.setVertexBounds.bind(this),
             this.setHovered.bind(this)
+        )
+        this.hoverHighlight = new HoverHighlightRenderer(
+            this.gl,
+            downPositions,
+            tileMetadata,
+            idMetadata
+        )
+
+        this.accentLines = new AccentLineRenderer(
+            this.gl,
+            accentPositions,
+            this.targetShape,
+            tileMetadata
         )
 
         // init canvas size, gl viewport, proj matrix
@@ -89,14 +149,14 @@ class VisRenderer {
     }
 
     setHovered (id: string | undefined): void {
-        this.core.setHovered(this.gl, id)
+        this.hoverHighlight.setHovered(this.gl, id)
         this.uiState.setHovered?.(id)
     }
 
     setZoom (t: number): void {
         this.camera.zoom(t)
+        this.wrapColumns()
         this.uiState.setZoom?.(t)
-        this.core.wrapColumns(this.gl, this.getViewportBounds())
     }
 
     setPan (t: number): void {
@@ -105,27 +165,41 @@ class VisRenderer {
     }
 
     setShape (s: CoreShape): void {
-        this.core.setShape(this.gl, s, this.getViewportBounds())
+        this.targetShape = s
+        this.genVerts()
         this.camera.setMode(s)
         this.uiState.setShape?.(s)
     }
 
     setViewMode (m: CoreViewMode): void {
-        this.core.setViewMode(this.gl, m, this.getViewportBounds())
+        this.viewMode = m
+        // since downscaled verts used in stencil / hover regardless of view mode
+        // only need to ensure that punchcard verts are updated
+        if (m === 'punchcard') {
+            this.genVerts()
+        }
         this.uiState.setViewMode?.(m)
     }
 
     setSpacing (s: [number, number]): void {
-        this.core.setSpacing(this.gl, s, this.getViewportBounds())
+        this.spacing = s
+        this.genVerts()
         this.uiState.setSpacing?.(s)
     }
 
     setBlending (params: BlendParams): void {
-        this.core.setBlending(this.gl, params)
+        this.downscaledCore.minerals.update(this.gl, params)
+        this.punchcardCore.minerals.update(this.gl, params)
     }
 
     setVertexBounds (b: BoundRect): void {
         this.camera.visBounds = b
+    }
+
+    wrapColumns (): void {
+        if (this.targetShape === 'column') {
+            this.genVerts()
+        }
     }
 
     // get bounds of current viewport in gl units, needed for wrapping
@@ -144,6 +218,49 @@ class VisRenderer {
         this.camera.viewportBounds = bounds
 
         return bounds
+    }
+
+    // regenerates full core vertices required for current visualization state.
+    // must be called on changes to layout parameters (spacing, vp bounds / zoom) to update layout,
+    // or representation parameters (view mode, shape) to ensure representation
+    // specific vertices have been generated with latest layout params
+    genVerts (): void {
+        const viewportBounds = this.getViewportBounds()
+        const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
+            this.metadata,
+            this.spacing,
+            viewportBounds,
+            this.targetShape,
+            this.viewMode
+        )
+
+        this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
+        this.stencilCore.setPositions(this.gl, downPositions)
+        this.hoverHighlight.setPositions(downPositions)
+        this.accentLines.setPositions(this.gl, accentPositions, this.targetShape)
+
+        // punchcard vertices only generated if currently in punchcard view
+        if (this.viewMode === 'punchcard') {
+            this.punchcardCore.setPositions(this.gl, punchPositions, this.targetShape)
+        }
+
+        this.setVertexBounds(vertexBounds)
+
+        // must generate both shapes for punchcard if in middle of transition
+        // because vertices may not have been generated yet
+        if (this.viewMode === 'punchcard' && Math.round(this.shapeT) !== this.shapeT) {
+            const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
+            // this is mega slow, generates vertices for all visualization elements,
+            // but still < 16ms and this edge case happens very rarely so fine for now
+            const { punchPositions } = getCorePositions(
+                this.metadata,
+                this.spacing,
+                viewportBounds,
+                otherShape,
+                this.viewMode
+            )
+            this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
+        }
     }
 
     setupEventListeners (): (() => void) {
@@ -172,9 +289,9 @@ class VisRenderer {
 
         const keydown = (e: KeyboardEvent): void => {
             if (e.key === '+' || e.key === '=') {
-                this.core.punchRenderer.incPointSize(0.2)
+                this.punchcardCore.incPointSize(0.2)
             } else if (e.key === '-' || e.key === '_') {
-                this.core.punchRenderer.incPointSize(-0.2)
+                this.punchcardCore.incPointSize(-0.2)
             }
         }
 
@@ -213,12 +330,20 @@ class VisRenderer {
         const { fov, near, far } = PROJECTION_PARAMS
         mat4.perspective(this.proj, fov, aspect, near, far)
 
-        this.core.setProj(this.gl, this.proj)
-        this.core.stencilRenderer.resize(this.gl, w, h)
-        this.core.punchRenderer.setWindowHeight(h)
-        this.core.highlightRenderer.setWindowHeight(h)
+        this.downscaledCore.setProj(this.proj)
 
-        this.core.wrapColumns(this.gl, this.getViewportBounds())
+        this.punchcardCore.setProj(this.proj)
+        this.punchcardCore.setWindowHeight(h)
+
+        this.stencilCore.setProj(this.proj)
+        this.stencilCore.resize(this.gl, w, h)
+
+        this.hoverHighlight.setProj(this.proj)
+        this.hoverHighlight.setWindowHeight(h)
+
+        this.accentLines.setProj(this.proj)
+
+        this.wrapColumns()
     }
 
     draw (elapsed: number): void {
@@ -233,14 +358,37 @@ class VisRenderer {
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
         this.gl.clear(this.gl.DEPTH_BUFFER_BIT | this.gl.COLOR_BUFFER_BIT)
 
-        this.core.draw(this.gl, elapsed, this.camera.matrix, this.mousePos)
+        const incSign = Math.sign(CORE_SHAPES[this.targetShape] - this.shapeT)
+        this.shapeT += incSign * TRANSFORM_SPEED * elapsed
+        this.shapeT = clamp(this.shapeT, 0, 1)
+        const easedShapeT = ease(this.shapeT)
+
+        if (this.viewMode === 'downscaled') {
+            this.downscaledCore.draw(this.gl, this.camera.matrix, easedShapeT)
+        } else {
+            this.punchcardCore.draw(this.gl, this.camera.matrix, easedShapeT)
+        }
+
+        this.stencilCore.draw(this.gl, this.camera.matrix, easedShapeT, this.mousePos)
+        this.hoverHighlight.draw(this.gl, this.camera.matrix, this.mousePos)
+        this.accentLines.draw(this.gl, this.camera.matrix, easedShapeT)
     }
 
     drop (): void {
-        this.core.drop(this.gl)
+        this.downscaledCore.drop(this.gl)
+        this.punchcardCore.drop(this.gl)
+        this.stencilCore.drop(this.gl)
+        this.hoverHighlight.drop(this.gl)
+        this.accentLines.drop(this.gl)
+
         this.dropped = true
     }
 }
 
 export default VisRenderer
-export type { UiState }
+export { TRANSFORM_SPEED }
+export type {
+    UiState,
+    CoreShape,
+    CoreViewMode
+}

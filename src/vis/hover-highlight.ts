@@ -54,7 +54,10 @@ class HoverHighlightRenderer {
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         const mousePosLoc = this.program.getUniformLocation(gl, 'mousePos')
         const windowHeightLoc = this.program.getUniformLocation(gl, 'windowHeight')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setProj = (m: mat4): void => {
+            this.program.bind(gl)
+            gl.uniformMatrix4fv(projLoc, false, m)
+        }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setMousePos = (p: vec2): void => { gl.uniform2fv(mousePosLoc, p) }
         this.setWindowHeight = (h: number): void => {

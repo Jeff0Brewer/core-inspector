@@ -60,7 +60,10 @@ class StencilCoreRenderer {
 
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setProj = (m: mat4): void => {
+            this.program.bind(gl)
+            gl.uniformMatrix4fv(projLoc, false, m)
+        }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
     }
 

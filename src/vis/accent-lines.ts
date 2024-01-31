@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { CoreShape } from '../vis/core'
+import { CoreShape } from '../vis/vis'
 import { POS_FPV, ROW_PER_TILE, startLine, endLine } from '../lib/vert-gen'
 import vertSource from '../shaders/accent-line-vert.glsl?raw'
 import fragSource from '../shaders/accent-line-frag.glsl?raw'
@@ -48,7 +48,10 @@ class AccentLineRenderer {
         const projLoc = this.program.getUniformLocation(gl, 'proj')
         const viewLoc = this.program.getUniformLocation(gl, 'view')
         const shapeTLoc = this.program.getUniformLocation(gl, 'shapeT')
-        this.setProj = (m: mat4): void => { gl.uniformMatrix4fv(projLoc, false, m) }
+        this.setProj = (m: mat4): void => {
+            this.program.bind(gl)
+            gl.uniformMatrix4fv(projLoc, false, m)
+        }
         this.setView = (m: mat4): void => { gl.uniformMatrix4fv(viewLoc, false, m) }
         this.setShapeT = (t: number): void => { gl.uniform1f(shapeTLoc, t) }
     }
