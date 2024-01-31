@@ -5,6 +5,7 @@ import { padZeros, formatFloat } from '../lib/util'
 import FullCoreRenderer, { CoreViewMode, CoreShape } from '../vis/full-core'
 import { CoreMetadata } from '../lib/metadata'
 import ToggleSelect from '../components/generic/toggle-select'
+import ToggleButton from '../components/generic/toggle-button'
 import Dropdown from '../components/generic/dropdown'
 import '../styles/core-vis-settings.css'
 
@@ -18,6 +19,7 @@ type CoreVisSettingsProps = {
 function CoreVisSettings (
     { vis, cores, core, setCore }: CoreVisSettingsProps
 ): ReactElement {
+    const [removeCalibration, setRemoveCalibration] = useState<boolean>(false)
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
     const [metadata, setMetadata] = useState<CoreMetadata | null>(null)
@@ -47,6 +49,11 @@ function CoreVisSettings (
     }, [vis])
 
     return <>
+        <ToggleButton
+            currValue={removeCalibration}
+            setValue={setRemoveCalibration}
+            icon={<></>}
+        />
         <ToggleSelect<CoreShape>
             currValue={shape}
             setValue={ s => vis?.setShape(s) }
