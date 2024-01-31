@@ -59,6 +59,7 @@ class FullCoreRenderer {
     accentLines: AccentLineRenderer
     metadata: TileTextureMetadata
     spacing: [number, number]
+    removeCalibration: boolean
     viewMode: CoreViewMode
     targetShape: CoreShape
     shapeT: number
@@ -79,6 +80,7 @@ class FullCoreRenderer {
     ) {
         this.canvas = canvas
         this.spacing = [0, 0]
+        this.removeCalibration = false
         this.viewMode = 'downscaled'
         this.targetShape = 'column'
         this.shapeT = CORE_SHAPES[this.targetShape]
@@ -256,7 +258,8 @@ class FullCoreRenderer {
             this.spacing,
             viewportBounds,
             this.targetShape,
-            this.viewMode
+            this.viewMode,
+            this.removeCalibration
         )
 
         this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
@@ -323,6 +326,15 @@ class FullCoreRenderer {
                 this.punchcardCore.incPointSize(0.2)
             } else if (e.key === '-' || e.key === '_') {
                 this.punchcardCore.incPointSize(-0.2)
+            } else if (e.key === 'c') {
+                this.removeCalibration = !this.removeCalibration
+                const { downTexCoords, punchTexCoords } = getCoreTexCoords(
+                    this.metadata,
+                    this.removeCalibration
+                )
+                this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
+                this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
+                this.genVerts()
             }
         }
 
