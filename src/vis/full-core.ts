@@ -18,6 +18,12 @@ type CoreShape = keyof typeof CORE_SHAPES
 type CoreViewMode = 'punchcard' | 'downscaled'
 
 const TRANSFORM_SPEED = 1
+const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
+const PROJECTION_PARAMS = {
+    fov: 0.5 * Math.PI,
+    near: 0.01,
+    far: 5
+}
 
 /*
  * UI STATE
@@ -43,14 +49,7 @@ type UiState = {
     setPanWidth?: (w: number) => void
 }
 
-const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
-const PROJECTION_PARAMS = {
-    fov: 0.5 * Math.PI,
-    near: 0.01,
-    far: 5
-}
-
-class VisRenderer {
+class FullCoreRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
     downscaledCore: DownscaledCoreRenderer
@@ -116,6 +115,7 @@ class VisRenderer {
             downTexCoords,
             this.targetShape
         )
+
         this.punchcardCore = new PunchcardCoreRenderer(
             this.gl,
             new MineralBlender(this.gl, punchcardMaps, minerals),
@@ -123,6 +123,7 @@ class VisRenderer {
             punchTexCoords,
             this.targetShape
         )
+
         this.stencilCore = new StencilCoreRenderer(
             this.gl,
             downPositions,
@@ -130,6 +131,7 @@ class VisRenderer {
             idMetadata,
             this.setHovered.bind(this)
         )
+
         this.hoverHighlight = new HoverHighlightRenderer(
             this.gl,
             downPositions,
@@ -385,7 +387,7 @@ class VisRenderer {
     }
 }
 
-export default VisRenderer
+export default FullCoreRenderer
 export { TRANSFORM_SPEED }
 export type {
     UiState,

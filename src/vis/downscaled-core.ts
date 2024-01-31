@@ -1,6 +1,6 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
-import { CoreShape } from '../vis/vis'
+import { CoreShape } from '../vis/full-core'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/downscaled-vert.glsl?raw'

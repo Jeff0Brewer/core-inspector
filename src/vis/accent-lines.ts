@@ -1,7 +1,7 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { CoreShape } from '../vis/vis'
+import { CoreShape } from '../vis/full-core'
 import { POS_FPV, ROW_PER_TILE, startLine, endLine } from '../lib/vert-gen'
 import vertSource from '../shaders/accent-line-vert.glsl?raw'
 import fragSource from '../shaders/accent-line-frag.glsl?raw'

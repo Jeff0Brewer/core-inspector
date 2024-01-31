@@ -6,7 +6,7 @@ import Vis from '../components/vis'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
-import VisRenderer from '../vis/vis'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -23,7 +23,7 @@ const MINERALS = [
 ]
 
 function App (): ReactElement {
-    const [vis, setVis] = useState<VisRenderer | null>(null)
+    const [vis, setVis] = useState<FullCoreRenderer | null>(null)
     const [core, setCore] = useState<string>(CORES[0])
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -33,7 +33,7 @@ function App (): ReactElement {
             throw new Error('No reference to canvas')
         }
 
-        const initVisRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+        const initFullCoreRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
             const basePath = `./data/${core}`
             const numMinerals = 9
 
@@ -52,7 +52,7 @@ function App (): ReactElement {
             ])
 
             setVis(
-                new VisRenderer(
+                new FullCoreRenderer(
                     canvas,
                     downscaledImgs,
                     punchcardImgs,
@@ -69,7 +69,7 @@ function App (): ReactElement {
         // immediately set to null for loading state
         setVis(null)
 
-        initVisRenderer(canvasRef.current)
+        initFullCoreRenderer(canvasRef.current)
 
         // don't want to include vis in dependency array since vis
         // is being set here, will cause loop

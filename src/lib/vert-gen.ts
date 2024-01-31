@@ -1,6 +1,6 @@
 import { BoundRect } from '../lib/util'
 import { TileTextureMetadata, TileRect } from '../lib/tile-texture'
-import { CoreShape, CoreViewMode } from '../vis/vis'
+import { CoreShape, CoreViewMode } from '../vis/full-core'
 
 // number of floats per vertex for position / tex coord attributes
 const POS_FPV = 2

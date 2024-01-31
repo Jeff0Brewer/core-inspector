@@ -2,14 +2,14 @@ import { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { padZeros, formatFloat } from '../lib/util'
-import VisRenderer, { CoreViewMode, CoreShape } from '../vis/vis'
+import FullCoreRenderer, { CoreViewMode, CoreShape } from '../vis/full-core'
 import { CoreMetadata } from '../lib/metadata'
 import ToggleSelect from '../components/generic/toggle-select'
 import Dropdown from '../components/generic/dropdown'
 import '../styles/core-vis-settings.css'
 
 type CoreVisSettingsProps = {
-    vis: VisRenderer | null,
+    vis: FullCoreRenderer | null,
     cores: Array<string>,
     core: string,
     setCore: (c: string) => void,
