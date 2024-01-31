@@ -63,10 +63,14 @@ class FullCoreRenderer {
     accentLines: AccentLineRenderer
     metadata: TileTextureMetadata
     spacing: [number, number]
-    calibration: CalibrationOption
     viewMode: CoreViewMode
+
+    targetCalibration: CalibrationOption
+    calibrationT: number
+
     targetShape: CoreShape
     shapeT: number
+
     camera: Camera2D
     proj: mat4
     mousePos: vec2
@@ -84,10 +88,14 @@ class FullCoreRenderer {
     ) {
         this.canvas = canvas
         this.spacing = [0, 0]
-        this.calibration = 'show'
         this.viewMode = 'downscaled'
+
         this.targetShape = 'column'
         this.shapeT = CORE_SHAPES[this.targetShape]
+
+        this.targetCalibration = 'show'
+        this.calibrationT = CALIBRATION_OPTIONS[this.targetCalibration]
+
         this.metadata = tileMetadata
         this.uiState = uiState
         this.mousePos = [0, 0]
@@ -105,7 +113,7 @@ class FullCoreRenderer {
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(
             tileMetadata,
-            CALIBRATION_OPTIONS[this.calibration]
+            CALIBRATION_OPTIONS[this.targetCalibration]
         )
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
@@ -115,7 +123,7 @@ class FullCoreRenderer {
             // always punchcard view mode to ensure punchcard vertices are
             // initialized regardless of initial view mode
             'punchcard',
-            CALIBRATION_OPTIONS[this.calibration]
+            this.calibrationT
         )
 
         this.downscaledCore = new DownscaledCoreRenderer(
@@ -228,14 +236,7 @@ class FullCoreRenderer {
     }
 
     setCalibration (o: CalibrationOption): void {
-        this.calibration = o
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-            this.metadata,
-            CALIBRATION_OPTIONS[this.calibration]
-        )
-        this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
-        this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
-        this.genVerts()
+        this.targetCalibration = o
         this.uiState.setCalibration?.(o)
     }
 
@@ -267,6 +268,15 @@ class FullCoreRenderer {
         return bounds
     }
 
+    genTexCoords (): void {
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
+            this.metadata,
+            ease(this.calibrationT)
+        )
+        this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
+        this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
+    }
+
     // regenerates full core vertices required for current visualization state.
     // must be called on changes to layout parameters (spacing, vp bounds / zoom) to update layout,
     // or representation parameters (view mode, shape) to ensure representation
@@ -279,7 +289,7 @@ class FullCoreRenderer {
             viewportBounds,
             this.targetShape,
             this.viewMode,
-            CALIBRATION_OPTIONS[this.calibration]
+            ease(this.calibrationT)
         )
 
         this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
@@ -306,7 +316,7 @@ class FullCoreRenderer {
                 viewportBounds,
                 otherShape,
                 this.viewMode,
-                CALIBRATION_OPTIONS[this.calibration]
+                ease(this.calibrationT)
             )
             this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
         }
@@ -387,6 +397,14 @@ class FullCoreRenderer {
         this.shapeT += incSign * TRANSFORM_SPEED * elapsed
         this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
+
+        this.calibrationT += Math.sign(CALIBRATION_OPTIONS[this.targetCalibration] - this.calibrationT) * TRANSFORM_SPEED * elapsed
+        this.calibrationT = clamp(this.calibrationT, 0, 1)
+
+        if (this.calibrationT !== 0 && this.calibrationT !== 1) {
+            this.genTexCoords()
+            this.genVerts()
+        }
 
         if (this.viewMode === 'downscaled') {
             this.downscaledCore.draw(this.gl, this.camera.matrix, easedShapeT)
