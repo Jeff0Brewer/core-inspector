@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
+import { IoGridSharp } from 'react-icons/io5'
 import { padZeros, formatFloat } from '../lib/util'
 import FullCoreRenderer, { CoreViewMode, CoreShape } from '../vis/full-core'
 import { CoreMetadata } from '../lib/metadata'
@@ -52,9 +53,9 @@ function CoreVisSettings (
 
     return <>
         <ToggleButton
-            currValue={removeCalibration}
-            setValue={r => vis?.setRemoveCalibration(r)}
-            icon={<></>}
+            currValue={!removeCalibration}
+            setValue={r => vis?.setRemoveCalibration(!r)}
+            icon={ICONS.calibration}
         />
         <ToggleSelect<CoreShape>
             currValue={shape}
@@ -93,6 +94,7 @@ function CoreVisSettings (
 }
 
 const ICONS = {
+    calibration: <IoGridSharp style={{ fontSize: '16px' }} />,
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
     downscaled: <div className={'downscaled-icon'}></div>,
