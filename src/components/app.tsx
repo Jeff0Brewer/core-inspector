@@ -15,10 +15,10 @@ const MINERALS = [
     'carbonate',
     'kaolinite-montmorillinite'
 ]
-const MODE_SWITCH_MS = 500
-const MODE_SWITCH_TRANSITION = `opacity ${MODE_SWITCH_MS}ms ease`
 
 type ViewMode = 'full' | 'single'
+const MODE_SWITCH_MS = 500
+const MODE_SWITCH_TRANSITION = `opacity ${MODE_SWITCH_MS}ms ease`
 
 function App (): ReactElement {
     const [core, setCore] = useState<string>(CORES[0])
@@ -27,7 +27,10 @@ function App (): ReactElement {
     const [render, setRender] = useState<ViewMode | 'both'>(mode)
 
     useEffect(() => {
+        // render both views during fade transition,
+        // only render current view when transition complete
         setRender('both')
+
         if (part) {
             setMode('single')
             window.setTimeout(() => setRender('single'), MODE_SWITCH_MS)
