@@ -20,7 +20,7 @@ type MetadataHoverProps = {
 }
 
 function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
-    const [hovered, setHovered] = useState<string | undefined>(undefined)
+    const [hovered, setHovered] = useState<string | null>(null)
     const [depth, setDepth] = useState<DepthMetadata>({})
     const [hydration, setHydration] = useState<HydrationMetadata>({})
     const popupRef = useRef<HTMLDivElement>(null)
@@ -28,7 +28,7 @@ function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
     useEffect(() => {
         if (!vis) { return }
         vis.uiState.setHovered = setHovered
-        vis.setHovered(undefined)
+        vis.setHovered(null)
     }, [vis])
 
     // get data for current core

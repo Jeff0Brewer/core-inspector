@@ -17,6 +17,7 @@ const MINERALS = [
 
 function App (): ReactElement {
     const [core, setCore] = useState<string>(CORES[0])
+    const [part, setPart] = useState<string | null>(null)
 
     return (
         <main>
@@ -26,6 +27,7 @@ function App (): ReactElement {
                 palettes={COLOR_PRESETS}
                 core={core}
                 setCore={setCore}
+                setPart={setPart}
             />
         </main>
     )

@@ -18,7 +18,7 @@ class HoverHighlightRenderer {
     setWindowHeight: (h: number) => void
     positions: Float32Array
     numVertex: number
-    lastHovered: string | undefined
+    lastHovered: string | null
     idIndMap: IdIndMap
 
     constructor (
@@ -28,7 +28,7 @@ class HoverHighlightRenderer {
         idMetadata: SectionIdMetadata
     ) {
         this.positions = positions
-        this.lastHovered = undefined
+        this.lastHovered = null
         this.numVertex = 0
 
         // get map from section id to section start and end indices in position buffer,
@@ -68,12 +68,12 @@ class HoverHighlightRenderer {
 
     // copy verts for current hovered section from positions array
     // into highlight buffer for drawing
-    setHovered (gl: GlContext, id: string | undefined): void {
+    setHovered (gl: GlContext, id: string | null): void {
         // don't update if hovered id hasn't changed
         if (id === this.lastHovered) { return }
         this.lastHovered = id
 
-        if (id === undefined) {
+        if (id === null) {
             this.buffer.setData(gl, new Float32Array())
             this.numVertex = 0
         } else {

@@ -26,16 +26,13 @@ class StencilCoreRenderer {
     numVertex: number
     lastMousePos: vec2
     colorIdMap: ColorIdMap
-    setHovered: (id: string | undefined) => void
 
     constructor (
         gl: GlContext,
         positions: Float32Array,
         tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata,
-        setHovered: (id: string | undefined) => void
+        idMetadata: SectionIdMetadata
     ) {
-        this.setHovered = setHovered
         this.lastMousePos = [-1, -1]
 
         this.numVertex = positions.length / POS_FPV
@@ -79,28 +76,7 @@ class StencilCoreRenderer {
         this.framebuffer = new GlTextureFramebuffer(gl, w, h)
     }
 
-    // check if stencil framebuffer should be updated, want to minimize draws and reads,
-    // ensure mouse has moved and shape is not currently transforming
-    checkHoverChange (shapeT: number, mousePos: vec2): boolean {
-        const shapeNotChanging = shapeT === 0 || shapeT === 1
-
-        const mousePosChanged =
-            this.lastMousePos[0] !== mousePos[0] ||
-            this.lastMousePos[1] !== mousePos[1]
-
-        // store mouse pos for next comparison
-        this.lastMousePos = mousePos
-
-        return mousePosChanged && shapeNotChanging
-    }
-
-    draw (gl: GlContext, view: mat4, shapeT: number, mousePos: vec2): void {
-        // only update stencil framebuffer and read pixels if
-        // hover has potentially changed
-        if (!this.checkHoverChange(shapeT, mousePos)) {
-            return
-        }
-
+    update (gl: GlContext, view: mat4, mousePos: vec2): string | null {
         this.framebuffer.bind(gl)
         this.program.bind(gl)
         this.positionBuffer.bind(gl)
@@ -117,10 +93,36 @@ class StencilCoreRenderer {
 
         // get hovered id from color and update state
         const colorHex = bytesToHex([pixels[0], pixels[1]])
-        this.setHovered(this.colorIdMap[colorHex])
+        const id = this.colorIdMap[colorHex]
 
         // reset to default framebuffer once completed
         this.framebuffer.unbind(gl)
+
+        return id || null
+    }
+
+    // check if stencil framebuffer should be updated, want to minimize draws and reads,
+    // ensure mouse has moved and shape is not currently transforming
+    checkHoverChange (shapeT: number, mousePos: vec2): boolean {
+        const shapeNotChanging = shapeT === 0 || shapeT === 1
+
+        const mousePosChanged =
+            this.lastMousePos[0] !== mousePos[0] ||
+            this.lastMousePos[1] !== mousePos[1]
+
+        // store mouse pos for next comparison
+        this.lastMousePos = mousePos
+
+        return mousePosChanged && shapeNotChanging
+    }
+
+    updateHover (gl: GlContext, view: mat4, shapeT: number, mousePos: vec2): string | undefined | null {
+        // only update stencil framebuffer and read pixels if
+        // hover has potentially changed
+        if (!this.checkHoverChange(shapeT, mousePos)) {
+            return
+        }
+        return this.update(gl, view, mousePos)
     }
 
     drop (gl: GlContext): void {

@@ -15,7 +15,8 @@ type FullCoreProps = {
     minerals: Array<string>,
     palettes: Array<GenericPalette>
     core: string,
-    setCore: (c: string) => void
+    setCore: (c: string) => void,
+    setPart: (p: string | null) => void
 }
 
 function FullCore (
