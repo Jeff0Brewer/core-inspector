@@ -1,7 +1,6 @@
 import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import FullCore from '../components/full-core'
-import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
 const MINERALS = [

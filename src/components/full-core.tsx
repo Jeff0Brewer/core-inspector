@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
-import MetadataHover from '../components/metadata-hover'
-import PanScrollbar from '../components/pan-scrollbar'
-import FullCoreRenderer from '../vis/full-core'
 import { loadImageAsync } from '../lib/load'
 import { GenericPalette } from '../lib/palettes'
 import LoadIcon from '../components/generic/load-icon'
+import FullCoreRenderer from '../vis/full-core'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
 import MineralControls from '../components/mineral-controls'
-import '../styles/app.css'
-import '../styles/vis.css'
+import MetadataHover from '../components/metadata-hover'
+import PanScrollbar from '../components/pan-scrollbar'
+import '../styles/full-core.css'
 
 type FullCoreProps = {
     cores: Array<string>,
@@ -99,7 +98,11 @@ function FullCore (
 
     return <div>
         <LoadIcon loading={!vis} showDelayMs={100} />
-        <canvas ref={canvasRef} data-visible={!!vis}></canvas>
+        <canvas
+            className={'full-core-canvas'}
+            ref={canvasRef}
+            data-visible={!!vis}
+        ></canvas>
         <div className={'interface'}>
             <div className={'top-bar'}>
                 <CoreVisSettings
