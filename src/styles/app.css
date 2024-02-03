@@ -1,17 +1,17 @@
-.full-view {
+.full-view, .single-view {
     position: absolute;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+    transition: opacity 500ms ease;
+}
+
+.full-view[data-visible="false"], .single-view[data-visible="false"] {
+    opacity: 0;
 }
 
 .single-view {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
     background-color: #333;
     display: grid;
     place-content: center;

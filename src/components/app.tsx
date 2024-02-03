@@ -17,58 +17,44 @@ const MINERALS = [
 ]
 
 type ViewMode = 'full' | 'single'
-const MODE_SWITCH_MS = 500
-const MODE_SWITCH_TRANSITION = `opacity ${MODE_SWITCH_MS}ms ease`
 
 function App (): ReactElement {
     const [core, setCore] = useState<string>(CORES[0])
     const [part, setPart] = useState<string | null>(null)
     const [mode, setMode] = useState<ViewMode>('full')
-    const [render, setRender] = useState<ViewMode | 'both'>(mode)
+    const [transitioning, setTransitioning] = useState<boolean>(false)
 
     useEffect(() => {
-        // render both views during fade transition,
-        // only render current view when transition complete
-        setRender('both')
-
-        if (part) {
-            setMode('single')
-            window.setTimeout(() => setRender('single'), MODE_SWITCH_MS)
-        } else {
-            setMode('full')
-            window.setTimeout(() => setRender('full'), MODE_SWITCH_MS)
+        if (!transitioning) {
+            setTransitioning(true)
+            window.setTimeout(() => setTransitioning(false), 1000)
+            return
         }
-    }, [part])
+
+        setMode(part !== null ? 'single' : 'full')
+    }, [part, transitioning])
 
     return (
         <main>
-            <section
+            { (mode === 'full' || transitioning) && <section
                 className={'full-view'}
-                style={{
-                    transition: MODE_SWITCH_TRANSITION,
-                    opacity: mode === 'full' ? 1 : 0
-                }}
+                data-visible={mode === 'full'}
             >
-                { render !== 'single' && <FullCore
+                <FullCore
                     cores={CORES}
                     minerals={MINERALS}
                     palettes={COLOR_PRESETS}
                     core={core}
                     setCore={setCore}
                     setPart={setPart}
-                /> }
-            </section>
-            <section
+                />
+            </section> }
+            { (mode === 'single' || transitioning) && <section
                 className={'single-view'}
-                style={{
-                    transition: MODE_SWITCH_TRANSITION,
-                    opacity: mode === 'single' ? 1 : 0
-                }}
+                data-visible={mode === 'single'}
             >
-                { render !== 'full' && <p>
-                    single view
-                </p> }
-            </section>
+                <p> single view </p>
+            </section> }
         </main>
     )
 }
