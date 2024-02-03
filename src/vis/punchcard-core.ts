@@ -81,6 +81,9 @@ class PunchcardCoreRenderer {
         } else {
             this.columnPosBuffer.setData(gl, positions)
         }
+
+        // if number of vertices has increased (due to calibration being shown)
+        // fill non-visible shape with empty buffer
         const lastNumVertex = this.numVertex
         this.numVertex = positions.length / POS_FPV
         if (lastNumVertex < this.numVertex) {
