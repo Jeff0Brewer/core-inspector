@@ -335,8 +335,27 @@ class FullCoreRenderer {
 
     setupEventListeners (): (() => void) {
         let dragging = false
-        const mousedown = (): void => { dragging = true }
-        const mouseup = (): void => { dragging = false }
+        let dragStartX = 0
+        let dragStartY = 0
+        const mousedown = (e: MouseEvent): void => {
+            dragging = true
+            dragStartX = e.clientX
+            dragStartY = e.clientY
+        }
+        const mouseup = (e: MouseEvent): void => {
+            dragging = false
+            const dx = Math.abs(dragStartX - e.clientX)
+            const dy = Math.abs(dragStartY - e.clientY)
+            const dragDelta = Math.sqrt(dx * dx + dy * dy)
+            if (dragDelta < 2) {
+                const clickedPart = this.stencilCore.update(
+                    this.gl,
+                    this.camera.matrix,
+                    this.mousePos
+                )
+                this.uiState.setPart?.(clickedPart)
+            }
+        }
         const mouseleave = (): void => {
             dragging = false
             this.setHovered(null)

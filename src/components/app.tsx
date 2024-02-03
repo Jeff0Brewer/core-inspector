@@ -21,14 +21,14 @@ function App (): ReactElement {
 
     return (
         <main>
-            <FullCore
+            { !part && <FullCore
                 cores={CORES}
                 minerals={MINERALS}
                 palettes={COLOR_PRESETS}
                 core={core}
                 setCore={setCore}
                 setPart={setPart}
-            />
+            /> }
         </main>
     )
 }

@@ -20,7 +20,7 @@ type FullCoreProps = {
 }
 
 function FullCore (
-    { cores, minerals, palettes, core, setCore }: FullCoreProps
+    { cores, minerals, palettes, core, setCore, setPart }: FullCoreProps
 ): ReactElement {
     const [vis, setVis] = useState<FullCoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
@@ -76,6 +76,8 @@ function FullCore (
     useEffect(() => {
         if (!vis) { return }
 
+        vis.uiState.setPart = setPart
+
         let lastMs = 0
         const tick = (thisMs: number): void => {
             const elapsedSec = (thisMs - lastMs) * 0.001
@@ -92,7 +94,7 @@ function FullCore (
             removeVisEventListeners()
             window.cancelAnimationFrame(frameIdRef.current)
         }
-    }, [vis])
+    }, [vis, setPart])
 
     return <div>
         <LoadIcon loading={!vis} showDelayMs={100} />
