@@ -57,8 +57,8 @@ function FullCore (
             )
         }
 
-        // free last visualization's gl resources and immediately
-        // set to null for loading state
+        // free last visualization's gl resources and
+        // immediately set to null for loading state
         if (vis) {
             vis.drop()
             setVis(null)
