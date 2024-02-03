@@ -74,24 +74,21 @@ function FullCore (
 
     useEffect(() => {
         if (!vis) { return }
-        return vis.setupEventListeners()
-    }, [vis])
 
-    useEffect(() => {
-        if (!vis) { return }
+        let lastMs = 0
+        const tick = (thisMs: number): void => {
+            const elapsedSec = (thisMs - lastMs) * 0.001
+            lastMs = thisMs
 
-        let lastT = 0
-        const tick = (t: number): void => {
-            const elapsed = (t - lastT) * 0.001
-            lastT = t
-
-            vis.draw(elapsed)
+            vis.draw(elapsedSec)
 
             frameIdRef.current = window.requestAnimationFrame(tick)
         }
 
+        const removeVisEventListeners = vis.setupEventListeners()
         frameIdRef.current = window.requestAnimationFrame(tick)
         return () => {
+            removeVisEventListeners()
             window.cancelAnimationFrame(frameIdRef.current)
         }
     }, [vis])
