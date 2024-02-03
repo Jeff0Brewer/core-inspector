@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { padZeros, formatFloat, formatPercent } from '../lib/util'
+import FullCoreRenderer from '../vis/full-core'
 import '../styles/metadata-hover.css'
 
 type HydrationMetadata = {
@@ -14,14 +15,21 @@ type DepthMetadata = {
 }
 
 type MetadataHoverProps = {
+    vis: FullCoreRenderer | null,
     core: string,
-    id: string | undefined
 }
 
-function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
+function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
+    const [hovered, setHovered] = useState<string | undefined>(undefined)
     const [depth, setDepth] = useState<DepthMetadata>({})
     const [hydration, setHydration] = useState<HydrationMetadata>({})
     const popupRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (!vis) { return }
+        vis.uiState.setHovered = setHovered
+        vis.setHovered(undefined)
+    }, [vis])
 
     // get data for current core
     useEffect(() => {
@@ -71,29 +79,29 @@ function MetadataHover ({ core, id }: MetadataHoverProps): ReactElement {
         }
     }, [])
 
-    const hasData = id && (depth[id] || hydration[id])
+    const hasData = hovered && (depth[hovered] || hydration[hovered])
 
     return (
         <div
             className={'metadata'}
             ref={popupRef}
-            data-hovered={!!id}
+            data-hovered={!!hovered}
         >
-            { id && <div className={'id'}>
-                {formatId(id)}
+            { hovered && <div className={'id'}>
+                {formatId(hovered)}
             </div> }
             { hasData && <div className={'data'}>
-                { depth[id] && <div>
+                { depth[hovered] && <div>
                     <p>top depth</p>
-                    <span>{formatFloat(depth[id].topDepth)}m</span>
+                    <span>{formatFloat(depth[hovered].topDepth)}m</span>
                 </div> }
-                { depth[id] && <div>
+                { depth[hovered] && <div>
                     <p>length</p>
-                    <span>{formatFloat(depth[id].length)}m</span>
+                    <span>{formatFloat(depth[hovered].length)}m</span>
                 </div> }
-                { hydration[id] && <div>
+                { hydration[hovered] && <div>
                     <p>hydration</p>
-                    <span>{formatFloat(hydration[id] * 100)}%</span>
+                    <span>{formatFloat(hydration[hovered] * 100)}%</span>
                 </div> }
             </div> }
         </div>
