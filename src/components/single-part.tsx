@@ -29,15 +29,13 @@ function SinglePart (
     if (!part) {
         return <></>
     }
-    return <div>
-        <button onClick={clearPart}>clear</button>
-        <p>core: { core } part: { part }</p>
-        { paths && <div className={'mineral-channels'}>
-            { paths.map((path, i) =>
-                <MineralCanvas src={path} key={i} />
-            ) }
-        </div> }
-    </div>
+    return <section className={'single-view'}>
+        <div className={'top'}></div>
+        <div className={'label'}></div>
+        <div className={'side'}></div>
+        <div className={'content'}></div>
+        <div className={'bottom'}></div>
+    </section>
 }
 
 type MineralCanvasProps = {
