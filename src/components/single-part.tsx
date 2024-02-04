@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
+import { PiArrowsHorizontalBold } from 'react-icons/pi'
+import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
 import { padZeros } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
+import VerticalSlider from '../components/generic/vertical-slider'
 import '../styles/single-part.css'
 
 type SinglePartProps = {
@@ -16,6 +19,8 @@ function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
     const [paths, setPaths] = useState<Array<string>>([])
+    const [zoom, setZoom] = useState<number>(0.5)
+    const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
 
     useEffect(() => {
         if (!part) { return }
@@ -35,7 +40,39 @@ function SinglePart (
             </div>
         </div>
         <div className={'label'}></div>
-        <div className={'side'}></div>
+        <div className={'side'}>
+            <div className={'vertical-controls'}>
+                <div className={'zoom-slider'}>
+                    <VerticalSlider
+                        value={zoom}
+                        setValue={setZoom}
+                        label={'zoom'}
+                        icon={ICONS.zoom}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                    />
+                </div>
+                <VerticalSlider
+                    value={spacing[0]}
+                    setValue={v => setSpacing([v, spacing[1]])}
+                    label={'horizontal distance'}
+                    icon={ICONS.horizontalDist}
+                    min={0}
+                    max={1}
+                    step={0.002}
+                />
+                <VerticalSlider
+                    value={spacing[1]}
+                    setValue={v => setSpacing([spacing[0], v])}
+                    label={'vertical distance'}
+                    icon={ICONS.verticalDist}
+                    min={0}
+                    max={1}
+                    step={0.002}
+                />
+            </div>
+        </div>
         <div className={'content'}></div>
         <div className={'bottom'}>
             <div className={'mineral-toggles'}>
@@ -108,6 +145,12 @@ function getAbundanceFilepaths (
     })
 
     return paths
+}
+
+const ICONS = {
+    zoom: <IoSearch style={{ fontSize: '16px' }} />,
+    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
+    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
 
 export default SinglePart

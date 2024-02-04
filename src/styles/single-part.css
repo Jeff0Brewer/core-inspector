@@ -5,7 +5,7 @@
     overflow: hidden;
     display: grid;
     grid-template-rows: 50px 20px 1fr 32px;
-    grid-template-columns: 100px 1fr;
+    grid-template-columns: 70px 1fr;
     grid-template-areas:
         "top top"
         "side label"
@@ -61,6 +61,29 @@
 .section-info > p > span {
     color: #fff;
     margin-left: 5px;
+}
+
+/* ----- SIDE CONTROLS ----- */
+.zoom-slider .vertical-slider {
+    --length: 125px;
+}
+
+.vertical-controls {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.distance-icon {
+    display: grid;
+    place-content: center;
+    width: fit-content;
+    border: 1px solid #fff;
+    border-width: 0 1px;
+    font-size: 12px;
 }
 
 /* ----- BOTTOM BAR CONTENT ----- */
