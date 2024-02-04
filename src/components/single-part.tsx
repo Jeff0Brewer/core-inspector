@@ -1,4 +1,5 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useRef, useEffect, ReactElement } from 'react'
+import { loadImageAsync } from '../lib/load'
 import { padZeros } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import '../styles/single-part.css'
@@ -33,10 +34,44 @@ function SinglePart (
         <p>core: { core } part: { part }</p>
         { paths && <div className={'mineral-channels'}>
             { paths.map((path, i) =>
-                <img src={path} key={i} />
+                <MineralCanvas src={path} key={i} />
             ) }
         </div> }
     </div>
+}
+
+type MineralCanvasProps = {
+    src: string
+}
+
+function MineralCanvas (
+    { src }: MineralCanvasProps
+): ReactElement {
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    useEffect(() => {
+        const canvas = canvasRef.current
+        const ctx = canvas?.getContext('2d')
+        if (!canvas || !ctx) {
+            throw new Error('No reference to mineral canvas context')
+        }
+
+        const initCanvasData = async (
+            canvas: HTMLCanvasElement,
+            ctx: CanvasRenderingContext2D
+        ): Promise<void> => {
+            const img = await loadImageAsync(src)
+            canvas.width = img.width
+            canvas.height = img.height
+            ctx.drawImage(img, 0, 0)
+        }
+
+        initCanvasData(canvas, ctx)
+    }, [src])
+
+    return (
+        <canvas ref={canvasRef}></canvas>
+    )
 }
 
 function getAbundanceFilepaths (
