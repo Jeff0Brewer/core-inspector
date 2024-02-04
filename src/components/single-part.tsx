@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
+import { IoMdClose } from 'react-icons/io'
 import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
 import { padZeros } from '../lib/util'
@@ -33,6 +34,11 @@ function SinglePart (
         return <></>
     }
     return <section className={'single-view'}>
+        <div className={'top-side'}>
+            <button className={'close-button'} onClick={clearPart}>
+                {ICONS.close}
+            </button>
+        </div>
         <div className={'top'}>
             <div className={'section-info'}>
                 <p> core <span>{ getCoreId(core) }</span> </p>
@@ -150,7 +156,8 @@ function getAbundanceFilepaths (
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
     horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
-    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
+    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>,
+    close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
 export default SinglePart
