@@ -43,7 +43,7 @@ const PROJECTION_PARAMS = {
  *   directly with react state passed in and nothing needs to be added here
  */
 type UiState = {
-    setPart?: (p: string | null) => void,
+    setPart?: (p: string) => void,
     setCalibration?: (o: CalibrationOption) => void,
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
@@ -353,7 +353,9 @@ class FullCoreRenderer {
                     this.camera.matrix,
                     this.mousePos
                 )
-                this.uiState.setPart?.(clickedPart)
+                if (clickedPart !== null) {
+                    this.uiState.setPart?.(clickedPart)
+                }
             }
         }
         const mouseleave = (): void => {

@@ -16,7 +16,7 @@ type FullCoreProps = {
     palettes: Array<GenericPalette>
     core: string,
     setCore: (c: string) => void,
-    setPart: (p: string | null) => void
+    setPart: (p: string) => void
 }
 
 function FullCore (

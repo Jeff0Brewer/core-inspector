@@ -1,6 +1,7 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import FullCore from '../components/full-core'
+import SinglePart from '../components/single-part'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -16,31 +17,30 @@ const MINERALS = [
     'kaolinite-montmorillinite'
 ]
 
-type ViewMode = 'full' | 'single'
+type ViewMode = 'single' | 'full'
 
 function App (): ReactElement {
+    const [mode, setMode] = useState<ViewMode>('full')
     const [core, setCore] = useState<string>(CORES[0])
     const [part, setPart] = useState<string | null>(null)
-    const [mode, setMode] = useState<ViewMode>('full')
     const [transitioning, setTransitioning] = useState<boolean>(false)
 
-    useEffect(() => {
-        const newMode = part !== null ? 'single' : 'full'
-        if (newMode === mode) { return }
-
+    const startTransition = (): void => {
         setTransitioning(true)
-        const timeoutIds = [
-            // add delay to unset transition state
-            window.setTimeout(() => setTransitioning(false), 1000),
-            // TODO: fix this hack
-            // delay setting mode state to render both views at
-            // transition start before changing css data attributes
-            window.setTimeout(() => setMode(newMode), 50)
-        ]
-        return () => {
-            timeoutIds.forEach(id => window.clearTimeout(id))
-        }
-    }, [part, mode, transitioning])
+        window.setTimeout(() => setTransitioning(false), 1000)
+    }
+
+    const viewSinglePart = (part: string): void => {
+        setPart(part)
+        startTransition()
+        window.setTimeout(() => setMode('single'), 50)
+    }
+
+    const viewFullCore = (): void => {
+        setPart(null)
+        startTransition()
+        window.setTimeout(() => setMode('full'), 50)
+    }
 
     return (
         <main>
@@ -54,14 +54,20 @@ function App (): ReactElement {
                     palettes={COLOR_PRESETS}
                     core={core}
                     setCore={setCore}
-                    setPart={setPart}
+                    setPart={viewSinglePart}
                 />
             </section> }
             { (mode === 'single' || transitioning) && <section
                 className={'single-view'}
                 data-visible={mode === 'single'}
             >
-                <p> single view </p>
+                <SinglePart
+                    part={part}
+                    core={core}
+                    minerals={MINERALS}
+                    palettes={COLOR_PRESETS}
+                    clearPart={viewFullCore}
+                />
             </section> }
         </main>
     )
