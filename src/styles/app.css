@@ -1,4 +1,4 @@
-.full-view, .single-view {
+.full-view-wrap, .single-view-wrap {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -7,11 +7,11 @@
     transition: opacity 500ms ease;
 }
 
-.full-view[data-visible="false"], .single-view[data-visible="false"] {
+.full-view-wrap[data-visible="false"], .single-view-wrap[data-visible="false"] {
     opacity: 0;
 }
 
-.single-view {
+.single-view-wrap {
     position: absolute;
     top: 0;
     left: 0;

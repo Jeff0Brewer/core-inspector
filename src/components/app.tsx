@@ -44,8 +44,8 @@ function App (): ReactElement {
 
     return (
         <main>
-            { (mode === 'full' || transitioning) && <section
-                className={'full-view'}
+            { (mode === 'full' || transitioning) && <div
+                className={'full-view-wrap'}
                 data-visible={mode === 'full'}
             >
                 <FullCore
@@ -56,9 +56,9 @@ function App (): ReactElement {
                     setCore={setCore}
                     setPart={viewSinglePart}
                 />
-            </section> }
-            { (mode === 'single' || transitioning) && <section
-                className={'single-view'}
+            </div> }
+            { (mode === 'single' || transitioning) && <div
+                className={'single-view-wrap'}
                 data-visible={mode === 'single'}
             >
                 <SinglePart
@@ -68,7 +68,7 @@ function App (): ReactElement {
                     palettes={COLOR_PRESETS}
                     clearPart={viewFullCore}
                 />
-            </section> }
+            </div> }
         </main>
     )
 }
