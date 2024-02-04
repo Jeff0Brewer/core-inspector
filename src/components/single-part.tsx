@@ -81,8 +81,8 @@ function SinglePart (
         </div>
         <div className={'side'}>
             <div className={'vertical-controls'}>
-                <div className={'depth-ruler'}>
-                    <div className={'depth-ruler-center'}>
+                <div className={'scale-ruler'}>
+                    <div className={'scale-ruler-center'}>
                         <p>43 cm</p>
                         <div></div>
                         <p>100 px</p>
