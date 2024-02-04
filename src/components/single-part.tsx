@@ -79,7 +79,13 @@ function SinglePart (
                 />
             </div>
         </div>
-        <div className={'content'}></div>
+        <div className={'content'}>
+            <div className={'mineral-channels'}>
+                { paths.map((path, i) =>
+                    <MineralCanvas src={path} key={i} />
+                ) }
+            </div>
+        </div>
         <div className={'bottom'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
@@ -120,7 +126,7 @@ function MineralCanvas (
     }, [src])
 
     return (
-        <canvas ref={canvasRef}></canvas>
+        <canvas className={'mineral-canvas'} ref={canvasRef}></canvas>
     )
 }
 

@@ -129,3 +129,15 @@
     background-color: var(--color2);
 
 }
+
+/* ----- MAIN CONTENT -----*/
+.mineral-channels {
+    display: flex;
+    gap: 80px;
+}
+
+.mineral-canvas {
+    width: 150px;
+    border-left: 2px dashed #4c3253;
+    border-right: 1px dashed #bee661;
+}
