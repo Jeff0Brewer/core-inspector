@@ -1,4 +1,5 @@
 notes.md
+public/data/*/parts
 
 # Logs
 logs
@@ -6,8 +7,7 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+pnpm-debug.log* lerna-debug.log*
 
 node_modules
 dist
