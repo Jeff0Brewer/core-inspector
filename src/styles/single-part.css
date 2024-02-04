@@ -26,6 +26,7 @@
 .single-view .label {
     grid-area: label;
     background-color: var(--color1);
+    overflow: hidden;
 }
 
 .single-view .side {
@@ -130,6 +131,7 @@
 
 }
 
+
 /* ----- MAIN CONTENT -----*/
 .mineral-channels {
     display: flex;
@@ -140,4 +142,24 @@
     width: 150px;
     border-left: 2px dashed #4c3253;
     border-right: 1px dashed #bee661;
+}
+
+/* ----- LABEL CONTENT ----- */
+.channel-labels {
+    position: relative;
+    display: flex;
+    gap: 80px;
+    height: 100%;
+}
+
+.channel-label {
+    min-width: 150px;
+    max-width: 150px;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    white-space: nowrap;
+    text-transform: uppercase;
+    border: solid var(--color4);
+    border-width: 0 1px;
 }

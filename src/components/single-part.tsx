@@ -22,6 +22,24 @@ function SinglePart (
     const [paths, setPaths] = useState<Array<string>>([])
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const contentRef = useRef<HTMLDivElement>(null)
+    const labelsRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const content = contentRef.current
+        const labels = labelsRef.current
+        if (!content || !labels) {
+            throw new Error('No reference to layout elements')
+        }
+
+        const scroll = (): void => {
+            labels.style.left = `${-content.scrollLeft}px`
+        }
+        content.addEventListener('scroll', scroll)
+        return () => {
+            content.removeEventListener('scroll', scroll)
+        }
+    }, [])
 
     useEffect(() => {
         if (!part) { return }
@@ -45,7 +63,22 @@ function SinglePart (
                 <p> section <span>{ getPartId(part) }</span> </p>
             </div>
         </div>
-        <div className={'label'}></div>
+        <div className={'label'}>
+            <div className={'channel-labels'} ref={labelsRef}>
+                { minerals.map((mineral, i) =>
+                    <div className={'channel-label'} key={i}>
+                        {mineral}
+                    </div>
+                ) }
+            </div>
+        </div>
+        <div className={'content'} ref={contentRef}>
+            <div className={'mineral-channels'}>
+                { paths.map((path, i) =>
+                    <MineralCanvas src={path} key={i} />
+                ) }
+            </div>
+        </div>
         <div className={'side'}>
             <div className={'vertical-controls'}>
                 <div className={'zoom-slider'}>
@@ -77,13 +110,6 @@ function SinglePart (
                     max={1}
                     step={0.002}
                 />
-            </div>
-        </div>
-        <div className={'content'}>
-            <div className={'mineral-channels'}>
-                { paths.map((path, i) =>
-                    <MineralCanvas src={path} key={i} />
-                ) }
             </div>
         </div>
         <div className={'bottom'}>
