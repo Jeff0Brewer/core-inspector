@@ -81,6 +81,13 @@ function SinglePart (
         </div>
         <div className={'side'}>
             <div className={'vertical-controls'}>
+                <div className={'depth-ruler'}>
+                    <div className={'depth-ruler-center'}>
+                        <p>43 cm</p>
+                        <div></div>
+                        <p>100 px</p>
+                    </div>
+                </div>
                 <div className={'zoom-slider'}>
                     <VerticalSlider
                         value={zoom}
