@@ -15,6 +15,28 @@
 
 .single-view .top {
     grid-area: top;
+    background-color: var(--color2);
+}
+
+.single-view .label {
+    grid-area: label;
+    background-color: var(--color1);
+}
+
+.single-view .side {
+    grid-area: side;
+    background-color: transparent;
+}
+
+.single-view .content {
+    grid-area: content;
+    background-color: transparent;
+    overflow: scroll;
+    font-size: 100px;
+}
+
+.single-view .bottom {
+    grid-area: bottom;
     background-color: var(--menu-bg-color);
 }
 
@@ -28,7 +50,7 @@
     font-weight: 300;
     text-transform: uppercase;
 
-    padding-left: 125px;
+    padding-left: 50px;
 }
 
 .section-info > p {
@@ -38,26 +60,4 @@
 .section-info > p > span {
     color: #fff;
     margin-left: 5px;
-}
-
-.single-view .label {
-    grid-area: label;
-    background-color: #222;
-}
-
-.single-view .side {
-    grid-area: side;
-    background-color: #333;
-}
-
-.single-view .content {
-    grid-area: content;
-    background-color: #444;
-    overflow: scroll;
-    font-size: 100px;
-}
-
-.single-view .bottom {
-    grid-area: bottom;
-    background-color: #555;
 }
