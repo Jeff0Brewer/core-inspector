@@ -40,6 +40,7 @@
     background-color: var(--menu-bg-color);
 }
 
+/* ----- TOP BAR CONTENT ----- */
 .section-info {
     display: flex;
     align-items: center;
@@ -60,4 +61,33 @@
 .section-info > p > span {
     color: #fff;
     margin-left: 5px;
+}
+
+/* ----- BOTTOM BAR CONTENT ----- */
+.mineral-toggles {
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    max-width: 1000px;
+    overflow-x: scroll;
+}
+
+.mineral-toggles > button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+    min-width: 30px;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+    border-radius: var(--border-radius);
+    text-transform: uppercase;
+    background-color: var(--color2);
+
 }

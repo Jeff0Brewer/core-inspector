@@ -30,14 +30,20 @@ function SinglePart (
     return <section className={'single-view'}>
         <div className={'top'}>
             <div className={'section-info'}>
-                <p> core <span>{getCoreId(core)}</span> </p>
-                <p> section <span>{getPartId(part)}</span> </p>
+                <p> core <span>{ getCoreId(core) }</span> </p>
+                <p> section <span>{ getPartId(part) }</span> </p>
             </div>
         </div>
         <div className={'label'}></div>
         <div className={'side'}></div>
         <div className={'content'}></div>
-        <div className={'bottom'}></div>
+        <div className={'bottom'}>
+            <div className={'mineral-toggles'}>
+                { minerals.map((mineral, i) =>
+                    <button key={i}>{ mineral }</button>
+                ) }
+            </div>
+        </div>
     </section>
 }
 
