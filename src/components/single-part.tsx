@@ -19,18 +19,21 @@ function SinglePart (
 
     useEffect(() => {
         if (!part) { return }
-
-        const [section, piece] = part.split('_').map(str => parseInt(str))
-        const paths = getAbundanceFilepaths(core, section, piece, minerals)
-
-        setPaths(paths)
+        setPaths(
+            getAbundanceFilepaths(core, part, minerals)
+        )
     }, [part, core, minerals])
 
     if (!part) {
         return <></>
     }
     return <section className={'single-view'}>
-        <div className={'top'}></div>
+        <div className={'top'}>
+            <div className={'section-info'}>
+                <p> core <span>{getCoreId(core)}</span> </p>
+                <p> section <span>{getPartId(part)}</span> </p>
+            </div>
+        </div>
         <div className={'label'}></div>
         <div className={'side'}></div>
         <div className={'content'}></div>
@@ -72,21 +75,30 @@ function MineralCanvas (
     )
 }
 
-function getAbundanceFilepaths (
-    core: string,
-    section: number,
-    piece: number,
-    minerals: Array<string>
-): Array<string> {
-    const coreId = core.toUpperCase() + 'A'
+function getCoreId (core: string): string {
+    return core.toUpperCase() + 'A'
+}
+
+function getPartId (part: string): string {
+    const [section, piece] = part.split('_').map(s => parseInt(s))
     const sectionId = padZeros(section, 4) + 'Z'
     const pieceId = padZeros(piece, 3)
-    const partId = `${coreId}_${sectionId}_${pieceId}`
+    return `${sectionId}_${pieceId}`
+}
+
+function getAbundanceFilepaths (
+    core: string,
+    part: string,
+    minerals: Array<string>
+): Array<string> {
+    const coreId = getCoreId(core)
+    const partId = getPartId(part)
+    const fullId = `${coreId}_${partId}`
     const extension = 'factor_1to001.abundance.local.png'
 
     const paths = minerals.map((_, mineralIndex) => {
         const mineralId = padZeros(mineralIndex, 2)
-        return `./data/${core}/parts/${partId}_${mineralId}.${extension}`
+        return `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
     })
 
     return paths
