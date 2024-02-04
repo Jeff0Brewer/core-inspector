@@ -25,14 +25,22 @@ function App (): ReactElement {
     const [transitioning, setTransitioning] = useState<boolean>(false)
 
     useEffect(() => {
-        if (!transitioning) {
-            setTransitioning(true)
-            window.setTimeout(() => setTransitioning(false), 1000)
-            return
-        }
+        const newMode = part !== null ? 'single' : 'full'
+        if (newMode === mode) { return }
 
-        setMode(part !== null ? 'single' : 'full')
-    }, [part, transitioning])
+        setTransitioning(true)
+        const timeoutIds = [
+            // add delay to unset transition state
+            window.setTimeout(() => setTransitioning(false), 1000),
+            // TODO: fix this hack
+            // delay setting mode state to render both views at
+            // transition start before changing css data attributes
+            window.setTimeout(() => setMode(newMode), 50)
+        ]
+        return () => {
+            timeoutIds.forEach(id => window.clearTimeout(id))
+        }
+    }, [part, mode, transitioning])
 
     return (
         <main>
