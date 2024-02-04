@@ -12,8 +12,9 @@
 }
 
 .single-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     background-color: #333;
-    display: grid;
-    place-content: center;
-    font-size: 30px;
 }
