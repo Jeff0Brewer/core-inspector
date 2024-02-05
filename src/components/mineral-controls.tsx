@@ -3,6 +3,7 @@ import { vec3 } from 'gl-matrix'
 import { MdColorLens, MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent } from '../lib/util'
+import { useBlendState } from '../components/blend-context'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
@@ -19,13 +20,15 @@ type MineralControlsProps = {
 function MineralControls (
     { vis, minerals, palettes }: MineralControlsProps
 ): ReactElement {
-    const [palette, setPalette] = useState<GenericPalette>(palettes[0])
-    const [magnitudes, setMagnitudes] = useState<Array<number>>(Array(minerals.length).fill(1))
-    const [visibilities, setVisibilities] = useState<Array<boolean>>(Array(minerals.length).fill(true))
-    const [saturation, setSaturation] = useState<number>(1)
-    const [threshold, setThreshold] = useState<number>(0)
-    const [blendMode, setBlendMode] = useState<BlendMode>('additive')
-    const [monochrome, setMonochrome] = useState<boolean>(false)
+    const {
+        palette, setPalette,
+        magnitudes, setMagnitudes,
+        visibilities, setVisibilities,
+        saturation, setSaturation,
+        threshold, setThreshold,
+        mode, setMode,
+        monochrome, setMonochrome
+    } = useBlendState()
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
 
     useEffect(() => {
@@ -35,10 +38,10 @@ function MineralControls (
             visibilities,
             saturation,
             threshold,
-            mode: blendMode,
+            mode,
             monochrome
         })
-    }, [vis, magnitudes, visibilities, palette, saturation, threshold, blendMode, monochrome])
+    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     // setup keyboard shortcuts
     useEffect(() => {
@@ -57,7 +60,7 @@ function MineralControls (
         return () => {
             window.removeEventListener('keydown', keydown)
         }
-    }, [monochrome, visibilities, minerals])
+    }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
 
     // update visibilities to match newly selected palette on change
     useEffect(() => {
@@ -68,7 +71,7 @@ function MineralControls (
             const numVisible = palette.colors.length
             setVisibilities(minerals.map((_, i) => i < numVisible))
         }
-    }, [palette, minerals])
+    }, [palette, minerals, setVisibilities])
 
     // sets parameters to show one channel in monochrome
     const getMineralSetter = (i: number): (() => void) => {
@@ -163,8 +166,8 @@ function MineralControls (
             <p>composite mode</p>
             <Dropdown<BlendMode>
                 items={['additive', 'maximum']}
-                selected={blendMode}
-                setSelected={setBlendMode}
+                selected={mode}
+                setSelected={setMode}
                 customClass={'blend-mode-dropdown'}
             />
             <div className={'params'}>

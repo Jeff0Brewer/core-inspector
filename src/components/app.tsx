@@ -1,5 +1,6 @@
 import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
+import BlendProvider from '../components/blend-provider'
 import FullCore from '../components/full-core'
 import SinglePart from '../components/single-part'
 import '../styles/app.css'
@@ -23,25 +24,27 @@ function App (): ReactElement {
 
     return (
         <main>
-            { part === null && <div className={'full-view-wrap'}>
-                <FullCore
-                    cores={CORES}
-                    minerals={MINERALS}
-                    palettes={COLOR_PRESETS}
-                    core={core}
-                    setCore={setCore}
-                    setPart={setPart}
-                />
-            </div> }
-            { part !== null && <div className={'single-view-wrap'}>
-                <SinglePart
-                    part={part}
-                    core={core}
-                    minerals={MINERALS}
-                    palettes={COLOR_PRESETS}
-                    clearPart={() => setPart(null)}
-                />
-            </div> }
+            <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
+                { part === null && <div className={'full-view-wrap'}>
+                    <FullCore
+                        cores={CORES}
+                        minerals={MINERALS}
+                        palettes={COLOR_PRESETS}
+                        core={core}
+                        setCore={setCore}
+                        setPart={setPart}
+                    />
+                </div> }
+                { part !== null && <div className={'single-view-wrap'}>
+                    <SinglePart
+                        part={part}
+                        core={core}
+                        minerals={MINERALS}
+                        palettes={COLOR_PRESETS}
+                        clearPart={() => setPart(null)}
+                    />
+                </div> }
+            </BlendProvider>
         </main>
     )
 }
