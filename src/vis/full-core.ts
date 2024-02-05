@@ -43,12 +43,13 @@ const PROJECTION_PARAMS = {
  *   directly with react state passed in and nothing needs to be added here
  */
 type UiState = {
+    setPart?: (p: string) => void,
     setCalibration?: (o: CalibrationOption) => void,
     setShape?: (s: CoreShape) => void,
     setViewMode?: (v: CoreViewMode) => void,
     setSpacing?: (s: [number, number]) => void,
     setZoom?: (z: number) => void,
-    setHovered?: (h: string | undefined) => void,
+    setHovered?: (h: string | null) => void,
     setPan?: (t: number) => void,
     setPanWidth?: (w: number) => void
 }
@@ -143,8 +144,7 @@ class FullCoreRenderer {
             this.gl,
             downPositions,
             tileMetadata,
-            idMetadata,
-            this.setHovered.bind(this)
+            idMetadata
         )
 
         this.hoverHighlight = new HoverHighlightRenderer(
@@ -203,7 +203,7 @@ class FullCoreRenderer {
         this.punchcardCore.minerals.update(this.gl, params)
     }
 
-    setHovered (id: string | undefined): void {
+    setHovered (id: string | null): void {
         this.hoverHighlight.setHovered(this.gl, id)
         this.uiState.setHovered?.(id)
     }
@@ -335,11 +335,32 @@ class FullCoreRenderer {
 
     setupEventListeners (): (() => void) {
         let dragging = false
-        const mousedown = (): void => { dragging = true }
-        const mouseup = (): void => { dragging = false }
+        let dragStartX = 0
+        let dragStartY = 0
+        const mousedown = (e: MouseEvent): void => {
+            dragging = true
+            dragStartX = e.clientX
+            dragStartY = e.clientY
+        }
+        const mouseup = (e: MouseEvent): void => {
+            dragging = false
+            const dx = Math.abs(dragStartX - e.clientX)
+            const dy = Math.abs(dragStartY - e.clientY)
+            const dragDelta = Math.sqrt(dx * dx + dy * dy)
+            if (dragDelta < 2) {
+                const clickedPart = this.stencilCore.update(
+                    this.gl,
+                    this.camera.matrix,
+                    this.mousePos
+                )
+                if (clickedPart !== null) {
+                    this.uiState.setPart?.(clickedPart)
+                }
+            }
+        }
         const mouseleave = (): void => {
             dragging = false
-            this.setHovered(undefined)
+            this.setHovered(null)
         }
         const mousemove = (e: MouseEvent): void => {
             this.mousePos = [
@@ -354,7 +375,7 @@ class FullCoreRenderer {
         const wheel = (e: WheelEvent): void => {
             this.camera.mousewheel(e.deltaY)
             this.uiState.setZoom?.(this.camera.zoomT)
-            this.setHovered(undefined)
+            this.setHovered(null)
         }
 
         const keydown = (e: KeyboardEvent): void => {
@@ -417,7 +438,16 @@ class FullCoreRenderer {
             this.punchcardCore.draw(this.gl, this.camera.matrix, easedShapeT)
         }
 
-        this.stencilCore.draw(this.gl, this.camera.matrix, easedShapeT, this.mousePos)
+        const hoveredId = this.stencilCore.updateHover(
+            this.gl,
+            this.camera.matrix,
+            easedShapeT,
+            this.mousePos
+        )
+        if (hoveredId !== undefined) {
+            this.setHovered(hoveredId)
+        }
+
         this.hoverHighlight.draw(this.gl, this.camera.matrix, this.mousePos)
         this.accentLines.draw(this.gl, this.camera.matrix, easedShapeT)
     }

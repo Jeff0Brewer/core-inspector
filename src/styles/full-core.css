@@ -1,0 +1,58 @@
+.full-core-canvas {
+    position: absolute;
+    z-index: 1;
+    /* temporary dimensions, will break on mobile */
+    width: 100vw;
+    height: 100vh;
+    opacity: 0;
+    transition: opacity var(--transition-param);
+}
+
+.full-core-canvas[data-visible="true"] {
+    transition-delay: 250ms;
+    opacity: 1;
+}
+
+.interface {
+    position: relative;
+    z-index: 2;
+    /* temporary dimensions, will break on mobile */
+    min-height: 100vh;
+    pointer-events: none;
+}
+
+.top-bar, .side-bar, .bottom-bar {
+    pointer-events: auto;
+}
+
+.top-bar {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 30px;
+    padding: 8px;
+    padding-left: 16px;
+
+    background-color: var(--menu-bg-color);
+}
+
+.side-bar {
+    position: relative;
+    z-index: 5;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+.bottom-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+
+    background-color: var(--menu-bg-color);
+}

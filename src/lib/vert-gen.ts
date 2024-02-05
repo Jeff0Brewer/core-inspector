@@ -611,6 +611,15 @@ const addAccentLineColumnPositions = (
     return offset
 }
 
+// rectangle with texture coordinates to fill full viewport.
+// used to render fragments in full viewport for blending
+const FULLSCREEN_RECT = new Float32Array([
+    -1, -1, 0, 0,
+    1, -1, 1, 0,
+    -1, 1, 0, 1,
+    1, 1, 1, 1
+])
+
 export {
     getCorePositions,
     getCoreTexCoords,
@@ -618,5 +627,6 @@ export {
     endLine,
     ROW_PER_TILE,
     POS_FPV,
-    TEX_FPV
+    TEX_FPV,
+    FULLSCREEN_RECT
 }
