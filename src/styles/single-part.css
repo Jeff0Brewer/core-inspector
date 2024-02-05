@@ -42,6 +42,7 @@
 }
 
 .single-view .bottom {
+    position: relative;
     grid-area: bottom;
     background-color: var(--menu-bg-color);
 }
@@ -162,9 +163,24 @@
     border-radius: var(--border-radius);
     text-transform: uppercase;
     background-color: var(--color2);
-
 }
 
+.bottom .mineral-slider p {
+    background-color: transparent;
+}
+
+.bottom .blend-toggle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    margin: auto;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-content: center;
+}
 
 /* ----- MAIN CONTENT -----*/
 .mineral-channels {

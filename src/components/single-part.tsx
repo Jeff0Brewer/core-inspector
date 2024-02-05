@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
+import { MdColorLens } from 'react-icons/md'
 import { IoMdClose } from 'react-icons/io'
 import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
+import { useBlendState } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import VerticalSlider from '../components/generic/vertical-slider'
-import { BlendParams } from '../vis/mineral-blend'
+import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
@@ -26,6 +28,7 @@ function SinglePart (
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const blendCanvasRef = useRef<HTMLCanvasElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
@@ -63,19 +66,6 @@ function SinglePart (
     }, [part, core, minerals])
 
     useEffect(() => {
-        if (!vis) { return }
-        vis?.setBlending({
-            magnitudes: Array(minerals.length).fill(1),
-            visibilities: Array(minerals.length).fill(true),
-            palette: palettes[0],
-            saturation: 2,
-            threshold: 0,
-            mode: 'additive',
-            monochrome: false
-        })
-    }, [vis, minerals, palettes])
-
-    useEffect(() => {
         const content = contentRef.current
         const labels = labelsRef.current
         if (!content || !labels) {
@@ -90,6 +80,29 @@ function SinglePart (
             content.removeEventListener('scroll', scroll)
         }
     }, [])
+
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    useEffect(() => {
+        if (!vis) { return }
+        vis?.setBlending({
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        })
+    }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
 
     if (!part) {
         return <></>
@@ -218,6 +231,17 @@ function SinglePart (
                     </button>
                 ) }
             </div>
+            <button
+                className={'blend-toggle'}
+                data-active={blendMenuOpen}
+                onClick={() => setBlendMenuOpen(!blendMenuOpen)}
+            >
+                <MdColorLens />
+            </button>
+            { blendMenuOpen && <BlendMenu
+                minerals={minerals}
+                palettes={palettes}
+            /> }
         </div>
     </section>
 }
