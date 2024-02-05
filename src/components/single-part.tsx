@@ -13,7 +13,7 @@ import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
 type SinglePartProps = {
-    part: string | null,
+    part: string,
     core: string,
     minerals: Array<string>,
     palettes: Array<GenericPalette>,
@@ -32,6 +32,15 @@ function SinglePart (
     const blendCanvasRef = useRef<HTMLCanvasElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
 
     useEffect(() => {
         if (!part) { return }
@@ -81,16 +90,6 @@ function SinglePart (
         }
     }, [])
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
     useEffect(() => {
         if (!vis) { return }
         vis?.setBlending({
@@ -104,11 +103,8 @@ function SinglePart (
         })
     }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
 
-    if (!part) {
-        return <></>
-    }
-
     const currWidth = zoom * 250 + 50
+
     return <section className={'single-view'}>
         <div className={'top-side'}>
             <button className={'close-button'} onClick={clearPart}>
@@ -246,6 +242,38 @@ function SinglePart (
     </section>
 }
 
+function getCoreId (core: string): string {
+    return core.toUpperCase() + 'A'
+}
+
+function getPartId (part: string): string {
+    const [section, piece] = part.split('_').map(s => parseInt(s))
+    const sectionId = padZeros(section, 4) + 'Z'
+    const pieceId = padZeros(piece, 3)
+    return `${sectionId}_${pieceId}`
+}
+
+function getAbundanceFilepaths (
+    core: string,
+    part: string,
+    minerals: Array<string>
+): StringMap<string> {
+    const coreId = getCoreId(core)
+    const partId = getPartId(part)
+    const fullId = `${coreId}_${partId}`
+    const extension = 'factor_1to001.abundance.local.png'
+
+    const paths: StringMap<string> = {}
+
+    minerals.forEach((mineral, index) => {
+        const mineralId = padZeros(index, 2)
+        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
+        paths[mineral] = path
+    })
+
+    return paths
+}
+
 type MineralCanvasProps = {
     src: string,
     width: number
@@ -283,38 +311,6 @@ function MineralCanvas (
             ref={canvasRef}
         ></canvas>
     )
-}
-
-function getCoreId (core: string): string {
-    return core.toUpperCase() + 'A'
-}
-
-function getPartId (part: string): string {
-    const [section, piece] = part.split('_').map(s => parseInt(s))
-    const sectionId = padZeros(section, 4) + 'Z'
-    const pieceId = padZeros(piece, 3)
-    return `${sectionId}_${pieceId}`
-}
-
-function getAbundanceFilepaths (
-    core: string,
-    part: string,
-    minerals: Array<string>
-): StringMap<string> {
-    const coreId = getCoreId(core)
-    const partId = getPartId(part)
-    const fullId = `${coreId}_${partId}`
-    const extension = 'factor_1to001.abundance.local.png'
-
-    const paths: StringMap<string> = {}
-
-    minerals.forEach((mineral, index) => {
-        const mineralId = padZeros(index, 2)
-        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
-        paths[mineral] = path
-    })
-
-    return paths
 }
 
 const ICONS = {
