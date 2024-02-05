@@ -68,6 +68,8 @@ type BoundRect = {
     right: number
 }
 
+type StringMap<T> = { [key: string]: T }
+
 export {
     ease,
     clamp,
@@ -80,4 +82,7 @@ export {
     getCssColor,
     checkStringType
 }
-export type { BoundRect }
+export type {
+    BoundRect,
+    StringMap
+}

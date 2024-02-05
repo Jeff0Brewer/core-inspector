@@ -3,7 +3,7 @@ import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoMdClose } from 'react-icons/io'
 import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
-import { padZeros } from '../lib/util'
+import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import VerticalSlider from '../components/generic/vertical-slider'
 import '../styles/single-part.css'
@@ -19,7 +19,8 @@ type SinglePartProps = {
 function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
-    const [paths, setPaths] = useState<Array<string>>([])
+    const [paths, setPaths] = useState<StringMap<string>>({})
+    const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
     const contentRef = useRef<HTMLDivElement>(null)
@@ -43,9 +44,14 @@ function SinglePart (
 
     useEffect(() => {
         if (!part) { return }
-        setPaths(
-            getAbundanceFilepaths(core, part, minerals)
-        )
+
+        setPaths(getAbundanceFilepaths(core, part, minerals))
+
+        const visible: StringMap<boolean> = {}
+        minerals.forEach(mineral => {
+            visible[mineral] = true
+        })
+        setVisible(visible)
     }, [part, core, minerals])
 
     if (!part) {
@@ -65,18 +71,22 @@ function SinglePart (
         </div>
         <div className={'label'}>
             <div className={'channel-labels'} ref={labelsRef}>
-                { minerals.map((mineral, i) =>
-                    <div className={'channel-label'} key={i}>
-                        {mineral}
-                    </div>
-                ) }
+                { minerals
+                    .filter(mineral => visible[mineral])
+                    .map((mineral, i) =>
+                        <div className={'channel-label'} key={i}>
+                            {mineral}
+                        </div>
+                    ) }
             </div>
         </div>
         <div className={'content'} ref={contentRef}>
             <div className={'mineral-channels'}>
-                { paths.map((path, i) =>
-                    <MineralCanvas src={path} key={i} />
-                ) }
+                { minerals
+                    .filter(mineral => visible[mineral])
+                    .map((mineral, i) =>
+                        <MineralCanvas src={paths[mineral]} key={i} />
+                    ) }
             </div>
         </div>
         <div className={'side'}>
@@ -122,7 +132,16 @@ function SinglePart (
         <div className={'bottom'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
-                    <button key={i}>{ mineral }</button>
+                    <button
+                        onClick={() => {
+                            visible[mineral] = !visible[mineral]
+                            setVisible({ ...visible })
+                        }}
+                        data-active={visible[mineral]}
+                        key={i}
+                    >
+                        {mineral}
+                    </button>
                 ) }
             </div>
         </div>
@@ -178,15 +197,18 @@ function getAbundanceFilepaths (
     core: string,
     part: string,
     minerals: Array<string>
-): Array<string> {
+): StringMap<string> {
     const coreId = getCoreId(core)
     const partId = getPartId(part)
     const fullId = `${coreId}_${partId}`
     const extension = 'factor_1to001.abundance.local.png'
 
-    const paths = minerals.map((_, mineralIndex) => {
-        const mineralId = padZeros(mineralIndex, 2)
-        return `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
+    const paths: StringMap<string> = {}
+
+    minerals.forEach((mineral, index) => {
+        const mineralId = padZeros(index, 2)
+        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
+        paths[mineral] = path
     })
 
     return paths
