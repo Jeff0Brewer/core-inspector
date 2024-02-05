@@ -6,6 +6,7 @@ import { loadImageAsync } from '../lib/load'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import VerticalSlider from '../components/generic/vertical-slider'
+import { BlendParams } from '../vis/mineral-blend'
 import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
@@ -30,22 +31,6 @@ function SinglePart (
     const labelsRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const content = contentRef.current
-        const labels = labelsRef.current
-        if (!content || !labels) {
-            throw new Error('No reference to layout elements')
-        }
-
-        const scroll = (): void => {
-            labels.style.left = `${-content.scrollLeft}px`
-        }
-        content.addEventListener('scroll', scroll)
-        return () => {
-            content.removeEventListener('scroll', scroll)
-        }
-    }, [])
-
-    useEffect(() => {
         if (!part) { return }
         const canvas = blendCanvasRef.current
         if (!canvas) {
@@ -67,6 +52,8 @@ function SinglePart (
                 imgPromises.push(loadImageAsync(path))
             }
             const imgs = await Promise.all(imgPromises)
+            canvas.width = imgs[0].width
+            canvas.height = imgs[0].height
             setVis(new SinglePartRenderer(canvas, minerals, imgs))
         }
 
@@ -74,6 +61,35 @@ function SinglePart (
         setVisible(visible)
         initVis()
     }, [part, core, minerals])
+
+    useEffect(() => {
+        if (!vis) { return }
+        vis?.setBlending({
+            magnitudes: Array(minerals.length).fill(1),
+            visibilities: Array(minerals.length).fill(true),
+            palette: palettes[0],
+            saturation: 2,
+            threshold: 0,
+            mode: 'additive',
+            monochrome: false
+        })
+    }, [vis, minerals, palettes])
+
+    useEffect(() => {
+        const content = contentRef.current
+        const labels = labelsRef.current
+        if (!content || !labels) {
+            throw new Error('No reference to layout elements')
+        }
+
+        const scroll = (): void => {
+            labels.style.left = `${-content.scrollLeft}px`
+        }
+        content.addEventListener('scroll', scroll)
+        return () => {
+            content.removeEventListener('scroll', scroll)
+        }
+    }, [])
 
     if (!part) {
         return <></>
@@ -92,6 +108,9 @@ function SinglePart (
         </div>
         <div className={'label'}>
             <div className={'channel-labels'} ref={labelsRef}>
+                <div className={'channel-label'}>
+                    [blended]
+                </div>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
@@ -103,7 +122,11 @@ function SinglePart (
         </div>
         <div className={'content'} ref={contentRef}>
             <div className={'mineral-channels'}>
-                <canvas ref={blendCanvasRef} className={'mineral-canvas'}></canvas>
+                <canvas
+                    ref={blendCanvasRef}
+                    className={'mineral-canvas'}
+                    style={{ transform: 'scaleY(-1)' }} // very temporary
+                ></canvas>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
