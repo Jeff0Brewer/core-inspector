@@ -94,6 +94,8 @@ function SinglePart (
     if (!part) {
         return <></>
     }
+
+    const currWidth = zoom * 250 + 50
     return <section className={'single-view'}>
         <div className={'top-side'}>
             <button className={'close-button'} onClick={clearPart}>
@@ -107,30 +109,57 @@ function SinglePart (
             </div>
         </div>
         <div className={'label'}>
-            <div className={'channel-labels'} ref={labelsRef}>
-                <div className={'channel-label'}>
+            <div
+                className={'channel-labels'}
+                style={{ gap: `${spacing[0] * currWidth}px` }}
+                ref={labelsRef}
+            >
+                <div
+                    className={'channel-label'}
+                    style={{
+                        minWidth: `${currWidth}px`,
+                        maxWidth: `${currWidth}px`
+                    }}
+                >
                     [blended]
                 </div>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
-                        <div className={'channel-label'} key={i}>
+                        <div
+                            className={'channel-label'}
+                            style={{
+                                minWidth: `${currWidth}px`,
+                                maxWidth: `${currWidth}px`
+                            }}
+                            key={i}
+                        >
                             {mineral}
                         </div>
                     ) }
             </div>
         </div>
         <div className={'content'} ref={contentRef}>
-            <div className={'mineral-channels'}>
+            <div
+                className={'mineral-channels'}
+                style={{ gap: `${spacing[0] * currWidth}px` }}
+            >
                 <canvas
                     ref={blendCanvasRef}
                     className={'mineral-canvas'}
-                    style={{ transform: 'scaleY(-1)' }} // very temporary
+                    style={{
+                        transform: 'scaleY(-1)', // very temporary
+                        width: `${currWidth}px`
+                    }}
                 ></canvas>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
-                        <MineralCanvas src={paths[mineral]} key={i} />
+                        <MineralCanvas
+                            src={paths[mineral]}
+                            width={currWidth}
+                            key={i}
+                        />
                     ) }
             </div>
         </div>
@@ -151,7 +180,7 @@ function SinglePart (
                         icon={ICONS.zoom}
                         min={0}
                         max={1}
-                        step={0.01}
+                        step={0.001}
                     />
                 </div>
                 <VerticalSlider
@@ -161,7 +190,7 @@ function SinglePart (
                     icon={ICONS.horizontalDist}
                     min={0}
                     max={1}
-                    step={0.002}
+                    step={0.001}
                 />
                 <VerticalSlider
                     value={spacing[1]}
@@ -170,7 +199,7 @@ function SinglePart (
                     icon={ICONS.verticalDist}
                     min={0}
                     max={1}
-                    step={0.002}
+                    step={0.001}
                 />
             </div>
         </div>
@@ -194,11 +223,12 @@ function SinglePart (
 }
 
 type MineralCanvasProps = {
-    src: string
+    src: string,
+    width: number
 }
 
 function MineralCanvas (
-    { src }: MineralCanvasProps
+    { src, width }: MineralCanvasProps
 ): ReactElement {
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -223,7 +253,11 @@ function MineralCanvas (
     }, [src])
 
     return (
-        <canvas className={'mineral-canvas'} ref={canvasRef}></canvas>
+        <canvas
+            className={'mineral-canvas'}
+            style={{ width: `${width}px` }}
+            ref={canvasRef}
+        ></canvas>
     )
 }
 
