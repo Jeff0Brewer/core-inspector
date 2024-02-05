@@ -1,6 +1,7 @@
 import { vec3 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTexture, GlTextureFramebuffer, getTextureAttachments } from '../lib/gl-wrap'
 import { GenericPalette } from '../lib/palettes'
+import { POS_FPV, TEX_FPV, FULLSCREEN_RECT } from '../lib/vert-gen'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 
 // get enum for blend modes since must send as uniform to shader
@@ -17,16 +18,6 @@ type BlendParams = {
     monochrome: boolean
 }
 
-// rectangle with texture coordinates to fill full viewport.
-// used to render fragments in full viewport for blending
-const FULLSCREEN_RECT = new Float32Array([
-    -1, -1, 0, 0,
-    1, -1, 1, 0,
-    -1, 1, 0, 1,
-    1, 1, 1, 1
-])
-const POS_FPV = 2
-const TEX_FPV = 2
 const STRIDE = POS_FPV + TEX_FPV
 
 class MineralBlender {

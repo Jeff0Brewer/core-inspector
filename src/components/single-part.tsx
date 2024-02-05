@@ -6,6 +6,7 @@ import { loadImageAsync } from '../lib/load'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import VerticalSlider from '../components/generic/vertical-slider'
+import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
 type SinglePartProps = {
@@ -19,10 +20,12 @@ type SinglePartProps = {
 function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
+    const [vis, setVis] = useState<SinglePartRenderer | null>(null)
     const [paths, setPaths] = useState<StringMap<string>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const blendCanvasRef = useRef<HTMLCanvasElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
@@ -44,14 +47,32 @@ function SinglePart (
 
     useEffect(() => {
         if (!part) { return }
+        const canvas = blendCanvasRef.current
+        if (!canvas) {
+            throw new Error('No reference to blend canvas')
+        }
 
-        setPaths(getAbundanceFilepaths(core, part, minerals))
+        const paths = getAbundanceFilepaths(core, part, minerals)
 
         const visible: StringMap<boolean> = {}
         minerals.forEach(mineral => {
             visible[mineral] = true
         })
+
+        const initVis = async (): Promise<void> => {
+            const minerals = []
+            const imgPromises = []
+            for (const [mineral, path] of Object.entries(paths)) {
+                minerals.push(mineral)
+                imgPromises.push(loadImageAsync(path))
+            }
+            const imgs = await Promise.all(imgPromises)
+            setVis(new SinglePartRenderer(canvas, minerals, imgs))
+        }
+
+        setPaths(paths)
         setVisible(visible)
+        initVis()
     }, [part, core, minerals])
 
     if (!part) {
@@ -82,6 +103,7 @@ function SinglePart (
         </div>
         <div className={'content'} ref={contentRef}>
             <div className={'mineral-channels'}>
+                <canvas ref={blendCanvasRef} className={'mineral-canvas'}></canvas>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
