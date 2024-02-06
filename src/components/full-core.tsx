@@ -96,36 +96,34 @@ function FullCore (
         }
     }, [vis, setPart])
 
-    return <div>
+    return <>
         <LoadIcon loading={!vis} showDelayMs={100} />
         <canvas
             className={'full-core-canvas'}
             ref={canvasRef}
             data-visible={!!vis}
         ></canvas>
-        <div className={'interface'}>
-            <div className={'top-bar'}>
-                <CoreVisSettings
-                    vis={vis}
-                    cores={cores}
-                    core={core}
-                    setCore={setCore}
-                />
-            </div>
-            <div className={'side-bar'}>
-                <CoreViewSliders vis={vis} />
-            </div>
-            <div className={'bottom-bar'}>
-                <MineralControls
-                    vis={vis}
-                    minerals={minerals}
-                    palettes={palettes}
-                />
-            </div>
-            <MetadataHover vis={vis} core={core} />
-            <PanScrollbar vis={vis} />
+        <div className={'top-bar'}>
+            <CoreVisSettings
+                vis={vis}
+                cores={cores}
+                core={core}
+                setCore={setCore}
+            />
         </div>
-    </div>
+        <div className={'side-bar'}>
+            <CoreViewSliders vis={vis} />
+        </div>
+        <div className={'bottom-bar'}>
+            <MineralControls
+                vis={vis}
+                minerals={minerals}
+                palettes={palettes}
+            />
+        </div>
+        <MetadataHover vis={vis} core={core} />
+        <PanScrollbar vis={vis} />
+    </>
 }
 
 export default FullCore

@@ -1,72 +1,15 @@
-.single-view {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    display: grid;
-    grid-template-rows: 50px 20px 1fr 32px;
-    grid-template-columns: 70px 1fr;
-    grid-template-areas:
-        "top-side top"
-        "punch-label label"
-        "side content"
-        "bottom bottom";
-}
-
-.single-view .top-side {
-    grid-area: top-side;
-    background-color: #444;
-}
-
-.single-view .top {
-    grid-area: top;
-    background-color: #444;
-}
-
-.single-view .punch-label {
-    grid-area: punch-label;
-    background-color: #444;
-}
-
-.single-view .label {
-    grid-area: label;
-    background-color: #444;
-    overflow: hidden;
-}
-
-.single-view .side {
-    grid-area: side;
-    grid-row: side / bottom;
-    background-color: #606060;
-}
-
-.single-view .content {
-    grid-area: content;
-    grid-row: content / bottom;
-    background-color: #333;
-    overflow: scroll;
-}
-
-.single-view .bottom {
-    position: relative;
-    grid-area: bottom;
-    background-color: var(--menu-bg-color);
-}
-
 /* ----- TOP BAR CONTENT ----- */
 .close-button {
+    grid-area: top-side;
     width: 100%;
     height: 100%;
     display: grid;
     place-content: center;
-}
-
-.single-view .top {
-    display: flex;
-    align-items: center;
+    background-color: #444;
 }
 
 .section-info {
+    grid-area: top;
     display: flex;
     align-items: center;
     width: 100%;
@@ -75,6 +18,7 @@
     font-size: 0.85rem;
     font-weight: 300;
     text-transform: uppercase;
+    background-color: #444;
 }
 
 .section-info > p {
@@ -88,13 +32,17 @@
 
 /* ----- SIDE CONTROLS ----- */
 .vertical-controls {
+    grid-area: side;
+    grid-row: side / bottom;
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
     align-items: center;
     gap: 20px;
     padding: 10px 0;
     padding-bottom: 32px;
+    background-color: #606060;
 }
 
 .scale-ruler {
@@ -145,12 +93,16 @@
 }
 
 /* ----- BOTTOM BAR CONTENT ----- */
-.bottom {
+.mineral-controls {
+    position: relative;
+    overflow: visible;
+    grid-area: bottom;
+    background-color: var(--menu-bg-color);
     display: grid;
     grid-template-columns: 1fr 40px;
 }
 
-.mineral-toggles > button, .bottom .blend-toggle {
+.mineral-toggles > button, .mineral-controls > .blend-toggle {
     border-radius: var(--radius);
     text-transform: uppercase;
     height: 16px;
@@ -179,11 +131,7 @@
     min-width: 30px;
 }
 
-.bottom .mineral-slider p {
-    background-color: transparent;
-}
-
-.bottom .blend-toggle {
+.mineral-controls > .blend-toggle {
     position: relative;
     margin-left: auto;
     display: grid;
@@ -193,6 +141,13 @@
 }
 
 /* ----- MAIN CONTENT -----*/
+.mineral-channels-wrap {
+    grid-area: content;
+    grid-row: content / bottom;
+    background-color: #333;
+    overflow: scroll;
+}
+
 .mineral-channels {
     position: relative;
     display: flex;
@@ -245,6 +200,20 @@
 }
 
 /* ----- LABEL CONTENT ----- */
+.punch-label {
+    grid-area: label-side;
+    background-color: #444;
+}
+
+.channel-labels-wrap {
+    position: relative;
+    grid-area: label;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background-color: #444;
+}
+
 .channel-labels {
     position: relative;
     display: flex;

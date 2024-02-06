@@ -44,12 +44,6 @@
     border-radius: var(--radius);
 }
 
-.blend-menu-wrap {
-    position: absolute;
-    right: 0;
-    bottom: 100%;
-}
-
 .blend-menu {
     position: absolute;
     right: 0;

@@ -23,9 +23,9 @@ function App (): ReactElement {
     const [part, setPart] = useState<string | null>(null)
 
     return (
-        <main>
+        <main className={'app'}>
             <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
-                { part === null && <div className={'full-view-wrap'}>
+                { part === null &&
                     <FullCore
                         cores={CORES}
                         minerals={MINERALS}
@@ -34,8 +34,8 @@ function App (): ReactElement {
                         setCore={setCore}
                         setPart={setPart}
                     />
-                </div> }
-                { part !== null && <div className={'single-view-wrap'}>
+                }
+                { part !== null &&
                     <SinglePart
                         part={part}
                         core={core}
@@ -43,7 +43,7 @@ function App (): ReactElement {
                         palettes={COLOR_PRESETS}
                         clearPart={() => setPart(null)}
                     />
-                </div> }
+                }
             </BlendProvider>
         </main>
     )

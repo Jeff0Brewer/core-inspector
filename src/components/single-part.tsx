@@ -123,12 +123,10 @@ function SinglePart (
 
     const currWidth = zoom * 250 + 50
 
-    return <section className={'single-view'}>
-        <div className={'top-side'}>
-            <button className={'close-button'} onClick={clearPart}>
-                {ICONS.close}
-            </button>
-        </div>
+    return <>
+        <button className={'close-button'} onClick={clearPart}>
+            {ICONS.close}
+        </button>
         <div className={'top'}>
             <div className={'section-info'}>
                 <p> core <span>{ getCoreId(core) }</span> </p>
@@ -136,7 +134,7 @@ function SinglePart (
             </div>
         </div>
         <div className={'punch-label'}></div>
-        <div className={'label'}>
+        <div className={'channel-labels-wrap'}>
             <div
                 className={'channel-labels'}
                 style={{ gap: `${spacing * currWidth}px` }}
@@ -167,7 +165,7 @@ function SinglePart (
                     ) }
             </div>
         </div>
-        <div className={'content'} ref={contentRef}>
+        <div className={'mineral-channels-wrap'} ref={contentRef}>
             <div
                 className={'mineral-channels'}
                 style={{ gap: `${spacing * currWidth}px` }}
@@ -193,36 +191,34 @@ function SinglePart (
                     ) }
             </div>
         </div>
-        <div className={'side'}>
-            <div className={'vertical-controls'}>
-                <div className={'scale-ruler'}>
-                    <div className={'scale-ruler-center'}>
-                        <p>{scale.toFixed(1)} cm</p>
-                        <div></div>
-                        <p>100 px</p>
-                    </div>
+        <div className={'vertical-controls'}>
+            <div className={'scale-ruler'}>
+                <div className={'scale-ruler-center'}>
+                    <p>{scale.toFixed(1)} cm</p>
+                    <div></div>
+                    <p>100 px</p>
                 </div>
-                <VerticalSlider
-                    value={zoom}
-                    setValue={setZoom}
-                    label={'zoom'}
-                    icon={ICONS.zoom}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                />
-                <VerticalSlider
-                    value={spacing}
-                    setValue={setSpacing}
-                    label={'horizontal distance'}
-                    icon={ICONS.horizontalDist}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                />
             </div>
+            <VerticalSlider
+                value={zoom}
+                setValue={setZoom}
+                label={'zoom'}
+                icon={ICONS.zoom}
+                min={0}
+                max={1}
+                step={0.01}
+            />
+            <VerticalSlider
+                value={spacing}
+                setValue={setSpacing}
+                label={'horizontal distance'}
+                icon={ICONS.horizontalDist}
+                min={0}
+                max={1}
+                step={0.01}
+            />
         </div>
-        <div className={'bottom'}>
+        <div className={'mineral-controls'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
                     <button
@@ -249,7 +245,7 @@ function SinglePart (
                 palettes={palettes}
             /> }
         </div>
-    </section>
+    </>
 }
 
 function getCoreId (core: string): string {
