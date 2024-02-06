@@ -3,6 +3,8 @@ import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { MdColorLens } from 'react-icons/md'
 import { IoMdClose } from 'react-icons/io'
 import { IoSearch } from 'react-icons/io5'
+import leftRulerSvg from '../assets/ruler-left.svg'
+import rightRulerSvg from '../assets/ruler-right.svg'
 import { loadImageAsync } from '../lib/load'
 import { useBlendState } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
@@ -126,8 +128,8 @@ function SinglePart (
                 <div
                     className={'channel-label'}
                     style={{
-                        minWidth: `${currWidth}px`,
-                        maxWidth: `${currWidth}px`
+                        minWidth: `${currWidth + 20}px`,
+                        maxWidth: `${currWidth + 20}px`
                     }}
                 >
                     [blended]
@@ -138,8 +140,8 @@ function SinglePart (
                         <div
                             className={'channel-label'}
                             style={{
-                                minWidth: `${currWidth}px`,
-                                maxWidth: `${currWidth}px`
+                                minWidth: `${currWidth + 20}px`,
+                                maxWidth: `${currWidth + 20}px`
                             }}
                             key={i}
                         >
@@ -305,11 +307,15 @@ function MineralCanvas (
     }, [src])
 
     return (
-        <canvas
-            className={'mineral-canvas'}
-            style={{ width: `${width}px` }}
-            ref={canvasRef}
-        ></canvas>
+        <div className={'channel-wrap'}>
+            <img className={'ruler-left'} src={leftRulerSvg} />
+            <canvas
+                className={'mineral-canvas'}
+                style={{ width: `${width}px` }}
+                ref={canvasRef}
+            ></canvas>
+            <img className={'ruler-right'} src={rightRulerSvg} />
+        </div>
     )
 }
 

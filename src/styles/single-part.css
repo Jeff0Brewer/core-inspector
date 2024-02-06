@@ -186,9 +186,21 @@
     display: flex;
 }
 
-.mineral-canvas {
-    border-left: 2px dashed #4c3253;
-    border-right: 1px dashed #bee661;
+.channel-wrap {
+    position: relative;
+    display: flex;
+}
+
+.ruler-left {
+    position: relative;
+    width: 15px;
+    height: 100%;
+}
+
+.ruler-right {
+    position: relative;
+    width: 5px;
+    height: 100%;
 }
 
 /* ----- LABEL CONTENT ----- */
