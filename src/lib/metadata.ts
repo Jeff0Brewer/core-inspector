@@ -8,7 +8,20 @@ type CoreMetadata = {
     bottomDepth: number
 }
 
+type HydrationMetadata = {
+    [id: string]: number
+}
+
+type DepthMetadata = {
+    [id: string]: {
+        topDepth: number,
+        length: number
+    }
+}
+
 export type {
     SectionIdMetadata,
-    CoreMetadata
+    CoreMetadata,
+    HydrationMetadata,
+    DepthMetadata
 }
