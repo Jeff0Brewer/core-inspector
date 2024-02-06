@@ -97,7 +97,7 @@ function FullCoreView (
     }, [vis, setPart])
 
     return <>
-        <LoadIcon loading={!vis} showDelayMs={100} />
+        <LoadIcon loading={!vis} showDelayMs={0} />
         <canvas
             className={'full-core-canvas'}
             ref={canvasRef}

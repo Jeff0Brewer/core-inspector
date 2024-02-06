@@ -8,6 +8,7 @@ import { useBlendState } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import { DepthMetadata } from '../lib/metadata'
+import LoadIcon from '../components/generic/load-icon'
 import VerticalSlider from '../components/generic/vertical-slider'
 import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
@@ -314,10 +315,15 @@ function PartMineralChannels (
                     ) }
             </div>
         </div>
-        <div className={'mineral-channels-wrap'} ref={contentRef}>
+        <div
+            className={'mineral-channels-wrap'}
+            ref={contentRef}
+        >
+            <LoadIcon loading={!vis} showDelayMs={0} />
             <div
                 className={'mineral-channels'}
                 style={{ gap: `${spacing * channelWidth}px` }}
+                data-visible={!!vis}
             >
                 <div className={'channel-wrap'}>
                     <canvas

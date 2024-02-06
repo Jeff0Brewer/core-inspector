@@ -155,6 +155,13 @@
     background-image: url('../assets/ruler-bg.svg');
     background-repeat: infinite;
     padding-bottom: 32px;
+    opacity: 0;
+    transition: opacity var(--transition-param);
+}
+
+.mineral-channels[data-visible="true"] {
+    transition-delay: 250ms;
+    opacity: 1;
 }
 
 .mineral-channels .channel-wrap:first-of-type {
