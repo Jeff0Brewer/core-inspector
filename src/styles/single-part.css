@@ -15,30 +15,29 @@
 
 .single-view .top-side {
     grid-area: top-side;
-    background-color: var(--color2);
+    background-color: #444;
 }
 
 .single-view .top {
     grid-area: top;
-    background-color: var(--color2);
+    background-color: #444;
 }
 
 .single-view .label {
     grid-area: label;
-    background-color: var(--color1);
+    background-color: #444;
     overflow: hidden;
 }
 
 .single-view .side {
     grid-area: side;
-    background-color: transparent;
+    background-color: #606060;
 }
 
 .single-view .content {
     grid-area: content;
-    background-color: transparent;
+    background-color: #333;
     overflow: scroll;
-    font-size: 100px;
 }
 
 .single-view .bottom {
