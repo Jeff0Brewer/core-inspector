@@ -24,8 +24,6 @@ type SinglePartProps = {
 function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
-    const [depths, setDepths] = useState<DepthMetadata | null>(null)
-    const [scale, setScale] = useState<number>(0)
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
@@ -38,24 +36,7 @@ function SinglePart (
             visible[mineral] = true
         })
         setVisible(visible)
-
-        const getDepths = async (): Promise<void> => {
-            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
-            const { depth } = await depthRes.json()
-            setDepths(depth)
-        }
-
-        getDepths()
-    }, [part, core, minerals])
-
-    useEffect(() => {
-        if (!depths || !channelHeight) { return }
-
-        const partLengthM = depths[part].length
-        const partLengthCm = partLengthM * 100
-
-        setScale(partLengthCm / channelHeight * 100)
-    }, [channelHeight, part, depths, zoom])
+    }, [part, minerals])
 
     return <>
         <button className={'close-button'} onClick={clearPart}>
@@ -77,33 +58,15 @@ function SinglePart (
             spacing={spacing}
             setChannelHeight={setChannelHeight}
         />
-        <div className={'vertical-controls'}>
-            <div className={'scale-ruler'}>
-                <div className={'scale-ruler-center'}>
-                    <p>{scale.toFixed(1)} cm</p>
-                    <div></div>
-                    <p>100 px</p>
-                </div>
-            </div>
-            <VerticalSlider
-                value={zoom}
-                setValue={setZoom}
-                label={'zoom'}
-                icon={ICONS.zoom}
-                min={0}
-                max={1}
-                step={0.01}
-            />
-            <VerticalSlider
-                value={spacing}
-                setValue={setSpacing}
-                label={'horizontal distance'}
-                icon={ICONS.horizontalDist}
-                min={0}
-                max={1}
-                step={0.01}
-            />
-        </div>
+        <PartViewControls
+            core={core}
+            part={part}
+            zoom={zoom}
+            setZoom={setZoom}
+            spacing={spacing}
+            setSpacing={setSpacing}
+            channelHeight={channelHeight}
+        />
         <div className={'mineral-controls'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
@@ -130,6 +93,72 @@ function SinglePart (
                 minerals={minerals}
                 palettes={palettes}
             /> }
+        </div>
+    </>
+}
+
+type PartViewControlsProps = {
+    core: string,
+    part: string,
+    zoom: number,
+    setZoom: (z: number) => void,
+    spacing: number,
+    setSpacing: (s: number) => void,
+    channelHeight: number
+}
+
+function PartViewControls (
+    { core, part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
+): ReactElement {
+    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const [scale, setScale] = useState<number>(0)
+
+    useEffect(() => {
+        const getDepths = async (): Promise<void> => {
+            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
+            const { depth } = await depthRes.json()
+            setDepths(depth)
+        }
+
+        getDepths()
+    }, [part, core])
+
+    useEffect(() => {
+        if (!depths || !channelHeight) { return }
+
+        const partLengthM = depths[part].length
+        const partLengthCm = partLengthM * 100
+
+        setScale(partLengthCm / channelHeight * 100)
+    }, [channelHeight, part, depths, zoom])
+
+    return <>
+        <div className={'vertical-controls'}>
+            <div className={'scale-ruler'}>
+                <div className={'scale-ruler-center'}>
+                    <p>{scale.toFixed(1)} cm</p>
+                    <div></div>
+                    <p>100 px</p>
+                </div>
+            </div>
+            <VerticalSlider
+                value={zoom}
+                setValue={setZoom}
+                label={'zoom'}
+                icon={ICONS.zoom}
+                min={0}
+                max={1}
+                step={0.01}
+            />
+            <VerticalSlider
+                value={spacing}
+                setValue={setSpacing}
+                label={'horizontal distance'}
+                icon={ICONS.horizontalDist}
+                min={0}
+                max={1}
+                step={0.01}
+            />
         </div>
     </>
 }
