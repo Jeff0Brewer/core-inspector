@@ -24,104 +24,38 @@ type SinglePartProps = {
 function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
-    const [vis, setVis] = useState<SinglePartRenderer | null>(null)
     const [depths, setDepths] = useState<DepthMetadata | null>(null)
     const [scale, setScale] = useState<number>(0)
-    const [paths, setPaths] = useState<StringMap<string>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
-    const blendCanvasRef = useRef<HTMLCanvasElement>(null)
-    const contentRef = useRef<HTMLDivElement>(null)
-    const labelsRef = useRef<HTMLDivElement>(null)
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
+    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     useEffect(() => {
-        if (!part) { return }
-        const canvas = blendCanvasRef.current
-        if (!canvas) {
-            throw new Error('No reference to blend canvas')
-        }
-
-        const paths = getAbundanceFilepaths(core, part, minerals)
-
         const visible: StringMap<boolean> = {}
         minerals.forEach(mineral => {
             visible[mineral] = true
         })
+        setVisible(visible)
 
-        const initVis = async (): Promise<void> => {
-            const minerals = []
-            const imgPromises = []
-            for (const [mineral, path] of Object.entries(paths)) {
-                minerals.push(mineral)
-                imgPromises.push(loadImageAsync(path))
-            }
-            const imgs = await Promise.all(imgPromises)
-            canvas.width = imgs[0].width
-            canvas.height = imgs[0].height
-            setVis(new SinglePartRenderer(canvas, minerals, imgs))
-
+        const getDepths = async (): Promise<void> => {
             const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
             const { depth } = await depthRes.json()
             setDepths(depth)
         }
 
-        setPaths(paths)
-        setVisible(visible)
-        initVis()
+        getDepths()
     }, [part, core, minerals])
 
     useEffect(() => {
-        const content = contentRef.current
-        const labels = labelsRef.current
-        if (!content || !labels) {
-            throw new Error('No reference to layout elements')
-        }
-
-        const scroll = (): void => {
-            labels.style.left = `${-content.scrollLeft}px`
-        }
-        content.addEventListener('scroll', scroll)
-        return () => {
-            content.removeEventListener('scroll', scroll)
-        }
-    }, [])
-
-    useEffect(() => {
-        if (!vis) { return }
-        vis?.setBlending({
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        })
-    }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
-
-    useEffect(() => {
-        const canvas = blendCanvasRef.current
-        if (!depths || !canvas) { return }
+        if (!depths || !channelHeight) { return }
 
         const partLengthM = depths[part].length
         const partLengthCm = partLengthM * 100
-        const canvasLength = canvas.getBoundingClientRect().height
 
-        setScale(partLengthCm / canvasLength * 100)
-    }, [part, depths, zoom])
-
-    const currWidth = zoom * 250 + 50
+        setScale(partLengthCm / channelHeight * 100)
+    }, [channelHeight, part, depths, zoom])
 
     return <>
         <button className={'close-button'} onClick={clearPart}>
@@ -134,63 +68,15 @@ function SinglePart (
             </div>
         </div>
         <div className={'punch-label'}></div>
-        <div className={'channel-labels-wrap'}>
-            <div
-                className={'channel-labels'}
-                style={{ gap: `${spacing * currWidth}px` }}
-                ref={labelsRef}
-            >
-                <div
-                    className={'channel-label'}
-                    style={{
-                        minWidth: `${currWidth}px`,
-                        maxWidth: `${currWidth}px`
-                    }}
-                >
-                    [blended]
-                </div>
-                { minerals
-                    .filter(mineral => visible[mineral])
-                    .map((mineral, i) =>
-                        <div
-                            className={'channel-label'}
-                            style={{
-                                minWidth: `${currWidth}px`,
-                                maxWidth: `${currWidth}px`
-                            }}
-                            key={i}
-                        >
-                            {mineral}
-                        </div>
-                    ) }
-            </div>
-        </div>
-        <div className={'mineral-channels-wrap'} ref={contentRef}>
-            <div
-                className={'mineral-channels'}
-                style={{ gap: `${spacing * currWidth}px` }}
-            >
-                <div className={'channel-wrap'}>
-                    <canvas
-                        ref={blendCanvasRef}
-                        className={'mineral-canvas'}
-                        style={{
-                            transform: 'scaleY(-1)', // very temporary
-                            width: `${currWidth}px`
-                        }}
-                    ></canvas>
-                </div>
-                { minerals
-                    .filter(mineral => visible[mineral])
-                    .map((mineral, i) =>
-                        <MineralCanvas
-                            src={paths[mineral]}
-                            width={currWidth}
-                            key={i}
-                        />
-                    ) }
-            </div>
-        </div>
+        <MineralChannels
+            core={core}
+            part={part}
+            minerals={minerals}
+            visible={visible}
+            zoom={zoom}
+            spacing={spacing}
+            setChannelHeight={setChannelHeight}
+        />
         <div className={'vertical-controls'}>
             <div className={'scale-ruler'}>
                 <div className={'scale-ruler-center'}>
@@ -244,6 +130,169 @@ function SinglePart (
                 minerals={minerals}
                 palettes={palettes}
             /> }
+        </div>
+    </>
+}
+
+type MineralChannelsProps = {
+    core: string,
+    part: string,
+    minerals: Array<string>,
+    visible: StringMap<boolean>,
+    zoom: number,
+    spacing: number,
+    setChannelHeight: (h: number) => void
+}
+
+function MineralChannels (
+    { core, part, minerals, visible, zoom, spacing, setChannelHeight }: MineralChannelsProps
+): ReactElement {
+    const [vis, setVis] = useState<SinglePartRenderer | null>(null)
+    const [paths, setPaths] = useState<StringMap<string>>({})
+    const [channelWidth, setChannelWidth] = useState<number>(0)
+    const [imgWidth, setImgWidth] = useState<number>(0)
+    const [imgHeight, setImgHeight] = useState<number>(0)
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+    const blendCanvasRef = useRef<HTMLCanvasElement>(null)
+    const contentRef = useRef<HTMLDivElement>(null)
+    const labelsRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const content = contentRef.current
+        const labels = labelsRef.current
+        if (!content || !labels) {
+            throw new Error('No reference to layout elements')
+        }
+
+        const scroll = (): void => {
+            labels.style.left = `${-content.scrollLeft}px`
+        }
+        content.addEventListener('scroll', scroll)
+        return () => {
+            content.removeEventListener('scroll', scroll)
+        }
+    }, [])
+
+    useEffect(() => {
+        const canvas = blendCanvasRef.current
+        if (!canvas) {
+            throw new Error('No reference to blend canvas')
+        }
+
+        const paths = getAbundanceFilepaths(core, part, minerals)
+
+        const visible: StringMap<boolean> = {}
+        minerals.forEach(mineral => {
+            visible[mineral] = true
+        })
+
+        const initVis = async (): Promise<void> => {
+            const minerals = []
+            const imgPromises = []
+            for (const [mineral, path] of Object.entries(paths)) {
+                minerals.push(mineral)
+                imgPromises.push(loadImageAsync(path))
+            }
+            const imgs = await Promise.all(imgPromises)
+            setImgWidth(imgs[0].width)
+            setImgHeight(imgs[0].height)
+            setVis(new SinglePartRenderer(canvas, minerals, imgs))
+        }
+
+        setPaths(paths)
+        initVis()
+    }, [part, core, minerals])
+
+    useEffect(() => {
+        if (!vis) { return }
+        vis?.setBlending({
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        })
+    }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
+
+    useEffect(() => {
+        const channelWidth = zoom * 250 + 50
+        setChannelWidth(channelWidth)
+        const canvas = blendCanvasRef.current
+        if (canvas) {
+            const channelHeight = channelWidth * imgHeight / imgWidth
+            setChannelHeight(channelHeight)
+        }
+    }, [zoom, imgWidth, imgHeight, setChannelHeight])
+
+    return <>
+        <div className={'channel-labels-wrap'}>
+            <div
+                className={'channel-labels'}
+                style={{ gap: `${spacing * channelWidth}px` }}
+                ref={labelsRef}
+            >
+                <div
+                    className={'channel-label'}
+                    style={{
+                        minWidth: `${channelWidth}px`,
+                        maxWidth: `${channelWidth}px`
+                    }}
+                >
+                    [blended]
+                </div>
+                { minerals
+                    .filter(mineral => visible[mineral])
+                    .map((mineral, i) =>
+                        <div
+                            className={'channel-label'}
+                            style={{
+                                minWidth: `${channelWidth}px`,
+                                maxWidth: `${channelWidth}px`
+                            }}
+                            key={i}
+                        >
+                            {mineral}
+                        </div>
+                    ) }
+            </div>
+        </div>
+        <div className={'mineral-channels-wrap'} ref={contentRef}>
+            <div
+                className={'mineral-channels'}
+                style={{ gap: `${spacing * channelWidth}px` }}
+            >
+                <div className={'channel-wrap'}>
+                    <canvas
+                        className={'mineral-canvas'}
+                        ref={blendCanvasRef}
+                        width={imgWidth}
+                        height={imgHeight}
+                        style={{
+                            transform: 'scaleY(-1)', // very temporary
+                            width: `${channelWidth}px`
+                        }}
+                    ></canvas>
+                </div>
+                { minerals
+                    .filter(mineral => visible[mineral])
+                    .map((mineral, i) =>
+                        <MineralCanvas
+                            src={paths[mineral]}
+                            width={channelWidth}
+                            key={i}
+                        />
+                    ) }
+            </div>
         </div>
     </>
 }
