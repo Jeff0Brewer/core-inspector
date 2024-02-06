@@ -34,7 +34,7 @@
 
 .side-bar {
     grid-area: label-side;
-    grid-rows: label-side / side;
+    grid-row: label-side / side;
     position: relative;
     width: 100%;
     height: 100%;
