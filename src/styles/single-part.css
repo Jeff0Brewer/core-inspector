@@ -145,6 +145,19 @@
 }
 
 /* ----- BOTTOM BAR CONTENT ----- */
+.bottom {
+    display: grid;
+    grid-template-columns: 1fr 40px;
+}
+
+.mineral-toggles > button, .bottom .blend-toggle {
+    border-radius: var(--radius);
+    text-transform: uppercase;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+}
+
 .mineral-toggles {
     position: relative;
     margin: 0 auto;
@@ -164,12 +177,6 @@
     white-space: nowrap;
     flex-grow: 1;
     min-width: 30px;
-    height: 16px;
-    padding: 10px;
-    margin: 6px;
-    border-radius: var(--border-radius);
-    text-transform: uppercase;
-    background-color: var(--color2);
 }
 
 .bottom .mineral-slider p {
@@ -177,16 +184,12 @@
 }
 
 .bottom .blend-toggle {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    margin: auto;
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
+    position: relative;
+    margin-left: auto;
     display: grid;
     place-content: center;
+    max-width: 30px;
+    font-size: 14px;
 }
 
 /* ----- MAIN CONTENT -----*/
