@@ -46,7 +46,7 @@ function SinglePart (
             </div>
         </div>
         <div className={'punch-label'}></div>
-        <MineralChannels
+        <PartMineralChannels
             core={core}
             part={part}
             minerals={minerals}
@@ -182,7 +182,7 @@ function PartViewControls (
     </>
 }
 
-type MineralChannelsProps = {
+type PartMineralChannelsProps = {
     core: string,
     part: string,
     minerals: Array<string>,
@@ -192,8 +192,8 @@ type MineralChannelsProps = {
     setChannelHeight: (h: number) => void
 }
 
-function MineralChannels (
-    { core, part, minerals, visible, zoom, spacing, setChannelHeight }: MineralChannelsProps
+function PartMineralChannels (
+    { core, part, minerals, visible, zoom, spacing, setChannelHeight }: PartMineralChannelsProps
 ): ReactElement {
     const [vis, setVis] = useState<SinglePartRenderer | null>(null)
     const [paths, setPaths] = useState<StringMap<string>>({})

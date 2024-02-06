@@ -5,7 +5,7 @@ import LoadIcon from '../components/generic/load-icon'
 import FullCoreRenderer from '../vis/full-core'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
-import MineralControls from '../components/mineral-controls'
+import CoreMineralControls from '../components/core-mineral-controls'
 import MetadataHover from '../components/metadata-hover'
 import PanScrollbar from '../components/pan-scrollbar'
 import '../styles/full-core.css'
@@ -110,7 +110,7 @@ function FullCore (
             setCore={setCore}
         />
         <CoreViewSliders vis={vis} />
-        <MineralControls
+        <CoreMineralControls
             vis={vis}
             minerals={minerals}
             palettes={palettes}

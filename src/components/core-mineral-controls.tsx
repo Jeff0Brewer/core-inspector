@@ -4,16 +4,16 @@ import { useBlendState } from '../components/blend-context'
 import { GenericPalette } from '../lib/palettes'
 import BlendMenu from '../components/blend-menu'
 import FullCoreRenderer from '../vis/full-core'
-import '../styles/mineral-controls.css'
+import '../styles/core-mineral-controls.css'
 
-type MineralControlsProps = {
+type CoreMineralControlsProps = {
     vis: FullCoreRenderer | null,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
 }
 
-function MineralControls (
-    { vis, minerals, palettes }: MineralControlsProps
+function CoreMineralControls (
+    { vis, minerals, palettes }: CoreMineralControlsProps
 ): ReactElement {
     const {
         palette, magnitudes, saturation, threshold, mode,
@@ -104,4 +104,4 @@ function MineralControls (
     )
 }
 
-export default MineralControls
+export default CoreMineralControls
