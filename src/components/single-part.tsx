@@ -7,6 +7,7 @@ import { loadImageAsync } from '../lib/load'
 import { useBlendState } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
+import { DepthMetadata } from '../lib/metadata'
 import VerticalSlider from '../components/generic/vertical-slider'
 import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
@@ -24,6 +25,8 @@ function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
     const [vis, setVis] = useState<SinglePartRenderer | null>(null)
+    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const [scale, setScale] = useState<number>(0)
     const [paths, setPaths] = useState<StringMap<string>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -67,6 +70,10 @@ function SinglePart (
             canvas.width = imgs[0].width
             canvas.height = imgs[0].height
             setVis(new SinglePartRenderer(canvas, minerals, imgs))
+
+            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
+            const { depth } = await depthRes.json()
+            setDepths(depth)
         }
 
         setPaths(paths)
@@ -102,6 +109,17 @@ function SinglePart (
             monochrome
         })
     }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
+
+    useEffect(() => {
+        const canvas = blendCanvasRef.current
+        if (!depths || !canvas) { return }
+
+        const partLengthM = depths[part].length
+        const partLengthCm = partLengthM * 100
+        const canvasLength = canvas.getBoundingClientRect().height
+
+        setScale(partLengthCm / canvasLength * 100)
+    }, [part, depths, zoom])
 
     const currWidth = zoom * 250 + 50
 
@@ -179,7 +197,7 @@ function SinglePart (
             <div className={'vertical-controls'}>
                 <div className={'scale-ruler'}>
                     <div className={'scale-ruler-center'}>
-                        <p>43 cm</p>
+                        <p>{scale.toFixed(1)} cm</p>
                         <div></div>
                         <p>100 px</p>
                     </div>

@@ -99,9 +99,9 @@
 
 .scale-ruler {
     position: relative;
-    border: 1px solid var(--color3);
+    border: 1px solid #999;
     border-left: 0;
-    height: 125px;
+    height: 200px;
     width: 15px;
     overflow: visible;
 }
@@ -124,7 +124,7 @@
 .scale-ruler-center > div {
     width: 15px;
     height: 1px;
-    background-color: var(--color3);
+    background-color: #999;
 }
 
 .scale-ruler-center > p {
