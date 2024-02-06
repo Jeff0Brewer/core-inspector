@@ -27,7 +27,7 @@ function SinglePart (
     const [paths, setPaths] = useState<StringMap<string>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const [spacing, setSpacing] = useState<number>(0.5)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const blendCanvasRef = useRef<HTMLCanvasElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
@@ -120,7 +120,7 @@ function SinglePart (
         <div className={'label'}>
             <div
                 className={'channel-labels'}
-                style={{ gap: `${spacing[0] * currWidth}px` }}
+                style={{ gap: `${spacing * currWidth}px` }}
                 ref={labelsRef}
             >
                 <div
@@ -151,7 +151,7 @@ function SinglePart (
         <div className={'content'} ref={contentRef}>
             <div
                 className={'mineral-channels'}
-                style={{ gap: `${spacing[0] * currWidth}px` }}
+                style={{ gap: `${spacing * currWidth}px` }}
             >
                 <div className={'channel-wrap'}>
                     <canvas
@@ -183,34 +183,23 @@ function SinglePart (
                         <p>100 px</p>
                     </div>
                 </div>
-                <div className={'zoom-slider'}>
-                    <VerticalSlider
-                        value={zoom}
-                        setValue={setZoom}
-                        label={'zoom'}
-                        icon={ICONS.zoom}
-                        min={0}
-                        max={1}
-                        step={0.001}
-                    />
-                </div>
                 <VerticalSlider
-                    value={spacing[0]}
-                    setValue={v => setSpacing([v, spacing[1]])}
+                    value={zoom}
+                    setValue={setZoom}
+                    label={'zoom'}
+                    icon={ICONS.zoom}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                />
+                <VerticalSlider
+                    value={spacing}
+                    setValue={setSpacing}
                     label={'horizontal distance'}
                     icon={ICONS.horizontalDist}
                     min={0}
                     max={1}
-                    step={0.001}
-                />
-                <VerticalSlider
-                    value={spacing[1]}
-                    setValue={v => setSpacing([spacing[0], v])}
-                    label={'vertical distance'}
-                    icon={ICONS.verticalDist}
-                    min={0}
-                    max={1}
-                    step={0.001}
+                    step={0.01}
                 />
             </div>
         </div>
@@ -320,7 +309,6 @@ function MineralCanvas (
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
     horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
-    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>,
     close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
