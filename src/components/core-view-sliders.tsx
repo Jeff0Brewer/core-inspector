@@ -29,35 +29,37 @@ function CoreViewSliders (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
 
-    return <>
-        <VerticalSlider
-            value={zoom}
-            setValue={v => vis?.setZoom(v)}
-            label={'zoom'}
-            icon={ICONS.zoom}
-            min={0}
-            max={1}
-            step={0.01}
-        />
-        <VerticalSlider
-            value={spacing[0]}
-            setValue={v => vis?.setSpacing([v, spacing[1]])}
-            label={'horizontal distance'}
-            icon={ICONS.horizontalDist}
-            min={0}
-            max={1}
-            step={0.002}
-        />
-        <VerticalSlider
-            value={spacing[1]}
-            setValue={v => vis?.setSpacing([spacing[0], v])}
-            label={'vertical distance'}
-            icon={ICONS.verticalDist}
-            min={0}
-            max={1}
-            step={0.002}
-        />
-    </>
+    return (
+        <div className={'side-bar'}>
+            <VerticalSlider
+                value={zoom}
+                setValue={v => vis?.setZoom(v)}
+                label={'zoom'}
+                icon={ICONS.zoom}
+                min={0}
+                max={1}
+                step={0.01}
+            />
+            <VerticalSlider
+                value={spacing[0]}
+                setValue={v => vis?.setSpacing([v, spacing[1]])}
+                label={'horizontal distance'}
+                icon={ICONS.horizontalDist}
+                min={0}
+                max={1}
+                step={0.002}
+            />
+            <VerticalSlider
+                value={spacing[1]}
+                setValue={v => vis?.setSpacing([spacing[0], v])}
+                label={'vertical distance'}
+                icon={ICONS.verticalDist}
+                min={0}
+                max={1}
+                step={0.002}
+            />
+        </div>
+    )
 }
 
 const ICONS = {

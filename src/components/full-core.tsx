@@ -103,24 +103,18 @@ function FullCore (
             ref={canvasRef}
             data-visible={!!vis}
         ></canvas>
-        <div className={'top-bar'}>
-            <CoreVisSettings
-                vis={vis}
-                cores={cores}
-                core={core}
-                setCore={setCore}
-            />
-        </div>
-        <div className={'side-bar'}>
-            <CoreViewSliders vis={vis} />
-        </div>
-        <div className={'bottom-bar'}>
-            <MineralControls
-                vis={vis}
-                minerals={minerals}
-                palettes={palettes}
-            />
-        </div>
+        <CoreVisSettings
+            vis={vis}
+            cores={cores}
+            core={core}
+            setCore={setCore}
+        />
+        <CoreViewSliders vis={vis} />
+        <MineralControls
+            vis={vis}
+            minerals={minerals}
+            palettes={palettes}
+        />
         <MetadataHover vis={vis} core={core} />
         <PanScrollbar vis={vis} />
     </>

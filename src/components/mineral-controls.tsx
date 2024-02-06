@@ -73,33 +73,35 @@ function MineralControls (
         }
     }
 
-    return <>
-        <div className={'mineral-bar'}>
-            <div className={'minerals'}>
-                { minerals.map((mineral, i) => (
-                    <button
-                        onClick={getMineralSetter(i)}
-                        data-active={visibilities[i]}
-                        key={i}
-                    >
-                        {mineral}
-                    </button>
-                )) }
+    return (
+        <div className={'bottom-bar'}>
+            <div className={'mineral-bar'}>
+                <div className={'minerals'}>
+                    { minerals.map((mineral, i) => (
+                        <button
+                            onClick={getMineralSetter(i)}
+                            data-active={visibilities[i]}
+                            key={i}
+                        >
+                            {mineral}
+                        </button>
+                    )) }
+                </div>
+                <button
+                    className={'blend-menu-toggle'}
+                    data-active={menuOpen}
+                    onClick={() => setMenuOpen(!menuOpen)}
+                >
+                    <MdColorLens />
+                </button>
             </div>
-            <button
-                className={'blend-menu-toggle'}
-                data-active={menuOpen}
-                onClick={() => setMenuOpen(!menuOpen)}
-            >
-                <MdColorLens />
-            </button>
-        </div>
-        { menuOpen &&
+            { menuOpen &&
             <BlendMenu
                 minerals={minerals}
                 palettes={palettes}
             /> }
-    </>
+        </div>
+    )
 }
 
 export default MineralControls
