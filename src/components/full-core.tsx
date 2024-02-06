@@ -10,7 +10,7 @@ import MetadataHover from '../components/metadata-hover'
 import PanScrollbar from '../components/pan-scrollbar'
 import '../styles/full-core.css'
 
-type FullCoreProps = {
+type FullCoreViewProps = {
     cores: Array<string>,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
@@ -19,8 +19,8 @@ type FullCoreProps = {
     setPart: (p: string) => void
 }
 
-function FullCore (
-    { cores, minerals, palettes, core, setCore, setPart }: FullCoreProps
+function FullCoreView (
+    { cores, minerals, palettes, core, setCore, setPart }: FullCoreViewProps
 ): ReactElement {
     const [vis, setVis] = useState<FullCoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
@@ -120,4 +120,4 @@ function FullCore (
     </>
 }
 
-export default FullCore
+export default FullCoreView

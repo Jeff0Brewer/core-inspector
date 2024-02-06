@@ -1,8 +1,8 @@
 import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import BlendProvider from '../components/blend-provider'
-import FullCore from '../components/full-core'
-import SinglePart from '../components/single-part'
+import FullCoreView from '../components/full-core'
+import SinglePartView from '../components/single-part'
 import '../styles/app.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
@@ -26,7 +26,7 @@ function App (): ReactElement {
         <main className={'app'}>
             <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
                 { part === null &&
-                    <FullCore
+                    <FullCoreView
                         cores={CORES}
                         minerals={MINERALS}
                         palettes={COLOR_PRESETS}
@@ -36,7 +36,7 @@ function App (): ReactElement {
                     />
                 }
                 { part !== null &&
-                    <SinglePart
+                    <SinglePartView
                         part={part}
                         core={core}
                         minerals={MINERALS}

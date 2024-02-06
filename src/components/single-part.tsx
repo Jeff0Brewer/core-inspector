@@ -13,7 +13,7 @@ import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
-type SinglePartProps = {
+type SinglePartViewProps = {
     part: string,
     core: string,
     minerals: Array<string>,
@@ -21,8 +21,8 @@ type SinglePartProps = {
     clearPart: () => void
 }
 
-function SinglePart (
-    { part, core, minerals, palettes, clearPart }: SinglePartProps
+function SinglePartView (
+    { part, core, minerals, palettes, clearPart }: SinglePartViewProps
 ): ReactElement {
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -424,4 +424,4 @@ const ICONS = {
     close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
-export default SinglePart
+export default SinglePartView
