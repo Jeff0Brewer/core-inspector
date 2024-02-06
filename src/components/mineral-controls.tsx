@@ -74,7 +74,7 @@ function MineralControls (
     }
 
     return (
-        <div className={'bottom-bar'}>
+        <div className={'core-mineral-controls'}>
             <div className={'mineral-bar'}>
                 <div className={'minerals'}>
                     { minerals.map((mineral, i) => (

@@ -60,7 +60,7 @@ function CoreVisSettings (
     }
 
     return (
-        <div className={'top-bar'}>
+        <div className={'core-vis-settings'}>
             <ToggleButton
                 active={calibration === 'show'}
                 toggleValue={toggleCalibration}

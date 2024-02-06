@@ -30,7 +30,7 @@ function CoreViewSliders (
     }, [vis])
 
     return (
-        <div className={'side-bar'}>
+        <div className={'core-view-sliders'}>
             <VerticalSlider
                 value={zoom}
                 setValue={v => vis?.setZoom(v)}
