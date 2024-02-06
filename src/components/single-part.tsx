@@ -149,7 +149,7 @@ function PartViewControls (
         const partLengthM = depths[part].length
         const partLengthCm = partLengthM * 100
 
-        setScale(partLengthCm / channelHeight * 100)
+        setScale(partLengthCm / channelHeight * 75)
     }, [channelHeight, part, depths, zoom])
 
     return <>
@@ -158,7 +158,7 @@ function PartViewControls (
                 <div className={'scale-ruler-center'}>
                     <p>{scale.toFixed(1)} cm</p>
                     <div></div>
-                    <p>100 px</p>
+                    <p>75 px</p>
                 </div>
             </div>
             <VerticalSlider
