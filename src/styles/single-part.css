@@ -8,37 +8,43 @@
     grid-template-columns: 70px 1fr;
     grid-template-areas:
         "top-side top"
-        "side label"
+        "punch-label label"
         "side content"
         "bottom bottom";
 }
 
 .single-view .top-side {
     grid-area: top-side;
-    background-color: var(--color2);
+    background-color: #444;
 }
 
 .single-view .top {
     grid-area: top;
-    background-color: var(--color2);
+    background-color: #444;
+}
+
+.single-view .punch-label {
+    grid-area: punch-label;
+    background-color: #444;
 }
 
 .single-view .label {
     grid-area: label;
-    background-color: var(--color1);
+    background-color: #444;
     overflow: hidden;
 }
 
 .single-view .side {
     grid-area: side;
-    background-color: transparent;
+    grid-row: side / bottom;
+    background-color: #606060;
 }
 
 .single-view .content {
     grid-area: content;
-    background-color: transparent;
+    grid-row: content / bottom;
+    background-color: #333;
     overflow: scroll;
-    font-size: 100px;
 }
 
 .single-view .bottom {
@@ -81,11 +87,21 @@
 }
 
 /* ----- SIDE CONTROLS ----- */
+.vertical-controls {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0;
+    padding-bottom: 32px;
+}
+
 .scale-ruler {
     position: relative;
-    border: 1px solid var(--color3);
+    border: 1px solid #999;
     border-left: 0;
-    height: 125px;
+    height: 200px;
     width: 15px;
     overflow: visible;
 }
@@ -108,23 +124,14 @@
 .scale-ruler-center > div {
     width: 15px;
     height: 1px;
-    background-color: var(--color3);
+    background-color: #999;
 }
 
 .scale-ruler-center > p {
     margin: 2px;
 }
 
-.vertical-controls {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    align-items: center;
-    gap: 20px;
-    padding: 10px 0;
-}
-
-.zoom-slider .vertical-slider {
+.side .vertical-slider {
     --length: 125px;
 }
 
@@ -138,6 +145,19 @@
 }
 
 /* ----- BOTTOM BAR CONTENT ----- */
+.bottom {
+    display: grid;
+    grid-template-columns: 1fr 40px;
+}
+
+.mineral-toggles > button, .bottom .blend-toggle {
+    border-radius: var(--radius);
+    text-transform: uppercase;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+}
+
 .mineral-toggles {
     position: relative;
     margin: 0 auto;
@@ -157,12 +177,6 @@
     white-space: nowrap;
     flex-grow: 1;
     min-width: 30px;
-    height: 16px;
-    padding: 10px;
-    margin: 6px;
-    border-radius: var(--border-radius);
-    text-transform: uppercase;
-    background-color: var(--color2);
 }
 
 .bottom .mineral-slider p {
@@ -170,26 +184,64 @@
 }
 
 .bottom .blend-toggle {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    top: 0;
-    margin: auto;
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
+    position: relative;
+    margin-left: auto;
     display: grid;
     place-content: center;
+    max-width: 30px;
+    font-size: 14px;
 }
 
 /* ----- MAIN CONTENT -----*/
 .mineral-channels {
+    position: relative;
+    display: flex;
+    width: fit-content;
+    background-image: url('../assets/ruler-bg.svg');
+    background-repeat: infinite;
+    padding-bottom: 32px;
+}
+
+.mineral-channels .channel-wrap:first-of-type {
+    padding-left: 50px;
+}
+
+.mineral-channels .channel-wrap:last-of-type {
+    padding-right: 50px;
+}
+
+.channel-wrap {
+    position: relative;
     display: flex;
 }
 
-.mineral-canvas {
-    border-left: 2px dashed #4c3253;
-    border-right: 1px dashed #bee661;
+.channel-wrap:before, .channel-wrap:after {
+    opacity: 0.3;
+    transition: opacity var(--transition-param);
+}
+
+.channel-wrap:hover:before, .channel-wrap:hover:after {
+    opacity: 1;
+}
+
+.channel-wrap:before {
+    content: "";
+    display: block;
+    position: relative;
+    width: 15px;
+    height: 100%;
+    background-image: url('../assets/ruler-left.svg');
+    background-repeat: infinite;
+}
+
+.channel-wrap:after {
+    content: "";
+    display: block;
+    position: relative;
+    width: 5px;
+    height: 100%;
+    background-image: url('../assets/ruler-right.svg');
+    background-repeat: infinite;
 }
 
 /* ----- LABEL CONTENT ----- */
@@ -197,6 +249,7 @@
     position: relative;
     display: flex;
     height: 100%;
+    padding-left: 50px;
 }
 
 .channel-label {
@@ -208,4 +261,6 @@
     border: solid var(--color3);
     border-width: 0 1px;
     overflow: hidden;
+    margin-left: 15px;
+    margin-right: 5px;
 }

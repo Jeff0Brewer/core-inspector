@@ -30,7 +30,7 @@
     height: 16px;
     padding: 10px;
     margin: 6px;
-    border-radius: var(--border-radius);
+    border-radius: var(--radius);
     text-transform: uppercase;
 }
 

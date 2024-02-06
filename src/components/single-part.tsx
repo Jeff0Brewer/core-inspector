@@ -7,13 +7,14 @@ import { loadImageAsync } from '../lib/load'
 import { useBlendState } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
+import { DepthMetadata } from '../lib/metadata'
 import VerticalSlider from '../components/generic/vertical-slider'
 import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
 type SinglePartProps = {
-    part: string | null,
+    part: string,
     core: string,
     minerals: Array<string>,
     palettes: Array<GenericPalette>,
@@ -24,14 +25,25 @@ function SinglePart (
     { part, core, minerals, palettes, clearPart }: SinglePartProps
 ): ReactElement {
     const [vis, setVis] = useState<SinglePartRenderer | null>(null)
+    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const [scale, setScale] = useState<number>(0)
     const [paths, setPaths] = useState<StringMap<string>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const [spacing, setSpacing] = useState<number>(0.5)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const blendCanvasRef = useRef<HTMLCanvasElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
 
     useEffect(() => {
         if (!part) { return }
@@ -58,6 +70,10 @@ function SinglePart (
             canvas.width = imgs[0].width
             canvas.height = imgs[0].height
             setVis(new SinglePartRenderer(canvas, minerals, imgs))
+
+            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
+            const { depth } = await depthRes.json()
+            setDepths(depth)
         }
 
         setPaths(paths)
@@ -81,16 +97,6 @@ function SinglePart (
         }
     }, [])
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
     useEffect(() => {
         if (!vis) { return }
         vis?.setBlending({
@@ -104,11 +110,19 @@ function SinglePart (
         })
     }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
 
-    if (!part) {
-        return <></>
-    }
+    useEffect(() => {
+        const canvas = blendCanvasRef.current
+        if (!depths || !canvas) { return }
+
+        const partLengthM = depths[part].length
+        const partLengthCm = partLengthM * 100
+        const canvasLength = canvas.getBoundingClientRect().height
+
+        setScale(partLengthCm / canvasLength * 100)
+    }, [part, depths, zoom])
 
     const currWidth = zoom * 250 + 50
+
     return <section className={'single-view'}>
         <div className={'top-side'}>
             <button className={'close-button'} onClick={clearPart}>
@@ -121,10 +135,11 @@ function SinglePart (
                 <p> section <span>{ getPartId(part) }</span> </p>
             </div>
         </div>
+        <div className={'punch-label'}></div>
         <div className={'label'}>
             <div
                 className={'channel-labels'}
-                style={{ gap: `${spacing[0] * currWidth}px` }}
+                style={{ gap: `${spacing * currWidth}px` }}
                 ref={labelsRef}
             >
                 <div
@@ -155,16 +170,18 @@ function SinglePart (
         <div className={'content'} ref={contentRef}>
             <div
                 className={'mineral-channels'}
-                style={{ gap: `${spacing[0] * currWidth}px` }}
+                style={{ gap: `${spacing * currWidth}px` }}
             >
-                <canvas
-                    ref={blendCanvasRef}
-                    className={'mineral-canvas'}
-                    style={{
-                        transform: 'scaleY(-1)', // very temporary
-                        width: `${currWidth}px`
-                    }}
-                ></canvas>
+                <div className={'channel-wrap'}>
+                    <canvas
+                        ref={blendCanvasRef}
+                        className={'mineral-canvas'}
+                        style={{
+                            transform: 'scaleY(-1)', // very temporary
+                            width: `${currWidth}px`
+                        }}
+                    ></canvas>
+                </div>
                 { minerals
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
@@ -180,39 +197,28 @@ function SinglePart (
             <div className={'vertical-controls'}>
                 <div className={'scale-ruler'}>
                     <div className={'scale-ruler-center'}>
-                        <p>43 cm</p>
+                        <p>{scale.toFixed(1)} cm</p>
                         <div></div>
                         <p>100 px</p>
                     </div>
                 </div>
-                <div className={'zoom-slider'}>
-                    <VerticalSlider
-                        value={zoom}
-                        setValue={setZoom}
-                        label={'zoom'}
-                        icon={ICONS.zoom}
-                        min={0}
-                        max={1}
-                        step={0.001}
-                    />
-                </div>
                 <VerticalSlider
-                    value={spacing[0]}
-                    setValue={v => setSpacing([v, spacing[1]])}
+                    value={zoom}
+                    setValue={setZoom}
+                    label={'zoom'}
+                    icon={ICONS.zoom}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                />
+                <VerticalSlider
+                    value={spacing}
+                    setValue={setSpacing}
                     label={'horizontal distance'}
                     icon={ICONS.horizontalDist}
                     min={0}
                     max={1}
-                    step={0.001}
-                />
-                <VerticalSlider
-                    value={spacing[1]}
-                    setValue={v => setSpacing([spacing[0], v])}
-                    label={'vertical distance'}
-                    icon={ICONS.verticalDist}
-                    min={0}
-                    max={1}
-                    step={0.001}
+                    step={0.01}
                 />
             </div>
         </div>
@@ -244,45 +250,6 @@ function SinglePart (
             /> }
         </div>
     </section>
-}
-
-type MineralCanvasProps = {
-    src: string,
-    width: number
-}
-
-function MineralCanvas (
-    { src, width }: MineralCanvasProps
-): ReactElement {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-
-    useEffect(() => {
-        const canvas = canvasRef.current
-        const ctx = canvas?.getContext('2d')
-        if (!canvas || !ctx) {
-            throw new Error('No reference to mineral canvas context')
-        }
-
-        const initCanvasData = async (
-            canvas: HTMLCanvasElement,
-            ctx: CanvasRenderingContext2D
-        ): Promise<void> => {
-            const img = await loadImageAsync(src)
-            canvas.width = img.width
-            canvas.height = img.height
-            ctx.drawImage(img, 0, 0)
-        }
-
-        initCanvasData(canvas, ctx)
-    }, [src])
-
-    return (
-        <canvas
-            className={'mineral-canvas'}
-            style={{ width: `${width}px` }}
-            ref={canvasRef}
-        ></canvas>
-    )
 }
 
 function getCoreId (core: string): string {
@@ -317,10 +284,50 @@ function getAbundanceFilepaths (
     return paths
 }
 
+type MineralCanvasProps = {
+    src: string,
+    width: number
+}
+
+function MineralCanvas (
+    { src, width }: MineralCanvasProps
+): ReactElement {
+    const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    useEffect(() => {
+        const canvas = canvasRef.current
+        const ctx = canvas?.getContext('2d')
+        if (!canvas || !ctx) {
+            throw new Error('No reference to mineral canvas context')
+        }
+
+        const initCanvasData = async (
+            canvas: HTMLCanvasElement,
+            ctx: CanvasRenderingContext2D
+        ): Promise<void> => {
+            const img = await loadImageAsync(src)
+            canvas.width = img.width
+            canvas.height = img.height
+            ctx.drawImage(img, 0, 0)
+        }
+
+        initCanvasData(canvas, ctx)
+    }, [src])
+
+    return (
+        <div className={'channel-wrap'}>
+            <canvas
+                className={'mineral-canvas'}
+                style={{ width: `${width}px` }}
+                ref={canvasRef}
+            ></canvas>
+        </div>
+    )
+}
+
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
     horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
-    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>,
     close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
