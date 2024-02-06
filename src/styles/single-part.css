@@ -183,7 +183,10 @@
 
 /* ----- MAIN CONTENT -----*/
 .mineral-channels {
+    position: relative;
     display: flex;
+    width: fit-content;
+    background-image: url('./assets/ruler-bg.svg');
 }
 
 .mineral-channels .channel-wrap:first-of-type {
