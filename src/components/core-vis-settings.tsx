@@ -59,46 +59,48 @@ function CoreVisSettings (
         }
     }
 
-    return <>
-        <ToggleButton
-            active={calibration === 'show'}
-            toggleValue={toggleCalibration}
-            icon={ICONS.calibration}
-        />
-        <ToggleSelect<CoreShape>
-            currValue={shape}
-            setValue={ s => vis?.setShape(s) }
-            item0={{ value: 'column', icon: ICONS.column }}
-            item1={{ value: 'spiral', icon: ICONS.spiral }}
-        />
-        <ToggleSelect<CoreViewMode>
-            currValue={viewMode}
-            setValue={v => vis?.setViewMode(v)}
-            item0={{ value: 'downscaled', icon: ICONS.downscaled }}
-            item1={{ value: 'punchcard', icon: ICONS.punchcard }}
-        />
-        <div className={'core-info'}>
-            <p>core</p>
-            <Dropdown
-                items={cores}
-                selected={core}
-                setSelected={setCore}
-                customClass={'core-dropdown'}
+    return (
+        <div className={'core-vis-settings'}>
+            <ToggleButton
+                active={calibration === 'show'}
+                toggleValue={toggleCalibration}
+                icon={ICONS.calibration}
             />
-            { metadata && <>
-                <p>
-                    sections
-                    <span>{padZeros(1)} - {padZeros(metadata.numSection)}</span>
-                </p>
-                <p>
-                    depth
-                    <span>
-                        {formatFloat(metadata.topDepth)}m - {formatFloat(metadata.bottomDepth)}m
-                    </span>
-                </p>
-            </>}
+            <ToggleSelect<CoreShape>
+                currValue={shape}
+                setValue={ s => vis?.setShape(s) }
+                item0={{ value: 'column', icon: ICONS.column }}
+                item1={{ value: 'spiral', icon: ICONS.spiral }}
+            />
+            <ToggleSelect<CoreViewMode>
+                currValue={viewMode}
+                setValue={v => vis?.setViewMode(v)}
+                item0={{ value: 'downscaled', icon: ICONS.downscaled }}
+                item1={{ value: 'punchcard', icon: ICONS.punchcard }}
+            />
+            <div className={'core-info'}>
+                <p>core</p>
+                <Dropdown
+                    items={cores}
+                    selected={core}
+                    setSelected={setCore}
+                    customClass={'core-dropdown'}
+                />
+                { metadata && <>
+                    <p>
+                        sections
+                        <span>{padZeros(1)} - {padZeros(metadata.numSection)}</span>
+                    </p>
+                    <p>
+                        depth
+                        <span>
+                            {formatFloat(metadata.topDepth)}m - {formatFloat(metadata.bottomDepth)}m
+                        </span>
+                    </p>
+                </>}
+            </div>
         </div>
-    </>
+    )
 }
 
 const ICONS = {

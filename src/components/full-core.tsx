@@ -5,12 +5,12 @@ import LoadIcon from '../components/generic/load-icon'
 import FullCoreRenderer from '../vis/full-core'
 import CoreVisSettings from '../components/core-vis-settings'
 import CoreViewSliders from '../components/core-view-sliders'
-import MineralControls from '../components/mineral-controls'
+import CoreMineralControls from '../components/core-mineral-controls'
 import MetadataHover from '../components/metadata-hover'
 import PanScrollbar from '../components/pan-scrollbar'
 import '../styles/full-core.css'
 
-type FullCoreProps = {
+type FullCoreViewProps = {
     cores: Array<string>,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
@@ -19,8 +19,8 @@ type FullCoreProps = {
     setPart: (p: string) => void
 }
 
-function FullCore (
-    { cores, minerals, palettes, core, setCore, setPart }: FullCoreProps
+function FullCoreView (
+    { cores, minerals, palettes, core, setCore, setPart }: FullCoreViewProps
 ): ReactElement {
     const [vis, setVis] = useState<FullCoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
@@ -96,36 +96,28 @@ function FullCore (
         }
     }, [vis, setPart])
 
-    return <div>
-        <LoadIcon loading={!vis} showDelayMs={100} />
+    return <>
+        <LoadIcon loading={!vis} showDelayMs={0} />
         <canvas
             className={'full-core-canvas'}
             ref={canvasRef}
             data-visible={!!vis}
         ></canvas>
-        <div className={'interface'}>
-            <div className={'top-bar'}>
-                <CoreVisSettings
-                    vis={vis}
-                    cores={cores}
-                    core={core}
-                    setCore={setCore}
-                />
-            </div>
-            <div className={'side-bar'}>
-                <CoreViewSliders vis={vis} />
-            </div>
-            <div className={'bottom-bar'}>
-                <MineralControls
-                    vis={vis}
-                    minerals={minerals}
-                    palettes={palettes}
-                />
-            </div>
-            <MetadataHover vis={vis} core={core} />
-            <PanScrollbar vis={vis} />
-        </div>
-    </div>
+        <CoreVisSettings
+            vis={vis}
+            cores={cores}
+            core={core}
+            setCore={setCore}
+        />
+        <CoreViewSliders vis={vis} />
+        <CoreMineralControls
+            vis={vis}
+            minerals={minerals}
+            palettes={palettes}
+        />
+        <MetadataHover vis={vis} core={core} />
+        <PanScrollbar vis={vis} />
+    </>
 }
 
-export default FullCore
+export default FullCoreView
