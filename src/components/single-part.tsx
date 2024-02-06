@@ -27,14 +27,11 @@ function SinglePart (
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
-    const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const [channelHeight, setChannelHeight] = useState<number>(0)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
-        minerals.forEach(mineral => {
-            visible[mineral] = true
-        })
+        minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
     }, [part, minerals])
 
@@ -67,6 +64,28 @@ function SinglePart (
             setSpacing={setSpacing}
             channelHeight={channelHeight}
         />
+        <PartMineralControls
+            minerals={minerals}
+            palettes={palettes}
+            visible={visible}
+            setVisible={setVisible}
+        />
+    </>
+}
+
+type PartMineralControlsProps = {
+    minerals: Array<string>,
+    palettes: Array<GenericPalette>,
+    visible: StringMap<boolean>,
+    setVisible: (v: StringMap<boolean>) => void,
+}
+
+function PartMineralControls (
+    { minerals, palettes, visible, setVisible }: PartMineralControlsProps
+): ReactElement {
+    const [menuOpen, setMenuOpen] = useState<boolean>(false)
+
+    return <>
         <div className={'mineral-controls'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
@@ -84,12 +103,12 @@ function SinglePart (
             </div>
             <button
                 className={'blend-toggle'}
-                data-active={blendMenuOpen}
-                onClick={() => setBlendMenuOpen(!blendMenuOpen)}
+                data-active={menuOpen}
+                onClick={() => setMenuOpen(!menuOpen)}
             >
                 <MdColorLens />
             </button>
-            { blendMenuOpen && <BlendMenu
+            { menuOpen && <BlendMenu
                 minerals={minerals}
                 palettes={palettes}
             /> }
@@ -326,38 +345,6 @@ function MineralChannels (
     </>
 }
 
-function getCoreId (core: string): string {
-    return core.toUpperCase() + 'A'
-}
-
-function getPartId (part: string): string {
-    const [section, piece] = part.split('_').map(s => parseInt(s))
-    const sectionId = padZeros(section, 4) + 'Z'
-    const pieceId = padZeros(piece, 3)
-    return `${sectionId}_${pieceId}`
-}
-
-function getAbundanceFilepaths (
-    core: string,
-    part: string,
-    minerals: Array<string>
-): StringMap<string> {
-    const coreId = getCoreId(core)
-    const partId = getPartId(part)
-    const fullId = `${coreId}_${partId}`
-    const extension = 'factor_1to001.abundance.local.png'
-
-    const paths: StringMap<string> = {}
-
-    minerals.forEach((mineral, index) => {
-        const mineralId = padZeros(index, 2)
-        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
-        paths[mineral] = path
-    })
-
-    return paths
-}
-
 type MineralCanvasProps = {
     src: string,
     width: number
@@ -397,6 +384,38 @@ function MineralCanvas (
             ></canvas>
         </div>
     )
+}
+
+function getCoreId (core: string): string {
+    return core.toUpperCase() + 'A'
+}
+
+function getPartId (part: string): string {
+    const [section, piece] = part.split('_').map(s => parseInt(s))
+    const sectionId = padZeros(section, 4) + 'Z'
+    const pieceId = padZeros(piece, 3)
+    return `${sectionId}_${pieceId}`
+}
+
+function getAbundanceFilepaths (
+    core: string,
+    part: string,
+    minerals: Array<string>
+): StringMap<string> {
+    const coreId = getCoreId(core)
+    const partId = getPartId(part)
+    const fullId = `${coreId}_${partId}`
+    const extension = 'factor_1to001.abundance.local.png'
+
+    const paths: StringMap<string> = {}
+
+    minerals.forEach((mineral, index) => {
+        const mineralId = padZeros(index, 2)
+        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
+        paths[mineral] = path
+    })
+
+    return paths
 }
 
 const ICONS = {
