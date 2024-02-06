@@ -8,7 +8,7 @@
     grid-template-columns: 70px 1fr;
     grid-template-areas:
         "top-side top"
-        "side label"
+        "punch-label label"
         "side content"
         "bottom bottom";
 }
@@ -20,6 +20,11 @@
 
 .single-view .top {
     grid-area: top;
+    background-color: #444;
+}
+
+.single-view .punch-label {
+    grid-area: punch-label;
     background-color: #444;
 }
 

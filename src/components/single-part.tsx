@@ -117,6 +117,7 @@ function SinglePart (
                 <p> section <span>{ getPartId(part) }</span> </p>
             </div>
         </div>
+        <div className={'punch-label'}></div>
         <div className={'label'}>
             <div
                 className={'channel-labels'}
