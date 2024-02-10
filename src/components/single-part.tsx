@@ -138,11 +138,11 @@ function ScaleRuler (
     }, [core])
 
     useEffect(() => {
-        if (!depths || !channelHeight) { return }
-
-        const partLengthCm = depths[part].length * 100
-
-        setScale(partLengthCm / channelHeight * 75)
+        if (!depths || !channelHeight) {
+            return
+        }
+        const cmPerPx = (depths[part].length * 100) / channelHeight
+        setScale(cmPerPx * 75)
     }, [part, depths, channelHeight])
 
     return (
@@ -169,7 +169,7 @@ type PartViewControlsProps = {
 function PartViewControls (
     { core, part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
 ): ReactElement {
-    return <>
+    return (
         <div className={'vertical-controls'}>
             <ScaleRuler
                 core={core}
@@ -195,7 +195,7 @@ function PartViewControls (
                 step={0.01}
             />
         </div>
-    </>
+    )
 }
 
 type PartMineralChannelsProps = {
