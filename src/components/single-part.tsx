@@ -86,15 +86,17 @@ function PartMineralControls (
 ): ReactElement {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
 
-    return <>
+    const toggleMineralVisible = (mineral: string): void => {
+        visible[mineral] = !visible[mineral]
+        setVisible({ ...visible })
+    }
+
+    return (
         <div className={'mineral-controls'}>
             <div className={'mineral-toggles'}>
                 { minerals.map((mineral, i) =>
                     <button
-                        onClick={() => {
-                            visible[mineral] = !visible[mineral]
-                            setVisible({ ...visible })
-                        }}
+                        onClick={() => toggleMineralVisible(mineral)}
                         data-active={visible[mineral]}
                         key={i}
                     >
@@ -104,17 +106,54 @@ function PartMineralControls (
             </div>
             <button
                 className={'blend-toggle'}
-                data-active={menuOpen}
                 onClick={() => setMenuOpen(!menuOpen)}
+                data-active={menuOpen}
             >
                 <MdColorLens />
             </button>
-            { menuOpen && <BlendMenu
-                minerals={minerals}
-                palettes={palettes}
-            /> }
+            { menuOpen && <BlendMenu minerals={minerals} palettes={palettes} /> }
         </div>
-    </>
+    )
+}
+
+type ScaleRulerProps = {
+    core: string,
+    part: string,
+    channelHeight: number
+}
+
+function ScaleRuler (
+    { core, part, channelHeight }: ScaleRulerProps
+): ReactElement {
+    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const [scale, setScale] = useState<number>(0)
+
+    useEffect(() => {
+        const getDepths = async (): Promise<void> => {
+            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
+            const { depth } = await depthRes.json()
+            setDepths(depth)
+        }
+        getDepths()
+    }, [core])
+
+    useEffect(() => {
+        if (!depths || !channelHeight) { return }
+
+        const partLengthCm = depths[part].length * 100
+
+        setScale(partLengthCm / channelHeight * 75)
+    }, [part, depths, channelHeight])
+
+    return (
+        <div className={'scale-ruler'}>
+            <div className={'scale-ruler-center'}>
+                <p>{scale.toFixed(1)} cm</p>
+                <div></div>
+                <p>75 px</p>
+            </div>
+        </div>
+    )
 }
 
 type PartViewControlsProps = {
@@ -130,37 +169,13 @@ type PartViewControlsProps = {
 function PartViewControls (
     { core, part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
 ): ReactElement {
-    const [depths, setDepths] = useState<DepthMetadata | null>(null)
-    const [scale, setScale] = useState<number>(0)
-
-    useEffect(() => {
-        const getDepths = async (): Promise<void> => {
-            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
-            const { depth } = await depthRes.json()
-            setDepths(depth)
-        }
-
-        getDepths()
-    }, [part, core])
-
-    useEffect(() => {
-        if (!depths || !channelHeight) { return }
-
-        const partLengthM = depths[part].length
-        const partLengthCm = partLengthM * 100
-
-        setScale(partLengthCm / channelHeight * 75)
-    }, [channelHeight, part, depths, zoom])
-
     return <>
         <div className={'vertical-controls'}>
-            <div className={'scale-ruler'}>
-                <div className={'scale-ruler-center'}>
-                    <p>{scale.toFixed(1)} cm</p>
-                    <div></div>
-                    <p>75 px</p>
-                </div>
-            </div>
+            <ScaleRuler
+                core={core}
+                part={part}
+                channelHeight={channelHeight}
+            />
             <VerticalSlider
                 value={zoom}
                 setValue={setZoom}
