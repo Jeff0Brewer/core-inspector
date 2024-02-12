@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
-import { padZeros, formatFloat, formatPercent } from '../../lib/util'
+import { padZeros, formatFloat } from '../../lib/util'
 import { DepthMetadata, HydrationMetadata } from '../../lib/metadata'
 import CoreRenderer from '../../vis/core'
 import '../../styles/metadata-hover.css'
