@@ -54,7 +54,7 @@ type UiState = {
     setPanWidth?: (w: number) => void
 }
 
-class FullCoreRenderer {
+class CoreRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
     downscaledCore: DownscaledCoreRenderer
@@ -463,7 +463,7 @@ class FullCoreRenderer {
     }
 }
 
-export default FullCoreRenderer
+export default CoreRenderer
 export { TRANSFORM_SPEED }
 export type {
     UiState,

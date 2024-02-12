@@ -6,7 +6,7 @@ import fragSource from '../shaders/single-part-frag.glsl?raw'
 
 const STRIDE = POS_FPV + TEX_FPV
 
-class SinglePartRenderer {
+class PartRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
     program: GlProgram
@@ -54,4 +54,4 @@ class SinglePartRenderer {
     }
 }
 
-export default SinglePartRenderer
+export default PartRenderer

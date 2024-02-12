@@ -11,12 +11,12 @@ import { DepthMetadata } from '../../lib/metadata'
 import LoadIcon from '../../components/generic/load-icon'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import BlendMenu from '../../components/blend-menu'
-import SinglePartRenderer from '../../vis/single-part'
+import PartRenderer from '../../vis/part'
 import '../../styles/single-part.css'
 
 const BLEND_KEY = '[blended]'
 
-type SinglePartViewProps = {
+type PartViewProps = {
     part: string,
     core: string,
     minerals: Array<string>,
@@ -24,10 +24,10 @@ type SinglePartViewProps = {
     clearPart: () => void
 }
 
-function SinglePartView (
-    { part, core, minerals, palettes, clearPart }: SinglePartViewProps
+function PartView (
+    { part, core, minerals, palettes, clearPart }: PartViewProps
 ): ReactElement {
-    const [vis, setVis] = useState<SinglePartRenderer | null>(null)
+    const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLCanvasElement>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -51,7 +51,7 @@ function SinglePartView (
             channels[BLEND_KEY] = document.createElement('canvas')
             channels[BLEND_KEY].width = imgs[0].width
             channels[BLEND_KEY].height = imgs[0].height
-            setVis(new SinglePartRenderer(channels[BLEND_KEY], minerals, imgs))
+            setVis(new PartRenderer(channels[BLEND_KEY], minerals, imgs))
 
             minerals.forEach((mineral, i) => {
                 channels[mineral] = imgToCanvas(imgs[i])
@@ -113,7 +113,7 @@ function PartInfo (
 }
 
 type PartMineralChannelsProps = {
-    vis: SinglePartRenderer | null,
+    vis: PartRenderer | null,
     channels: StringMap<HTMLCanvasElement>,
     visible: StringMap<boolean>,
     zoom: number,
@@ -397,4 +397,4 @@ const ICONS = {
     close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
-export default SinglePartView
+export default PartView

@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect } from 'react'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode } from '../vis/mineral-blend'
-import SinglePartRenderer from '../vis/single-part'
-import FullCoreRenderer from '../vis/full-core'
+import PartRenderer from '../vis/part'
+import CoreRenderer from '../vis/core'
 
 type BlendContextProps = {
     palette: GenericPalette,
@@ -31,7 +31,7 @@ const useBlendState = (): BlendContextProps => {
     return context
 }
 
-const useBlending = (vis: SinglePartRenderer | FullCoreRenderer | null): void => {
+const useBlending = (vis: PartRenderer | CoreRenderer | null): void => {
     const {
         magnitudes,
         visibilities,

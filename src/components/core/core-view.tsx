@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { loadImageAsync } from '../../lib/load'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
-import FullCoreRenderer from '../../vis/full-core'
+import CoreRenderer from '../../vis/core'
 import CoreVisSettings from '../../components/core/vis-settings'
 import CoreViewSliders from '../../components/core/view-sliders'
 import CoreMineralControls from '../../components/core/mineral-controls'
@@ -10,7 +10,7 @@ import MetadataHover from '../../components/core/metadata-hover'
 import PanScrollbar from '../../components/core/pan-scrollbar'
 import '../../styles/full-core.css'
 
-type FullCoreViewProps = {
+type CoreViewProps = {
     cores: Array<string>,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
@@ -19,10 +19,10 @@ type FullCoreViewProps = {
     setPart: (p: string) => void
 }
 
-function FullCoreView (
-    { cores, minerals, palettes, core, setCore, setPart }: FullCoreViewProps
+function CoreView (
+    { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
 ): ReactElement {
-    const [vis, setVis] = useState<FullCoreRenderer | null>(null)
+    const [vis, setVis] = useState<CoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -31,7 +31,7 @@ function FullCoreView (
             throw new Error('No reference to full core canvas')
         }
 
-        const initFullCoreRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+        const initCoreRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
             const downscaledPaths = []
             const punchcardPaths = []
             for (let i = 0; i < minerals.length; i++) {
@@ -47,7 +47,7 @@ function FullCoreView (
             ])
 
             setVis(
-                new FullCoreRenderer(
+                new CoreRenderer(
                     canvas,
                     downscaledImgs,
                     punchcardImgs,
@@ -65,7 +65,7 @@ function FullCoreView (
             setVis(null)
         }
 
-        initFullCoreRenderer(canvasRef.current)
+        initCoreRenderer(canvasRef.current)
 
         // don't want to include vis in dependency array since vis
         // is being set here, will cause loop
@@ -120,4 +120,4 @@ function FullCoreView (
     </>
 }
 
-export default FullCoreView
+export default CoreView

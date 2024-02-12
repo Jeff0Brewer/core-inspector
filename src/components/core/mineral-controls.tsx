@@ -3,11 +3,11 @@ import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../components/blend-context'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
-import FullCoreRenderer from '../../vis/full-core'
+import CoreRenderer from '../../vis/core'
 import '../../styles/core-mineral-controls.css'
 
 type CoreMineralControlsProps = {
-    vis: FullCoreRenderer | null,
+    vis: CoreRenderer | null,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
 }
