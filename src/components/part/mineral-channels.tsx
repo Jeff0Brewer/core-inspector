@@ -17,7 +17,7 @@ function PartMineralChannels (
     const [width, setWidth] = useState<string>('0px')
     const [height, setHeight] = useState<string>('0px')
     const [gap, setGap] = useState<string>('0px')
-    const [mousePos, setMousePos] = useState<[number, number]>([0, 0])
+    const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
@@ -91,8 +91,8 @@ type MineralCanvasProps = {
     canvas: HTMLCanvasElement,
     width: string,
     height: string,
-    mousePos: [number, number],
-    setMousePos: (p: [number, number]) => void
+    mousePos: [number, number] | null,
+    setMousePos: (p: [number, number] | null) => void
 }
 
 function MineralCanvas (
@@ -124,7 +124,8 @@ function MineralCanvas (
             ])
         }
         const mouseleave = (): void => {
-            setMousePos([-100, -100])
+            console.log('hi')
+            setMousePos(null)
         }
 
         channel.addEventListener('mousemove', mousemove)
@@ -138,12 +139,12 @@ function MineralCanvas (
     return (
         <div className={'channel-wrap'}>
             <div className={'canvas-wrap'} ref={channelRef}>
-                <div
+                { mousePos && <div
                     className={'channel-cursor'}
                     style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
                 >
                     x
-                </div>
+                </div> }
                 <div
                     className={'canvas'}
                     style={{ width, height }}
