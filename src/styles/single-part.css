@@ -206,6 +206,16 @@
     background-repeat: infinite;
 }
 
+.canvas-wrap {
+    position: relative;
+}
+
+.canvas-wrap > canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
 /* ----- LABEL CONTENT ----- */
 .punch-label {
     grid-area: label-side;
