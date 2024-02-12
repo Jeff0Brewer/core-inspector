@@ -123,16 +123,17 @@ function MineralCanvas (
                 e.clientY - top
             ])
         }
-        const mouseleave = (): void => {
-            console.log('hi')
+        const clearMousePos = (): void => {
             setMousePos(null)
         }
 
         channel.addEventListener('mousemove', mousemove)
-        channel.addEventListener('mouseleave', mouseleave)
+        channel.addEventListener('mouseleave', clearMousePos)
+        window.addEventListener('wheel', clearMousePos)
         return () => {
             channel.removeEventListener('mousemove', mousemove)
-            channel.removeEventListener('mouseleave', mouseleave)
+            channel.removeEventListener('mouseleave', clearMousePos)
+            window.removeEventListener('wheel', clearMousePos)
         }
     }, [setMousePos])
 
