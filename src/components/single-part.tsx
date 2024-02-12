@@ -131,7 +131,9 @@ type PartMineralChannelsProps = {
 function PartMineralChannels (
     { vis, blended, channels, visible, zoom, spacing }: PartMineralChannelsProps
 ): ReactElement {
-    const [channelDims, setChannelDims] = useState<[number, number]>([0, 0])
+    const [width, setWidth] = useState<string>('0px')
+    const [height, setHeight] = useState<string>('0px')
+    const [gap, setGap] = useState<string>('0px')
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
@@ -157,63 +159,41 @@ function PartMineralChannels (
         const channelWidth = zoom * 250 + 50
         const channelHeight = channelWidth * blended.height / blended.width
 
-        setChannelDims([channelWidth, channelHeight])
-    }, [zoom, blended])
+        setWidth(`${channelWidth}px`)
+        setHeight(`${channelHeight}px`)
+        setGap(`${spacing * channelWidth}px`)
+    }, [zoom, blended, spacing])
 
     return <>
         <div className={'channel-labels-wrap'}>
-            <div
-                className={'channel-labels'}
-                style={{ gap: `${spacing * channelDims[0]}px` }}
-                ref={labelsRef}
-            >
-                <div
-                    className={'channel-label'}
-                    style={{
-                        minWidth: `${channelDims[0]}px`,
-                        maxWidth: `${channelDims[0]}px`
-                    }}
-                >
+            <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
+                <div className={'channel-label'} style={{ width }}>
                     [blended]
                 </div>
                 { Object.keys(channels)
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
-                        <div
-                            className={'channel-label'}
-                            style={{
-                                minWidth: `${channelDims[0]}px`,
-                                maxWidth: `${channelDims[0]}px`
-                            }}
-                            key={i}
-                        >
+                        <div className={'channel-label'} style={{ width }} key={i}>
                             {mineral}
                         </div>
                     ) }
             </div>
         </div>
-        <div
-            className={'mineral-channels-wrap'}
-            ref={contentRef}
-        >
+        <div className={'mineral-channels-wrap'} ref={contentRef}>
             <LoadIcon loading={!vis} showDelayMs={0} />
-            <div
-                className={'mineral-channels'}
-                style={{ gap: `${spacing * channelDims[0]}px` }}
-                data-visible={!!vis}
-            >
+            <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
                 { blended && <MineralCanvas
                     canvas={blended}
-                    width={channelDims[0]}
-                    height={channelDims[1]}
+                    width={width}
+                    height={height}
                 /> }
                 { Object.entries(channels)
                     .filter(([mineral, _]) => visible[mineral])
                     .map(([_, canvas], i) =>
                         <MineralCanvas
                             canvas={canvas}
-                            width={channelDims[0]}
-                            height={channelDims[1]}
+                            width={width}
+                            height={height}
                             key={i}
                         />
                     ) }
@@ -348,8 +328,8 @@ function PartViewControls (
 
 type MineralCanvasProps = {
     canvas: HTMLCanvasElement,
-    width: number,
-    height: number
+    width: string,
+    height: string
 }
 
 function MineralCanvas (
@@ -367,10 +347,7 @@ function MineralCanvas (
         <div className={'channel-wrap'}>
             <div
                 className={'canvas-wrap'}
-                style={{
-                    width: `${width}px`,
-                    height: `${height}px`
-                }}
+                style={{ width, height }}
                 ref={addCanvasChild}
             ></div>
         </div>
