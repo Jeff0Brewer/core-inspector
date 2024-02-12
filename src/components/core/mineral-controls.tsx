@@ -1,10 +1,10 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
-import { useBlendState, useBlending } from '../components/blend-context'
-import { GenericPalette } from '../lib/palettes'
-import BlendMenu from '../components/blend-menu'
-import FullCoreRenderer from '../vis/full-core'
-import '../styles/core-mineral-controls.css'
+import { useBlendState, useBlending } from '../../components/blend-context'
+import { GenericPalette } from '../../lib/palettes'
+import BlendMenu from '../../components/blend-menu'
+import FullCoreRenderer from '../../vis/full-core'
+import '../../styles/core-mineral-controls.css'
 
 type CoreMineralControlsProps = {
     vis: FullCoreRenderer | null,
