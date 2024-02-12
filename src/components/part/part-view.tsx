@@ -34,7 +34,8 @@ function PartView (
     useBlending(vis)
 
     useEffect(() => {
-        const visible: StringMap<boolean> = { BLEND_KEY: true }
+        const visible: StringMap<boolean> = {}
+        visible[BLEND_KEY] = true
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
