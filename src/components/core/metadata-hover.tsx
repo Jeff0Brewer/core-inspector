@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
-import { padZeros, formatFloat, formatPercent } from '../lib/util'
-import { DepthMetadata, HydrationMetadata } from '../lib/metadata'
-import FullCoreRenderer from '../vis/full-core'
-import '../styles/metadata-hover.css'
+import { padZeros, formatFloat, formatPercent } from '../../lib/util'
+import { DepthMetadata, HydrationMetadata } from '../../lib/metadata'
+import CoreRenderer from '../../vis/core'
+import '../../styles/metadata-hover.css'
 
 type MetadataHoverProps = {
-    vis: FullCoreRenderer | null,
+    vis: CoreRenderer | null,
     core: string,
 }
 

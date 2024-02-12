@@ -2,16 +2,16 @@ import { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoGridSharp } from 'react-icons/io5'
-import { padZeros, formatFloat } from '../lib/util'
-import FullCoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../vis/full-core'
-import { CoreMetadata } from '../lib/metadata'
-import ToggleSelect from '../components/generic/toggle-select'
-import ToggleButton from '../components/generic/toggle-button'
-import Dropdown from '../components/generic/dropdown'
-import '../styles/core-vis-settings.css'
+import { padZeros, formatFloat } from '../../lib/util'
+import CoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../../vis/core'
+import { CoreMetadata } from '../../lib/metadata'
+import ToggleSelect from '../../components/generic/toggle-select'
+import ToggleButton from '../../components/generic/toggle-button'
+import Dropdown from '../../components/generic/dropdown'
+import '../../styles/core-vis-settings.css'
 
 type CoreVisSettingsProps = {
-    vis: FullCoreRenderer | null,
+    vis: CoreRenderer | null,
     cores: Array<string>,
     core: string,
     setCore: (c: string) => void,
