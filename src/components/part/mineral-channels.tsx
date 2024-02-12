@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
+import { BiCross } from 'react-icons/bi'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer from '../../vis/part'
@@ -11,11 +12,12 @@ type PartMineralChannelsProps = {
     channels: StringMap<HTMLCanvasElement>,
     visible: StringMap<boolean>,
     zoom: number,
-    spacing: number
+    spacing: number,
+    setChannelHeight: (h: number) => void
 }
 
 function PartMineralChannels (
-    { vis, channels, visible, zoom, spacing }: PartMineralChannelsProps
+    { vis, channels, visible, zoom, spacing, setChannelHeight }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -62,7 +64,9 @@ function PartMineralChannels (
         setViewWidth(channelWidth)
         setViewHeight(channelHeight)
         setViewGap(channelGap)
-    }, [zoom, spacing, channels])
+
+        setChannelHeight(channelHeight)
+    }, [zoom, spacing, channels, setChannelHeight])
 
     useEffect(() => {
         const firstChannel = Object.values(channels)[0]
@@ -235,7 +239,7 @@ function MineralCanvas (
                     className={'channel-cursor'}
                     style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
                 >
-                    x
+                    {ICONS.cursor}
                 </div> }
                 <div
                     className={'canvas'}
@@ -245,6 +249,10 @@ function MineralCanvas (
             </div>
         </div>
     )
+}
+
+const ICONS = {
+    cursor: <BiCross style={{ fontSize: '16px' }} />
 }
 
 export default PartMineralChannels

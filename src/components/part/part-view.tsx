@@ -30,6 +30,7 @@ function PartView (
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
+    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     useBlending(vis)
 
@@ -74,6 +75,7 @@ function PartView (
             visible={visible}
             zoom={zoom}
             spacing={spacing}
+            setChannelHeight={setChannelHeight}
         />
         <PartViewControls
             core={core}
@@ -82,7 +84,7 @@ function PartView (
             setZoom={setZoom}
             spacing={spacing}
             setSpacing={setSpacing}
-            channelHeight={channels[BLEND_KEY]?.height || 0}
+            channelHeight={channelHeight}
         />
         <PartMineralControls
             minerals={minerals}
