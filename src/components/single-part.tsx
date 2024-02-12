@@ -14,6 +14,8 @@ import BlendMenu from '../components/blend-menu'
 import SinglePartRenderer from '../vis/single-part'
 import '../styles/single-part.css'
 
+const BLEND_KEY = '[blended]'
+
 type SinglePartViewProps = {
     part: string,
     core: string,
@@ -26,7 +28,6 @@ function SinglePartView (
     { part, core, minerals, palettes, clearPart }: SinglePartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<SinglePartRenderer | null>(null)
-    const [blendCanvas, setBlendCanvas] = useState<HTMLCanvasElement | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLCanvasElement>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -35,7 +36,7 @@ function SinglePartView (
     useBlending(vis)
 
     useEffect(() => {
-        const visible: StringMap<boolean> = {}
+        const visible: StringMap<boolean> = { BLEND_KEY: true }
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
@@ -46,16 +47,17 @@ function SinglePartView (
             )
 
             const channels: StringMap<HTMLCanvasElement> = {}
+
+            channels[BLEND_KEY] = document.createElement('canvas')
+            channels[BLEND_KEY].width = imgs[0].width
+            channels[BLEND_KEY].height = imgs[0].height
+            setVis(new SinglePartRenderer(channels[BLEND_KEY], minerals, imgs))
+
             minerals.forEach((mineral, i) => {
                 channels[mineral] = imgToCanvas(imgs[i])
             })
-            setChannels(channels)
 
-            const blendCanvas = document.createElement('canvas')
-            blendCanvas.width = imgs[0].width
-            blendCanvas.height = imgs[0].height
-            setVis(new SinglePartRenderer(blendCanvas, minerals, imgs))
-            setBlendCanvas(blendCanvas)
+            setChannels(channels)
         }
 
         getChannels()
@@ -74,7 +76,6 @@ function SinglePartView (
         <div className={'punch-label'}></div>
         <PartMineralChannels
             vis={vis}
-            blended={blendCanvas}
             channels={channels}
             visible={visible}
             zoom={zoom}
@@ -87,7 +88,7 @@ function SinglePartView (
             setZoom={setZoom}
             spacing={spacing}
             setSpacing={setSpacing}
-            channelHeight={blendCanvas?.height || 0}
+            channelHeight={channels[BLEND_KEY]?.height || 0}
         />
         <PartMineralControls
             minerals={minerals}
@@ -100,15 +101,14 @@ function SinglePartView (
 
 type PartMineralChannelsProps = {
     vis: SinglePartRenderer | null,
-    blended: HTMLCanvasElement | null,
-    channels: StringMap<HTMLCanvasElement>
+    channels: StringMap<HTMLCanvasElement>,
     visible: StringMap<boolean>,
     zoom: number,
     spacing: number
 }
 
 function PartMineralChannels (
-    { vis, blended, channels, visible, zoom, spacing }: PartMineralChannelsProps
+    { vis, channels, visible, zoom, spacing }: PartMineralChannelsProps
 ): ReactElement {
     const [width, setWidth] = useState<string>('0px')
     const [height, setHeight] = useState<string>('0px')
@@ -116,6 +116,7 @@ function PartMineralChannels (
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
+    // add event listener to coordinate label / content scroll
     useEffect(() => {
         const content = contentRef.current
         const labels = labelsRef.current
@@ -133,22 +134,25 @@ function PartMineralChannels (
         }
     }, [])
 
+    // get css values for layout from current zoom / spacing
     useEffect(() => {
-        if (!blended) { return }
+        const firstChannel = Object.values(channels)[0]
+        if (!firstChannel) { return }
+
         const channelWidth = zoom * 250 + 50
-        const channelHeight = channelWidth * blended.height / blended.width
+
+        const { width, height } = firstChannel
+        const channelHeight = channelWidth * height / width
+        const channelGap = channelWidth * spacing
 
         setWidth(`${channelWidth}px`)
         setHeight(`${channelHeight}px`)
-        setGap(`${spacing * channelWidth}px`)
-    }, [zoom, blended, spacing])
+        setGap(`${channelGap}px`)
+    }, [zoom, spacing, channels])
 
     return <>
         <div className={'channel-labels-wrap'}>
             <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
-                <div className={'channel-label'} style={{ width }}>
-                    [blended]
-                </div>
                 { Object.keys(channels)
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
@@ -161,11 +165,6 @@ function PartMineralChannels (
         <div className={'mineral-channels-wrap'} ref={contentRef}>
             <LoadIcon loading={!vis} showDelayMs={0} />
             <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
-                { blended && <MineralCanvas
-                    canvas={blended}
-                    width={width}
-                    height={height}
-                /> }
                 { Object.entries(channels)
                     .filter(([mineral, _]) => visible[mineral])
                     .map(([_, canvas], i) =>
@@ -245,9 +244,7 @@ function ScaleRuler (
     }, [core])
 
     useEffect(() => {
-        if (!depths || !channelHeight) {
-            return
-        }
+        if (!depths || !channelHeight) { return }
         const cmPerPx = (depths[part].length * 100) / channelHeight
         setScale(cmPerPx * 75)
     }, [part, depths, channelHeight])
@@ -314,6 +311,8 @@ type MineralCanvasProps = {
 function MineralCanvas (
     { canvas, width, height }: MineralCanvasProps
 ): ReactElement {
+    // add HTML canvas element to react element via ref,
+    // allows access of canvas reference when not rendered to dom
     const addCanvasChild = (ref: HTMLDivElement | null): void => {
         if (!ref) { return }
         while (ref.lastChild) {
