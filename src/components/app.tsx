@@ -1,6 +1,7 @@
 import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import BlendProvider from '../components/blend-provider'
+import CoreMetadataProvider from '../components/core-metadata-provider'
 import CoreView from '../components/core/core-view'
 import PartView from '../components/part/part-view'
 import '../styles/app.css'
@@ -24,27 +25,29 @@ function App (): ReactElement {
 
     return (
         <main className={'app'}>
-            <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
-                { part === null &&
-                    <CoreView
-                        cores={CORES}
-                        minerals={MINERALS}
-                        palettes={COLOR_PRESETS}
-                        core={core}
-                        setCore={setCore}
-                        setPart={setPart}
-                    />
-                }
-                { part !== null &&
-                    <PartView
-                        part={part}
-                        core={core}
-                        minerals={MINERALS}
-                        palettes={COLOR_PRESETS}
-                        clearPart={() => setPart(null)}
-                    />
-                }
-            </BlendProvider>
+            <CoreMetadataProvider core={core}>
+                <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
+                    { part === null &&
+                        <CoreView
+                            cores={CORES}
+                            minerals={MINERALS}
+                            palettes={COLOR_PRESETS}
+                            core={core}
+                            setCore={setCore}
+                            setPart={setPart}
+                        />
+                    }
+                    { part !== null &&
+                        <PartView
+                            part={part}
+                            core={core}
+                            minerals={MINERALS}
+                            palettes={COLOR_PRESETS}
+                            clearPart={() => setPart(null)}
+                        />
+                    }
+                </BlendProvider>
+            </CoreMetadataProvider>
         </main>
     )
 }

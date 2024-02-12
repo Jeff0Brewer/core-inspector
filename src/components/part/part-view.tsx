@@ -78,7 +78,6 @@ function PartView (
             setChannelHeight={setChannelHeight}
         />
         <PartViewControls
-            core={core}
             part={part}
             zoom={zoom}
             setZoom={setZoom}

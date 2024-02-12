@@ -115,7 +115,7 @@ function CoreView (
             minerals={minerals}
             palettes={palettes}
         />
-        <MetadataHover vis={vis} core={core} />
+        <MetadataHover vis={vis} />
         <PanScrollbar vis={vis} />
     </>
 }

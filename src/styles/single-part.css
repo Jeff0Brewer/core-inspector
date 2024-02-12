@@ -14,7 +14,7 @@
     align-items: center;
     width: 100%;
     height: 100%;
-    gap: 10px;
+    gap: 25px;
     font-size: 0.85rem;
     font-weight: 300;
     text-transform: uppercase;
@@ -28,6 +28,10 @@
 .section-info > p > span {
     color: #fff;
     margin-left: 5px;
+}
+
+.section-info > p > .lower {
+    text-transform: lowercase;
 }
 
 /* ----- SIDE CONTROLS ----- */

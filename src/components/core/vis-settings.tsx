@@ -4,7 +4,7 @@ import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoGridSharp } from 'react-icons/io5'
 import { padZeros, formatFloat } from '../../lib/util'
 import CoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../../vis/core'
-import { CoreMetadata } from '../../lib/metadata'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
@@ -23,17 +23,7 @@ function CoreVisSettings (
     const [calibration, setCalibration] = useState<CalibrationOption>('show')
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
-    const [metadata, setMetadata] = useState<CoreMetadata | null>(null)
-
-    useEffect(() => {
-        const getMetadata = async (): Promise<void> => {
-            const basePath = `./data/${core}`
-            const res = await fetch(`${basePath}/core-metadata.json`)
-            const metadata = await res.json() as CoreMetadata
-            setMetadata(metadata)
-        }
-        getMetadata()
-    }, [core])
+    const { numSection, topDepth, bottomDepth } = useCoreMetadata()
 
     useEffect(() => {
         if (!vis) { return }
@@ -86,18 +76,16 @@ function CoreVisSettings (
                     setSelected={setCore}
                     customClass={'core-dropdown'}
                 />
-                { metadata && <>
-                    <p>
-                        sections
-                        <span>{padZeros(1)} - {padZeros(metadata.numSection)}</span>
-                    </p>
-                    <p>
-                        depth
-                        <span>
-                            {formatFloat(metadata.topDepth)}m - {formatFloat(metadata.bottomDepth)}m
-                        </span>
-                    </p>
-                </>}
+                <p>
+                    sections
+                    <span>{padZeros(1)} - {padZeros(numSection)}</span>
+                </p>
+                <p>
+                    depth
+                    <span>
+                        {formatFloat(topDepth)}m - {formatFloat(bottomDepth)}m
+                    </span>
+                </p>
             </div>
         </div>
     )

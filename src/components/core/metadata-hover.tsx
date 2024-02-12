@@ -1,19 +1,17 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { padZeros, formatFloat } from '../../lib/util'
-import { DepthMetadata, HydrationMetadata } from '../../lib/metadata'
 import CoreRenderer from '../../vis/core'
 import '../../styles/metadata-hover.css'
 
 type MetadataHoverProps = {
-    vis: CoreRenderer | null,
-    core: string,
+    vis: CoreRenderer | null
 }
 
-function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
+function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
+    const { depths, hydrations } = useCoreMetadata()
     const [hovered, setHovered] = useState<string | null>(null)
-    const [depth, setDepth] = useState<DepthMetadata>({})
-    const [hydration, setHydration] = useState<HydrationMetadata>({})
     const popupRef = useRef<HTMLDivElement>(null)
 
     usePopupPosition(popupRef)
@@ -24,23 +22,7 @@ function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
         vis.setHovered(null)
     }, [vis])
 
-    // get data for current core
-    useEffect(() => {
-        const getData = async (): Promise<void> => {
-            const basePath = `./data/${core}`
-            const [{ depth }, { hydration }] = await Promise.all([
-                fetch(`${basePath}/depth-metadata.json`).then(res => res.json()),
-                fetch(`${basePath}/hydration-metadata.json`).then(res => res.json())
-            ])
-
-            setDepth(depth)
-            setHydration(hydration)
-        }
-
-        getData()
-    }, [core])
-
-    const hasData = hovered && (depth[hovered] || hydration[hovered])
+    const hasData = hovered && (depths[hovered] || hydrations[hovered])
 
     return (
         <div
@@ -52,17 +34,17 @@ function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
                 {formatId(hovered)}
             </div> }
             { hasData && <div className={'data'}>
-                { depth[hovered] && <div>
+                { depths[hovered] && <div>
                     <p>top depth</p>
-                    <span>{formatFloat(depth[hovered].topDepth)}m</span>
+                    <span>{formatFloat(depths[hovered].topDepth)}m</span>
                 </div> }
-                { depth[hovered] && <div>
+                { depths[hovered] && <div>
                     <p>length</p>
-                    <span>{formatFloat(depth[hovered].length)}m</span>
+                    <span>{formatFloat(depths[hovered].length)}m</span>
                 </div> }
-                { hydration[hovered] && <div>
+                { hydrations[hovered] && <div>
                     <p>hydration</p>
-                    <span>{formatFloat(hydration[hovered] * 100)}%</span>
+                    <span>{formatFloat(hydrations[hovered] * 100)}%</span>
                 </div> }
             </div> }
         </div>
