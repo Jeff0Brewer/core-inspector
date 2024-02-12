@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
+import { usePopupPosition } from '../../hooks/popup-position'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer from '../../vis/part'
@@ -149,24 +150,13 @@ type PartHoverInfoProps = {
 function PartHoverInfo (
     { abundances, visible }: PartHoverInfoProps
 ): ReactElement {
-    const [left, setLeft] = useState<string>('0px')
-    const [top, setTop] = useState<string>('0px')
-
-    useEffect(() => {
-        const mousemove = (e: MouseEvent): void => {
-            setLeft(`${e.clientX}px`)
-            setTop(`${e.clientY}px`)
-        }
-        window.addEventListener('mousemove', mousemove)
-        return () => {
-            window.removeEventListener('mousemove', mousemove)
-        }
-    }, [])
+    const popupRef = useRef<HTMLDivElement>(null)
+    usePopupPosition(popupRef)
 
     return (
         <div
             className={'hover-info'}
-            style={{ top, left }}
+            ref={popupRef}
             data-visible={visible}
         >
             {Object.entries(abundances).map(([mineral, abundance], i) =>

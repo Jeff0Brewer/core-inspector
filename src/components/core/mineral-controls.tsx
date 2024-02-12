@@ -1,6 +1,6 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
-import { useBlendState, useBlending } from '../../components/blend-context'
+import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'

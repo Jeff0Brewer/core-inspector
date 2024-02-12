@@ -237,7 +237,9 @@
     height: 50px;
     background-color: var(--menu-bg-color);
     border-radius: var(--radius);
-    transition: opacity var(--transition-param);
+    transition:
+        transform var(--transition-param),
+        opacity var(--transition-param);
     transform: translate(10%, -50%);
 }
 

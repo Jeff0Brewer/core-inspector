@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { loadImageAsync } from '../../lib/load'
-import { useBlending } from '../../components/blend-context'
+import { useBlending } from '../../hooks/blend-context'
 import { padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
