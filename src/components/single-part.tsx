@@ -67,13 +67,8 @@ function SinglePartView (
         <button className={'close-button'} onClick={clearPart}>
             {ICONS.close}
         </button>
-        <div className={'top'}>
-            <div className={'section-info'}>
-                <p> core <span>{ getCoreId(core) }</span> </p>
-                <p> section <span>{ getPartId(part) }</span> </p>
-            </div>
-        </div>
         <div className={'punch-label'}></div>
+        <PartInfo core={core} part={part} />
         <PartMineralChannels
             vis={vis}
             channels={channels}
@@ -97,6 +92,24 @@ function SinglePartView (
             setVisible={setVisible}
         />
     </>
+}
+
+type PartInfoProps = {
+    core: string,
+    part: string
+}
+
+function PartInfo (
+    { core, part }: PartInfoProps
+): ReactElement {
+    return (
+        <div className={'top'}>
+            <div className={'section-info'}>
+                <p> core <span>{ getCoreId(core) }</span> </p>
+                <p> section <span>{ getPartId(part) }</span> </p>
+            </div>
+        </div>
+    )
 }
 
 type PartMineralChannelsProps = {
