@@ -25,7 +25,6 @@ function usePopupPosition (popupRef: RefObject<HTMLElement>): void {
                 popup.style.transform = leftTransform
             }
         }
-        console.log('event set')
 
         window.addEventListener('mousemove', mousemove)
         return () => {

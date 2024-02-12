@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
-import { usePopupPosition } from '../../hooks/popup-position'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer from '../../vis/part'
+import PartHoverInfo from '../../components/part/hover-info'
 
 // temporary, import from consts file later
 const BLEND_KEY = '[blended]'
@@ -140,36 +140,6 @@ function PartMineralChannels (
             </div>
         </div>
     </>
-}
-
-type PartHoverInfoProps = {
-    abundances: StringMap<number>,
-    visible: boolean
-}
-
-function PartHoverInfo (
-    { abundances, visible }: PartHoverInfoProps
-): ReactElement {
-    const popupRef = useRef<HTMLDivElement>(null)
-    usePopupPosition(popupRef)
-
-    return (
-        <div
-            className={'hover-info'}
-            ref={popupRef}
-            data-visible={visible}
-        >
-            {Object.entries(abundances).map(([mineral, abundance], i) =>
-                <div className={'abundance-bar'} key={i}>
-                    <div
-                        className={'abundance'}
-                        style={{ height: `${(abundance / 255) * 100}%` }}
-                    ></div>
-                    <p>{mineral.substring(0, 2)}</p>
-                </div>
-            )}
-        </div>
-    )
 }
 
 type MineralCanvasProps = {
