@@ -4,7 +4,7 @@ import { MdColorLens } from 'react-icons/md'
 import { IoMdClose } from 'react-icons/io'
 import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../lib/load'
-import { useBlendState } from '../components/blend-context'
+import { useBlending } from '../components/blend-context'
 import { padZeros, StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import { DepthMetadata } from '../lib/metadata'
@@ -32,28 +32,7 @@ function SinglePartView (
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
-    useEffect(() => {
-        if (!vis) { return }
-        vis?.setBlending({
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        })
-    }, [vis, palette, magnitudes, visibilities, saturation, threshold, mode, monochrome])
+    useBlending(vis)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
