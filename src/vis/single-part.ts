@@ -26,7 +26,12 @@ class SinglePartRenderer {
         this.program = new GlProgram(this.gl, vertSource, fragSource)
 
         this.buffer = new GlBuffer(this.gl)
-        this.buffer.setData(this.gl, FULLSCREEN_RECT)
+        this.buffer.setData(this.gl, new Float32Array([
+            -1, -1, 0, 1,
+            1, -1, 1, 1,
+            -1, 1, 0, 0,
+            1, 1, 1, 0
+        ]))
         this.buffer.addAttribute(this.gl, this.program, 'position', POS_FPV, STRIDE, 0)
         this.buffer.addAttribute(this.gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
         this.numVertex = FULLSCREEN_RECT.length / STRIDE
