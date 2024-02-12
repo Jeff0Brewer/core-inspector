@@ -227,6 +227,47 @@
     height: 100%;
 }
 
+.hover-info {
+    position: absolute;
+    pointer-events: none;
+    z-index: 200;
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    height: 50px;
+    background-color: var(--menu-bg-color);
+    border-radius: var(--radius);
+    transition: opacity var(--transition-param);
+    transform: translate(10%, -50%);
+}
+
+.hover-info[data-visible="false"] {
+    opacity: 0;
+}
+
+.hover-info .abundance-bar {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.abundance-bar > .abundance {
+    position: relative;
+    background-color: #fff;
+}
+
+.abundance-bar > p {
+    background-color: #000;
+    text-transform: uppercase;
+    display: grid;
+    place-content: center;
+    width: 12px;
+    height: 10px;
+    font-size: 0.4rem;
+}
+
 /* ----- LABEL CONTENT ----- */
 .punch-label {
     grid-area: label-side;
