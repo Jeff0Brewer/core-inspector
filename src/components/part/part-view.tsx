@@ -1,17 +1,15 @@
-import { useState, useRef, useEffect, ReactElement } from 'react'
-import { PiArrowsHorizontalBold } from 'react-icons/pi'
-import { MdColorLens } from 'react-icons/md'
+import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
-import { IoSearch } from 'react-icons/io5'
 import { loadImageAsync } from '../../lib/load'
 import { useBlending } from '../../components/blend-context'
 import { padZeros, StringMap } from '../../lib/util'
+import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
-import { DepthMetadata } from '../../lib/metadata'
-import LoadIcon from '../../components/generic/load-icon'
-import VerticalSlider from '../../components/generic/vertical-slider'
-import BlendMenu from '../../components/blend-menu'
 import PartRenderer from '../../vis/part'
+import PartInfoHeader from '../../components/part/info-header'
+import PartMineralChannels from '../../components/part/mineral-channels'
+import PartMineralControls from '../../components/part/mineral-controls'
+import PartViewControls from '../../components/part/view-controls'
 import '../../styles/single-part.css'
 
 const BLEND_KEY = '[blended]'
@@ -68,7 +66,7 @@ function PartView (
             {ICONS.close}
         </button>
         <div className={'punch-label'}></div>
-        <PartInfo core={core} part={part} />
+        <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
             channels={channels}
@@ -94,257 +92,6 @@ function PartView (
     </>
 }
 
-type PartInfoProps = {
-    core: string,
-    part: string
-}
-
-function PartInfo (
-    { core, part }: PartInfoProps
-): ReactElement {
-    return (
-        <div className={'top'}>
-            <div className={'section-info'}>
-                <p> core <span>{ getCoreId(core) }</span> </p>
-                <p> section <span>{ getPartId(part) }</span> </p>
-            </div>
-        </div>
-    )
-}
-
-type PartMineralChannelsProps = {
-    vis: PartRenderer | null,
-    channels: StringMap<HTMLCanvasElement>,
-    visible: StringMap<boolean>,
-    zoom: number,
-    spacing: number
-}
-
-function PartMineralChannels (
-    { vis, channels, visible, zoom, spacing }: PartMineralChannelsProps
-): ReactElement {
-    const [width, setWidth] = useState<string>('0px')
-    const [height, setHeight] = useState<string>('0px')
-    const [gap, setGap] = useState<string>('0px')
-    const contentRef = useRef<HTMLDivElement>(null)
-    const labelsRef = useRef<HTMLDivElement>(null)
-
-    // add event listener to coordinate label / content scroll
-    useEffect(() => {
-        const content = contentRef.current
-        const labels = labelsRef.current
-        if (!content || !labels) {
-            throw new Error('No reference to layout elements')
-        }
-
-        const scroll = (): void => {
-            labels.style.left = `${-content.scrollLeft}px`
-        }
-
-        content.addEventListener('scroll', scroll)
-        return () => {
-            content.removeEventListener('scroll', scroll)
-        }
-    }, [])
-
-    // get css values for layout from current zoom / spacing
-    useEffect(() => {
-        const firstChannel = Object.values(channels)[0]
-        if (!firstChannel) { return }
-
-        const channelWidth = zoom * 250 + 50
-
-        const { width, height } = firstChannel
-        const channelHeight = channelWidth * height / width
-        const channelGap = channelWidth * spacing
-
-        setWidth(`${channelWidth}px`)
-        setHeight(`${channelHeight}px`)
-        setGap(`${channelGap}px`)
-    }, [zoom, spacing, channels])
-
-    return <>
-        <div className={'channel-labels-wrap'}>
-            <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
-                { Object.keys(channels)
-                    .filter(mineral => visible[mineral])
-                    .map((mineral, i) =>
-                        <div className={'channel-label'} style={{ width }} key={i}>
-                            {mineral}
-                        </div>
-                    ) }
-            </div>
-        </div>
-        <div className={'mineral-channels-wrap'} ref={contentRef}>
-            <LoadIcon loading={!vis} showDelayMs={0} />
-            <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
-                { Object.entries(channels)
-                    .filter(([mineral, _]) => visible[mineral])
-                    .map(([_, canvas], i) =>
-                        <MineralCanvas
-                            canvas={canvas}
-                            width={width}
-                            height={height}
-                            key={i}
-                        />
-                    ) }
-            </div>
-        </div>
-    </>
-}
-
-type PartMineralControlsProps = {
-    minerals: Array<string>,
-    palettes: Array<GenericPalette>,
-    visible: StringMap<boolean>,
-    setVisible: (v: StringMap<boolean>) => void,
-}
-
-function PartMineralControls (
-    { minerals, palettes, visible, setVisible }: PartMineralControlsProps
-): ReactElement {
-    const [menuOpen, setMenuOpen] = useState<boolean>(false)
-
-    const toggleMineralVisible = (mineral: string): void => {
-        visible[mineral] = !visible[mineral]
-        setVisible({ ...visible })
-    }
-
-    return (
-        <div className={'mineral-controls'}>
-            <div className={'mineral-toggles'}>
-                { minerals.map((mineral, i) =>
-                    <button
-                        onClick={() => toggleMineralVisible(mineral)}
-                        data-active={visible[mineral]}
-                        key={i}
-                    >
-                        {mineral}
-                    </button>
-                ) }
-            </div>
-            <button
-                className={'blend-toggle'}
-                onClick={() => setMenuOpen(!menuOpen)}
-                data-active={menuOpen}
-            >
-                <MdColorLens />
-            </button>
-            { menuOpen && <BlendMenu minerals={minerals} palettes={palettes} /> }
-        </div>
-    )
-}
-
-type ScaleRulerProps = {
-    core: string,
-    part: string,
-    channelHeight: number
-}
-
-function ScaleRuler (
-    { core, part, channelHeight }: ScaleRulerProps
-): ReactElement {
-    const [depths, setDepths] = useState<DepthMetadata | null>(null)
-    const [scale, setScale] = useState<number>(0)
-
-    useEffect(() => {
-        const getDepths = async (): Promise<void> => {
-            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
-            const { depth } = await depthRes.json()
-            setDepths(depth)
-        }
-        getDepths()
-    }, [core])
-
-    useEffect(() => {
-        if (!depths || !channelHeight) { return }
-        const cmPerPx = (depths[part].length * 100) / channelHeight
-        setScale(cmPerPx * 75)
-    }, [part, depths, channelHeight])
-
-    return (
-        <div className={'scale-ruler'}>
-            <div className={'scale-ruler-center'}>
-                <p>{scale.toFixed(1)} cm</p>
-                <div></div>
-                <p>75 px</p>
-            </div>
-        </div>
-    )
-}
-
-type PartViewControlsProps = {
-    core: string,
-    part: string,
-    zoom: number,
-    setZoom: (z: number) => void,
-    spacing: number,
-    setSpacing: (s: number) => void,
-    channelHeight: number
-}
-
-function PartViewControls (
-    { core, part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
-): ReactElement {
-    return (
-        <div className={'vertical-controls'}>
-            <ScaleRuler
-                core={core}
-                part={part}
-                channelHeight={channelHeight}
-            />
-            <VerticalSlider
-                value={zoom}
-                setValue={setZoom}
-                label={'zoom'}
-                icon={ICONS.zoom}
-                min={0}
-                max={1}
-                step={0.01}
-            />
-            <VerticalSlider
-                value={spacing}
-                setValue={setSpacing}
-                label={'horizontal distance'}
-                icon={ICONS.horizontalDist}
-                min={0}
-                max={1}
-                step={0.01}
-            />
-        </div>
-    )
-}
-
-type MineralCanvasProps = {
-    canvas: HTMLCanvasElement,
-    width: string,
-    height: string
-}
-
-function MineralCanvas (
-    { canvas, width, height }: MineralCanvasProps
-): ReactElement {
-    // add HTML canvas element to react element via ref,
-    // allows access of canvas reference when not rendered to dom
-    const addCanvasChild = (ref: HTMLDivElement | null): void => {
-        if (!ref) { return }
-        while (ref.lastChild) {
-            ref.removeChild(ref.lastChild)
-        }
-        ref.appendChild(canvas)
-    }
-
-    return (
-        <div className={'channel-wrap'}>
-            <div
-                className={'canvas-wrap'}
-                style={{ width, height }}
-                ref={addCanvasChild}
-            ></div>
-        </div>
-    )
-}
-
 function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
@@ -357,17 +104,6 @@ function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
     ctx.drawImage(img, 0, 0)
 
     return canvas
-}
-
-function getCoreId (core: string): string {
-    return core.toUpperCase() + 'A'
-}
-
-function getPartId (part: string): string {
-    const [section, piece] = part.split('_').map(s => parseInt(s))
-    const sectionId = padZeros(section, 4) + 'Z'
-    const pieceId = padZeros(piece, 3)
-    return `${sectionId}_${pieceId}`
 }
 
 function getAbundanceFilepaths (
@@ -392,8 +128,6 @@ function getAbundanceFilepaths (
 }
 
 const ICONS = {
-    zoom: <IoSearch style={{ fontSize: '16px' }} />,
-    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
     close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 

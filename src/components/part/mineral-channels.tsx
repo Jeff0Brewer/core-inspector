@@ -1,0 +1,117 @@
+import { useState, useRef, useEffect, ReactElement } from 'react'
+import { StringMap } from '../../lib/util'
+import LoadIcon from '../../components/generic/load-icon'
+import PartRenderer from '../../vis/part'
+
+type PartMineralChannelsProps = {
+    vis: PartRenderer | null,
+    channels: StringMap<HTMLCanvasElement>,
+    visible: StringMap<boolean>,
+    zoom: number,
+    spacing: number
+}
+
+function PartMineralChannels (
+    { vis, channels, visible, zoom, spacing }: PartMineralChannelsProps
+): ReactElement {
+    const [width, setWidth] = useState<string>('0px')
+    const [height, setHeight] = useState<string>('0px')
+    const [gap, setGap] = useState<string>('0px')
+    const contentRef = useRef<HTMLDivElement>(null)
+    const labelsRef = useRef<HTMLDivElement>(null)
+
+    // add event listener to coordinate label / content scroll
+    useEffect(() => {
+        const content = contentRef.current
+        const labels = labelsRef.current
+        if (!content || !labels) {
+            throw new Error('No reference to layout elements')
+        }
+
+        const scroll = (): void => {
+            labels.style.left = `${-content.scrollLeft}px`
+        }
+
+        content.addEventListener('scroll', scroll)
+        return () => {
+            content.removeEventListener('scroll', scroll)
+        }
+    }, [])
+
+    // get css values for layout from current zoom / spacing
+    useEffect(() => {
+        const firstChannel = Object.values(channels)[0]
+        if (!firstChannel) { return }
+
+        const channelWidth = zoom * 250 + 50
+
+        const { width, height } = firstChannel
+        const channelHeight = channelWidth * height / width
+        const channelGap = channelWidth * spacing
+
+        setWidth(`${channelWidth}px`)
+        setHeight(`${channelHeight}px`)
+        setGap(`${channelGap}px`)
+    }, [zoom, spacing, channels])
+
+    return <>
+        <div className={'channel-labels-wrap'}>
+            <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
+                { Object.keys(channels)
+                    .filter(mineral => visible[mineral])
+                    .map((mineral, i) =>
+                        <div className={'channel-label'} style={{ width }} key={i}>
+                            {mineral}
+                        </div>
+                    ) }
+            </div>
+        </div>
+        <div className={'mineral-channels-wrap'} ref={contentRef}>
+            <LoadIcon loading={!vis} showDelayMs={0} />
+            <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
+                { Object.entries(channels)
+                    .filter(([mineral, _]) => visible[mineral])
+                    .map(([_, canvas], i) =>
+                        <MineralCanvas
+                            canvas={canvas}
+                            width={width}
+                            height={height}
+                            key={i}
+                        />
+                    ) }
+            </div>
+        </div>
+    </>
+}
+
+type MineralCanvasProps = {
+    canvas: HTMLCanvasElement,
+    width: string,
+    height: string
+}
+
+function MineralCanvas (
+    { canvas, width, height }: MineralCanvasProps
+): ReactElement {
+    // add HTML canvas element to react element via ref,
+    // allows access of canvas reference when not rendered to dom
+    const addCanvasChild = (ref: HTMLDivElement | null): void => {
+        if (!ref) { return }
+        while (ref.lastChild) {
+            ref.removeChild(ref.lastChild)
+        }
+        ref.appendChild(canvas)
+    }
+
+    return (
+        <div className={'channel-wrap'}>
+            <div
+                className={'canvas-wrap'}
+                style={{ width, height }}
+                ref={addCanvasChild}
+            ></div>
+        </div>
+    )
+}
+
+export default PartMineralChannels
