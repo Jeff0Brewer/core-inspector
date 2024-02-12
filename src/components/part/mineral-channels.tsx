@@ -17,6 +17,7 @@ function PartMineralChannels (
     const [width, setWidth] = useState<string>('0px')
     const [height, setHeight] = useState<string>('0px')
     const [gap, setGap] = useState<string>('0px')
+    const [mousePos, setMousePos] = useState<[number, number]>([0, 0])
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
@@ -76,6 +77,8 @@ function PartMineralChannels (
                             canvas={canvas}
                             width={width}
                             height={height}
+                            mousePos={mousePos}
+                            setMousePos={setMousePos}
                             key={i}
                         />
                     ) }
@@ -87,12 +90,16 @@ function PartMineralChannels (
 type MineralCanvasProps = {
     canvas: HTMLCanvasElement,
     width: string,
-    height: string
+    height: string,
+    mousePos: [number, number],
+    setMousePos: (p: [number, number]) => void
 }
 
 function MineralCanvas (
-    { canvas, width, height }: MineralCanvasProps
+    { canvas, width, height, mousePos, setMousePos }: MineralCanvasProps
 ): ReactElement {
+    const channelRef = useRef<HTMLDivElement>(null)
+
     // add HTML canvas element to react element via ref,
     // allows access of canvas reference when not rendered to dom
     const addCanvasChild = (ref: HTMLDivElement | null): void => {
@@ -103,13 +110,46 @@ function MineralCanvas (
         ref.appendChild(canvas)
     }
 
+    useEffect(() => {
+        const channel = channelRef.current
+        if (!channel) {
+            throw new Error('No reference to mineral channel')
+        }
+
+        const mousemove = (e: MouseEvent): void => {
+            const { top, left } = channel.getBoundingClientRect()
+            setMousePos([
+                e.clientX - left,
+                e.clientY - top
+            ])
+        }
+        const mouseleave = (): void => {
+            setMousePos([-100, -100])
+        }
+
+        channel.addEventListener('mousemove', mousemove)
+        channel.addEventListener('mouseleave', mouseleave)
+        return () => {
+            channel.removeEventListener('mousemove', mousemove)
+            channel.removeEventListener('mouseleave', mouseleave)
+        }
+    }, [setMousePos])
+
     return (
         <div className={'channel-wrap'}>
-            <div
-                className={'canvas-wrap'}
-                style={{ width, height }}
-                ref={addCanvasChild}
-            ></div>
+            <div className={'canvas-wrap'} ref={channelRef}>
+                <div
+                    className={'channel-cursor'}
+                    style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
+                >
+                    x
+                </div>
+                <div
+                    className={'canvas'}
+                    style={{ width, height }}
+                    ref={addCanvasChild}
+                ></div>
+            </div>
         </div>
     )
 }

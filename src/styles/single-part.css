@@ -210,7 +210,17 @@
     position: relative;
 }
 
-.canvas-wrap > canvas {
+.channel-cursor {
+    position: absolute;
+    z-index: 100;
+    transform: translate(-50%, -50%);
+}
+
+.canvas {
+    position: relative;
+}
+
+.canvas > canvas {
     position: relative;
     width: 100%;
     height: 100%;
