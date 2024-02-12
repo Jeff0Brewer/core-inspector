@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
-import { padZeros, formatFloat, formatPercent } from '../../lib/util'
+import { usePopupPosition } from '../../hooks/popup-position'
+import { padZeros, formatFloat } from '../../lib/util'
 import { DepthMetadata, HydrationMetadata } from '../../lib/metadata'
 import CoreRenderer from '../../vis/core'
 import '../../styles/metadata-hover.css'
@@ -14,6 +15,8 @@ function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
     const [depth, setDepth] = useState<DepthMetadata>({})
     const [hydration, setHydration] = useState<HydrationMetadata>({})
     const popupRef = useRef<HTMLDivElement>(null)
+
+    usePopupPosition(popupRef)
 
     useEffect(() => {
         if (!vis) { return }
@@ -36,38 +39,6 @@ function MetadataHover ({ vis, core }: MetadataHoverProps): ReactElement {
 
         getData()
     }, [core])
-
-    // setup popup window positioning
-    useEffect(() => {
-        const popup = popupRef.current
-        if (!popup) {
-            throw new Error('No reference to popup element')
-        }
-
-        const xTranslate = 0.2
-        const rightTransform = `translate(${formatPercent(xTranslate)}, -50%)`
-        const leftTransform = `translate(${formatPercent(-1 - xTranslate)}, -50%)`
-
-        popup.style.transform = rightTransform
-
-        const mousemove = (e: MouseEvent): void => {
-            popup.style.left = e.clientX + 'px'
-            popup.style.top = e.clientY + 'px'
-
-            // shift popup left / right to ensure it stays in window bounds
-            const popupWidth = (1 + xTranslate) * popup.getBoundingClientRect().width
-            if (e.clientX - popupWidth < 0) {
-                popup.style.transform = rightTransform
-            } else if (e.clientX + popupWidth > window.innerWidth) {
-                popup.style.transform = leftTransform
-            }
-        }
-
-        window.addEventListener('mousemove', mousemove)
-        return () => {
-            window.removeEventListener('mousemove', mousemove)
-        }
-    }, [])
 
     const hasData = hovered && (depth[hovered] || hydration[hovered])
 

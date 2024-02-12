@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { loadImageAsync } from '../../lib/load'
-import { useBlending } from '../../components/blend-context'
+import { useBlending } from '../../hooks/blend-context'
 import { padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
@@ -30,11 +30,13 @@ function PartView (
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
+    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     useBlending(vis)
 
     useEffect(() => {
-        const visible: StringMap<boolean> = { BLEND_KEY: true }
+        const visible: StringMap<boolean> = {}
+        visible[BLEND_KEY] = true
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
@@ -73,6 +75,7 @@ function PartView (
             visible={visible}
             zoom={zoom}
             spacing={spacing}
+            setChannelHeight={setChannelHeight}
         />
         <PartViewControls
             core={core}
@@ -81,7 +84,7 @@ function PartView (
             setZoom={setZoom}
             spacing={spacing}
             setSpacing={setSpacing}
-            channelHeight={channels[BLEND_KEY]?.height || 0}
+            channelHeight={channelHeight}
         />
         <PartMineralControls
             minerals={minerals}
@@ -94,7 +97,7 @@ function PartView (
 
 function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
     const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
     if (!ctx) {
         throw new Error('Could not get 2d drawing context')
     }

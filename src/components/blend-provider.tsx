@@ -1,7 +1,7 @@
 import { useState, ReactElement, ReactNode } from 'react'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode } from '../vis/mineral-blend'
-import BlendContext from '../components/blend-context'
+import BlendContext from '../hooks/blend-context'
 
 type BlendProviderProps = {
     minerals: Array<string>,
