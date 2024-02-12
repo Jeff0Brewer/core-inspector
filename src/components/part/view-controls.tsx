@@ -1,11 +1,10 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
-import { DepthMetadata } from '../../lib/metadata'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import VerticalSlider from '../../components/generic/vertical-slider'
 
 type PartViewControlsProps = {
-    core: string,
     part: string,
     zoom: number,
     setZoom: (z: number) => void,
@@ -15,12 +14,11 @@ type PartViewControlsProps = {
 }
 
 function PartViewControls (
-    { core, part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
+    { part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
 ): ReactElement {
     return (
         <div className={'vertical-controls'}>
             <ScaleRuler
-                core={core}
                 part={part}
                 channelHeight={channelHeight}
             />
@@ -46,25 +44,15 @@ function PartViewControls (
     )
 }
 type ScaleRulerProps = {
-    core: string,
     part: string,
     channelHeight: number
 }
 
 function ScaleRuler (
-    { core, part, channelHeight }: ScaleRulerProps
+    { part, channelHeight }: ScaleRulerProps
 ): ReactElement {
-    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const { depths } = useCoreMetadata()
     const [scale, setScale] = useState<number>(0)
-
-    useEffect(() => {
-        const getDepths = async (): Promise<void> => {
-            const depthRes = await fetch(`./data/${core}/depth-metadata.json`)
-            const { depth } = await depthRes.json()
-            setDepths(depth)
-        }
-        getDepths()
-    }, [core])
 
     useEffect(() => {
         if (!depths || !channelHeight) { return }

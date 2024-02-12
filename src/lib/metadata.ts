@@ -2,12 +2,6 @@ type SectionIdMetadata = {
     ids: Array<string>
 }
 
-type CoreMetadata = {
-    numSection: number,
-    topDepth: number,
-    bottomDepth: number
-}
-
 type HydrationMetadata = {
     [id: string]: number
 }
@@ -21,7 +15,6 @@ type DepthMetadata = {
 
 export type {
     SectionIdMetadata,
-    CoreMetadata,
     HydrationMetadata,
     DepthMetadata
 }
