@@ -23,9 +23,23 @@ const VERT_PER_ROW_TRI = 6
 const VERT_PER_TILE_TRI = ROW_PER_TILE * VERT_PER_ROW_TRI
 const VERT_PER_TILE_LINE = 2 * 2 + 2 + 4 + (ROW_PER_TILE * 2)
 
+const CALIBRATION_HEIGHT = 0.01
 const CALIBRATION_HEIGHT_DOWN = 0.01
 const CALIBRATION_HEIGHT_PUNCH = 0.008
 const CALIBRATION_POINT_HEIGHT = 2
+
+function getNumRows (part: TileRect, calibrationT: number): number {
+    const height = 2 * part.height - CALIBRATION_HEIGHT * calibrationT
+    return Math.round(VERT_PER_ROW_POINT * height / part.width)
+}
+
+function getTotalNumRows (parts: Array<TileRect>, calibrationT: number): number {
+    let numRows = 0
+    for (let i = 0; i < parts.length; i++) {
+        numRows += getNumRows(parts[i], calibrationT)
+    }
+    return numRows
+}
 
 /*
  * FULL CORE
@@ -42,7 +56,7 @@ function getCoreTexCoords (metadata: TileTextureMetadata, calibrationT: number):
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } {
-    const numRows = metadata.punchTotalRows - metadata.numTiles * Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    const numRows = getTotalNumRows(metadata.downTiles, calibrationT)
     const punchTexCoords = new Float32Array(numRows * VERT_PER_ROW_POINT * TEX_FPV)
     const downTexCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
     let punchOffset = 0
@@ -52,8 +66,7 @@ function getCoreTexCoords (metadata: TileTextureMetadata, calibrationT: number):
         punchOffset = addPunchcardTexCoords(
             punchTexCoords,
             punchOffset,
-            metadata.punchTiles[i],
-            metadata.punchNumRows[i],
+            metadata.downTiles[i],
             calibrationT
         )
         downOffset = addDownscaledTexCoords(
@@ -83,7 +96,7 @@ function getCorePositions (
     accentPositions: Float32Array,
     vertexBounds: BoundRect
 } {
-    const numRows = metadata.punchTotalRows - metadata.numTiles * Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    const numRows = getTotalNumRows(metadata.downTiles, calibrationT)
     const punchPositions = new Float32Array(numRows * VERT_PER_ROW_POINT * POS_FPV)
     const downPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * POS_FPV)
     const accentPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_LINE * POS_FPV)
@@ -148,7 +161,7 @@ function getCorePositions (
                     angle,
                     tileRadius,
                     tileAngle,
-                    metadata.punchNumRows[i],
+                    getNumRows(metadata.downTiles[i], calibrationT),
                     calibrationT
                 )
             }
@@ -176,7 +189,7 @@ function getCorePositions (
                     columnX,
                     columnY,
                     tileHeight,
-                    metadata.punchNumRows[i],
+                    getNumRows(metadata.downTiles[i], calibrationT),
                     calibrationT
                 )
             }
@@ -363,12 +376,11 @@ function addPunchcardTexCoords (
     out: Float32Array,
     offset: number,
     rect: TileRect,
-    numRows: number,
     calibrationT: number
 ): number {
-    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    const numRows = getNumRows(rect, calibrationT)
     const xInc = rect.width / VERT_PER_ROW_POINT
-    const yInc = (rect.height - CALIBRATION_HEIGHT_PUNCH * calibrationT) / numRows
+    const yInc = (rect.height - CALIBRATION_HEIGHT * calibrationT) / numRows
 
     // offset x and y by 0.5 to center coordinate on pixel in texture
     const x = rect.left + xInc * 0.5

@@ -134,7 +134,7 @@ class CoreRenderer {
 
         this.punchcardCore = new PunchcardCoreRenderer(
             this.gl,
-            new MineralBlender(this.gl, punchcardMaps, minerals),
+            new MineralBlender(this.gl, downscaledMaps, minerals),
             punchPositions,
             punchTexCoords,
             this.targetShape
