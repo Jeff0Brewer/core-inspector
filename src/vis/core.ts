@@ -27,6 +27,7 @@ const PROJECTION_PARAMS = {
     near: 0.01,
     far: 5
 }
+const POINT_PER_ROW = 3
 
 /*
  * UI STATE
@@ -112,9 +113,14 @@ class CoreRenderer {
 
         this.camera = new Camera2D(0, 'spiral')
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(tileMetadata, this.calibrationT)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
+            tileMetadata,
+            POINT_PER_ROW,
+            this.calibrationT
+        )
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             tileMetadata,
+            POINT_PER_ROW,
             this.spacing,
             this.getViewportBounds(),
             this.targetShape,
@@ -276,6 +282,7 @@ class CoreRenderer {
     genTexCoords (): void {
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(
             this.metadata,
+            POINT_PER_ROW,
             ease(this.calibrationT)
         )
         this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
@@ -290,6 +297,7 @@ class CoreRenderer {
         const viewportBounds = this.getViewportBounds()
         const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
+            POINT_PER_ROW,
             this.spacing,
             viewportBounds,
             this.targetShape,
@@ -317,6 +325,7 @@ class CoreRenderer {
             // but still < 16ms and this edge case happens very rarely so fine for now
             const { punchPositions } = getCorePositions(
                 this.metadata,
+                POINT_PER_ROW,
                 this.spacing,
                 viewportBounds,
                 otherShape,
