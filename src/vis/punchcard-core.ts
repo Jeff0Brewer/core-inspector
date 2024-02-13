@@ -1,13 +1,13 @@
 import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { CoreShape } from '../vis/core'
+import { TileTextureMetadata } from '../lib/tile-texture'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/punchcard-vert.glsl?raw'
 import fragSource from '../shaders/punchcard-frag.glsl?raw'
 
 class PunchcardCoreRenderer {
-    minerals: MineralBlender
     program: GlProgram
     spiralPosBuffer: GlBuffer
     columnPosBuffer: GlBuffer
@@ -21,12 +21,12 @@ class PunchcardCoreRenderer {
 
     constructor (
         gl: GlContext,
-        minerals: MineralBlender,
+        metadata: TileTextureMetadata,
+        pointPerRow: number,
         positions: Float32Array,
         texCoords: Float32Array,
         currentShape: CoreShape
     ) {
-        this.minerals = minerals
         this.numVertex = positions.length / POS_FPV
 
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -71,6 +71,13 @@ class PunchcardCoreRenderer {
             gl.uniform1f(pointSizeLoc, pointSize)
         }
         this.incPointSize(0) // init pointSize uniform
+
+        const [texWidth, texHeight] = metadata.textureDims
+        const tileWidth = metadata.tiles[0].width
+        const binWidth = tileWidth / pointPerRow
+        const binHeight = binWidth * texWidth / texHeight
+        const binSizeLoc = this.program.getUniformLocation(gl, 'binSize')
+        gl.uniform2f(binSizeLoc, binWidth, binHeight)
     }
 
     // generate vertices externally to coordinate alignment between
@@ -96,13 +103,13 @@ class PunchcardCoreRenderer {
         }
     }
 
-    draw (gl: GlContext, view: mat4, shapeT: number): void {
+    draw (gl: GlContext, minerals: MineralBlender, view: mat4, shapeT: number): void {
         this.program.bind(gl)
 
-        this.minerals.bind(gl)
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
         this.texCoordBuffer.bind(gl)
+        minerals.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
@@ -110,7 +117,6 @@ class PunchcardCoreRenderer {
     }
 
     drop (gl: GlContext): void {
-        this.minerals.drop(gl)
         this.program.drop(gl)
         this.spiralPosBuffer.drop(gl)
         this.columnPosBuffer.drop(gl)

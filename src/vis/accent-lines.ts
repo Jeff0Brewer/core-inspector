@@ -96,7 +96,7 @@ const getLineLengths = (
     const out = new Float32Array(numVertex * LEN_FPV)
     let offset = 0
 
-    for (const { height } of metadata.downTiles) {
+    for (const { height } of metadata.tiles) {
         // use representative length for accent lines along side of tile
         const heightInc = height / ROW_PER_TILE * SIDE_DOT_DENSITY
 
