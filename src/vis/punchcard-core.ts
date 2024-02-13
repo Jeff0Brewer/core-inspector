@@ -1,6 +1,7 @@
-import { mat4 } from 'gl-matrix'
+import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { CoreShape } from '../vis/core'
+import { TileTextureMetadata } from '../lib/tile-texture'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/punchcard-vert.glsl?raw'
@@ -21,6 +22,8 @@ class PunchcardCoreRenderer {
 
     constructor (
         gl: GlContext,
+        metadata: TileTextureMetadata,
+        pointPerRow: number,
         minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
@@ -71,6 +74,13 @@ class PunchcardCoreRenderer {
             gl.uniform1f(pointSizeLoc, pointSize)
         }
         this.incPointSize(0) // init pointSize uniform
+
+        const [texWidth, texHeight] = metadata.downDims
+        const tileWidth = metadata.downTiles[0].width
+        const binWidth = tileWidth / pointPerRow
+        const binHeight = binWidth * texWidth / texHeight
+        const binSizeLoc = this.program.getUniformLocation(gl, 'binSize')
+        gl.uniform2f(binSizeLoc, binWidth, binHeight)
     }
 
     // generate vertices externally to coordinate alignment between

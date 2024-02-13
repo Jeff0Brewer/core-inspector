@@ -140,6 +140,8 @@ class CoreRenderer {
 
         this.punchcardCore = new PunchcardCoreRenderer(
             this.gl,
+            tileMetadata,
+            POINT_PER_ROW,
             new MineralBlender(this.gl, downscaledMaps, minerals),
             punchPositions,
             punchTexCoords,
