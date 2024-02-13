@@ -1,4 +1,4 @@
-import { mat4, vec2 } from 'gl-matrix'
+import { mat4 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { CoreShape } from '../vis/core'
 import { TileTextureMetadata } from '../lib/tile-texture'
@@ -8,7 +8,6 @@ import vertSource from '../shaders/punchcard-vert.glsl?raw'
 import fragSource from '../shaders/punchcard-frag.glsl?raw'
 
 class PunchcardCoreRenderer {
-    minerals: MineralBlender
     program: GlProgram
     spiralPosBuffer: GlBuffer
     columnPosBuffer: GlBuffer
@@ -24,12 +23,10 @@ class PunchcardCoreRenderer {
         gl: GlContext,
         metadata: TileTextureMetadata,
         pointPerRow: number,
-        minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
         currentShape: CoreShape
     ) {
-        this.minerals = minerals
         this.numVertex = positions.length / POS_FPV
 
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -106,13 +103,13 @@ class PunchcardCoreRenderer {
         }
     }
 
-    draw (gl: GlContext, view: mat4, shapeT: number): void {
+    draw (gl: GlContext, minerals: MineralBlender, view: mat4, shapeT: number): void {
         this.program.bind(gl)
 
-        this.minerals.bind(gl)
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
         this.texCoordBuffer.bind(gl)
+        minerals.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
@@ -120,7 +117,6 @@ class PunchcardCoreRenderer {
     }
 
     drop (gl: GlContext): void {
-        this.minerals.drop(gl)
         this.program.drop(gl)
         this.spiralPosBuffer.drop(gl)
         this.columnPosBuffer.drop(gl)

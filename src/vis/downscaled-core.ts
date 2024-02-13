@@ -7,7 +7,6 @@ import vertSource from '../shaders/downscaled-vert.glsl?raw'
 import fragSource from '../shaders/downscaled-frag.glsl?raw'
 
 class DownscaledCoreRenderer {
-    minerals: MineralBlender
     program: GlProgram
     spiralPosBuffer: GlBuffer
     columnPosBuffer: GlBuffer
@@ -19,12 +18,10 @@ class DownscaledCoreRenderer {
 
     constructor (
         gl: GlContext,
-        minerals: MineralBlender,
         positions: Float32Array,
         texCoords: Float32Array,
         currentShape: CoreShape
     ) {
-        this.minerals = minerals
         this.numVertex = positions.length / POS_FPV
 
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -66,13 +63,13 @@ class DownscaledCoreRenderer {
         }
     }
 
-    draw (gl: GlContext, view: mat4, shapeT: number): void {
+    draw (gl: GlContext, minerals: MineralBlender, view: mat4, shapeT: number): void {
         this.program.bind(gl)
 
-        this.minerals.bind(gl)
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
         this.texCoordBuffer.bind(gl)
+        minerals.bind(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 
@@ -80,7 +77,6 @@ class DownscaledCoreRenderer {
     }
 
     drop (gl: GlContext): void {
-        this.minerals.drop(gl)
         this.program.drop(gl)
         this.spiralPosBuffer.drop(gl)
         this.columnPosBuffer.drop(gl)

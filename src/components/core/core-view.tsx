@@ -32,16 +32,13 @@ function CoreView (
         }
 
         const initCoreRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
-            const downscaledPaths = []
-            const punchcardPaths = []
+            const mineralPaths = []
             for (let i = 0; i < minerals.length; i++) {
-                downscaledPaths.push(`./data/${core}/downscaled/${i}.png`)
-                punchcardPaths.push(`./data/${core}/punchcard/${i}.png`)
+                mineralPaths.push(`./data/${core}/downscaled/${i}.png`)
             }
 
-            const [downscaledImgs, punchcardImgs, tileMetadata, idMetadata] = await Promise.all([
-                Promise.all(downscaledPaths.map(path => loadImageAsync(path))),
-                Promise.all(punchcardPaths.map(path => loadImageAsync(path))),
+            const [mineralImgs, tileMetadata, idMetadata] = await Promise.all([
+                Promise.all(mineralPaths.map(path => loadImageAsync(path))),
                 fetch(`./data/${core}/tile-metadata.json`).then(res => res.json()),
                 fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
             ])
@@ -49,8 +46,7 @@ function CoreView (
             setVis(
                 new CoreRenderer(
                     canvas,
-                    downscaledImgs,
-                    punchcardImgs,
+                    mineralImgs,
                     tileMetadata,
                     idMetadata,
                     minerals

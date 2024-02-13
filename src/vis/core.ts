@@ -58,6 +58,7 @@ type UiState = {
 class CoreRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
+    mineralBlender: MineralBlender
     downscaledCore: DownscaledCoreRenderer
     punchcardCore: PunchcardCoreRenderer
     stencilCore: StencilCoreRenderer
@@ -81,8 +82,7 @@ class CoreRenderer {
 
     constructor (
         canvas: HTMLCanvasElement,
-        downscaledMaps: Array<HTMLImageElement>,
-        punchcardMaps: Array<HTMLImageElement>,
+        mineralMaps: Array<HTMLImageElement>,
         tileMetadata: TileTextureMetadata,
         idMetadata: SectionIdMetadata,
         minerals: Array<string>,
@@ -113,6 +113,8 @@ class CoreRenderer {
 
         this.camera = new Camera2D(0, 'spiral')
 
+        this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
+
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(
             tileMetadata,
             POINT_PER_ROW,
@@ -132,7 +134,6 @@ class CoreRenderer {
 
         this.downscaledCore = new DownscaledCoreRenderer(
             this.gl,
-            new MineralBlender(this.gl, downscaledMaps, minerals),
             downPositions,
             downTexCoords,
             this.targetShape
@@ -142,7 +143,6 @@ class CoreRenderer {
             this.gl,
             tileMetadata,
             POINT_PER_ROW,
-            new MineralBlender(this.gl, downscaledMaps, minerals),
             punchPositions,
             punchTexCoords,
             this.targetShape
@@ -207,8 +207,7 @@ class CoreRenderer {
     }
 
     setBlending (params: BlendParams): void {
-        this.downscaledCore.minerals.update(this.gl, params)
-        this.punchcardCore.minerals.update(this.gl, params)
+        this.mineralBlender.update(this.gl, params)
     }
 
     setHovered (id: string | null): void {
@@ -444,9 +443,19 @@ class CoreRenderer {
         }
 
         if (this.viewMode === 'downscaled') {
-            this.downscaledCore.draw(this.gl, this.camera.matrix, easedShapeT)
+            this.downscaledCore.draw(
+                this.gl,
+                this.mineralBlender,
+                this.camera.matrix,
+                easedShapeT
+            )
         } else {
-            this.punchcardCore.draw(this.gl, this.camera.matrix, easedShapeT)
+            this.punchcardCore.draw(
+                this.gl,
+                this.mineralBlender,
+                this.camera.matrix,
+                easedShapeT
+            )
         }
 
         const hoveredId = this.stencilCore.updateHover(
@@ -464,6 +473,7 @@ class CoreRenderer {
     }
 
     drop (): void {
+        this.mineralBlender.drop(this.gl)
         this.downscaledCore.drop(this.gl)
         this.punchcardCore.drop(this.gl)
         this.stencilCore.drop(this.gl)
