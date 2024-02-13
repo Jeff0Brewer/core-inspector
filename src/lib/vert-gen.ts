@@ -24,9 +24,6 @@ const VERT_PER_TILE_TRI = ROW_PER_TILE * VERT_PER_ROW_TRI
 const VERT_PER_TILE_LINE = 2 * 2 + 2 + 4 + (ROW_PER_TILE * 2)
 
 const CALIBRATION_HEIGHT = 0.01
-const CALIBRATION_HEIGHT_DOWN = 0.01
-const CALIBRATION_HEIGHT_PUNCH = 0.008
-const CALIBRATION_POINT_HEIGHT = 2
 
 function getNumRows (part: TileRect, calibrationT: number): number {
     const height = 2 * part.height - CALIBRATION_HEIGHT * calibrationT
@@ -121,7 +118,7 @@ function getCorePositions (
         // calculate tile layout using downscaled tile dimensions as source of truth
         // for all vis elements, ensuring alignment
         let { height, width } = metadata.downTiles[i]
-        height -= CALIBRATION_HEIGHT_DOWN * calibrationT
+        height -= CALIBRATION_HEIGHT * calibrationT
         const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
         const tileRadius = tileAngle / maxAngle * RADIUS_RANGE
@@ -277,8 +274,8 @@ function addDownscaledTexCoords (
     rect: TileRect,
     calibrationT: number
 ): number {
-    const yStart = rect.top + CALIBRATION_HEIGHT_DOWN * calibrationT
-    const yInc = (rect.height - CALIBRATION_HEIGHT_DOWN * calibrationT) / ROW_PER_TILE
+    const yStart = rect.top + CALIBRATION_HEIGHT * calibrationT
+    const yInc = (rect.height - CALIBRATION_HEIGHT * calibrationT) / ROW_PER_TILE
 
     const getRowCoords = (
         i: number,
@@ -384,7 +381,7 @@ function addPunchcardTexCoords (
 
     // offset x and y by 0.5 to center coordinate on pixel in texture
     const x = rect.left + xInc * 0.5
-    const startY = (rect.top + CALIBRATION_HEIGHT_PUNCH * calibrationT) + yInc * 0.5
+    const startY = (rect.top + CALIBRATION_HEIGHT * calibrationT) + yInc * 0.5
 
     for (let i = 0; i < numRows; i++) {
         const y = startY + yInc * i
@@ -414,7 +411,7 @@ function addPunchcardSpiralPositions (
     numRows: number,
     calibrationT: number
 ): number {
-    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    numRows -= Math.round(CALIBRATION_HEIGHT * calibrationT)
 
     const angleInc = tileAngle / numRows
     const radiusInc = tileRadius / numRows
@@ -455,7 +452,7 @@ function addPunchcardColumnPositions (
     numRows: number,
     calibrationT: number
 ): number {
-    numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
+    numRows -= Math.round(CALIBRATION_HEIGHT * calibrationT)
 
     const columnYInc = tileHeight / numRows
     const columnXInc = TILE_WIDTH / VERT_PER_ROW_POINT
