@@ -34,7 +34,7 @@ class HoverHighlightRenderer {
         // get map from section id to section start and end indices in position buffer,
         // useful when getting offsets into position buffer for highlighted section vertices.
         // assumes that all tiles have same number of vertices
-        const floatPerTile = positions.length / tileMetadata.numTiles
+        const floatPerTile = positions.length / tileMetadata.tiles.length
         this.idIndMap = {}
         Object.entries(idMetadata.ids).forEach(
             ([ind, id]) => {

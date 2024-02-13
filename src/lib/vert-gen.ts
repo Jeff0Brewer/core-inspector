@@ -64,24 +64,24 @@ function getCoreTexCoords (
     downTexCoords: Float32Array,
     punchTexCoords: Float32Array
 } {
-    const numRows = getTotalNumRows(metadata.downTiles, pointPerRow, calibrationT)
+    const numRows = getTotalNumRows(metadata.tiles, pointPerRow, calibrationT)
     const punchTexCoords = new Float32Array(numRows * pointPerRow * TEX_FPV)
-    const downTexCoords = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * TEX_FPV)
+    const downTexCoords = new Float32Array(metadata.tiles.length * VERT_PER_TILE_TRI * TEX_FPV)
     let punchOffset = 0
     let downOffset = 0
 
-    for (let i = 0; i < metadata.numTiles; i++) {
+    for (let i = 0; i < metadata.tiles.length; i++) {
         punchOffset = addPunchcardTexCoords(
             punchTexCoords,
             punchOffset,
             pointPerRow,
-            metadata.downTiles[i],
+            metadata.tiles[i],
             calibrationT
         )
         downOffset = addDownscaledTexCoords(
             downTexCoords,
             downOffset,
-            metadata.downTiles[i],
+            metadata.tiles[i],
             calibrationT
         )
     }
@@ -106,10 +106,10 @@ function getCorePositions (
     accentPositions: Float32Array,
     vertexBounds: BoundRect
 } {
-    const numRows = getTotalNumRows(metadata.downTiles, pointPerRow, calibrationT)
+    const numRows = getTotalNumRows(metadata.tiles, pointPerRow, calibrationT)
     const punchPositions = new Float32Array(numRows * pointPerRow * POS_FPV)
-    const downPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_TRI * POS_FPV)
-    const accentPositions = new Float32Array(metadata.numTiles * VERT_PER_TILE_LINE * POS_FPV)
+    const downPositions = new Float32Array(metadata.tiles.length * VERT_PER_TILE_TRI * POS_FPV)
+    const accentPositions = new Float32Array(metadata.tiles.length * VERT_PER_TILE_LINE * POS_FPV)
     let punchOffset = 0
     let downOffset = 0
     let accentOffset = 0
@@ -119,7 +119,7 @@ function getCorePositions (
     const verticalSpacing = spacing[1] * TILE_WIDTH
     const numRotation = RADIUS_RANGE / (TILE_WIDTH + horizontalSpacing)
     const avgAngleSpacing = verticalSpacing / (MIN_RADIUS + RADIUS_RANGE * 0.5)
-    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.numTiles
+    const maxAngle = numRotation * Math.PI * 2 - avgAngleSpacing * metadata.tiles.length
 
     // init variables for current position in spiral / column layout
     let radius = MIN_RADIUS
@@ -127,10 +127,8 @@ function getCorePositions (
     let columnX = viewportBounds.left
     let columnY = viewportBounds.top
 
-    for (let i = 0; i < metadata.numTiles; i++) {
-        // calculate tile layout using downscaled tile dimensions as source of truth
-        // for all vis elements, ensuring alignment
-        let { height, width } = metadata.downTiles[i]
+    for (let i = 0; i < metadata.tiles.length; i++) {
+        let { height, width } = metadata.tiles[i]
         height -= CALIBRATION_HEIGHT * calibrationT
         const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
@@ -172,7 +170,7 @@ function getCorePositions (
                     angle,
                     tileRadius,
                     tileAngle,
-                    getNumRows(metadata.downTiles[i], pointPerRow, calibrationT)
+                    getNumRows(metadata.tiles[i], pointPerRow, calibrationT)
                 )
             }
         } else {
@@ -200,7 +198,7 @@ function getCorePositions (
                     columnX,
                     columnY,
                     tileHeight,
-                    getNumRows(metadata.downTiles[i], pointPerRow, calibrationT),
+                    getNumRows(metadata.tiles[i], pointPerRow, calibrationT),
                     calibrationT
                 )
             }
@@ -375,10 +373,7 @@ function addDownscaledColumnPositions (
 /*
  * PUNCHCARD CORE
  * - takes parameters from full core generators and interpolates into punchcard representation
- * - layed out as individual points, each with a texture coordinate representing
- *   a unique pixel in punchcard mineral map texture
- * - requires number of rows value from metadata, a value representing the exact pixel height
- *   of the punchcard tile's mineral texture, to determine number of points per tile
+ * - layed out as individual points, with colors from average of downscaled texture
  */
 
 // get texture coordinates from rect defined in metadata

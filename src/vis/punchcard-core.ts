@@ -72,8 +72,8 @@ class PunchcardCoreRenderer {
         }
         this.incPointSize(0) // init pointSize uniform
 
-        const [texWidth, texHeight] = metadata.downDims
-        const tileWidth = metadata.downTiles[0].width
+        const [texWidth, texHeight] = metadata.textureDims
+        const tileWidth = metadata.tiles[0].width
         const binWidth = tileWidth / pointPerRow
         const binHeight = binWidth * texWidth / texHeight
         const binSizeLoc = this.program.getUniformLocation(gl, 'binSize')

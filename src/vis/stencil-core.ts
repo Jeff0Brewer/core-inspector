@@ -37,7 +37,7 @@ class StencilCoreRenderer {
 
         this.numVertex = positions.length / POS_FPV
         // assume same number of vertices for each tile
-        const vertPerTile = this.numVertex / tileMetadata.numTiles
+        const vertPerTile = this.numVertex / tileMetadata.tiles.length
 
         // placeholder dimensions for framebuffer so init can happen before canvas resized
         this.framebuffer = new GlTextureFramebuffer(gl, 1, 1)
@@ -144,10 +144,10 @@ const getStencilColors = (
     map: ColorIdMap
 } => {
     const map: ColorIdMap = {}
-    const colors = new Uint8Array(tileMetadata.numTiles * vertPerTile * COL_FPV)
+    const colors = new Uint8Array(tileMetadata.tiles.length * vertPerTile * COL_FPV)
     let offset = 0
 
-    for (let i = 0; i < tileMetadata.numTiles; i++) {
+    for (let i = 0; i < tileMetadata.tiles.length; i++) {
         const { hex, vec } = indToColor(i)
 
         map[hex] = idMetadata.ids[i]
