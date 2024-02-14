@@ -6,14 +6,12 @@ import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
-import PartRenderer from '../../vis/part'
+import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartViewControls from '../../components/part/view-controls'
 import '../../styles/single-part.css'
-
-const BLEND_KEY = '[blended]'
 
 type PartViewProps = {
     part: string,
@@ -27,11 +25,16 @@ function PartView (
     { part, core, minerals, palettes, clearPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<HTMLCanvasElement>>({})
+    const [blendChannel, setBlendChannel] = useState<CanvasCtx>(getCanvasCtx(0, 0))
+    const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
     const [channelHeight, setChannelHeight] = useState<number>(0)
+
+    // ensures vis gl resources are freed when renderer changes
+    useRendererDrop(vis)
+
     const {
         magnitudes,
         visibilities,
@@ -44,7 +47,7 @@ function PartView (
 
     // apply blending on change to params
     useEffect(() => {
-        vis?.setBlending({
+        const params = {
             magnitudes,
             visibilities,
             palette,
@@ -52,15 +55,12 @@ function PartView (
             threshold,
             mode,
             monochrome
-        })
-    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
-
-    // ensures vis gl resources are freed when renderer changes
-    useRendererDrop(vis)
+        }
+        vis?.getBlended(params, blendChannel)
+    }, [vis, blendChannel, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
-        visible[BLEND_KEY] = true
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
@@ -70,27 +70,16 @@ function PartView (
                 minerals.map(mineral => loadImageAsync(paths[mineral]))
             )
 
-            const channels: StringMap<HTMLCanvasElement> = {}
+            setVis(new PartRenderer(minerals, imgs))
 
-            channels[BLEND_KEY] = document.createElement('canvas')
-            channels[BLEND_KEY].width = imgs[0].width
-            channels[BLEND_KEY].height = imgs[0].height
-            setVis(
-                new PartRenderer(
-                    minerals,
-                    imgs,
-                    {
-                        canvas: channels[BLEND_KEY],
-                        ctx: get2dContext(channels[BLEND_KEY])
-                    }
-                )
-            )
-
+            const channels: StringMap<CanvasCtx> = {}
             minerals.forEach((mineral, i) => {
-                channels[mineral] = imgToCanvas(imgs[i])
+                channels[mineral] = imgToCanvasCtx(imgs[i])
             })
-
             setChannels(channels)
+
+            const blendChannel = getCanvasCtx(imgs[0].width, imgs[0].height)
+            setBlendChannel(blendChannel)
         }
 
         getChannels()
@@ -104,6 +93,7 @@ function PartView (
         <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
+            blendChannel={blendChannel}
             channels={channels}
             visible={visible}
             zoom={zoom}
@@ -127,7 +117,17 @@ function PartView (
     </>
 }
 
-function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
+function getCanvasCtx (width: number, height: number): CanvasCtx {
+    const canvas = document.createElement('canvas')
+    const ctx = get2dContext(canvas)
+
+    canvas.width = width
+    canvas.height = height
+
+    return { canvas, ctx }
+}
+
+function imgToCanvasCtx (img: HTMLImageElement): CanvasCtx {
     const canvas = document.createElement('canvas')
     const ctx = get2dContext(canvas, { willReadFrequently: true })
 
@@ -135,7 +135,7 @@ function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
     canvas.height = img.height
     ctx.drawImage(img, 0, 0)
 
-    return canvas
+    return { canvas, ctx }
 }
 
 function getAbundanceFilepaths (
