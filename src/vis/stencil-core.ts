@@ -3,7 +3,6 @@ import { GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-
 import { bytesToHex } from '../lib/util'
 import { POS_FPV } from '../lib/vert-gen'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
@@ -30,14 +29,13 @@ class StencilCoreRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata
+        metadata: TileTextureMetadata
     ) {
         this.lastMousePos = [-1, -1]
 
         this.numVertex = positions.length / POS_FPV
         // assume same number of vertices for each tile
-        const vertPerTile = this.numVertex / tileMetadata.tiles.length
+        const vertPerTile = this.numVertex / metadata.numTiles
 
         // placeholder dimensions for framebuffer so init can happen before canvas resized
         this.framebuffer = new GlTextureFramebuffer(gl, 1, 1)
@@ -49,7 +47,7 @@ class StencilCoreRenderer {
         this.positionBuffer.setData(gl, positions)
         this.positionBuffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
-        const { colors, map } = getStencilColors(tileMetadata, idMetadata, vertPerTile)
+        const { colors, map } = getStencilColors(metadata, vertPerTile)
         this.colorIdMap = map
         this.colorBuffer = new GlBuffer(gl)
         this.colorBuffer.setData(gl, colors)
@@ -136,21 +134,22 @@ class StencilCoreRenderer {
 // get unique color for each tile id, return buffer for rendering colors
 // and map for converting rendered color to original id
 const getStencilColors = (
-    tileMetadata: TileTextureMetadata,
-    idMetadata: SectionIdMetadata,
+    metadata: TileTextureMetadata,
     vertPerTile: number
 ): {
     colors: Uint8Array,
     map: ColorIdMap
 } => {
     const map: ColorIdMap = {}
-    const colors = new Uint8Array(tileMetadata.tiles.length * vertPerTile * COL_FPV)
+    const colors = new Uint8Array(metadata.numTiles * vertPerTile * COL_FPV)
     let offset = 0
 
-    for (let i = 0; i < tileMetadata.tiles.length; i++) {
+    const ids = Object.keys(metadata.tiles)
+
+    for (let i = 0; i < ids.length; i++) {
         const { hex, vec } = indToColor(i)
 
-        map[hex] = idMetadata.ids[i]
+        map[hex] = ids[i]
 
         // fill buffer with same color for all vertices of tile
         const tileColors = Array(vertPerTile).fill(vec).flat()

@@ -1,3 +1,5 @@
+import { StringMap } from '../lib/util'
+
 type TileRect = {
     left: number,
     top: number,
@@ -6,8 +8,9 @@ type TileRect = {
 }
 
 type TileTextureMetadata = {
-    tiles: Array<TileRect>,
-    textureDims: [number, number]
+    tiles: StringMap<TileRect>,
+    textureDims: [number, number],
+    numTiles: number
 }
 
 export type {

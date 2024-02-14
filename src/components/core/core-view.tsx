@@ -41,10 +41,9 @@ function CoreView (
                 mineralPaths.push(`./data/${core}/downscaled/${i}.png`)
             }
 
-            const [mineralImgs, tileMetadata, idMetadata] = await Promise.all([
+            const [mineralImgs, tileMetadata] = await Promise.all([
                 Promise.all(mineralPaths.map(path => loadImageAsync(path))),
-                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
+                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json())
             ])
 
             setVis(
@@ -52,7 +51,6 @@ function CoreView (
                     canvas,
                     mineralImgs,
                     tileMetadata,
-                    idMetadata,
                     minerals
                 )
             )

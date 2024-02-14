@@ -2,7 +2,6 @@ import { mat4, vec2 } from 'gl-matrix'
 import { BoundRect, clamp, ease } from '../lib/util'
 import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { SectionIdMetadata } from '../lib/metadata'
 import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import Camera2D from '../lib/camera'
 import DownscaledCoreRenderer from '../vis/downscaled-core'
@@ -83,8 +82,7 @@ class CoreRenderer {
     constructor (
         canvas: HTMLCanvasElement,
         mineralMaps: Array<HTMLImageElement>,
-        tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata,
+        metadata: TileTextureMetadata,
         minerals: Array<string>,
         uiState: UiState = {}
     ) {
@@ -98,7 +96,7 @@ class CoreRenderer {
         this.targetCalibration = 'show'
         this.calibrationT = CALIBRATION_OPTIONS[this.targetCalibration]
 
-        this.metadata = tileMetadata
+        this.metadata = metadata
         this.uiState = uiState
         this.mousePos = [0, 0]
         this.dropped = false
@@ -116,12 +114,12 @@ class CoreRenderer {
         this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
 
         const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-            tileMetadata,
+            this.metadata,
             POINT_PER_ROW,
             this.calibrationT
         )
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
-            tileMetadata,
+            this.metadata,
             POINT_PER_ROW,
             this.spacing,
             this.getViewportBounds(),
@@ -141,7 +139,7 @@ class CoreRenderer {
 
         this.punchcardCore = new PunchcardCoreRenderer(
             this.gl,
-            tileMetadata,
+            this.metadata,
             POINT_PER_ROW,
             punchPositions,
             punchTexCoords,
@@ -151,22 +149,20 @@ class CoreRenderer {
         this.stencilCore = new StencilCoreRenderer(
             this.gl,
             downPositions,
-            tileMetadata,
-            idMetadata
+            this.metadata
         )
 
         this.hoverHighlight = new HoverHighlightRenderer(
             this.gl,
             downPositions,
-            tileMetadata,
-            idMetadata
+            this.metadata
         )
 
         this.accentLines = new AccentLineRenderer(
             this.gl,
             accentPositions,
             this.targetShape,
-            tileMetadata
+            this.metadata
         )
 
         // init canvas size, gl viewport, proj matrix

@@ -1,7 +1,3 @@
-type SectionIdMetadata = {
-    ids: Array<string>
-}
-
 type HydrationMetadata = {
     [id: string]: number
 }
@@ -14,7 +10,6 @@ type DepthMetadata = {
 }
 
 export type {
-    SectionIdMetadata,
     HydrationMetadata,
     DepthMetadata
 }

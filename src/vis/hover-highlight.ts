@@ -2,7 +2,6 @@ import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV } from '../lib/vert-gen'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { SectionIdMetadata } from '../lib/metadata'
 import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
 import fragSource from '../shaders/hover-highlight-frag.glsl?raw'
 
@@ -24,8 +23,7 @@ class HoverHighlightRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        tileMetadata: TileTextureMetadata,
-        idMetadata: SectionIdMetadata
+        metadata: TileTextureMetadata
     ) {
         this.positions = positions
         this.lastHovered = null
@@ -34,16 +32,13 @@ class HoverHighlightRenderer {
         // get map from section id to section start and end indices in position buffer,
         // useful when getting offsets into position buffer for highlighted section vertices.
         // assumes that all tiles have same number of vertices
-        const floatPerTile = positions.length / tileMetadata.tiles.length
+        const floatPerTile = positions.length / metadata.numTiles
         this.idIndMap = {}
-        Object.entries(idMetadata.ids).forEach(
-            ([ind, id]) => {
-                const tileInd = parseInt(ind)
-                const start = tileInd * floatPerTile
-                const end = (tileInd + 1) * floatPerTile
-                this.idIndMap[id] = [start, end]
-            }
-        )
+        Object.keys(metadata.tiles).forEach((id, index) => {
+            const start = index * floatPerTile
+            const end = (index + 1) * floatPerTile
+            this.idIndMap[id] = [start, end]
+        })
 
         this.program = new GlProgram(gl, vertSource, fragSource)
 
