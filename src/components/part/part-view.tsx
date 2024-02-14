@@ -1,7 +1,8 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
-import { loadImageAsync } from '../../lib/load'
+import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useBlending } from '../../hooks/blend-context'
+import { loadImageAsync } from '../../lib/load'
 import { padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
@@ -32,7 +33,11 @@ function PartView (
     const [spacing, setSpacing] = useState<number>(0.5)
     const [channelHeight, setChannelHeight] = useState<number>(0)
 
+    // apply blending to renderer on change to blend params
     useBlending(vis)
+
+    // ensures vis gl resources are freed when renderer changes
+    useRendererDrop(vis)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}

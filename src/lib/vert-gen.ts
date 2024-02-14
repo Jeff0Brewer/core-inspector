@@ -8,7 +8,7 @@ const TEX_FPV = 2
 
 // sizing / layout parameters
 const TILE_WIDTH = 0.025
-const LINE_WIDTH = 0.0015
+const LINE_WIDTH = 0.002
 const MIN_RADIUS = TILE_WIDTH * 5
 const MAX_RADIUS = 1
 const RADIUS_RANGE = MAX_RADIUS - MIN_RADIUS

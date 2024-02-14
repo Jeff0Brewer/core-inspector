@@ -11,8 +11,9 @@ class PartRenderer {
     gl: GlContext
     program: GlProgram
     buffer: GlBuffer
-    blender: MineralBlender
+    mineralBlender: MineralBlender
     numVertex: number
+    dropped: boolean
 
     constructor (
         canvas: HTMLCanvasElement,
@@ -36,11 +37,14 @@ class PartRenderer {
         this.buffer.addAttribute(this.gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
         this.numVertex = FULLSCREEN_RECT.length / STRIDE
 
-        this.blender = new MineralBlender(this.gl, mineralMaps, minerals)
+        this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
+
+        this.dropped = false
     }
 
     setBlending (params: BlendParams): void {
-        this.blender.update(this.gl, params)
+        if (this.dropped) { return }
+        this.mineralBlender.update(this.gl, params)
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
@@ -48,9 +52,17 @@ class PartRenderer {
 
         this.program.bind(this.gl)
         this.buffer.bind(this.gl)
-        this.blender.bind(this.gl)
+        this.mineralBlender.bind(this.gl)
 
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, this.numVertex)
+    }
+
+    drop (): void {
+        this.mineralBlender.drop(this.gl)
+        this.program.drop(this.gl)
+        this.buffer.drop(this.gl)
+
+        this.dropped = true
     }
 }
 

@@ -106,6 +106,10 @@
     grid-template-columns: 1fr 40px;
 }
 
+.mineral-controls > .blend-menu {
+    z-index: 6;
+}
+
 .mineral-toggles > button, .mineral-controls > .blend-toggle {
     border-radius: var(--radius);
     text-transform: uppercase;
@@ -216,9 +220,13 @@
 
 .channel-cursor {
     position: absolute;
-    z-index: 100;
+    z-index: 2;
     transform: translate(-50%, -50%);
     pointer-events: none;
+}
+
+.channel-wrap:hover .channel-cursor {
+    display: none;
 }
 
 .canvas {

@@ -1,6 +1,7 @@
 import { useEffect, RefObject } from 'react'
 import { formatPercent } from '../lib/util'
 
+// positions element next to mouse for hover dialogs
 function usePopupPosition (popupRef: RefObject<HTMLElement>): void {
     useEffect(() => {
         const popup = popupRef.current
@@ -8,21 +9,24 @@ function usePopupPosition (popupRef: RefObject<HTMLElement>): void {
             throw new Error('No reference to popup element')
         }
 
-        const xTranslate = 0.2
-        const rightTransform = `translate(${formatPercent(xTranslate)}, -50%)`
-        const leftTransform = `translate(${formatPercent(-1 - xTranslate)}, -50%)`
+        // translate element to either side of cursor
+        const xOffset = 0.2
+        const rightTranslate = `translate(${formatPercent(xOffset)}, -50%)`
+        const leftTranslate = `translate(${formatPercent(-1 - xOffset)}, -50%)`
 
-        popup.style.transform = rightTransform
+        popup.style.transform = rightTranslate
 
         const mousemove = (e: MouseEvent): void => {
             popup.style.left = `${e.clientX}px`
             popup.style.top = `${e.clientY}px`
 
-            const popupWidth = (1 + xTranslate) * popup.getBoundingClientRect().width
-            if (e.clientX - popupWidth < 0) {
-                popup.style.transform = rightTransform
-            } else if (e.clientX + popupWidth > window.innerWidth) {
-                popup.style.transform = leftTransform
+            // ensure element remains on screen
+            const popupRect = popup.getBoundingClientRect()
+            if (popupRect.left < 0) {
+                popup.style.transform = rightTranslate
+            }
+            if (popupRect.right > window.innerWidth) {
+                popup.style.transform = leftTranslate
             }
         }
 

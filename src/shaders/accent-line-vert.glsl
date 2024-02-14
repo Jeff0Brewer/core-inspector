@@ -15,8 +15,8 @@ void main() {
     vLineLength = lineLength;
 
     float isColumn = 1.0 - shapeT;
-    vec4 sideColor = vec4(0.34, 0.45, 0.59, 0.9 * isColumn);
-    vec4 bottomColor = vec4(0.58, 0.46, 0.28, 0.9);
+    vec4 sideColor = vec4(0.4, 0.5, 0.65, 1.0 * isColumn);
+    vec4 bottomColor = vec4(0.6, 0.5, 0.3, 1.0);
 
     // switch between colors for side / bottom lines
     // any vertices with negative lengths are known to be bottom lines
