@@ -65,20 +65,34 @@ function PartView (
         setVisible(visible)
 
         const getChannels = async (): Promise<void> => {
-            const paths = getAbundanceFilepaths(core, part, minerals)
-            const imgs = await Promise.all(
-                minerals.map(mineral => loadImageAsync(paths[mineral]))
-            )
+            const partPaths = getAbundanceFilepaths(core, part, minerals)
+            const corePaths: StringMap<string> = {}
+            minerals.forEach((mineral, i) => {
+                corePaths[mineral] = `./data/${core}/downscaled/${i}.png`
+            })
 
-            setVis(new PartRenderer(minerals, imgs))
+            const [partMaps, coreMaps, tileMetadata] = await Promise.all([
+                Promise.all(minerals.map(mineral => loadImageAsync(partPaths[mineral]))),
+                Promise.all(minerals.map(mineral => loadImageAsync(corePaths[mineral]))),
+                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json())
+            ])
+
+            setVis(
+                new PartRenderer(
+                    minerals,
+                    partMaps,
+                    coreMaps,
+                    tileMetadata
+                )
+            )
 
             const channels: StringMap<CanvasCtx> = {}
             minerals.forEach((mineral, i) => {
-                channels[mineral] = imgToCanvasCtx(imgs[i])
+                channels[mineral] = imgToCanvasCtx(partMaps[i])
             })
             setChannels(channels)
 
-            const blendChannel = getCanvasCtx(imgs[0].width, imgs[0].height)
+            const blendChannel = getCanvasCtx(partMaps[0].width, partMaps[0].height)
             setBlendChannel(blendChannel)
         }
 
