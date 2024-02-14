@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
+import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
@@ -25,6 +26,9 @@ function CoreView (
     const [vis, setVis] = useState<CoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    // ensures vis gl resources are freed when renderer changes
+    useRendererDrop(vis)
 
     useEffect(() => {
         if (!canvasRef.current) {
@@ -54,19 +58,10 @@ function CoreView (
             )
         }
 
-        // free last visualization's gl resources and
         // immediately set to null for loading state
-        if (vis) {
-            vis.drop()
-            setVis(null)
-        }
+        setVis(null)
 
         initCoreRenderer(canvasRef.current)
-
-        // don't want to include vis in dependency array since vis
-        // is being set here, will cause loop
-        //
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [core, minerals])
 
     useEffect(() => {
