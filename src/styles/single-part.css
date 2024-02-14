@@ -221,6 +221,10 @@
     pointer-events: none;
 }
 
+.channel-wrap:hover .channel-cursor {
+    display: none;
+}
+
 .canvas {
     position: relative;
 }
