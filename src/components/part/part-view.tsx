@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
-import { useBlending } from '../../hooks/blend-context'
+import { useBlendState } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
@@ -32,9 +32,28 @@ function PartView (
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<number>(0.5)
     const [channelHeight, setChannelHeight] = useState<number>(0)
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
 
-    // apply blending to renderer on change to blend params
-    useBlending(vis)
+    // apply blending on change to params
+    useEffect(() => {
+        vis?.setBlending({
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        })
+    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
