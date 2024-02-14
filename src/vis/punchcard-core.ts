@@ -109,7 +109,7 @@ class PunchcardCoreRenderer {
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
         this.texCoordBuffer.bind(gl)
-        minerals.bind(gl)
+        minerals.bindTexture(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 

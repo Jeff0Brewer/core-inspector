@@ -61,6 +61,23 @@ function checkStringType (v: unknown): string {
     return v as 'string'
 }
 
+// wierd typing since actual render context settings type is private
+type CanvasRenderingContext2DSettings = {
+    willReadFrequently?: boolean
+}
+
+function get2dContext (
+    canvas: HTMLCanvasElement,
+    settings: CanvasRenderingContext2DSettings = {}
+): CanvasRenderingContext2D {
+    const ctx = canvas.getContext('2d', settings)
+    if (!ctx) {
+        throw new Error('Could not get 2d rendering context from canvas')
+    }
+    // cast required due to custom settings type defined above
+    return ctx as CanvasRenderingContext2D
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -80,7 +97,8 @@ export {
     parsePercent,
     padZeros,
     getCssColor,
-    checkStringType
+    checkStringType,
+    get2dContext
 }
 export type {
     BoundRect,

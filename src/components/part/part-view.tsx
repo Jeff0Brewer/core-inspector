@@ -3,7 +3,7 @@ import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useBlending } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
-import { padZeros, StringMap } from '../../lib/util'
+import { get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
@@ -56,7 +56,16 @@ function PartView (
             channels[BLEND_KEY] = document.createElement('canvas')
             channels[BLEND_KEY].width = imgs[0].width
             channels[BLEND_KEY].height = imgs[0].height
-            setVis(new PartRenderer(channels[BLEND_KEY], minerals, imgs))
+            setVis(
+                new PartRenderer(
+                    minerals,
+                    imgs,
+                    {
+                        canvas: channels[BLEND_KEY],
+                        ctx: get2dContext(channels[BLEND_KEY])
+                    }
+                )
+            )
 
             minerals.forEach((mineral, i) => {
                 channels[mineral] = imgToCanvas(imgs[i])
@@ -101,10 +110,7 @@ function PartView (
 
 function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
     const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) {
-        throw new Error('Could not get 2d drawing context')
-    }
+    const ctx = get2dContext(canvas, { willReadFrequently: true })
 
     canvas.width = img.width
     canvas.height = img.height

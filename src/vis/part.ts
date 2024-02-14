@@ -1,13 +1,19 @@
-import { initGl, GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
+import { initGl, GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-wrap'
 import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import { POS_FPV, TEX_FPV, FULLSCREEN_RECT } from '../lib/vert-gen'
 import vertSource from '../shaders/single-part-vert.glsl?raw'
 import fragSource from '../shaders/single-part-frag.glsl?raw'
 
+type CanvasContext = {
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D
+}
+
 const STRIDE = POS_FPV + TEX_FPV
 
 class PartRenderer {
     canvas: HTMLCanvasElement
+    blendOutput: CanvasContext
     gl: GlContext
     program: GlProgram
     buffer: GlBuffer
@@ -16,11 +22,12 @@ class PartRenderer {
     dropped: boolean
 
     constructor (
-        canvas: HTMLCanvasElement,
         minerals: Array<string>,
-        mineralMaps: Array<HTMLImageElement>
+        mineralMaps: Array<HTMLImageElement>,
+        blendOutput: CanvasContext
     ) {
-        this.canvas = canvas
+        this.canvas = document.createElement('canvas')
+        this.blendOutput = blendOutput
 
         this.gl = initGl(this.canvas)
 
@@ -44,17 +51,27 @@ class PartRenderer {
 
     setBlending (params: BlendParams): void {
         if (this.dropped) { return }
+        this.canvas.width = this.blendOutput.canvas.width
+        this.canvas.height = this.blendOutput.canvas.height
+
         this.mineralBlender.update(this.gl, params)
+        this.mineralBlender.bindFramebuffer(this.gl)
 
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
-        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height)
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
+        this.copyToCanvas(this.mineralBlender.framebuffer, this.blendOutput)
+    }
 
-        this.program.bind(this.gl)
-        this.buffer.bind(this.gl)
-        this.mineralBlender.bind(this.gl)
+    copyToCanvas (
+        framebuffer: GlTextureFramebuffer,
+        canvasContext: CanvasContext
+    ): void {
+        framebuffer.bind(this.gl)
+        const { canvas: { width, height }, ctx } = canvasContext
 
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, this.numVertex)
+        const pixels = new Uint8ClampedArray(4 * width * height)
+        this.gl.readPixels(0, 0, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels)
+
+        const imageData = new ImageData(pixels, width, height)
+        ctx.putImageData(imageData, 0, 0)
     }
 
     drop (): void {
