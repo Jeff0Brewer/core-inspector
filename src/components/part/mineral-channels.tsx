@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
-import { StringMap } from '../../lib/util'
+import { get2dContext, StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
@@ -80,11 +80,7 @@ function PartMineralChannels (
         Object.entries(channels)
             .filter(([mineral, _]) => mineral !== BLEND_KEY)
             .forEach(([mineral, channel]) => {
-                const ctx = channel.getContext('2d', { willReadFrequently: true })
-                if (!ctx) {
-                    throw new Error('Could not get 2d rendering context')
-                }
-                channelContexts[mineral] = ctx
+                channelContexts[mineral] = get2dContext(channel, { willReadFrequently: true })
             })
         setChannelContexts(channelContexts)
     }, [channels])
