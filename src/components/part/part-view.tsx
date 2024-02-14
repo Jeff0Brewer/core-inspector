@@ -13,6 +13,10 @@ import PartMineralControls from '../../components/part/mineral-controls'
 import PartViewControls from '../../components/part/view-controls'
 import '../../styles/single-part.css'
 
+function PartPunchcard (
+    { vis, part }
+)
+
 type PartViewProps = {
     part: string,
     core: string,
@@ -47,6 +51,7 @@ function PartView (
 
     // apply blending on change to params
     useEffect(() => {
+        if (!vis) { return }
         const params = {
             magnitudes,
             visibilities,
@@ -56,7 +61,8 @@ function PartView (
             mode,
             monochrome
         }
-        vis?.getBlended(params, blendChannel)
+        vis.getBlended(params, blendChannel)
+        vis.updatePunchcardBlend(params)
     }, [vis, blendChannel, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     useEffect(() => {

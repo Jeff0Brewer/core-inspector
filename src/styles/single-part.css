@@ -229,16 +229,6 @@
     display: none;
 }
 
-.canvas {
-    position: relative;
-}
-
-.canvas > canvas {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
 .hover-info {
     position: absolute;
     pointer-events: none;

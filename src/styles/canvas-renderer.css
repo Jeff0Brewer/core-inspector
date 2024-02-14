@@ -1,0 +1,9 @@
+.canvas-renderer {
+    position: relative;
+}
+
+.canvas-renderer > canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}

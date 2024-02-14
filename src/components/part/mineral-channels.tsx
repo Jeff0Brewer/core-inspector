@@ -4,6 +4,7 @@ import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
+import CanvasRenderer from '../../components/generic/canvas-renderer'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
@@ -143,16 +144,6 @@ function MineralCanvas (
 ): ReactElement {
     const channelRef = useRef<HTMLDivElement>(null)
 
-    // add HTML canvas element to react element via ref,
-    // allows access of canvas reference when not rendered to dom
-    const addCanvasChild = (ref: HTMLDivElement | null): void => {
-        if (!ref) { return }
-        while (ref.lastChild) {
-            ref.removeChild(ref.lastChild)
-        }
-        ref.appendChild(canvas)
-    }
-
     useEffect(() => {
         const channel = channelRef.current
         if (!channel) {
@@ -189,11 +180,7 @@ function MineralCanvas (
                 >
                     {ICONS.cursor}
                 </div> }
-                <div
-                    className={'canvas'}
-                    style={{ width, height }}
-                    ref={addCanvasChild}
-                ></div>
+                <CanvasRenderer canvas={canvas} width={width} height={height} />
             </div>
         </div>
     )
