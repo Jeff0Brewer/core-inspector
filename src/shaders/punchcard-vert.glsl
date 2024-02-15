@@ -14,6 +14,7 @@ varying vec3 vColor;
 
 const float numSample = 5.0;
 const float invNumSample = 1.0 / (numSample - 1.0);
+const float invSize = 1.0 / (numSample * numSample);
 
 void main() {
     vec4 position = spiralPos * shapeT + columnPos * (1.0 - shapeT);
@@ -23,7 +24,6 @@ void main() {
     gl_PointSize = pointSize * windowScale / gl_Position.w;
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    float invSize = 1.0 / (numSample * numSample);
     for (float i = 0.0; i < numSample; i += 1.0) {
         for (float j = 0.0; j < numSample; j += 1.0) {
             vec2 offset = vec2(

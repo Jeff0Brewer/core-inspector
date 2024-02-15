@@ -5,6 +5,7 @@ import { CanvasCtx, glToCanvas } from '../vis/part'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/punchcard-part-vert.glsl?raw'
 import fragSource from '../shaders/punchcard-part-frag.glsl?raw'
+import { vec2 } from 'gl-matrix'
 
 const STRIDE = POS_FPV + TEX_FPV
 
@@ -13,6 +14,7 @@ class PunchcardPartRenderer {
     program: GlProgram
     buffer: GlBuffer
     setPointSize: (s: number) => void
+    setBinWidth: (b: vec2) => void
 
     constructor (
         gl: GlContext,
@@ -27,7 +29,9 @@ class PunchcardPartRenderer {
         this.buffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
 
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
+        const binWidthLoc = this.program.getUniformLocation(gl, 'binWidth')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
+        this.setBinWidth = (b: vec2): void => { gl.uniform2fv(binWidthLoc, b) }
     }
 
     getPunchcard (
@@ -81,6 +85,10 @@ class PunchcardPartRenderer {
         minerals.bindTexture(gl)
 
         this.setPointSize(width / pointPerRow)
+        const [texWidth, texHeight] = this.metadata.textureDims
+        const binWidth = tile.width / pointPerRow
+        const binHeight = binWidth * texWidth / texHeight
+        this.setBinWidth([binWidth, binHeight])
 
         gl.viewport(0, 0, width, height)
         gl.drawArrays(gl.POINTS, 0, numVertex)
