@@ -25,6 +25,8 @@ class PartRenderer {
         this.canvas = document.createElement('canvas')
 
         this.gl = initGl(this.canvas)
+        this.gl.enable(this.gl.BLEND)
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
 
         this.partMinerals = new MineralBlender(this.gl, partMinerals, minerals)
         this.coreMinerals = new MineralBlender(this.gl, coreMinerals, minerals)
@@ -54,12 +56,10 @@ class PartRenderer {
         )
     }
 
-    updatePunchcardBlend (params: BlendParams): void {
-        this.coreMinerals.update(this.gl, params)
-    }
-
-    getPunchcard (part: string, output: CanvasCtx): void {
+    getPunchcard (part: string, params: BlendParams, output: CanvasCtx): void {
         if (this.dropped) { return }
+
+        this.coreMinerals.update(this.gl, params)
 
         this.punchcardPart.getPunchcard(
             this.gl,

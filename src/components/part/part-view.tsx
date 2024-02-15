@@ -11,11 +11,51 @@ import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartViewControls from '../../components/part/view-controls'
+import CanvasRenderer from '../../components/generic/canvas-renderer'
 import '../../styles/single-part.css'
 
+type PartPunchcardProps = {
+    vis: PartRenderer | null,
+    part: string
+}
+
 function PartPunchcard (
-    { vis, part }
-)
+    { vis, part }: PartPunchcardProps
+): ReactElement {
+    const [canvasCtx] = useState<CanvasCtx>(getCanvasCtx())
+
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    useEffect(() => {
+        if (!vis) { return }
+        const params = {
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        }
+        vis.getPunchcard(part, params, canvasCtx)
+    }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+
+    return (
+        <CanvasRenderer
+            canvas={canvasCtx.canvas}
+            width={'auto'}
+            height={'auto'}
+        />
+    )
+}
 
 type PartViewProps = {
     part: string,
@@ -62,7 +102,6 @@ function PartView (
             monochrome
         }
         vis.getBlended(params, blendChannel)
-        vis.updatePunchcardBlend(params)
     }, [vis, blendChannel, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     useEffect(() => {
@@ -120,14 +159,17 @@ function PartView (
             spacing={spacing}
             setChannelHeight={setChannelHeight}
         />
-        <PartViewControls
-            part={part}
-            zoom={zoom}
-            setZoom={setZoom}
-            spacing={spacing}
-            setSpacing={setSpacing}
-            channelHeight={channelHeight}
-        />
+        <div className={'side-display'}>
+            <PartViewControls
+                part={part}
+                zoom={zoom}
+                setZoom={setZoom}
+                spacing={spacing}
+                setSpacing={setSpacing}
+                channelHeight={channelHeight}
+            />
+            <PartPunchcard vis={vis} part={part} />
+        </div>
         <PartMineralControls
             minerals={minerals}
             palettes={palettes}
@@ -137,7 +179,7 @@ function PartView (
     </>
 }
 
-function getCanvasCtx (width: number, height: number): CanvasCtx {
+function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     const canvas = document.createElement('canvas')
     const ctx = get2dContext(canvas)
 

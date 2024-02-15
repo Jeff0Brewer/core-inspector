@@ -12,6 +12,7 @@ class PunchcardPartRenderer {
     metadata: TileTextureMetadata
     program: GlProgram
     buffer: GlBuffer
+    setPointSize: (s: number) => void
 
     constructor (
         gl: GlContext,
@@ -24,6 +25,9 @@ class PunchcardPartRenderer {
         this.buffer = new GlBuffer(gl)
         this.buffer.addAttribute(gl, this.program, 'position', POS_FPV, STRIDE, 0)
         this.buffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
+
+        const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
+        this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
     }
 
     getPunchcard (
@@ -38,7 +42,7 @@ class PunchcardPartRenderer {
         const pointPerRow = 3
         const numRows = Math.round(pointPerRow * (2 * tile.height / tile.width))
         const width = 100
-        const height = width * tile.width / tile.height
+        const height = 2 * Math.round(width * tile.height / tile.width)
 
         output.canvas.width = width
         output.canvas.height = height
@@ -47,15 +51,15 @@ class PunchcardPartRenderer {
 
         const verts = []
 
-        const xInc = 1 / pointPerRow
-        const yInc = 1 / numRows
-        const xStart = xInc * 0.5
-        const yStart = yInc * 0.5
+        const xInc = 2 / pointPerRow
+        const yInc = 2 / numRows
+        const xStart = -1 + xInc * 0.5
+        const yStart = -1 + yInc * 0.5
 
-        const txInc = 1 / tile.width
-        const tyInc = 1 / tile.height
-        const txStart = txInc * 0.5
-        const tyStart = tyInc * 0.5
+        const txInc = tile.width / pointPerRow
+        const tyInc = tile.height / numRows
+        const txStart = tile.left + txInc * 0.5
+        const tyStart = tile.top + tyInc * 0.5
 
         for (let i = 0; i < numRows; i++) {
             for (let j = 0; j < pointPerRow; j++) {
@@ -76,6 +80,9 @@ class PunchcardPartRenderer {
         this.buffer.bind(gl)
         minerals.bindTexture(gl)
 
+        this.setPointSize(width / pointPerRow)
+
+        gl.viewport(0, 0, width, height)
         gl.drawArrays(gl.POINTS, 0, numVertex)
 
         glToCanvas(gl, framebuffer, output.ctx, width, height)

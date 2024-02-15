@@ -35,18 +35,22 @@
 }
 
 /* ----- SIDE CONTROLS ----- */
-.vertical-controls {
+.side-display {
     grid-area: side;
     grid-row: side / bottom;
     display: flex;
+    background-color: #606060;
+}
+
+.vertical-controls {
+    display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 70px;
     height: 100%;
     align-items: center;
     gap: 20px;
     padding: 10px 0;
     padding-bottom: 32px;
-    background-color: #606060;
 }
 
 .scale-ruler {
