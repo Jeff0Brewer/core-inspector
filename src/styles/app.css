@@ -5,7 +5,7 @@
     overflow: hidden;
     display: grid;
     grid-template-rows: 50px 20px 1fr 32px;
-    grid-template-columns: 150px 1fr;
+    grid-template-columns: 100px 1fr;
     grid-template-areas:
         "top-side top"
         "label-side label"

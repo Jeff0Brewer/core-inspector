@@ -35,7 +35,7 @@ class PunchcardPartRenderer {
         part: string,
         minerals: MineralBlender,
         output: CanvasCtx
-    ): void {
+    ): number {
         const tile = this.metadata.tiles[part]
 
         // temp
@@ -86,6 +86,8 @@ class PunchcardPartRenderer {
         gl.drawArrays(gl.POINTS, 0, numVertex)
 
         glToCanvas(gl, framebuffer, output.ctx, width, height)
+
+        return height / width
     }
 }
 

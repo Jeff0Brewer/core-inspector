@@ -23,6 +23,7 @@ function PartPunchcard (
     { vis, part }: PartPunchcardProps
 ): ReactElement {
     const [canvasCtx] = useState<CanvasCtx>(getCanvasCtx())
+    const [aspect, setAspect] = useState<number>(0)
 
     const {
         magnitudes,
@@ -45,15 +46,58 @@ function PartPunchcard (
             mode,
             monochrome
         }
-        vis.getPunchcard(part, params, canvasCtx)
+        const aspect = vis.getPunchcard(part, params, canvasCtx)
+        setAspect(aspect)
     }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     return (
         <CanvasRenderer
             canvas={canvasCtx.canvas}
-            width={'auto'}
-            height={'auto'}
+            width={'15px'}
+            height={`${15 * aspect}px`}
         />
+    )
+}
+
+type PunchardSidebarProps = {
+    vis: PartRenderer | null,
+    ids: Array<string>,
+    part: string
+}
+
+function PunchcardSidebar (
+    { vis, ids, part }: PunchardSidebarProps
+): ReactElement {
+    const [prev, setPrev] = useState<string>('')
+    const [next, setNext] = useState<string>('')
+
+    useEffect(() => {
+        const partInd = ids.indexOf(part)
+        setPrev(partInd === 0 ? '' : ids[partInd - 1])
+        setNext(partInd >= ids.length ? '' : ids[partInd + 1])
+    }, [part, ids])
+
+    return (
+        <div className={'punch-column'}>
+            { prev && <>
+                <PartPunchcard
+                    vis={vis}
+                    part={prev}
+                />
+                <div className={'space-dot'}></div>
+            </>}
+            <PartPunchcard
+                vis={vis}
+                part={part}
+            />
+            { next && <>
+                <div className={'space-dot'}></div>
+                <PartPunchcard
+                    vis={vis}
+                    part={next}
+                />
+            </>}
+        </div>
     )
 }
 
@@ -69,6 +113,7 @@ function PartView (
     { part, core, minerals, palettes, clearPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
+    const [ids, setIds] = useState<Array<string>>([])
     const [blendChannel, setBlendChannel] = useState<CanvasCtx>(getCanvasCtx(0, 0))
     const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
@@ -131,6 +176,8 @@ function PartView (
                 )
             )
 
+            setIds(Object.keys(tileMetadata.tiles))
+
             const channels: StringMap<CanvasCtx> = {}
             minerals.forEach((mineral, i) => {
                 channels[mineral] = imgToCanvasCtx(partMaps[i])
@@ -168,7 +215,11 @@ function PartView (
                 setSpacing={setSpacing}
                 channelHeight={channelHeight}
             />
-            <PartPunchcard vis={vis} part={part} />
+            <PunchcardSidebar
+                vis={vis}
+                ids={ids}
+                part={part}
+            />
         </div>
         <PartMineralControls
             minerals={minerals}

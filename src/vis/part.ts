@@ -56,12 +56,12 @@ class PartRenderer {
         )
     }
 
-    getPunchcard (part: string, params: BlendParams, output: CanvasCtx): void {
-        if (this.dropped) { return }
+    getPunchcard (part: string, params: BlendParams, output: CanvasCtx): number {
+        if (this.dropped) { return 0 }
 
         this.coreMinerals.update(this.gl, params)
 
-        this.punchcardPart.getPunchcard(
+        return this.punchcardPart.getPunchcard(
             this.gl,
             part,
             this.coreMinerals,
