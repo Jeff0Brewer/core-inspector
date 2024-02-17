@@ -38,18 +38,15 @@ class PunchcardPartRenderer {
         gl: GlContext,
         part: string,
         minerals: MineralBlender,
-        output: CanvasCtx
+        output: CanvasCtx,
+        width: number
     ): number {
         const tile = this.metadata.tiles[part]
 
         // temp
         const pointPerRow = 3
         const numRows = Math.round(pointPerRow * (2 * tile.height / tile.width))
-        const width = 100
         const height = 2 * Math.round(width * tile.height / tile.width)
-
-        output.canvas.width = width
-        output.canvas.height = height
 
         const framebuffer = new GlTextureFramebuffer(gl, width, height)
 
@@ -93,7 +90,10 @@ class PunchcardPartRenderer {
         gl.viewport(0, 0, width, height)
         gl.drawArrays(gl.POINTS, 0, numVertex)
 
-        glToCanvas(gl, framebuffer, output.ctx, width, height)
+        output.canvas.width = width
+        output.canvas.height = height
+
+        glToCanvas(gl, framebuffer, output)
 
         return height / width
     }

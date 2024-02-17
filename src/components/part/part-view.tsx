@@ -37,16 +37,7 @@ function PartPunchcard (
 
     useEffect(() => {
         if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        const aspect = vis.getPunchcard(part, params, canvasCtx)
+        const aspect = vis.getPunchcard(part, canvasCtx, 15 * window.devicePixelRatio)
         setAspect(aspect)
     }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
@@ -80,22 +71,13 @@ function PunchcardSidebar (
     return (
         <div className={'punch-column'}>
             { prev && <>
-                <PartPunchcard
-                    vis={vis}
-                    part={prev}
-                />
+                <PartPunchcard vis={vis} part={prev} />
                 <div className={'space-dot'}></div>
             </>}
-            <PartPunchcard
-                vis={vis}
-                part={part}
-            />
+            <PartPunchcard vis={vis} part={part} />
             { next && <>
                 <div className={'space-dot'}></div>
-                <PartPunchcard
-                    vis={vis}
-                    part={next}
-                />
+                <PartPunchcard vis={vis} part={next} />
             </>}
         </div>
     )
@@ -114,7 +96,6 @@ function PartView (
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [ids, setIds] = useState<Array<string>>([])
-    const [blendChannel, setBlendChannel] = useState<CanvasCtx>(getCanvasCtx(0, 0))
     const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -123,31 +104,6 @@ function PartView (
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
-
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
-    // apply blending on change to params
-    useEffect(() => {
-        if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        vis.getBlended(params, blendChannel)
-    }, [vis, blendChannel, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
@@ -183,9 +139,6 @@ function PartView (
                 channels[mineral] = imgToCanvasCtx(partMaps[i])
             })
             setChannels(channels)
-
-            const blendChannel = getCanvasCtx(partMaps[0].width, partMaps[0].height)
-            setBlendChannel(blendChannel)
         }
 
         getChannels()
@@ -199,7 +152,6 @@ function PartView (
         <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
-            blendChannel={blendChannel}
             channels={channels}
             visible={visible}
             zoom={zoom}
