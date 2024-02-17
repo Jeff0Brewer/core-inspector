@@ -30,10 +30,10 @@ function BlendMenu (
     // sets magnitude for single index, used in mineral sliders
     const getMagnitudeSetter = (index: number): ((m: number) => void) => {
         return (m: number) => {
-            magnitudes[index] = m
-            visibilities[index] = true
-            setMagnitudes([...magnitudes])
-            setVisibilities([...visibilities])
+            if (visibilities[index]) {
+                magnitudes[index] = m
+                setMagnitudes([...magnitudes])
+            }
         }
     }
 
