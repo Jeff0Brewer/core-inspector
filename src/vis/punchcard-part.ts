@@ -10,18 +10,12 @@ import { vec2 } from 'gl-matrix'
 const STRIDE = POS_FPV + TEX_FPV
 
 class PunchcardPartRenderer {
-    metadata: TileTextureMetadata
     program: GlProgram
     buffer: GlBuffer
     setPointSize: (s: number) => void
     setBinWidth: (b: vec2) => void
 
-    constructor (
-        gl: GlContext,
-        metadata: TileTextureMetadata
-    ) {
-        this.metadata = metadata
-
+    constructor (gl: GlContext) {
         this.program = new GlProgram(gl, vertSource, fragSource)
 
         this.buffer = new GlBuffer(gl)
@@ -36,12 +30,13 @@ class PunchcardPartRenderer {
 
     getPunchcard (
         gl: GlContext,
+        metadata: TileTextureMetadata,
         part: string,
         minerals: MineralBlender,
         output: CanvasCtx,
         width: number
     ): number {
-        const tile = this.metadata.tiles[part]
+        const tile = metadata.tiles[part]
 
         // temp
         const pointPerRow = 3
@@ -82,7 +77,7 @@ class PunchcardPartRenderer {
         minerals.bindTexture(gl)
 
         this.setPointSize(width / pointPerRow)
-        const [texWidth, texHeight] = this.metadata.textureDims
+        const [texWidth, texHeight] = metadata.textureDims
         const binWidth = tile.width / pointPerRow
         const binHeight = binWidth * texWidth / texHeight
         this.setBinWidth([binWidth, binHeight])

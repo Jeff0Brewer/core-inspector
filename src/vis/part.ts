@@ -22,6 +22,7 @@ class PartRenderer {
     partMinerals: MineralBlender
     coreMinerals: MineralBlender
     punchcardPart: PunchcardPartRenderer
+    tileMetadata: TileTextureMetadata
     dropped: boolean
 
     constructor (
@@ -30,6 +31,8 @@ class PartRenderer {
         coreMinerals: Array<HTMLImageElement>,
         metadata: TileTextureMetadata
     ) {
+        this.tileMetadata = metadata
+
         this.canvas = document.createElement('canvas')
         this.canvas.width = partMinerals[0].width
         this.canvas.height = partMinerals[0].height
@@ -56,7 +59,7 @@ class PartRenderer {
         this.partMinerals = new MineralBlender(this.gl, partMinerals, minerals)
         this.coreMinerals = new MineralBlender(this.gl, coreMinerals, minerals)
 
-        this.punchcardPart = new PunchcardPartRenderer(this.gl, metadata)
+        this.punchcardPart = new PunchcardPartRenderer(this.gl)
 
         this.dropped = false
     }
@@ -81,11 +84,23 @@ class PartRenderer {
         if (this.dropped) { return 0 }
         return this.punchcardPart.getPunchcard(
             this.gl,
+            this.tileMetadata,
             part,
             this.coreMinerals,
             output,
             width
         )
+    }
+
+    getPartAspects (parts: Array<string>): Array<number> {
+        return parts.map(part => {
+            const rect = this.tileMetadata.tiles[part]
+            if (!rect) {
+                throw new Error(`Part ${part} not present in metadata`)
+            }
+            const { width, height } = rect
+            return width / (2 * height)
+        })
     }
 
     drop (): void {

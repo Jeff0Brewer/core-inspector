@@ -1,7 +1,6 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useEffect, useRef, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
-import { useBlendState } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
@@ -11,74 +10,221 @@ import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartViewControls from '../../components/part/view-controls'
-import CanvasRenderer from '../../components/generic/canvas-renderer'
 import '../../styles/single-part.css'
 
-type PartPunchcardProps = {
+// type PartPunchcardProps = {
+//     vis: PartRenderer | null,
+//     part: string
+// }
+//
+// function PartPunchcard (
+//     { vis, part }: PartPunchcardProps
+// ): ReactElement {
+//     const [canvasCtx] = useState<CanvasCtx>(getCanvasCtx())
+//     const [aspect, setAspect] = useState<number>(0)
+//
+//     const {
+//         magnitudes,
+//         visibilities,
+//         palette,
+//         saturation,
+//         threshold,
+//         mode,
+//         monochrome
+//     } = useBlendState()
+//
+//     useEffect(() => {
+//         if (!vis) { return }
+//         const aspect = vis.getPunchcard(part, canvasCtx, 15 * window.devicePixelRatio)
+//         setAspect(aspect)
+//     }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+//
+//     return (
+//         <CanvasRenderer
+//             canvas={canvasCtx.canvas}
+//             width={'15px'}
+//             height={`${15 * aspect}px`}
+//         />
+//     )
+// }
+//
+// type PunchardSidebarProps = {
+//     vis: PartRenderer | null,
+//     ids: Array<string>,
+//     part: string
+// }
+//
+// function PunchcardSidebar (
+//     { vis, ids, part }: PunchardSidebarProps
+// ): ReactElement {
+//     const [prev, setPrev] = useState<string>('')
+//     const [next, setNext] = useState<string>('')
+//
+//     useEffect(() => {
+//         const partInd = ids.indexOf(part)
+//         setPrev(partInd === 0 ? '' : ids[partInd - 1])
+//         setNext(partInd >= ids.length ? '' : ids[partInd + 1])
+//     }, [part, ids])
+//
+//     return (
+//         <div className={'punch-column'}>
+//             { prev && <>
+//                 <PartPunchcard vis={vis} part={prev} />
+//                 <div className={'space-dot'}></div>
+//             </>}
+//             <PartPunchcard vis={vis} part={part} />
+//             { next && <>
+//                 <div className={'space-dot'}></div>
+//                 <PartPunchcard vis={vis} part={next} />
+//             </>}
+//         </div>
+//     )
+// }
+
+type CoreRepresentationProps = {
     vis: PartRenderer | null,
-    part: string
+    parts: Array<string>,
+    aspects: StringMap<number>
 }
 
-function PartPunchcard (
-    { vis, part }: PartPunchcardProps
+function CoreRectRepresentation (
+    { parts, aspects }: CoreRepresentationProps
 ): ReactElement {
-    const [canvasCtx] = useState<CanvasCtx>(getCanvasCtx())
-    const [aspect, setAspect] = useState<number>(0)
+    return <>
+        { parts.map((part, i) =>
+            <div
+                className={'rect-part'}
+                style={{ aspectRatio: aspects[part] }}
+                key={i}
+            ></div>
+        ) }
+    </>
+}
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
+type CoreZoomLevelProps = {
+    vis: PartRenderer | null,
+    representations: Array<(p: CoreRepresentationProps) => ReactElement>
+    part: string,
+    parts: Array<string>,
+    aspects: StringMap<number>,
+    gap?: number
+    width?: number
+}
+
+function CoreZoomLevel (
+    { vis, representations, parts, part, aspects, gap = 1, width = 1 }: CoreZoomLevelProps
+): ReactElement {
+    const [visibleParts, setVisibleParts] = useState<Array<string>>([])
+    const [columnHeight, setColumnHeight] = useState<number>(0)
+    const columnRef = useRef<HTMLDivElement>(null)
+    const representationRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const getColumnHeight = (): void => {
+            if (!columnRef.current) {
+                throw new Error('No reference to column element')
+            }
+            const { height } = columnRef.current.getBoundingClientRect()
+            setColumnHeight(height)
+        }
+        getColumnHeight()
+
+        window.addEventListener('resize', getColumnHeight)
+        return () => {
+            window.removeEventListener('resize', getColumnHeight)
+        }
+    }, [])
+
+    useEffect(() => {
+        const representation = representationRef.current
+        if (!representation) {
+            throw new Error('No reference to representation element')
+        }
+
+        let top = 0
+        const heights: StringMap<number> = {}
+        const tops: StringMap<number> = {}
+        for (let i = 0; i < parts.length; i++) {
+            const height = width / aspects[parts[i]] + gap
+            heights[parts[i]] = height
+            tops[parts[i]] = top
+            top += height
+        }
+
+        const center = tops[part] - heights[part] * 0.5
+        const topBound = center - columnHeight * 0.5
+        const bottomBound = center + columnHeight * 0.5
+
+        const visibleParts = parts.filter(part => {
+            const top = tops[part]
+            const bottom = tops[part] + heights[part]
+            return bottom > topBound && top < bottomBound
+        })
+
+        const firstPart = visibleParts[0]
+        const lastPart = visibleParts[visibleParts.length - 1]
+        const visibleHeight = (tops[lastPart] + heights[lastPart]) - tops[firstPart]
+        const overflow = visibleHeight - columnHeight
+
+        representation.style.top = `-${overflow * 0.5}px`
+
+        setVisibleParts(visibleParts)
+    }, [part, parts, aspects, width, gap, columnHeight])
+
+    const Representation = representations[0]
+    return <>
+        <div
+            ref={columnRef}
+            className={'core-column'}
+        >
+            <div
+                ref={representationRef}
+                className={'core-representation-wrap'}
+                style={{ gap: `${gap}px` }}
+            >
+                { <Representation vis={vis} parts={visibleParts} aspects={aspects} /> }
+            </div>
+        </div>
+        { representations.length > 1 && <CoreZoomLevel
+            vis={vis}
+            representations={representations.slice(1)}
+            part={part}
+            parts={visibleParts}
+            aspects={aspects}
+        /> }
+    </>
+}
+
+type CorePanelProps = {
+    vis: PartRenderer | null,
+    representations: Array<(p: CoreRepresentationProps) => ReactElement>,
+    part: string,
+    parts: Array<string>
+}
+
+function CorePanel (
+    { vis, representations, part, parts }: CorePanelProps
+): ReactElement {
+    const [aspects, setAspects] = useState<StringMap<number>>({})
 
     useEffect(() => {
         if (!vis) { return }
-        const aspect = vis.getPunchcard(part, canvasCtx, 15 * window.devicePixelRatio)
-        setAspect(aspect)
-    }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+        const aspects: StringMap<number> = {}
+        vis.getPartAspects(parts).forEach((aspect, i) => {
+            aspects[parts[i]] = aspect
+        })
+        setAspects(aspects)
+    }, [vis, parts])
 
     return (
-        <CanvasRenderer
-            canvas={canvasCtx.canvas}
-            width={'15px'}
-            height={`${15 * aspect}px`}
-        />
-    )
-}
-
-type PunchardSidebarProps = {
-    vis: PartRenderer | null,
-    ids: Array<string>,
-    part: string
-}
-
-function PunchcardSidebar (
-    { vis, ids, part }: PunchardSidebarProps
-): ReactElement {
-    const [prev, setPrev] = useState<string>('')
-    const [next, setNext] = useState<string>('')
-
-    useEffect(() => {
-        const partInd = ids.indexOf(part)
-        setPrev(partInd === 0 ? '' : ids[partInd - 1])
-        setNext(partInd >= ids.length ? '' : ids[partInd + 1])
-    }, [part, ids])
-
-    return (
-        <div className={'punch-column'}>
-            { prev && <>
-                <PartPunchcard vis={vis} part={prev} />
-                <div className={'space-dot'}></div>
-            </>}
-            <PartPunchcard vis={vis} part={part} />
-            { next && <>
-                <div className={'space-dot'}></div>
-                <PartPunchcard vis={vis} part={next} />
-            </>}
+        <div className={'core-panel'}>
+            <CoreZoomLevel
+                vis={vis}
+                representations={representations}
+                part={part}
+                parts={parts}
+                aspects={aspects}
+            />
         </div>
     )
 }
@@ -167,9 +313,10 @@ function PartView (
                 setSpacing={setSpacing}
                 channelHeight={channelHeight}
             />
-            <PunchcardSidebar
+            <CorePanel
                 vis={vis}
-                ids={ids}
+                representations={[CoreRectRepresentation]}
+                parts={ids}
                 part={part}
             />
         </div>
