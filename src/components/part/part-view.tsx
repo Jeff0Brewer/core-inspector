@@ -95,6 +95,7 @@ function CoreRectRepresentation (
             <div
                 className={'rect-part'}
                 style={{ aspectRatio: aspects[part] }}
+                onMouseEnter={() => console.log(part)}
                 key={i}
             ></div>
         ) }
@@ -118,6 +119,7 @@ function CoreZoomLevel (
     const [columnHeight, setColumnHeight] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
     const representationRef = useRef<HTMLDivElement>(null)
+    const nextWindowRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const getColumnHeight = (): void => {
@@ -137,8 +139,9 @@ function CoreZoomLevel (
 
     useEffect(() => {
         const representation = representationRef.current
-        if (!representation) {
-            throw new Error('No reference to representation element')
+        const nextWindow = nextWindowRef.current
+        if (!representation || !nextWindow) {
+            throw new Error('No reference to dom elements')
         }
 
         let top = 0
@@ -151,7 +154,7 @@ function CoreZoomLevel (
             top += height
         }
 
-        const center = tops[part] - heights[part] * 0.5
+        const center = tops[part] + heights[part] * 0.5
         const topBound = center - columnHeight * 0.5
         const bottomBound = center + columnHeight * 0.5
 
@@ -163,10 +166,13 @@ function CoreZoomLevel (
 
         const firstPart = visibleParts[0]
         const lastPart = visibleParts[visibleParts.length - 1]
-        const visibleHeight = (tops[lastPart] + heights[lastPart]) - tops[firstPart]
+        const minTop = tops[firstPart]
+        const maxBottom = (tops[lastPart] + heights[lastPart])
+        const visibleHeight = maxBottom - minTop
         const overflow = visibleHeight - columnHeight
 
         representation.style.top = `-${overflow * 0.5}px`
+        nextWindow.style.top = `${center - minTop}px`
 
         setVisibleParts(visibleParts)
     }, [part, parts, aspects, width, gap, columnHeight])
@@ -182,6 +188,7 @@ function CoreZoomLevel (
                 className={'core-representation-wrap'}
                 style={{ gap: `${gap}px` }}
             >
+                <div ref={nextWindowRef} className={'next-window'}></div>
                 { <Representation vis={vis} parts={visibleParts} aspects={aspects} /> }
             </div>
         </div>

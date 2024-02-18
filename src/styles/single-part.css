@@ -333,6 +333,14 @@
     height: fit-content;
 }
 
+.next-window {
+    position: absolute;
+    width: 100%;
+    height: 10%;
+    transform: translateY(-50%);
+    background-color: #111;
+}
+
 .rect-part {
     position: relative;
     background-color: #fff;
