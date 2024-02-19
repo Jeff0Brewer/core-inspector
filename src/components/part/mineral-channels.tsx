@@ -5,25 +5,27 @@ import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
+import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
+    part: string,
     channels: StringMap<CanvasCtx>,
-    visible: StringMap<boolean>,
-    zoom: number,
-    spacing: number,
-    setChannelHeight: (h: number) => void
+    visible: StringMap<boolean>
 }
 
 function PartMineralChannels (
-    { vis, channels, visible, zoom, spacing, setChannelHeight }: PartMineralChannelsProps
+    { vis, part, channels, visible }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
     const [viewWidth, setViewWidth] = useState<number>(0)
     const [viewHeight, setViewHeight] = useState<number>(0)
     const [viewGap, setViewGap] = useState<number>(0)
+    const [zoom, setZoom] = useState<number>(0.5)
+    const [spacing, setSpacing] = useState<number>(0.5)
+    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const [abundances, setAbundances] = useState<StringMap<number>>({})
@@ -113,6 +115,14 @@ function PartMineralChannels (
     const height = `${viewHeight}px`
     const gap = `${viewGap}px`
     return <>
+        <PartViewControls
+            part={part}
+            zoom={zoom}
+            setZoom={setZoom}
+            spacing={spacing}
+            setSpacing={setSpacing}
+            channelHeight={channelHeight}
+        />
         <div className={'channel-labels-wrap'}>
             <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
                 <div className={'channel-label'} style={{ width }}>

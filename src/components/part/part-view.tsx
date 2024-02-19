@@ -11,7 +11,6 @@ import CanvasRenderer from '../../components/generic/canvas-renderer'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
-import PartViewControls from '../../components/part/view-controls'
 import '../../styles/single-part.css'
 
 const PART_WIDTH_M = 0.0525
@@ -314,9 +313,6 @@ function PartView (
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
-    const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<number>(0.5)
-    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -366,19 +362,9 @@ function PartView (
         <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
+            part={part}
             channels={channels}
             visible={visible}
-            zoom={zoom}
-            spacing={spacing}
-            setChannelHeight={setChannelHeight}
-        />
-        <PartViewControls
-            part={part}
-            zoom={zoom}
-            setZoom={setZoom}
-            spacing={spacing}
-            setSpacing={setSpacing}
-            channelHeight={channelHeight}
         />
         <CorePanel
             vis={vis}
