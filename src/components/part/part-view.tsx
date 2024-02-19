@@ -135,7 +135,20 @@ function CorePunchcardRepresentation (
         for (const part of parts) {
             vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
         }
-    }, [parts, vis, mToPx, canvasCtxs, blending])
+    }, [parts, vis, mToPx, canvasCtxs])
+
+    const blendTimeoutRef = useRef<number>(-1)
+    useEffect(() => {
+        if (!vis || !canvasCtxs) { return }
+        window.clearTimeout(blendTimeoutRef.current)
+        blendTimeoutRef.current = window.setTimeout(() => {
+            for (const part of parts) {
+                vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+            }
+        }, 100)
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [blending])
 
     return (
         <div
