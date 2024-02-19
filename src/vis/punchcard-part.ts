@@ -90,6 +90,8 @@ class PunchcardPartRenderer {
 
         glToCanvas(gl, framebuffer, output)
 
+        framebuffer.drop(gl)
+
         return height / width
     }
 }

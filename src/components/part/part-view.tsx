@@ -4,10 +4,10 @@ import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
-import { DepthMetadata } from '../../lib/metadata'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
+import CanvasRenderer from '../../components/generic/canvas-renderer'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
@@ -86,6 +86,7 @@ import '../../styles/single-part.css'
 const PART_WIDTH_M = 0.06
 
 type CoreRepresentationProps = {
+    vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
     mToPx: number,
@@ -161,7 +162,75 @@ function CoreRectRepresentation (
     )
 }
 
+function CorePunchcardRepresentation (
+    { vis, part, parts, mToPx, gap, setCenter }: CoreRepresentationProps
+): ReactElement {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx> | null>(null)
+    const { depths } = useCoreMetadata()
+    const wrapRef = useRef<HTMLDivElement>(null)
+    const partRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const getCenter = (): void => {
+            const partDiv = partRef.current
+            const wrapDiv = wrapRef.current
+            if (!partDiv || !wrapDiv) { return }
+
+            const partRect = partDiv.getBoundingClientRect()
+            const wrapRect = wrapDiv.getBoundingClientRect()
+
+            const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
+            const wrapHeight = wrapRect.height
+
+            setCenter(partCenter / wrapHeight)
+        }
+
+        getCenter()
+    })
+
+    useEffect(() => {
+        if (parts.length === 0) { return }
+
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            canvasCtxs[part] = getCanvasCtx()
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    useEffect(() => {
+        if (!vis || !canvasCtxs) { return }
+        for (const part of parts) {
+            vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+        }
+    }, [parts, vis, mToPx, canvasCtxs])
+
+    return (
+        <div
+            ref={wrapRef}
+            className={'part-rect-wrap'}
+            style={{ gap: `${gap}px` }}
+        >
+            { parts.map((id, i) => {
+                const refProp = id === part ? { ref: partRef } : {}
+                return <div
+                    {...refProp}
+                    key={i}
+                    className={'part-rect'}
+                >
+                    { canvasCtxs !== null && <CanvasRenderer
+                        canvas={canvasCtxs[id].canvas}
+                        width={`${PART_WIDTH_M * mToPx}px`}
+                        height={`${depths[id].length * mToPx}px`}
+                    /> }
+                </div>
+            }) }
+        </div>
+    )
+}
+
 type CoreScaleColumnProps = {
+    vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
     topDepth: number,
@@ -171,7 +240,7 @@ type CoreScaleColumnProps = {
 }
 
 function CoreScaleColumn (
-    { part, parts, topDepth, bottomDepth, representations, gap = 1 }: CoreScaleColumnProps
+    { vis, part, parts, topDepth, bottomDepth, representations, gap = 1 }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -244,6 +313,7 @@ function CoreScaleColumn (
                     }}
                 ></div>
                 <Representation
+                    vis={vis}
                     part={part}
                     parts={visibleParts}
                     mToPx={mToPx}
@@ -254,6 +324,7 @@ function CoreScaleColumn (
         </div>
         { representations.length > 1 &&
             <CoreScaleColumn
+                vis={vis}
                 part={part}
                 parts={visibleParts}
                 topDepth={nextTopDepth}
@@ -266,19 +337,21 @@ function CoreScaleColumn (
 }
 
 type CorePanelProps = {
+    vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
     representations: Array<CoreRepresentation>
 }
 
 function CorePanel (
-    { part, parts, representations }: CorePanelProps
+    { vis, part, parts, representations }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
 
     return (
         <div className={'core-panel'}>
             <CoreScaleColumn
+                vis={vis}
                 part={part}
                 parts={parts}
                 topDepth={topDepth}
@@ -371,13 +444,14 @@ function PartView (
                 channelHeight={channelHeight}
             />
             <CorePanel
+                vis={vis}
                 part={part}
                 parts={vis?.getParts() || []}
                 representations={[
                     CoreLineRepresentation,
                     CoreRectRepresentation,
-                    CoreRectRepresentation,
-                    CoreRectRepresentation
+                    CorePunchcardRepresentation,
+                    CorePunchcardRepresentation
                 ]}
             />
         </div>

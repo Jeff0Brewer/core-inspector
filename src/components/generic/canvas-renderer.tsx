@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { useEffect, useRef, ReactElement } from 'react'
 import '../../styles/canvas-renderer.css'
 
 type CanvasRendererProps = {
@@ -10,19 +10,31 @@ type CanvasRendererProps = {
 function CanvasRenderer (
     { canvas, width, height }: CanvasRendererProps
 ): ReactElement {
-    // add HTML canvas element to react element via ref,
+    const wrapRef = useRef<HTMLDivElement>(null)
+
+    // Add HTML canvas element to react element via ref,
     // allows access of canvas reference when not rendered to dom
-    const addCanvasChild = (ref: HTMLDivElement | null): void => {
-        if (!ref) { return }
-        while (ref.lastChild) {
-            ref.removeChild(ref.lastChild)
+    useEffect(() => {
+        const wrap = wrapRef.current
+        if (!wrap) {
+            throw new Error('No reference to canvas container')
         }
-        ref.appendChild(canvas)
-    }
+        while (wrap.lastChild) {
+            wrap.removeChild(wrap.lastChild)
+        }
+        wrap.appendChild(canvas)
+
+        // Cleanup when the component is unmounted
+        return () => {
+            if (wrap.contains(canvas)) {
+                wrap.removeChild(canvas)
+            }
+        }
+    }, [canvas, width, height])
 
     return (
         <div
-            ref={addCanvasChild}
+            ref={wrapRef}
             className={'canvas-renderer'}
             style={{ width, height }}
         ></div>
