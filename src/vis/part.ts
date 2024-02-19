@@ -93,10 +93,16 @@ class PartRenderer {
         )
     }
 
-    getPartAspects (): StringMap<number> {
-        const aspects: StringMap<number> = {}
+    getPartAspects (): StringMap<{width: number, height: number}> {
+        const aspects: StringMap<{
+            width: number,
+            height: number
+        }> = {}
         Object.entries(this.tileMetadata.tiles).forEach(([part, rect]) => {
-            aspects[part] = rect.width / (2 * rect.height)
+            aspects[part] = {
+                width: rect.width,
+                height: rect.height * 2
+            }
         })
         return aspects
     }

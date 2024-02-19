@@ -85,13 +85,11 @@ import '../../styles/single-part.css'
 
 type CoreRepresentationProps = {
     parts: Array<string>,
-    scale: number,
-    aspects: StringMap<number>
+    width: number,
+    aspects: StringMap<{width: number, height: number}>,
 }
 
 type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
-
-const CORE_WIDTH_M = 0.05
 
 function CoreLineRepresentation (): ReactElement {
     return (
@@ -101,7 +99,7 @@ function CoreLineRepresentation (): ReactElement {
 }
 
 function CoreRectRepresentation (
-    { parts, scale, aspects }: CoreRepresentationProps
+    { parts, width, aspects }: CoreRepresentationProps
 ): ReactElement {
     return <>
         { parts.map((part, i) =>
@@ -109,8 +107,8 @@ function CoreRectRepresentation (
                 className={'part-rect'}
                 onMouseEnter={() => console.log(part)}
                 style={{
-                    width: `${CORE_WIDTH_M * scale}px`,
-                    aspectRatio: aspects[part],
+                    width: `${width}px`,
+                    height: `${width * aspects[part].height / aspects[part].width}px`,
                     backgroundColor: '#fff',
                     marginBottom: '1px'
                 }}
@@ -124,7 +122,7 @@ type CoreDepthColumnProps = {
     part: string,
     parts: Array<string>,
     depths: DepthMetadata,
-    aspects: StringMap<number>,
+    aspects: StringMap<{width: number, height: number}>,
     topDepth: number,
     bottomDepth: number,
     representations: Array<CoreRepresentation>
@@ -136,8 +134,7 @@ function CoreDepthColumn (
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [nextTopDepth, setNextTopDepth] = useState<number>(0)
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
-    const [scale, setScale] = useState<number>(1)
-    const [crop, setCrop] = useState<number>(0)
+    const [width, setWidth] = useState<number>(0)
     const nextWindowRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
 
@@ -154,19 +151,24 @@ function CoreDepthColumn (
         }
 
         setVisibleParts(visibleParts)
-    }, [parts, topDepth, bottomDepth, depths, aspects])
+    }, [parts, topDepth, bottomDepth, depths])
 
     useEffect(() => {
         const column = columnRef.current
         if (!visibleParts.length || !column) { return }
 
         const columnHeight = column.getBoundingClientRect().height
-        const mToPx = columnHeight / (bottomDepth - topDepth)
-        setScale(mToPx)
+        let totalHeight = 0
+        let totalWidth = 0
+        for (const part of visibleParts) {
+            totalHeight += aspects[part].height
+            totalWidth += aspects[part].width
+        }
+        const totalAspect = totalHeight / (totalWidth / visibleParts.length)
 
-        const cropM = topDepth - depths[visibleParts[0]].topDepth
-        setCrop(cropM * mToPx)
-    }, [visibleParts, bottomDepth, topDepth, depths])
+        const width = columnHeight / totalAspect
+        setWidth(width)
+    }, [visibleParts, bottomDepth, topDepth, depths, aspects])
 
     useEffect(() => {
         const nextWindow = nextWindowRef.current
@@ -193,13 +195,10 @@ function CoreDepthColumn (
     return <>
         <div className={'depth-column'} ref={columnRef}>
             <div className={'next-window'} ref={nextWindowRef}></div>
-            <div
-                className={'rep-wrap'}
-                style={{ top: `-${crop}px` }}
-            >
+            <div className={'rep-wrap'} >
                 <Representation
                     parts={visibleParts}
-                    scale={scale}
+                    width={width}
                     aspects={aspects}
                 />
             </div>
