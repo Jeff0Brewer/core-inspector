@@ -144,13 +144,14 @@ function PartMineralChannels (
                 visible={!!mousePos}
             />
             <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
-                { vis && <MineralCanvas
-                    canvas={vis.canvas}
-                    width={width}
-                    height={height}
-                    mousePos={mousePos}
-                    setMousePos={setMousePos}
-                /> }
+                { vis &&
+                    <MineralCanvas
+                        canvas={vis.canvas}
+                        width={width}
+                        height={height}
+                        mousePos={mousePos}
+                        setMousePos={setMousePos}
+                    /> }
                 { Object.entries(channels)
                     .filter(([mineral, _]) => visible[mineral])
                     .map(([_, channel], i) =>

@@ -47,10 +47,10 @@ class PartRenderer {
         this.buffer.setData(
             this.gl,
             new Float32Array([
-                -1, -1, 0, 0,
-                1, -1, 1, 0,
-                -1, 1, 0, 1,
-                1, 1, 1, 1
+                -1, 1, 0, 0,
+                1, 1, 1, 0,
+                -1, -1, 0, 1,
+                1, -1, 1, 1
             ])
         )
         this.numVertex = 4
