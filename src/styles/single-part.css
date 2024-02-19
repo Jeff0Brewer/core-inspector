@@ -322,7 +322,7 @@
     height: 100%;
 }
 
-.depth-column {
+.scale-column {
     position: relative;
     width: 25px;
     height: 100%;
@@ -330,7 +330,7 @@
     overflow: scroll;
 }
 
-.rep-wrap {
+.representation-wrap {
     position: relative;
     display: flex;
     flex-direction: column;

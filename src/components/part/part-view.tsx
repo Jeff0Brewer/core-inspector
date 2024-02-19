@@ -83,132 +83,121 @@ import '../../styles/single-part.css'
 //     )
 // }
 
+const PART_WIDTH_M = 0.06
+
 type CoreRepresentationProps = {
     parts: Array<string>,
-    width: number,
-    aspects: StringMap<{width: number, height: number}>,
+    mToPx: number
 }
 
 type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
 
 function CoreLineRepresentation (): ReactElement {
-    return (
-        <div className={'core-line'}>
-        </div>
-    )
+    return <>
+        <div className={'core-line'}></div>
+    </>
 }
 
 function CoreRectRepresentation (
-    { parts, width, aspects }: CoreRepresentationProps
+    { parts, mToPx }: CoreRepresentationProps
 ): ReactElement {
+    const { depths } = useCoreMetadata()
+
     return <>
         { parts.map((part, i) =>
             <div
-                className={'part-rect'}
-                onMouseEnter={() => console.log(part)}
-                style={{
-                    width: `${width}px`,
-                    height: `${width * aspects[part].height / aspects[part].width}px`,
-                    backgroundColor: '#fff',
-                    marginBottom: '1px'
-                }}
                 key={i}
-            ></div>
+                className={'part-rect'}
+                style={{
+                    width: `${PART_WIDTH_M * mToPx}px`,
+                    height: `${depths[part].length * mToPx}px`,
+                    backgroundColor: '#fff'
+                }}
+            >
+            </div>
         ) }
     </>
 }
 
-type CoreDepthColumnProps = {
+type CoreScaleColumnProps = {
     part: string,
     parts: Array<string>,
-    depths: DepthMetadata,
-    aspects: StringMap<{width: number, height: number}>,
     topDepth: number,
     bottomDepth: number,
-    representations: Array<CoreRepresentation>
+    representations: Array<CoreRepresentation>,
+    gapPx?: number
 }
 
-function CoreDepthColumn (
-    { part, parts, depths, aspects, topDepth, bottomDepth, representations }: CoreDepthColumnProps
+function CoreScaleColumn (
+    { part, parts, topDepth, bottomDepth, representations, gapPx = 1 }: CoreScaleColumnProps
 ): ReactElement {
+    const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
+    const [mToPx, setMToPx] = useState<number>(0)
     const [nextTopDepth, setNextTopDepth] = useState<number>(0)
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
-    const [width, setWidth] = useState<number>(0)
-    const nextWindowRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
 
+    // get m / px scale of column
     useEffect(() => {
-        const visibleParts = []
-        for (const part of parts) {
-            if (!depths[part]) { continue }
+        const getScale = (): void => {
+            const column = columnRef.current
+            if (!column) { return }
 
-            const partTop = depths[part].topDepth
-            const partBottom = partTop + depths[part].length
-            if (partBottom > topDepth && partTop < bottomDepth) {
+            const heightM = bottomDepth - topDepth
+            const heightPx = column.getBoundingClientRect().height
+            setMToPx(heightPx / heightM)
+        }
+
+        getScale()
+
+        window.addEventListener('resize', getScale)
+        return () => {
+            window.removeEventListener('resize', getScale)
+        }
+    }, [topDepth, bottomDepth])
+
+    // get visible parts within depth range
+    useEffect(() => {
+        const visibleParts: Array<string> = []
+
+        parts.forEach(part => {
+            if (!depths[part]) { return }
+
+            const partTopDepth = depths[part].topDepth
+            const partBottomDepth = partTopDepth + depths[part].length
+            if (partBottomDepth > topDepth && partTopDepth < bottomDepth) {
                 visibleParts.push(part)
             }
-        }
+        })
 
         setVisibleParts(visibleParts)
-    }, [parts, topDepth, bottomDepth, depths])
+    }, [parts, depths, topDepth, bottomDepth])
 
+    // get next column's depth range
     useEffect(() => {
-        const column = columnRef.current
-        if (!visibleParts.length || !column) { return }
-
-        const columnHeight = column.getBoundingClientRect().height
-        let totalHeight = 0
-        let totalWidth = 0
-        for (const part of visibleParts) {
-            totalHeight += aspects[part].height
-            totalWidth += aspects[part].width
-        }
-        const totalAspect = totalHeight / (totalWidth / visibleParts.length)
-
-        const width = columnHeight / totalAspect
-        setWidth(width)
-    }, [visibleParts, bottomDepth, topDepth, depths, aspects])
-
-    useEffect(() => {
-        const nextWindow = nextWindowRef.current
-        if (!nextWindow) {
-            throw new Error('No reference to dom element')
-        }
-
         const depthRange = bottomDepth - topDepth
         const nextDepthRange = Math.sqrt(depthRange)
-        let center = depths[part].topDepth + depths[part].length * 0.5
-        center += Math.max((nextDepthRange * 0.5) - center, 0)
 
-        const nextTopDepth = center - nextDepthRange * 0.5
-        const nextBottomDepth = center + nextDepthRange * 0.5
-
-        setNextTopDepth(nextTopDepth)
-        setNextBottomDepth(nextBottomDepth)
-
-        nextWindow.style.top = `${(nextTopDepth - topDepth) / depthRange * 100}%`
-        nextWindow.style.height = `${nextDepthRange / depthRange * 100}%`
-    }, [part, topDepth, bottomDepth, depths])
+        const center = depths[part].topDepth + 0.5 * depths[part].length
+        setNextTopDepth(center - 0.5 * nextDepthRange)
+        setNextBottomDepth(center + 0.5 * nextDepthRange)
+    }, [part, depths, topDepth, bottomDepth])
 
     const Representation = representations[0]
     return <>
-        <div className={'depth-column'} ref={columnRef}>
-            <div className={'next-window'} ref={nextWindowRef}></div>
-            <div className={'rep-wrap'} >
-                <Representation
-                    parts={visibleParts}
-                    width={width}
-                    aspects={aspects}
-                />
+        <div className={'scale-column'} ref={columnRef}>
+            <div
+                className={'representation-wrap'}
+                style={{ gap: `${gapPx}px` }}
+            >
+                <Representation parts={visibleParts} mToPx={mToPx} />
             </div>
         </div>
         { representations.length > 1 &&
-            <CoreDepthColumn
+            <CoreScaleColumn
                 part={part}
                 parts={visibleParts}
-                depths={depths}
-                aspects={aspects}
                 topDepth={nextTopDepth}
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
@@ -218,29 +207,21 @@ function CoreDepthColumn (
 }
 
 type CorePanelProps = {
-    vis: PartRenderer | null,
     part: string,
+    parts: Array<string>,
     representations: Array<CoreRepresentation>
 }
 
 function CorePanel (
-    { vis, part, representations }: CorePanelProps
+    { part, parts, representations }: CorePanelProps
 ): ReactElement {
-    const { topDepth, bottomDepth, depths } = useCoreMetadata()
-    const [aspects, setAspects] = useState<StringMap<number>>({})
-
-    useEffect(() => {
-        if (!vis) { return }
-        setAspects(vis.getPartAspects())
-    }, [vis])
+    const { topDepth, bottomDepth } = useCoreMetadata()
 
     return (
         <div className={'core-panel'}>
-            <CoreDepthColumn
+            <CoreScaleColumn
                 part={part}
-                parts={Object.keys(aspects)}
-                depths={depths}
-                aspects={aspects}
+                parts={parts}
                 topDepth={topDepth}
                 bottomDepth={bottomDepth}
                 representations={representations}
@@ -331,12 +312,10 @@ function PartView (
                 channelHeight={channelHeight}
             />
             <CorePanel
-                vis={vis}
                 part={part}
+                parts={vis?.getParts() || []}
                 representations={[
                     CoreLineRepresentation,
-                    CoreRectRepresentation,
-                    CoreRectRepresentation,
                     CoreRectRepresentation
                 ]}
             />

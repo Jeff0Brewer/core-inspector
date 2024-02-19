@@ -93,6 +93,11 @@ class PartRenderer {
         )
     }
 
+    // TEMPORARY, add parts list to metadata
+    getParts (): Array<string> {
+        return Object.keys(this.tileMetadata.tiles)
+    }
+
     getPartAspects (): StringMap<{width: number, height: number}> {
         const aspects: StringMap<{
             width: number,
