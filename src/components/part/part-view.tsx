@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
+import { useBlendState } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
 import { clamp, get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
@@ -97,6 +98,7 @@ function CorePunchcardRepresentation (
 ): ReactElement {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx> | null>(null)
     const { depths } = useCoreMetadata()
+    const blending = useBlendState()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
 
@@ -133,7 +135,7 @@ function CorePunchcardRepresentation (
         for (const part of parts) {
             vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
         }
-    }, [parts, vis, mToPx, canvasCtxs])
+    }, [parts, vis, mToPx, canvasCtxs, blending])
 
     return (
         <div

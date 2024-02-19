@@ -319,7 +319,7 @@
     grid-row: punch / bottom;
     position: relative;
     display: flex;
-    gap: 10px;
+    justify-content: space-around;
     height: 100%;
 }
 
