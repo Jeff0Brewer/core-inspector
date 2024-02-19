@@ -3,7 +3,7 @@ import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
-import { get2dContext, padZeros, StringMap } from '../../lib/util'
+import { clamp, get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
@@ -13,75 +13,6 @@ import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartViewControls from '../../components/part/view-controls'
 import '../../styles/single-part.css'
-
-// type PartPunchcardProps = {
-//     vis: PartRenderer | null,
-//     part: string
-// }
-//
-// function PartPunchcard (
-//     { vis, part }: PartPunchcardProps
-// ): ReactElement {
-//     const [canvasCtx] = useState<CanvasCtx>(getCanvasCtx())
-//     const [aspect, setAspect] = useState<number>(0)
-//
-//     const {
-//         magnitudes,
-//         visibilities,
-//         palette,
-//         saturation,
-//         threshold,
-//         mode,
-//         monochrome
-//     } = useBlendState()
-//
-//     useEffect(() => {
-//         if (!vis) { return }
-//         const aspect = vis.getPunchcard(part, canvasCtx, 15 * window.devicePixelRatio)
-//         setAspect(aspect)
-//     }, [vis, canvasCtx, part, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
-//
-//     return (
-//         <CanvasRenderer
-//             canvas={canvasCtx.canvas}
-//             width={'15px'}
-//             height={`${15 * aspect}px`}
-//         />
-//     )
-// }
-//
-// type PunchardSidebarProps = {
-//     vis: PartRenderer | null,
-//     ids: Array<string>,
-//     part: string
-// }
-//
-// function PunchcardSidebar (
-//     { vis, ids, part }: PunchardSidebarProps
-// ): ReactElement {
-//     const [prev, setPrev] = useState<string>('')
-//     const [next, setNext] = useState<string>('')
-//
-//     useEffect(() => {
-//         const partInd = ids.indexOf(part)
-//         setPrev(partInd === 0 ? '' : ids[partInd - 1])
-//         setNext(partInd >= ids.length ? '' : ids[partInd + 1])
-//     }, [part, ids])
-//
-//     return (
-//         <div className={'punch-column'}>
-//             { prev && <>
-//                 <PartPunchcard vis={vis} part={prev} />
-//                 <div className={'space-dot'}></div>
-//             </>}
-//             <PartPunchcard vis={vis} part={part} />
-//             { next && <>
-//                 <div className={'space-dot'}></div>
-//                 <PartPunchcard vis={vis} part={next} />
-//             </>}
-//         </div>
-//     )
-// }
 
 const PART_WIDTH_M = 0.0525
 
@@ -215,6 +146,7 @@ function CorePunchcardRepresentation (
                 const refProp = id === part ? { ref: partRef } : {}
                 return <div
                     {...refProp}
+                    onMouseEnter={() => console.log(id)}
                     key={i}
                     className={'part-rect'}
                 >
@@ -291,7 +223,12 @@ function CoreScaleColumn (
         const depthRange = bottomDepth - topDepth
         const nextDepthRange = Math.sqrt(depthRange)
 
-        const center = depths[part].topDepth + 0.5 * depths[part].length
+        const center = clamp(
+            depths[part].topDepth + 0.5 * depths[part].length,
+            topDepth + nextDepthRange * 0.5,
+            bottomDepth - nextDepthRange * 0.5
+
+        )
         setNextTopDepth(center - 0.5 * nextDepthRange)
         setNextBottomDepth(center + 0.5 * nextDepthRange)
     }, [part, depths, topDepth, bottomDepth])
@@ -302,7 +239,8 @@ function CoreScaleColumn (
             <div
                 className={'representation-wrap'}
                 style={{
-                    transform: `translateY(${Math.min((0.5 - windowCenter) * 100, 0)}%)`
+                    top: '50%',
+                    transform: `translateY(${-windowCenter * 100}%)`
                 }}
             >
                 <div
