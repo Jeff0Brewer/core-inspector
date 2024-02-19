@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
+import { DepthMetadata } from '../../lib/metadata'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
@@ -82,155 +84,101 @@ import '../../styles/single-part.css'
 // }
 
 type CoreRepresentationProps = {
-    vis: PartRenderer | null,
-    parts: Array<string>,
-    aspects: StringMap<number>
+    topDepth?: number,
+    bottomDepth?: number
 }
 
-function CoreRectRepresentation (
-    { parts, aspects }: CoreRepresentationProps
-): ReactElement {
-    return <>
-        { parts.map((part, i) =>
-            <div
-                className={'rect-part'}
-                style={{ aspectRatio: aspects[part] }}
-                onMouseEnter={() => console.log(part)}
-                key={i}
-            ></div>
-        ) }
-    </>
+type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
+
+function CoreLineRepresentation (): ReactElement {
+    return (
+        <div className={'core-line'}>
+        </div>
+    )
 }
 
-type CoreZoomLevelProps = {
-    vis: PartRenderer | null,
-    representations: Array<(p: CoreRepresentationProps) => ReactElement>
+type CoreDepthColumnProps = {
     part: string,
-    parts: Array<string>,
+    depths: DepthMetadata,
     aspects: StringMap<number>,
-    gap?: number
-    width?: number
+    topDepth: number,
+    bottomDepth: number,
+    representations: Array<CoreRepresentation>
 }
 
-function CoreZoomLevel (
-    { vis, representations, parts, part, aspects, gap = 1, width = 1 }: CoreZoomLevelProps
+function CoreDepthColumn (
+    { part, depths, aspects, topDepth, bottomDepth, representations }: CoreDepthColumnProps
 ): ReactElement {
-    const [visibleParts, setVisibleParts] = useState<Array<string>>([])
-    const [columnHeight, setColumnHeight] = useState<number>(0)
-    const columnRef = useRef<HTMLDivElement>(null)
-    const representationRef = useRef<HTMLDivElement>(null)
+    const [nextTopDepth, setNextTopDepth] = useState<number>(0)
+    const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
     const nextWindowRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const getColumnHeight = (): void => {
-            if (!columnRef.current) {
-                throw new Error('No reference to column element')
-            }
-            const { height } = columnRef.current.getBoundingClientRect()
-            setColumnHeight(height)
-        }
-        getColumnHeight()
-
-        window.addEventListener('resize', getColumnHeight)
-        return () => {
-            window.removeEventListener('resize', getColumnHeight)
-        }
-    }, [])
-
-    useEffect(() => {
-        const representation = representationRef.current
         const nextWindow = nextWindowRef.current
-        if (!representation || !nextWindow) {
-            throw new Error('No reference to dom elements')
+        if (!nextWindow) {
+            throw new Error('No reference to dom element')
         }
 
-        let top = 0
-        const heights: StringMap<number> = {}
-        const tops: StringMap<number> = {}
-        for (let i = 0; i < parts.length; i++) {
-            const height = width / aspects[parts[i]] + gap
-            heights[parts[i]] = height
-            tops[parts[i]] = top
-            top += height
-        }
+        const depthRange = bottomDepth - topDepth
+        const nextDepthRange = Math.sqrt(depthRange)
+        let center = depths[part].topDepth + depths[part].length * 0.5
+        center += Math.max((nextDepthRange * 0.5) - center, 0)
 
-        const center = tops[part] + heights[part] * 0.5
-        const topBound = center - columnHeight * 0.5
-        const bottomBound = center + columnHeight * 0.5
+        const nextTopDepth = center - nextDepthRange * 0.5
+        const nextBottomDepth = center + nextDepthRange * 0.5
 
-        const visibleParts = parts.filter(part => {
-            const top = tops[part]
-            const bottom = tops[part] + heights[part]
-            return bottom > topBound && top < bottomBound
-        })
+        setNextTopDepth(nextTopDepth)
+        setNextBottomDepth(nextBottomDepth)
 
-        const firstPart = visibleParts[0]
-        const lastPart = visibleParts[visibleParts.length - 1]
-        const minTop = tops[firstPart]
-        const maxBottom = (tops[lastPart] + heights[lastPart])
-        const visibleHeight = maxBottom - minTop
-        const overflow = visibleHeight - columnHeight
-
-        representation.style.top = `-${overflow * 0.5}px`
-        nextWindow.style.top = `${center - minTop}px`
-
-        setVisibleParts(visibleParts)
-    }, [part, parts, aspects, width, gap, columnHeight])
+        nextWindow.style.top = `${(nextTopDepth - topDepth) / depthRange * 100}%`
+        nextWindow.style.height = `${nextDepthRange / depthRange * 100}%`
+    }, [part, topDepth, bottomDepth, depths])
 
     const Representation = representations[0]
     return <>
-        <div
-            ref={columnRef}
-            className={'core-column'}
-        >
-            <div
-                ref={representationRef}
-                className={'core-representation-wrap'}
-                style={{ gap: `${gap}px` }}
-            >
-                <div ref={nextWindowRef} className={'next-window'}></div>
-                { <Representation vis={vis} parts={visibleParts} aspects={aspects} /> }
-            </div>
+        <div className={'depth-column'}>
+            <div className={'depth-window'} ref={nextWindowRef}></div>
+            <Representation topDepth={topDepth} bottomDepth={bottomDepth} />
         </div>
-        { representations.length > 1 && <CoreZoomLevel
-            vis={vis}
-            representations={representations.slice(1)}
-            part={part}
-            parts={visibleParts}
-            aspects={aspects}
-        /> }
+        { representations.length > 1 &&
+            <CoreDepthColumn
+                part={part}
+                depths={depths}
+                aspects={aspects}
+                topDepth={nextTopDepth}
+                bottomDepth={nextBottomDepth}
+                representations={representations.slice(1)}
+            />
+        }
     </>
 }
 
 type CorePanelProps = {
     vis: PartRenderer | null,
-    representations: Array<(p: CoreRepresentationProps) => ReactElement>,
     part: string,
-    parts: Array<string>
+    representations: Array<CoreRepresentation>
 }
 
 function CorePanel (
-    { vis, representations, part, parts }: CorePanelProps
+    { vis, part, representations }: CorePanelProps
 ): ReactElement {
+    const { topDepth, bottomDepth, depths } = useCoreMetadata()
     const [aspects, setAspects] = useState<StringMap<number>>({})
 
     useEffect(() => {
         if (!vis) { return }
-        const aspects: StringMap<number> = {}
-        vis.getPartAspects(parts).forEach((aspect, i) => {
-            aspects[parts[i]] = aspect
-        })
-        setAspects(aspects)
-    }, [vis, parts])
+        setAspects(vis.getPartAspects())
+    }, [vis])
 
     return (
         <div className={'core-panel'}>
-            <CoreZoomLevel
-                vis={vis}
-                representations={representations}
+            <CoreDepthColumn
                 part={part}
-                parts={parts}
+                depths={depths}
                 aspects={aspects}
+                topDepth={topDepth}
+                bottomDepth={bottomDepth}
+                representations={representations}
             />
         </div>
     )
@@ -248,7 +196,6 @@ function PartView (
     { part, core, minerals, palettes, clearPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [ids, setIds] = useState<Array<string>>([])
     const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
     const [zoom, setZoom] = useState<number>(0.5)
@@ -285,8 +232,6 @@ function PartView (
                 )
             )
 
-            setIds(Object.keys(tileMetadata.tiles))
-
             const channels: StringMap<CanvasCtx> = {}
             minerals.forEach((mineral, i) => {
                 channels[mineral] = imgToCanvasCtx(partMaps[i])
@@ -322,9 +267,13 @@ function PartView (
             />
             <CorePanel
                 vis={vis}
-                representations={[CoreRectRepresentation]}
-                parts={ids}
                 part={part}
+                representations={[
+                    CoreLineRepresentation,
+                    CoreLineRepresentation,
+                    CoreLineRepresentation,
+                    CoreLineRepresentation
+                ]}
             />
         </div>
         <PartMineralControls

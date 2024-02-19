@@ -315,36 +315,33 @@
 
 
 /* ----- ZOOM SIDEBAR CONTENT ----- */
-
-.core-column {
+.core-panel {
     position: relative;
+    display: flex;
+    gap: 10px;
+    height: 100%;
+}
+
+.depth-column {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     width: 25px;
     height: 100%;
     background-color: #444;
     overflow: hidden;
 }
 
-.core-representation-wrap {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    height: fit-content;
-}
-
-.next-window {
+.depth-window {
     position: absolute;
     width: 100%;
-    height: 10%;
-    transform: translateY(-50%);
     background-color: #111;
 }
 
-.rect-part {
+.core-line {
     position: relative;
-    background-color: #fff;
     width: 1px;
-    flex-grow: 0;
-    flex-shrink: 0;
+    height: 100%;
+    background-color: #fff;
 }

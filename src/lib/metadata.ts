@@ -1,15 +1,14 @@
-type HydrationMetadata = {
-    [id: string]: number
+import { StringMap } from '../lib/util'
+
+type DepthInfo = {
+    topDepth: number,
+    length: number
 }
 
-type DepthMetadata = {
-    [id: string]: {
-        topDepth: number,
-        length: number
-    }
-}
+type DepthMetadata = StringMap<DepthInfo>
+type HydrationMetadata = StringMap<number>
 
 export type {
-    HydrationMetadata,
-    DepthMetadata
+    DepthMetadata,
+    HydrationMetadata
 }
