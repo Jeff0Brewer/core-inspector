@@ -89,7 +89,8 @@ type CoreRepresentationProps = {
     part: string,
     parts: Array<string>,
     mToPx: number,
-    setCenter: (c: number) => void
+    setCenter: (c: number) => void,
+    gap: number
 }
 
 type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
@@ -111,7 +112,7 @@ function CoreLineRepresentation (
 }
 
 function CoreRectRepresentation (
-    { part, parts, mToPx, setCenter }: CoreRepresentationProps
+    { part, parts, mToPx, gap, setCenter }: CoreRepresentationProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
@@ -139,7 +140,7 @@ function CoreRectRepresentation (
         <div
             ref={wrapRef}
             className={'part-rect-wrap'}
-            style={{ gap: '1px' }}
+            style={{ gap: `${gap}px` }}
         >
             { parts.map((id, i) => {
                 const refProp = id === part ? { ref: partRef } : {}
@@ -165,11 +166,12 @@ type CoreScaleColumnProps = {
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
-    representations: Array<CoreRepresentation>
+    representations: Array<CoreRepresentation>,
+    gap?: number
 }
 
 function CoreScaleColumn (
-    { part, parts, topDepth, bottomDepth, representations }: CoreScaleColumnProps
+    { part, parts, topDepth, bottomDepth, representations, gap = 1 }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -246,6 +248,7 @@ function CoreScaleColumn (
                     parts={visibleParts}
                     mToPx={mToPx}
                     setCenter={setWindowCenter}
+                    gap={gap}
                 />
             </div>
         </div>
@@ -256,6 +259,7 @@ function CoreScaleColumn (
                 topDepth={nextTopDepth}
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
+                gap={gap * 2}
             />
         }
     </>
