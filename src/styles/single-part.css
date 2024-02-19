@@ -10,6 +10,7 @@
 
 .section-info {
     grid-area: top;
+    grid-column: top-punch / top;
     display: flex;
     align-items: center;
     width: 100%;
@@ -35,14 +36,10 @@
 }
 
 /* ----- SIDE CONTROLS ----- */
-.side-display {
+.vertical-controls {
+    background-color: #606060;
     grid-area: side;
     grid-row: side / bottom;
-    display: flex;
-    background-color: #606060;
-}
-
-.vertical-controls {
     display: flex;
     flex-direction: column;
     width: 70px;
@@ -279,6 +276,7 @@
 /* ----- LABEL CONTENT ----- */
 .punch-label {
     grid-area: label-side;
+    grid-column: label-side / label-punch;
     background-color: #444;
 }
 
@@ -316,6 +314,9 @@
 
 /* ----- ZOOM SIDEBAR CONTENT ----- */
 .core-panel {
+    background-color: #606060;
+    grid-area: punch;
+    grid-row: punch / bottom;
     position: relative;
     display: flex;
     gap: 10px;

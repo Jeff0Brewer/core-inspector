@@ -5,10 +5,10 @@
     overflow: hidden;
     display: grid;
     grid-template-rows: 50px 20px 1fr 32px;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 70px 150px 1fr;
     grid-template-areas:
-        "top-side top"
-        "label-side label"
-        "side content"
-        "bottom bottom";
+        "top-side top-punch top"
+        "label-side label-punch label"
+        "side punch content"
+        "bottom bottom bottom";
 }

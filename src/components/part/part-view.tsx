@@ -372,27 +372,25 @@ function PartView (
             spacing={spacing}
             setChannelHeight={setChannelHeight}
         />
-        <div className={'side-display'}>
-            <PartViewControls
-                part={part}
-                zoom={zoom}
-                setZoom={setZoom}
-                spacing={spacing}
-                setSpacing={setSpacing}
-                channelHeight={channelHeight}
-            />
-            <CorePanel
-                vis={vis}
-                part={part}
-                parts={vis?.getParts() || []}
-                representations={[
-                    CoreLineRepresentation,
-                    CoreRectRepresentation,
-                    CorePunchcardRepresentation,
-                    CorePunchcardRepresentation
-                ]}
-            />
-        </div>
+        <PartViewControls
+            part={part}
+            zoom={zoom}
+            setZoom={setZoom}
+            spacing={spacing}
+            setSpacing={setSpacing}
+            channelHeight={channelHeight}
+        />
+        <CorePanel
+            vis={vis}
+            part={part}
+            parts={vis?.getParts() || []}
+            representations={[
+                CoreLineRepresentation,
+                CoreRectRepresentation,
+                CorePunchcardRepresentation,
+                CorePunchcardRepresentation
+            ]}
+        />
         <PartMineralControls
             minerals={minerals}
             palettes={palettes}
