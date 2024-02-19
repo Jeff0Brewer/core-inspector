@@ -324,10 +324,10 @@
 
 .scale-column {
     position: relative;
-    width: 25px;
+    width: 30px;
     height: 100%;
     background-color: #444;
-    overflow: scroll;
+    overflow: hidden;
 }
 
 .representation-wrap {
@@ -336,20 +336,30 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: 100%;
+    height: fit-content;
 }
 
 .next-window {
     position: absolute;
     width: 100%;
     background-color: #111;
+    transform: translateY(-50%);
 }
 
 .core-line {
     position: relative;
     width: 1px;
-    height: 100%;
+    height: 100vh;
     background-color: #fff;
+}
+
+.part-rect-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
 }
 
 .part-rect {

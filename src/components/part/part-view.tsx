@@ -86,37 +86,78 @@ import '../../styles/single-part.css'
 const PART_WIDTH_M = 0.06
 
 type CoreRepresentationProps = {
+    part: string,
     parts: Array<string>,
-    mToPx: number
+    mToPx: number,
+    setCenter: (c: number) => void
 }
 
 type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
 
-function CoreLineRepresentation (): ReactElement {
+function CoreLineRepresentation (
+    { part, setCenter }: CoreRepresentationProps
+): ReactElement {
+    const { topDepth, bottomDepth, depths } = useCoreMetadata()
+
+    useEffect(() => {
+        const center = depths[part].topDepth + 0.5 * depths[part].length
+        const centerPercent = center / (bottomDepth - topDepth)
+        setCenter(centerPercent)
+    }, [part, depths, topDepth, bottomDepth, setCenter])
+
     return <>
         <div className={'core-line'}></div>
     </>
 }
 
 function CoreRectRepresentation (
-    { parts, mToPx }: CoreRepresentationProps
+    { part, parts, mToPx, setCenter }: CoreRepresentationProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
+    const wrapRef = useRef<HTMLDivElement>(null)
+    const partRef = useRef<HTMLDivElement>(null)
 
-    return <>
-        { parts.map((part, i) =>
-            <div
-                key={i}
-                className={'part-rect'}
-                style={{
-                    width: `${PART_WIDTH_M * mToPx}px`,
-                    height: `${depths[part].length * mToPx}px`,
-                    backgroundColor: '#fff'
-                }}
-            >
-            </div>
-        ) }
-    </>
+    useEffect(() => {
+        const getCenter = (): void => {
+            const partDiv = partRef.current
+            const wrapDiv = wrapRef.current
+            if (!partDiv || !wrapDiv) { return }
+
+            const partRect = partDiv.getBoundingClientRect()
+            const wrapRect = wrapDiv.getBoundingClientRect()
+
+            const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
+            const wrapHeight = wrapRect.height
+
+            setCenter(partCenter / wrapHeight)
+        }
+
+        getCenter()
+    })
+
+    return (
+        <div
+            ref={wrapRef}
+            className={'part-rect-wrap'}
+            style={{ gap: '1px' }}
+        >
+            { parts.map((id, i) => {
+                const refProp = id === part ? { ref: partRef } : {}
+                return <div
+                    onMouseEnter={() => console.log(id)}
+                    {...refProp}
+                    key={i}
+                    className={'part-rect'}
+                    style={{
+                        width: `${PART_WIDTH_M * mToPx}px`,
+                        height: `${depths[id].length * mToPx}px`,
+                        backgroundColor: '#fff'
+                    }}
+                >
+                </div>
+            }) }
+        </div>
+    )
 }
 
 type CoreScaleColumnProps = {
@@ -124,16 +165,16 @@ type CoreScaleColumnProps = {
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
-    representations: Array<CoreRepresentation>,
-    gapPx?: number
+    representations: Array<CoreRepresentation>
 }
 
 function CoreScaleColumn (
-    { part, parts, topDepth, bottomDepth, representations, gapPx = 1 }: CoreScaleColumnProps
+    { part, parts, topDepth, bottomDepth, representations }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [mToPx, setMToPx] = useState<number>(0)
+    const [windowCenter, setWindowCenter] = useState<number>(0)
     const [nextTopDepth, setNextTopDepth] = useState<number>(0)
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
@@ -189,9 +230,23 @@ function CoreScaleColumn (
         <div className={'scale-column'} ref={columnRef}>
             <div
                 className={'representation-wrap'}
-                style={{ gap: `${gapPx}px` }}
+                style={{
+                    transform: `translateY(${Math.min((0.5 - windowCenter) * 100, 0)}%)`
+                }}
             >
-                <Representation parts={visibleParts} mToPx={mToPx} />
+                <div
+                    className={'next-window'}
+                    style={{
+                        top: `${windowCenter * 100}%`,
+                        height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
+                    }}
+                ></div>
+                <Representation
+                    part={part}
+                    parts={visibleParts}
+                    mToPx={mToPx}
+                    setCenter={setWindowCenter}
+                />
             </div>
         </div>
         { representations.length > 1 &&
@@ -316,6 +371,8 @@ function PartView (
                 parts={vis?.getParts() || []}
                 representations={[
                     CoreLineRepresentation,
+                    CoreRectRepresentation,
+                    CoreRectRepresentation,
                     CoreRectRepresentation
                 ]}
             />
