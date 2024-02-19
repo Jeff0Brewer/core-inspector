@@ -83,7 +83,7 @@ import '../../styles/single-part.css'
 //     )
 // }
 
-const PART_WIDTH_M = 0.06
+const PART_WIDTH_M = 0.0525
 
 type CoreRepresentationProps = {
     vis: PartRenderer | null,
