@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, StringMap } from '../../lib/util'
@@ -130,19 +130,15 @@ function CorePunchcardRepresentation (
         }
     }, [parts, vis, mToPx, canvasCtxs, blending])
 
+    const gapPx = `${gap}px`
     return <>
-        <div
-            ref={wrapRef}
-            className={'part-rect-wrap'}
-            style={{ gap: `${gap}px` }}
-        >
+        <div ref={wrapRef} className={'part-rect-wrap'}>
             { parts.map((id, i) => {
                 const refProp = id === part ? { ref: partRef } : {}
-                return (
+                return <React.Fragment key={i}>
                     <div
                         {...refProp}
                         onClick={() => setPart(id)}
-                        key={i}
                         className={'part-punchcard'}
                     >
                         { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
@@ -151,7 +147,11 @@ function CorePunchcardRepresentation (
                             height={`${depths[id].length * mToPx}px`}
                         /> }
                     </div>
-                )
+                    <div
+                        className={'punch-spacer'}
+                        style={{ width: gapPx, height: gapPx, margin: gapPx }}
+                    ></div>
+                </React.Fragment>
             }) }
         </div>
     </>
@@ -203,19 +203,15 @@ function CoreChannelPunchcardRepresentation (
         }
     }, [parts, vis, mToPx, canvasCtxs])
 
+    const gapPx = `${gap}px`
     return (
-        <div
-            ref={wrapRef}
-            className={'part-rect-wrap'}
-            style={{ gap: `${gap}px` }}
-        >
+        <div ref={wrapRef} className={'part-rect-wrap'}>
             { parts.map((id, i) => {
                 const refProp = id === part ? { ref: partRef } : {}
-                return (
+                return <React.Fragment key={i}>
                     <div
                         {...refProp}
                         onClick={() => setPart(id)}
-                        key={i}
                         className={'part-punchcard'}
                     >
                         { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
@@ -224,7 +220,11 @@ function CoreChannelPunchcardRepresentation (
                             height={`${depths[id].length * mToPx}px`}
                         /> }
                     </div>
-                )
+                    <div
+                        className={'punch-spacer'}
+                        style={{ width: gapPx, height: gapPx, margin: gapPx }}
+                    ></div>
+                </React.Fragment>
             }) }
         </div>
     )

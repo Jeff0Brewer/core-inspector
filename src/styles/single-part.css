@@ -405,3 +405,10 @@
 .part-punchcard:hover:after {
     background-color: rgba(235, 255, 200, 0.1)
 }
+
+.punch-spacer {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: #fff;
+}
