@@ -319,7 +319,6 @@
     grid-row: punch / bottom;
     position: relative;
     display: flex;
-    justify-content: space-around;
     height: 100%;
 }
 
@@ -329,6 +328,8 @@
     height: 100%;
     background-color: #444;
     overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
 .representation-wrap {
@@ -345,6 +346,12 @@
     width: 100%;
     background-color: #222;
     transform: translateY(-50%);
+}
+
+.zoom-lines {
+    position: relative;
+    width: 30px;
+    height: 100%;
 }
 
 .core-line {

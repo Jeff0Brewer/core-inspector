@@ -172,6 +172,26 @@ function CorePunchcardRepresentation (
     )
 }
 
+function getZoomSvg (
+    topDepth: number,
+    bottomDepth: number,
+    nextTopDepth: number,
+    nextBottomDepth: number
+): ReactElement {
+    const depthRange = bottomDepth - topDepth
+    const nextDepthRange = nextBottomDepth - nextTopDepth
+    const windowHeight = nextDepthRange / depthRange
+
+    const topPercent = (0.5 - windowHeight * 0.5) * 100
+    const bottomPercent = (0.5 + windowHeight * 0.5) * 100
+    const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
+    return (
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polygon fill="#727280" points={points} />
+        </svg>
+    )
+}
+
 type CoreScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
@@ -246,22 +266,24 @@ function CoreScaleColumn (
     }, [part, depths, topDepth, bottomDepth])
 
     const Representation = representations[0]
+    const hasNext = representations.length > 1
+
     return <>
         <div className={'scale-column'} ref={columnRef}>
             <div
                 className={'representation-wrap'}
                 style={{
                     top: '50%',
-                    transform: `translateY(${-windowCenter * 100}%)`
+                    transform: `translateY(-${windowCenter * 100}%)`
                 }}
             >
-                <div
+                { hasNext && <div
                     className={'next-window'}
                     style={{
                         top: `${windowCenter * 100}%`,
                         height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
                     }}
-                ></div>
+                ></div> }
                 <Representation
                     vis={vis}
                     part={part}
@@ -273,7 +295,10 @@ function CoreScaleColumn (
                 />
             </div>
         </div>
-        { representations.length > 1 &&
+        { hasNext && <>
+            <div className={'zoom-lines'}>
+                {getZoomSvg(topDepth, bottomDepth, nextTopDepth, nextBottomDepth)}
+            </div>
             <CoreScaleColumn
                 vis={vis}
                 part={part}
@@ -284,7 +309,7 @@ function CoreScaleColumn (
                 setPart={setPart}
                 gap={gap * 2}
             />
-        }
+        </> }
     </>
 }
 
