@@ -1,20 +1,14 @@
-type SectionIdMetadata = {
-    ids: Array<string>
+import { StringMap } from '../lib/util'
+
+type DepthInfo = {
+    topDepth: number,
+    length: number
 }
 
-type HydrationMetadata = {
-    [id: string]: number
-}
-
-type DepthMetadata = {
-    [id: string]: {
-        topDepth: number,
-        length: number
-    }
-}
+type DepthMetadata = StringMap<DepthInfo>
+type HydrationMetadata = StringMap<number>
 
 export type {
-    SectionIdMetadata,
-    HydrationMetadata,
-    DepthMetadata
+    DepthMetadata,
+    HydrationMetadata
 }

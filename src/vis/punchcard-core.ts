@@ -73,7 +73,8 @@ class PunchcardCoreRenderer {
         this.incPointSize(0) // init pointSize uniform
 
         const [texWidth, texHeight] = metadata.textureDims
-        const tileWidth = metadata.tiles[0].width
+        const tileWidth = Object.values(metadata.tiles)[0].width
+
         const binWidth = tileWidth / pointPerRow
         const binHeight = binWidth * texWidth / texHeight
         const binSizeLoc = this.program.getUniformLocation(gl, 'binSize')
@@ -109,7 +110,7 @@ class PunchcardCoreRenderer {
         this.spiralPosBuffer.bind(gl)
         this.columnPosBuffer.bind(gl)
         this.texCoordBuffer.bind(gl)
-        minerals.bind(gl)
+        minerals.bindTexture(gl)
         this.setView(view)
         this.setShapeT(shapeT)
 

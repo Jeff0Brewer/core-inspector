@@ -23,7 +23,7 @@ class AccentLineRenderer {
         gl: GlContext,
         positions: Float32Array,
         currentShape: CoreShape,
-        tileMetadata: TileTextureMetadata
+        metadata: TileTextureMetadata
     ) {
         this.numVertex = positions.length / POS_FPV
 
@@ -42,7 +42,7 @@ class AccentLineRenderer {
         this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
         this.lineLengthBuffer = new GlBuffer(gl)
-        this.lineLengthBuffer.setData(gl, getLineLengths(tileMetadata, this.numVertex))
+        this.lineLengthBuffer.setData(gl, getLineLengths(metadata, this.numVertex))
         this.lineLengthBuffer.addAttribute(gl, this.program, 'lineLength', LEN_FPV, LEN_FPV, 0)
 
         const projLoc = this.program.getUniformLocation(gl, 'proj')
@@ -96,7 +96,9 @@ const getLineLengths = (
     const out = new Float32Array(numVertex * LEN_FPV)
     let offset = 0
 
-    for (const { height } of metadata.tiles) {
+    const tileRects = Object.values(metadata.tiles)
+
+    for (const { height } of tileRects) {
         // use representative length for accent lines along side of tile
         const heightInc = height / ROW_PER_TILE * SIDE_DOT_DENSITY
 

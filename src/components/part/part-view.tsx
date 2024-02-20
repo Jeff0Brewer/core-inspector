@@ -1,67 +1,66 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useRendererDrop } from '../../hooks/renderer-drop'
-import { useBlending } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
-import { padZeros, StringMap } from '../../lib/util'
+import { get2dContext, padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
-import PartRenderer from '../../vis/part'
+import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
-import PartViewControls from '../../components/part/view-controls'
+import CorePanel, { CoreLineRepresentation, CoreRectRepresentation, CorePunchcardRepresentation } from '../../components/part/core-panel'
 import '../../styles/single-part.css'
-
-const BLEND_KEY = '[blended]'
 
 type PartViewProps = {
     part: string,
     core: string,
     minerals: Array<string>,
     palettes: Array<GenericPalette>,
-    clearPart: () => void
+    setPart: (p: string | null) => void
 }
 
 function PartView (
-    { part, core, minerals, palettes, clearPart }: PartViewProps
+    { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<HTMLCanvasElement>>({})
+    const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
-    const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<number>(0.5)
-    const [channelHeight, setChannelHeight] = useState<number>(0)
-
-    // apply blending to renderer on change to blend params
-    useBlending(vis)
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
-        visible[BLEND_KEY] = true
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
         const getChannels = async (): Promise<void> => {
-            const paths = getAbundanceFilepaths(core, part, minerals)
-            const imgs = await Promise.all(
-                minerals.map(mineral => loadImageAsync(paths[mineral]))
-            )
-
-            const channels: StringMap<HTMLCanvasElement> = {}
-
-            channels[BLEND_KEY] = document.createElement('canvas')
-            channels[BLEND_KEY].width = imgs[0].width
-            channels[BLEND_KEY].height = imgs[0].height
-            setVis(new PartRenderer(channels[BLEND_KEY], minerals, imgs))
-
+            const partPaths = getAbundanceFilepaths(core, part, minerals)
+            const corePaths: StringMap<string> = {}
             minerals.forEach((mineral, i) => {
-                channels[mineral] = imgToCanvas(imgs[i])
+                corePaths[mineral] = `./data/${core}/downscaled/${i}.png`
             })
 
+            const [partMaps, coreMaps, tileMetadata] = await Promise.all([
+                Promise.all(minerals.map(mineral => loadImageAsync(partPaths[mineral]))),
+                Promise.all(minerals.map(mineral => loadImageAsync(corePaths[mineral]))),
+                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json())
+            ])
+
+            setVis(
+                new PartRenderer(
+                    minerals,
+                    partMaps,
+                    coreMaps,
+                    tileMetadata
+                )
+            )
+
+            const channels: StringMap<CanvasCtx> = {}
+            minerals.forEach((mineral, i) => {
+                channels[mineral] = imgToCanvasCtx(partMaps[i])
+            })
             setChannels(channels)
         }
 
@@ -69,26 +68,28 @@ function PartView (
     }, [core, part, minerals])
 
     return <>
-        <button className={'close-button'} onClick={clearPart}>
+        <button className={'close-button'} onClick={() => setPart(null)}>
             {ICONS.close}
         </button>
         <div className={'punch-label'}></div>
         <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
+            part={part}
             channels={channels}
             visible={visible}
-            zoom={zoom}
-            spacing={spacing}
-            setChannelHeight={setChannelHeight}
         />
-        <PartViewControls
+        <CorePanel
+            vis={vis}
             part={part}
-            zoom={zoom}
-            setZoom={setZoom}
-            spacing={spacing}
-            setSpacing={setSpacing}
-            channelHeight={channelHeight}
+            parts={vis?.getParts() || []}
+            representations={[
+                CoreLineRepresentation,
+                CoreRectRepresentation,
+                CorePunchcardRepresentation,
+                CorePunchcardRepresentation
+            ]}
+            setPart={setPart}
         />
         <PartMineralControls
             minerals={minerals}
@@ -99,18 +100,15 @@ function PartView (
     </>
 }
 
-function imgToCanvas (img: HTMLImageElement): HTMLCanvasElement {
+function imgToCanvasCtx (img: HTMLImageElement): CanvasCtx {
     const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) {
-        throw new Error('Could not get 2d drawing context')
-    }
+    const ctx = get2dContext(canvas, { willReadFrequently: true })
 
     canvas.width = img.width
     canvas.height = img.height
     ctx.drawImage(img, 0, 0)
 
-    return canvas
+    return { canvas, ctx }
 }
 
 function getAbundanceFilepaths (

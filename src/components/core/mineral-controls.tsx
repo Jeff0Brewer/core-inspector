@@ -1,6 +1,6 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
-import { useBlendState, useBlending } from '../../hooks/blend-context'
+import { useBlendState } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
@@ -17,14 +17,29 @@ function CoreMineralControls (
 ): ReactElement {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const {
-        palette,
+        magnitudes,
         visibilities,
         setVisibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
         monochrome,
         setMonochrome
     } = useBlendState()
 
-    useBlending(vis)
+    // apply blending on change to params
+    useEffect(() => {
+        vis?.setBlending({
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        })
+    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     // setup keyboard shortcuts
     useEffect(() => {

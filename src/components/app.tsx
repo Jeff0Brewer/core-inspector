@@ -1,4 +1,4 @@
-import { useState, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import BlendProvider from '../components/blend-provider'
 import CoreMetadataProvider from '../components/core-metadata-provider'
@@ -43,7 +43,7 @@ function App (): ReactElement {
                             core={core}
                             minerals={MINERALS}
                             palettes={COLOR_PRESETS}
-                            clearPart={() => setPart(null)}
+                            setPart={setPart}
                         />
                     }
                 </BlendProvider>

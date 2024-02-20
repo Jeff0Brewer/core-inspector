@@ -1,11 +1,6 @@
-attribute vec4 spiralPos;
-attribute vec4 columnPos;
+attribute vec4 position;
 attribute vec2 texCoord;
 
-uniform mat4 proj;
-uniform mat4 view;
-uniform float shapeT;
-uniform float windowHeight;
 uniform float pointSize;
 uniform vec2 binSize;
 uniform sampler2D mineral;
@@ -16,12 +11,9 @@ const float numSample = 5.0;
 const float invNumSample = 1.0 / (numSample - 1.0);
 const float invSize = 1.0 / (numSample * numSample);
 
-void main() {
-    vec4 position = spiralPos * shapeT + columnPos * (1.0 - shapeT);
-    gl_Position = proj * view * position;
-
-    float windowScale = windowHeight * 0.00115;
-    gl_PointSize = pointSize * windowScale / gl_Position.w;
+void main () {
+    gl_Position = position;
+    gl_PointSize = pointSize;
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
     for (float i = 0.0; i < numSample; i += 1.0) {
@@ -33,5 +25,6 @@ void main() {
             color += invSize * texture2D(mineral, texCoord + offset);
         }
     }
+
     vColor = color.xyz;
 }

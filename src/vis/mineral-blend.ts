@@ -122,8 +122,12 @@ class MineralBlender {
         this.framebuffer.unbind(gl)
     }
 
-    bind (gl: GlContext): void {
+    bindTexture (gl: GlContext): void {
         this.framebuffer.bindTexture(gl)
+    }
+
+    bindFramebuffer (gl: GlContext): void {
+        this.framebuffer.bind(gl)
     }
 
     drop (gl: GlContext): void {

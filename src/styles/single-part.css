@@ -10,6 +10,7 @@
 
 .section-info {
     grid-area: top;
+    grid-column: top-punch / top;
     display: flex;
     align-items: center;
     width: 100%;
@@ -36,17 +37,17 @@
 
 /* ----- SIDE CONTROLS ----- */
 .vertical-controls {
+    background-color: #606060;
     grid-area: side;
     grid-row: side / bottom;
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 70px;
     height: 100%;
     align-items: center;
     gap: 20px;
     padding: 10px 0;
     padding-bottom: 32px;
-    background-color: #606060;
 }
 
 .scale-ruler {
@@ -229,16 +230,6 @@
     display: none;
 }
 
-.canvas {
-    position: relative;
-}
-
-.canvas > canvas {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
 .hover-info {
     position: absolute;
     pointer-events: none;
@@ -285,6 +276,7 @@
 /* ----- LABEL CONTENT ----- */
 .punch-label {
     grid-area: label-side;
+    grid-column: label-side / label-punch;
     background-color: #444;
 }
 
@@ -317,4 +309,62 @@
     margin-right: 5px;
     flex-grow: 0;
     flex-shrink: 0;
+}
+
+
+/* ----- ZOOM SIDEBAR CONTENT ----- */
+.core-panel {
+    background-color: #606060;
+    grid-area: punch;
+    grid-row: punch / bottom;
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+    height: 100%;
+}
+
+.scale-column {
+    position: relative;
+    width: 30px;
+    height: 100%;
+    background-color: #444;
+    overflow: hidden;
+}
+
+.representation-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+}
+
+.next-window {
+    position: absolute;
+    width: 100%;
+    background-color: #111;
+    transform: translateY(-50%);
+}
+
+.core-line {
+    position: relative;
+    width: 1px;
+    height: 100vh;
+    background-color: #fff;
+}
+
+.part-rect-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+}
+
+.part-rect {
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 0;
 }

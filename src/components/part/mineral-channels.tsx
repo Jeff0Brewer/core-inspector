@@ -1,37 +1,62 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
+import { useBlendState } from '../../hooks/blend-context'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
-import PartRenderer from '../../vis/part'
+import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
-
-// temporary, import from consts file later
-const BLEND_KEY = '[blended]'
+import PartViewControls from '../../components/part/view-controls'
+import CanvasRenderer from '../../components/generic/canvas-renderer'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
-    channels: StringMap<HTMLCanvasElement>,
-    visible: StringMap<boolean>,
-    zoom: number,
-    spacing: number,
-    setChannelHeight: (h: number) => void
+    part: string,
+    channels: StringMap<CanvasCtx>,
+    visible: StringMap<boolean>
 }
 
 function PartMineralChannels (
-    { vis, channels, visible, zoom, spacing, setChannelHeight }: PartMineralChannelsProps
+    { vis, part, channels, visible }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
     const [viewWidth, setViewWidth] = useState<number>(0)
     const [viewHeight, setViewHeight] = useState<number>(0)
     const [viewGap, setViewGap] = useState<number>(0)
+    const [zoom, setZoom] = useState<number>(0.5)
+    const [spacing, setSpacing] = useState<number>(0.5)
+    const [channelHeight, setChannelHeight] = useState<number>(0)
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
-    const [channelContexts, setChannelContexts] = useState<StringMap<CanvasRenderingContext2D>>({})
     const [abundances, setAbundances] = useState<StringMap<number>>({})
 
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
+
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    // apply blending on change to params
+    useEffect(() => {
+        if (!vis) { return }
+        const params = {
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        }
+        vis.setBlending(params)
+    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     // add event listener to coordinate label / content scroll
     useEffect(() => {
@@ -53,12 +78,11 @@ function PartMineralChannels (
 
     // get css values for layout from current zoom / spacing
     useEffect(() => {
-        const firstChannel = Object.values(channels)[0]
-        if (!firstChannel) { return }
+        if (!vis) { return }
+        const { width, height } = vis.canvas
+        if (!width || !height) { return }
 
         const channelWidth = zoom * 250 + 50
-
-        const { width, height } = firstChannel
         const channelHeight = channelWidth * height / width
         const channelGap = channelWidth * spacing
 
@@ -67,27 +91,13 @@ function PartMineralChannels (
         setViewGap(channelGap)
 
         setChannelHeight(channelHeight)
-    }, [zoom, spacing, channels, setChannelHeight])
+    }, [zoom, spacing, vis, setChannelHeight])
 
     useEffect(() => {
-        const firstChannel = Object.values(channels)[0]
-        if (!firstChannel) { return }
-
-        setImgWidth(firstChannel.width)
-        setImgHeight(firstChannel.height)
-
-        const channelContexts: StringMap<CanvasRenderingContext2D> = {}
-        Object.entries(channels)
-            .filter(([mineral, _]) => mineral !== BLEND_KEY)
-            .forEach(([mineral, channel]) => {
-                const ctx = channel.getContext('2d', { willReadFrequently: true })
-                if (!ctx) {
-                    throw new Error('Could not get 2d rendering context')
-                }
-                channelContexts[mineral] = ctx
-            })
-        setChannelContexts(channelContexts)
-    }, [channels])
+        if (!vis) { return }
+        setImgWidth(vis.canvas.width)
+        setImgHeight(vis.canvas.height)
+    }, [vis])
 
     useEffect(() => {
         if (!mousePos) { return }
@@ -95,20 +105,29 @@ function PartMineralChannels (
         const y = mousePos[1] / viewHeight * imgHeight
 
         const abundances: StringMap<number> = {}
-        Object.entries(channelContexts)
-            .filter(([mineral, _]) => mineral !== BLEND_KEY)
-            .forEach(([mineral, ctx]) => {
-                abundances[mineral] = ctx.getImageData(x, y, 1, 1).data[0]
-            })
+        Object.entries(channels).forEach(([mineral, channel]) => {
+            abundances[mineral] = channel.ctx.getImageData(x, y, 1, 1).data[0]
+        })
         setAbundances(abundances)
-    }, [mousePos, channelContexts, viewWidth, viewHeight, imgWidth, imgHeight])
+    }, [mousePos, channels, viewWidth, viewHeight, imgWidth, imgHeight])
 
     const width = `${viewWidth}px`
     const height = `${viewHeight}px`
     const gap = `${viewGap}px`
     return <>
+        <PartViewControls
+            part={part}
+            zoom={zoom}
+            setZoom={setZoom}
+            spacing={spacing}
+            setSpacing={setSpacing}
+            channelHeight={channelHeight}
+        />
         <div className={'channel-labels-wrap'}>
             <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
+                <div className={'channel-label'} style={{ width }}>
+                    [blended]
+                </div>
                 { Object.keys(channels)
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
@@ -125,11 +144,19 @@ function PartMineralChannels (
                 visible={!!mousePos}
             />
             <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
+                { vis &&
+                    <MineralCanvas
+                        canvas={vis.canvas}
+                        width={width}
+                        height={height}
+                        mousePos={mousePos}
+                        setMousePos={setMousePos}
+                    /> }
                 { Object.entries(channels)
                     .filter(([mineral, _]) => visible[mineral])
-                    .map(([_, canvas], i) =>
+                    .map(([_, channel], i) =>
                         <MineralCanvas
-                            canvas={canvas}
+                            canvas={channel.canvas}
                             width={width}
                             height={height}
                             mousePos={mousePos}
@@ -154,16 +181,6 @@ function MineralCanvas (
     { canvas, width, height, mousePos, setMousePos }: MineralCanvasProps
 ): ReactElement {
     const channelRef = useRef<HTMLDivElement>(null)
-
-    // add HTML canvas element to react element via ref,
-    // allows access of canvas reference when not rendered to dom
-    const addCanvasChild = (ref: HTMLDivElement | null): void => {
-        if (!ref) { return }
-        while (ref.lastChild) {
-            ref.removeChild(ref.lastChild)
-        }
-        ref.appendChild(canvas)
-    }
 
     useEffect(() => {
         const channel = channelRef.current
@@ -201,11 +218,7 @@ function MineralCanvas (
                 >
                     {ICONS.cursor}
                 </div> }
-                <div
-                    className={'canvas'}
-                    style={{ width, height }}
-                    ref={addCanvasChild}
-                ></div>
+                <CanvasRenderer canvas={canvas} width={width} height={height} />
             </div>
         </div>
     )
