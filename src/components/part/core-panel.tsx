@@ -178,6 +178,8 @@ function getZoomSvg (
     nextBottomDepth: number
 ): ReactElement {
     const depthRange = bottomDepth - topDepth
+    if (depthRange === 0) { return <></> }
+
     const nextDepthRange = nextBottomDepth - nextTopDepth
     const windowHeight = nextDepthRange / depthRange
 
