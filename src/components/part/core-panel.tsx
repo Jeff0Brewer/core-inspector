@@ -114,7 +114,11 @@ function CoreScaleColumn (
         </div>
         { hasNext && <>
             <div className={'zoom-lines'}>
-                {getZoomSvg(windowCenter, bottomDepth - topDepth, nextBottomDepth - nextTopDepth)}
+                {getZoomSvg(
+                    fullScale ? windowCenter : 0.5,
+                    bottomDepth - topDepth,
+                    nextBottomDepth - nextTopDepth
+                )}
             </div>
             <CoreScaleColumn
                 vis={vis}
