@@ -76,8 +76,7 @@ function CoreRectRepresentation (
                     className={'part-rect'}
                     style={{
                         width: `${PART_WIDTH_M * mToPx}px`,
-                        height: `${depths[id].length * mToPx}px`,
-                        backgroundColor: '#fff'
+                        height: `${depths[id].length * mToPx}px`
                     }}
                 >
                 </div>
@@ -159,7 +158,7 @@ function CorePunchcardRepresentation (
                     {...refProp}
                     onClick={() => setPart(id)}
                     key={i}
-                    className={'part-rect'}
+                    className={'part-punchcard'}
                 >
                     { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
                         canvas={canvasCtxs[id].canvas}
@@ -325,7 +324,6 @@ function CorePanel (
     { vis, part, parts, representations, setPart }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
-
     return (
         <div className={'core-panel'}>
             <CoreScaleColumn

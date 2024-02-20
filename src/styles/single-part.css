@@ -370,8 +370,37 @@
     height: fit-content;
 }
 
-.part-rect {
+.part-rect, .part-punchcard {
     position: relative;
     flex-shrink: 0;
     flex-grow: 0;
+    cursor: pointer;
+}
+
+.part-rect {
+    background-color: #fff;
+    transition:
+        background-color var(--transition-param),
+        transform var(--transition-param);
+}
+
+.part-rect:hover {
+    background-color: #ebffc8;
+    transform: scaleX(200%);
+}
+
+.part-punchcard:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    transition: background-color var(--transition-param);
+}
+
+.part-punchcard:hover:after {
+    background-color: rgba(235, 255, 200, 0.1)
 }
