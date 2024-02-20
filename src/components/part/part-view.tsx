@@ -17,11 +17,11 @@ type PartViewProps = {
     core: string,
     minerals: Array<string>,
     palettes: Array<GenericPalette>,
-    clearPart: () => void
+    setPart: (p: string | null) => void
 }
 
 function PartView (
-    { part, core, minerals, palettes, clearPart }: PartViewProps
+    { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
@@ -68,7 +68,7 @@ function PartView (
     }, [core, part, minerals])
 
     return <>
-        <button className={'close-button'} onClick={clearPart}>
+        <button className={'close-button'} onClick={() => setPart(null)}>
             {ICONS.close}
         </button>
         <div className={'punch-label'}></div>
@@ -89,6 +89,7 @@ function PartView (
                 CorePunchcardRepresentation,
                 CorePunchcardRepresentation
             ]}
+            setPart={setPart}
         />
         <PartMineralControls
             minerals={minerals}

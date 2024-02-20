@@ -14,6 +14,7 @@ type CoreRepresentationProps = {
     parts: Array<string>,
     mToPx: number,
     setCenter: (c: number) => void,
+    setPart: (p: string | null) => void,
     gap: number
 }
 
@@ -36,7 +37,7 @@ function CoreLineRepresentation (
 }
 
 function CoreRectRepresentation (
-    { part, parts, mToPx, gap, setCenter }: CoreRepresentationProps
+    { part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
@@ -69,7 +70,7 @@ function CoreRectRepresentation (
             { parts.map((id, i) => {
                 const refProp = id === part ? { ref: partRef } : {}
                 return <div
-                    onMouseEnter={() => console.log(id)}
+                    onClick={() => setPart(id)}
                     {...refProp}
                     key={i}
                     className={'part-rect'}
@@ -86,9 +87,9 @@ function CoreRectRepresentation (
 }
 
 function CorePunchcardRepresentation (
-    { vis, part, parts, mToPx, gap, setCenter }: CoreRepresentationProps
+    { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx> | null>(null)
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const { depths } = useCoreMetadata()
     const blending = useBlendState()
     const wrapRef = useRef<HTMLDivElement>(null)
@@ -123,9 +124,11 @@ function CorePunchcardRepresentation (
     }, [parts])
 
     useEffect(() => {
-        if (!vis || !canvasCtxs) { return }
+        if (!vis) { return }
         for (const part of parts) {
-            vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+            if (canvasCtxs[part]) {
+                vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+            }
         }
     }, [parts, vis, mToPx, canvasCtxs])
 
@@ -135,7 +138,9 @@ function CorePunchcardRepresentation (
         window.clearTimeout(blendTimeoutRef.current)
         blendTimeoutRef.current = window.setTimeout(() => {
             for (const part of parts) {
-                vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+                if (canvasCtxs[part]) {
+                    vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+                }
             }
         }, 10)
 
@@ -152,11 +157,11 @@ function CorePunchcardRepresentation (
                 const refProp = id === part ? { ref: partRef } : {}
                 return <div
                     {...refProp}
-                    onMouseEnter={() => console.log(id)}
+                    onClick={() => setPart(id)}
                     key={i}
                     className={'part-rect'}
                 >
-                    { canvasCtxs !== null && <CanvasRenderer
+                    { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
                         canvas={canvasCtxs[id].canvas}
                         width={`${PART_WIDTH_M * mToPx}px`}
                         height={`${depths[id].length * mToPx}px`}
@@ -174,11 +179,12 @@ type CoreScaleColumnProps = {
     topDepth: number,
     bottomDepth: number,
     representations: Array<CoreRepresentation>,
+    setPart: (p: string | null) => void,
     gap?: number
 }
 
 function CoreScaleColumn (
-    { vis, part, parts, topDepth, bottomDepth, representations, gap = 1 }: CoreScaleColumnProps
+    { vis, part, parts, topDepth, bottomDepth, representations, setPart, gap = 1 }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -262,6 +268,7 @@ function CoreScaleColumn (
                     parts={visibleParts}
                     mToPx={mToPx}
                     setCenter={setWindowCenter}
+                    setPart={setPart}
                     gap={gap}
                 />
             </div>
@@ -274,6 +281,7 @@ function CoreScaleColumn (
                 topDepth={nextTopDepth}
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
+                setPart={setPart}
                 gap={gap * 2}
             />
         }
@@ -284,11 +292,12 @@ type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    representations: Array<CoreRepresentation>
+    representations: Array<CoreRepresentation>,
+    setPart: (p: string | null) => void
 }
 
 function CorePanel (
-    { vis, part, parts, representations }: CorePanelProps
+    { vis, part, parts, representations, setPart }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
 
@@ -301,6 +310,7 @@ function CorePanel (
                 topDepth={topDepth}
                 bottomDepth={bottomDepth}
                 representations={representations}
+                setPart={setPart}
             />
         </div>
     )
