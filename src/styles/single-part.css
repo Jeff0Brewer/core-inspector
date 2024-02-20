@@ -338,7 +338,7 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    height: fit-content;
+    min-height: 100%;
 }
 
 .next-window {
@@ -355,9 +355,10 @@
 }
 
 .core-line {
-    position: relative;
+    position: absolute;
+    margin: 0 auto;
     width: 1px;
-    height: 100vh;
+    height: 100%;
     background-color: #fff;
 }
 
