@@ -65,7 +65,7 @@ class MineralBlender {
         }
 
         // init texture framebuffer of same size as source textures for blended output
-        this.framebuffer = new GlTextureFramebuffer(gl, this.width, this.height)
+        this.framebuffer = new GlTextureFramebuffer(gl, this.width, this.height, textureAttachments[0])
 
         const saturationLoc = this.program.getUniformLocation(gl, 'saturation')
         const thresholdLoc = this.program.getUniformLocation(gl, 'threshold')
@@ -120,6 +120,10 @@ class MineralBlender {
 
         // bind default framebuffer on completion
         this.framebuffer.unbind(gl)
+    }
+
+    bindSourceTexture (gl: GlContext, ind: number): void {
+        this.sources[ind].bind(gl, gl.TEXTURE0)
     }
 
     bindTexture (gl: GlContext): void {

@@ -185,8 +185,8 @@ class GlTexture {
         this.attachment = attachment
     }
 
-    bind (gl: GlContext): void {
-        gl.activeTexture(this.attachment)
+    bind (gl: GlContext, attachment?: number): void {
+        gl.activeTexture(attachment || this.attachment)
         gl.bindTexture(gl.TEXTURE_2D, this.id)
     }
 

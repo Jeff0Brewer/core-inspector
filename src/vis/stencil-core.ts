@@ -25,6 +25,7 @@ class StencilCoreRenderer {
     numVertex: number
     lastMousePos: vec2
     colorIdMap: ColorIdMap
+    textureAttachment: number
 
     constructor (
         gl: GlContext,
@@ -38,7 +39,8 @@ class StencilCoreRenderer {
         const vertPerTile = this.numVertex / metadata.numTiles
 
         // placeholder dimensions for framebuffer so init can happen before canvas resized
-        this.framebuffer = new GlTextureFramebuffer(gl, 1, 1)
+        this.textureAttachment = gl.TEXTURE16
+        this.framebuffer = new GlTextureFramebuffer(gl, 1, 1, this.textureAttachment)
         this.program = new GlProgram(gl, vertSource, fragSource)
 
         // positions passed in as argument since exactly the same as downscaled
@@ -71,7 +73,7 @@ class StencilCoreRenderer {
     // need to call resize as well as update projection matrix when window changes
     // since stencil buffer is offscreen texture framebuffer and needs to match window size
     resize (gl: GlContext, w: number, h: number): void {
-        this.framebuffer = new GlTextureFramebuffer(gl, w, h)
+        this.framebuffer = new GlTextureFramebuffer(gl, w, h, this.textureAttachment)
     }
 
     update (gl: GlContext, view: mat4, mousePos: vec2): string | null {
