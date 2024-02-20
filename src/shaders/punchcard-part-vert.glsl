@@ -3,6 +3,7 @@ attribute vec2 texCoord;
 
 uniform float pointSize;
 uniform vec2 binSize;
+uniform float offsetX;
 uniform sampler2D mineral;
 
 varying vec3 vColor;
@@ -12,7 +13,10 @@ const float invNumSample = 1.0 / (numSample - 1.0);
 const float invSize = 1.0 / (numSample * numSample);
 
 void main () {
-    gl_Position = position;
+    vec4 offsetPos = position;
+    offsetPos.x += offsetX;
+
+    gl_Position = offsetPos;
     gl_PointSize = pointSize;
 
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);

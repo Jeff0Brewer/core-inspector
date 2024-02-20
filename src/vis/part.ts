@@ -81,9 +81,21 @@ class PartRenderer {
         this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, this.numVertex)
     }
 
-    getPunchcard (part: string, output: CanvasCtx, width: number): number {
-        if (this.dropped) { return 0 }
-        return this.punchcardPart.getPunchcard(
+    getPunchcard (part: string, output: CanvasCtx, width: number): void {
+        if (this.dropped) { return }
+        this.punchcardPart.getPunchcard(
+            this.gl,
+            this.tileMetadata,
+            part,
+            this.coreMinerals,
+            output,
+            width
+        )
+    }
+
+    getChannelPunchcard (part: string, output: CanvasCtx, width: number): void {
+        if (this.dropped) { return }
+        this.punchcardPart.getChannelPunchcard(
             this.gl,
             this.tileMetadata,
             part,

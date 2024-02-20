@@ -14,6 +14,7 @@ class PunchcardPartRenderer {
     buffer: GlBuffer
     setPointSize: (s: number) => void
     setBinWidth: (b: vec2) => void
+    setOffsetX: (o: number) => void
 
     constructor (gl: GlContext) {
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -24,8 +25,74 @@ class PunchcardPartRenderer {
 
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
         const binWidthLoc = this.program.getUniformLocation(gl, 'binWidth')
+        const offsetXLoc = this.program.getUniformLocation(gl, 'offsetX')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
         this.setBinWidth = (b: vec2): void => { gl.uniform2fv(binWidthLoc, b) }
+        this.setOffsetX = (o: number): void => { gl.uniform1f(offsetXLoc, o) }
+    }
+
+    getChannelPunchcard (
+        gl: GlContext,
+        metadata: TileTextureMetadata,
+        part: string,
+        minerals: MineralBlender,
+        output: CanvasCtx,
+        width: number
+    ): void {
+        const tile = metadata.tiles[part]
+        const tileAspect = (2 * tile.height / tile.width)
+
+        const numColumns = minerals.sources.length
+        const numRows = Math.round(numColumns * tileAspect)
+        width = Math.round(width)
+        const height = Math.round(width * tileAspect)
+
+        const xInc = 2 / numColumns
+        const yInc = 2 / numRows
+        const yStart = -1 + yInc * 0.5
+        const xStart = -1 + xInc * 0.5
+
+        const tyInc = tile.height / numRows
+        const tyStart = tile.top + tyInc * 0.5
+        const tx = tile.left + tile.width * 0.5
+
+        const columnVerts = []
+        for (let i = 0; i < numRows; i++) {
+            columnVerts.push(
+                xStart,
+                yStart + yInc * i,
+                tx,
+                tyStart + tyInc * i
+            )
+        }
+
+        const numVertex = columnVerts.length / STRIDE
+        this.buffer.setData(gl, new Float32Array(columnVerts))
+
+        const framebuffer = new GlTextureFramebuffer(gl, width, height)
+        framebuffer.bind(gl)
+        this.program.bind(gl)
+        this.buffer.bind(gl)
+
+        const [texWidth, texHeight] = metadata.textureDims
+        const binWidth = tile.width
+        const binHeight = binWidth * texHeight / texWidth
+        this.setBinWidth([binWidth, binHeight])
+        this.setPointSize(1.1 * width / numColumns)
+
+        gl.viewport(0, 0, width, height)
+        for (let i = 0; i < numColumns; i++) {
+            this.setOffsetX(i * xInc)
+            minerals.bindSourceTexture(gl, i)
+            gl.drawArrays(gl.POINTS, 0, numVertex)
+        }
+
+        output.canvas.width = width
+        output.canvas.height = height
+
+        glToCanvas(gl, framebuffer, output)
+
+        framebuffer.drop(gl)
     }
 
     getPunchcard (
@@ -35,12 +102,13 @@ class PunchcardPartRenderer {
         minerals: MineralBlender,
         output: CanvasCtx,
         width: number
-    ): number {
+    ): void {
         const tile = metadata.tiles[part]
 
         // temp
         const pointPerRow = 3
         const numRows = Math.round(pointPerRow * (2 * tile.height / tile.width))
+        width = Math.round(width)
         const height = 2 * Math.round(width * tile.height / tile.width)
 
         const framebuffer = new GlTextureFramebuffer(gl, width, height)
@@ -76,11 +144,12 @@ class PunchcardPartRenderer {
         this.buffer.bind(gl)
         minerals.bindTexture(gl)
 
-        this.setPointSize(width / pointPerRow)
         const [texWidth, texHeight] = metadata.textureDims
         const binWidth = tile.width / pointPerRow
-        const binHeight = binWidth * texWidth / texHeight
+        const binHeight = binWidth * texHeight / texWidth
         this.setBinWidth([binWidth, binHeight])
+        this.setPointSize(width / pointPerRow)
+        this.setOffsetX(0)
 
         gl.viewport(0, 0, width, height)
         gl.drawArrays(gl.POINTS, 0, numVertex)
@@ -91,8 +160,6 @@ class PunchcardPartRenderer {
         glToCanvas(gl, framebuffer, output)
 
         framebuffer.drop(gl)
-
-        return height / width
     }
 }
 
