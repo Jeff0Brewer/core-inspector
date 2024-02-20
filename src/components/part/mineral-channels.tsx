@@ -23,8 +23,8 @@ function PartMineralChannels (
     const [viewWidth, setViewWidth] = useState<number>(0)
     const [viewHeight, setViewHeight] = useState<number>(0)
     const [viewGap, setViewGap] = useState<number>(0)
-    const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<number>(0.5)
+    const [zoom, setZoom] = useState<number>(0.25)
+    const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)

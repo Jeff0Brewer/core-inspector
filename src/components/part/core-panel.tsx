@@ -76,8 +76,7 @@ function CoreRectRepresentation (
                     className={'part-rect'}
                     style={{
                         width: `${PART_WIDTH_M * mToPx}px`,
-                        height: `${depths[id].length * mToPx}px`,
-                        backgroundColor: '#fff'
+                        height: `${depths[id].length * mToPx}px`
                     }}
                 >
                 </div>
@@ -159,7 +158,7 @@ function CorePunchcardRepresentation (
                     {...refProp}
                     onClick={() => setPart(id)}
                     key={i}
-                    className={'part-rect'}
+                    className={'part-punchcard'}
                 >
                     { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
                         canvas={canvasCtxs[id].canvas}
@@ -173,17 +172,18 @@ function CorePunchcardRepresentation (
 }
 
 function getZoomSvg (
-    topDepth: number,
-    bottomDepth: number,
-    nextTopDepth: number,
-    nextBottomDepth: number
+    center: number,
+    depthRange: number,
+    nextDepthRange: number
 ): ReactElement {
-    const depthRange = bottomDepth - topDepth
-    const nextDepthRange = nextBottomDepth - nextTopDepth
+    if (depthRange === 0) {
+        return <></>
+    }
+
     const windowHeight = nextDepthRange / depthRange
 
-    const topPercent = (0.5 - windowHeight * 0.5) * 100
-    const bottomPercent = (0.5 + windowHeight * 0.5) * 100
+    const topPercent = (center - windowHeight * 0.5) * 100
+    const bottomPercent = (center + windowHeight * 0.5) * 100
     const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -200,11 +200,12 @@ type CoreScaleColumnProps = {
     bottomDepth: number,
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
+    fullScale?: boolean,
     gap?: number
 }
 
 function CoreScaleColumn (
-    { vis, part, parts, topDepth, bottomDepth, representations, setPart, gap = 1 }: CoreScaleColumnProps
+    { vis, part, parts, topDepth, bottomDepth, representations, setPart, fullScale = false, gap = 1 }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -272,10 +273,14 @@ function CoreScaleColumn (
         <div className={'scale-column'} ref={columnRef}>
             <div
                 className={'representation-wrap'}
-                style={{
-                    top: '50%',
-                    transform: `translateY(-${windowCenter * 100}%)`
-                }}
+                style={
+                    fullScale
+                        ? {}
+                        : {
+                            top: '50%',
+                            transform: `translateY(-${windowCenter * 100}%)`
+                        }
+                }
             >
                 { hasNext && <div
                     className={'next-window'}
@@ -297,7 +302,7 @@ function CoreScaleColumn (
         </div>
         { hasNext && <>
             <div className={'zoom-lines'}>
-                {getZoomSvg(topDepth, bottomDepth, nextTopDepth, nextBottomDepth)}
+                {getZoomSvg(windowCenter, bottomDepth - topDepth, nextBottomDepth - nextTopDepth)}
             </div>
             <CoreScaleColumn
                 vis={vis}
@@ -318,14 +323,14 @@ type CorePanelProps = {
     part: string,
     parts: Array<string>,
     representations: Array<CoreRepresentation>,
-    setPart: (p: string | null) => void
+    setPart: (p: string | null) => void,
+    fullScale?: boolean
 }
 
 function CorePanel (
     { vis, part, parts, representations, setPart }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
-
     return (
         <div className={'core-panel'}>
             <CoreScaleColumn
@@ -336,6 +341,7 @@ function CorePanel (
                 bottomDepth={bottomDepth}
                 representations={representations}
                 setPart={setPart}
+                fullScale={true}
             />
         </div>
     )
