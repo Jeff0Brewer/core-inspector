@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="15">
     <polyline
         points="0,0 15,0 15,0 15,15"
-        stroke="#c5bcc7"
+        stroke="#dfd4e1"
         stroke-width="2"
         fill="transparent"
     />
