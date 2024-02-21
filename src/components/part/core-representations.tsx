@@ -63,7 +63,7 @@ function CoreRectRepresentation (
     return (
         <div
             ref={wrapRef}
-            className={'part-rect-wrap'}
+            className={'part-column'}
             style={{ gap: `${gap}px` }}
         >
             { parts.map((id, i) => {
@@ -84,12 +84,20 @@ function CoreRectRepresentation (
     )
 }
 
-function CorePunchcardRepresentation (
-    { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
+type CoreCanvasRepresentationProps = {
+    part: string,
+    parts: Array<string>,
+    canvasCtxs: StringMap<CanvasCtx>,
+    mToPx: number,
+    gap: number,
+    setCenter: (c: number) => void,
+    setPart: (p: string | null) => void,
+}
+
+function CoreCanvasRepresentation (
+    { part, parts, canvasCtxs, mToPx, gap, setCenter, setPart }: CoreCanvasRepresentationProps
 ): ReactElement {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const { depths } = useCoreMetadata()
-    const blending = useBlendState()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
 
@@ -111,78 +119,37 @@ function CorePunchcardRepresentation (
         getCenter()
     })
 
-    useEffect(() => {
-        if (parts.length === 0) { return }
-
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
-
-    useEffect(() => {
-        if (!vis) { return }
-        for (const part of parts) {
-            if (canvasCtxs[part]) {
-                vis.getPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
-            }
-        }
-    }, [parts, vis, mToPx, canvasCtxs, blending])
-
-    const gapPx = `${gap}px`
     return <>
-        <div ref={wrapRef} className={'part-rect-wrap'}>
-            { parts.map((id, i) => {
-                const refProp = id === part ? { ref: partRef } : {}
-                return <React.Fragment key={i}>
+        <div ref={wrapRef} className={'part-column'}>
+            { parts.map((id, i) =>
+                <React.Fragment key={i}>
                     <div
-                        {...refProp}
+                        className={'part-canvas'}
                         onClick={() => setPart(id)}
-                        className={'part-punchcard'}
+                        ref={id === part ? partRef : null}
                     >
-                        { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
-                            canvas={canvasCtxs[id].canvas}
-                            width={`${PART_WIDTH_M * mToPx}px`}
-                            height={`${depths[id].length * mToPx}px`}
-                        /> }
+                        { canvasCtxs[id] &&
+                            <CanvasRenderer
+                                canvas={canvasCtxs[id].canvas}
+                                width={`${PART_WIDTH_M * mToPx}px`}
+                                height={`${depths[id].length * mToPx}px`}
+                            /> }
                     </div>
                     <div
-                        className={'punch-spacer'}
-                        style={{ width: gapPx, height: gapPx, margin: gapPx }}
+                        className={'part-spacer'}
+                        style={{ '--size': `${gap * 0.33333}px` } as React.CSSProperties}
                     ></div>
                 </React.Fragment>
-            }) }
+            ) }
         </div>
     </>
 }
 
-// TODO: fix duplication
-function CoreChannelPunchcardRepresentation (
+function CorePunchcardRepresentation (
     { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
-    const { depths } = useCoreMetadata()
-    const wrapRef = useRef<HTMLDivElement>(null)
-    const partRef = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        const getCenter = (): void => {
-            const partDiv = partRef.current
-            const wrapDiv = wrapRef.current
-            if (!partDiv || !wrapDiv) { return }
-
-            const partRect = partDiv.getBoundingClientRect()
-            const wrapRect = wrapDiv.getBoundingClientRect()
-
-            const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
-            const wrapHeight = wrapRect.height
-
-            setCenter(partCenter / wrapHeight)
-        }
-
-        getCenter()
-    })
+    const blending = useBlendState()
 
     useEffect(() => {
         if (parts.length === 0) { return }
@@ -198,35 +165,66 @@ function CoreChannelPunchcardRepresentation (
         if (!vis) { return }
         for (const part of parts) {
             if (canvasCtxs[part]) {
-                vis.getChannelPunchcard(part, canvasCtxs[part], PART_WIDTH_M * mToPx * window.devicePixelRatio)
+                vis.getPunchcard(
+                    part,
+                    canvasCtxs[part],
+                    PART_WIDTH_M * mToPx * window.devicePixelRatio
+                )
+            }
+        }
+    }, [parts, vis, mToPx, canvasCtxs, blending])
+
+    return (
+        <CoreCanvasRepresentation
+            part={part}
+            parts={parts}
+            canvasCtxs={canvasCtxs}
+            mToPx={mToPx}
+            gap={gap}
+            setCenter={setCenter}
+            setPart={setPart}
+        />
+    )
+}
+
+function CoreChannelPunchcardRepresentation (
+    { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
+): ReactElement {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+
+    useEffect(() => {
+        if (parts.length === 0) { return }
+
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            canvasCtxs[part] = getCanvasCtx()
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    useEffect(() => {
+        if (!vis) { return }
+        for (const part of parts) {
+            if (canvasCtxs[part]) {
+                vis.getChannelPunchcard(
+                    part,
+                    canvasCtxs[part],
+                    PART_WIDTH_M * mToPx * window.devicePixelRatio
+                )
             }
         }
     }, [parts, vis, mToPx, canvasCtxs])
 
-    const gapPx = `${gap}px`
     return (
-        <div ref={wrapRef} className={'part-rect-wrap'}>
-            { parts.map((id, i) => {
-                const refProp = id === part ? { ref: partRef } : {}
-                return <React.Fragment key={i}>
-                    <div
-                        {...refProp}
-                        onClick={() => setPart(id)}
-                        className={'part-punchcard'}
-                    >
-                        { canvasCtxs && canvasCtxs[id] && <CanvasRenderer
-                            canvas={canvasCtxs[id].canvas}
-                            width={`${PART_WIDTH_M * mToPx}px`}
-                            height={`${depths[id].length * mToPx}px`}
-                        /> }
-                    </div>
-                    <div
-                        className={'punch-spacer'}
-                        style={{ width: gapPx, height: gapPx, margin: gapPx }}
-                    ></div>
-                </React.Fragment>
-            }) }
-        </div>
+        <CoreCanvasRepresentation
+            part={part}
+            parts={parts}
+            canvasCtxs={canvasCtxs}
+            mToPx={mToPx}
+            gap={gap}
+            setCenter={setCenter}
+            setPart={setPart}
+        />
     )
 }
 

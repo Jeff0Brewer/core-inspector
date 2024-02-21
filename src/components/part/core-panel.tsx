@@ -128,7 +128,7 @@ function CoreScaleColumn (
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
                 setPart={setPart}
-                gap={gap * 2}
+                gap={gap * 3}
             />
         </> }
     </>
