@@ -362,7 +362,7 @@
     background-color: #fff;
 }
 
-.part-rect-wrap {
+.part-column {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -371,7 +371,7 @@
     height: fit-content;
 }
 
-.part-rect, .part-punchcard {
+.part-rect, .part-canvas {
     position: relative;
     flex-shrink: 0;
     flex-grow: 0;
@@ -390,7 +390,7 @@
     transform: scaleX(200%);
 }
 
-.part-punchcard:after {
+.part-canvas:after {
     content: "";
     display: block;
     position: absolute;
@@ -402,6 +402,19 @@
     transition: background-color var(--transition-param);
 }
 
-.part-punchcard:hover:after {
+.part-canvas:hover:after {
     background-color: rgba(235, 255, 200, 0.1)
+}
+
+.part-spacer {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: #fff;
+    min-width: 4px;
+    min-height: 4px;
+    min-margin: 4px;
+    width: var(--size, 0);
+    height: var(--size, 0);
+    margin: var(--size, 0);
 }

@@ -9,7 +9,13 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
-import CorePanel, { CoreLineRepresentation, CoreRectRepresentation, CorePunchcardRepresentation } from '../../components/part/core-panel'
+import CorePanel from '../../components/part/core-panel'
+import {
+    CoreLineRepresentation,
+    CoreRectRepresentation,
+    CorePunchcardRepresentation,
+    CoreChannelPunchcardRepresentation
+} from '../../components/part/core-representations'
 import '../../styles/single-part.css'
 
 type PartViewProps = {
@@ -87,7 +93,7 @@ function PartView (
                 CoreLineRepresentation,
                 CoreRectRepresentation,
                 CorePunchcardRepresentation,
-                CorePunchcardRepresentation
+                CoreChannelPunchcardRepresentation
             ]}
             setPart={setPart}
         />
