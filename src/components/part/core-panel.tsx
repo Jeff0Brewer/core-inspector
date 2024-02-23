@@ -179,7 +179,7 @@ function getZoomSvg (
     const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polygon fill="#727280" points={points} />
+            <polygon fill="#1d1d1e" points={points} />
         </svg>
     )
 }
