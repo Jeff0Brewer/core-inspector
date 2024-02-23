@@ -65,7 +65,7 @@ function CoreScaleColumn (
     // get next column's depth range
     useEffect(() => {
         const depthRange = bottomDepth - topDepth
-        const nextDepthRange = Math.pow(depthRange, 0.4)
+        const nextDepthRange = Math.pow(depthRange, 0.45)
 
         const center = clamp(
             depths[part].topDepth + 0.5 * depths[part].length,

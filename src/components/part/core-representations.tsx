@@ -96,11 +96,21 @@ type CoreCanvasRepresentationProps = {
     gap: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
+    widthScale?: number,
+    canvasSpacer?: ReactElement,
+    customRender?: (canvas: ReactElement) => ReactElement
 }
 
-function CoreCanvasRepresentation (
-    { part, parts, canvasCtxs, mToPx, gap, setCenter, setPart }: CoreCanvasRepresentationProps
-): ReactElement {
+const DEFAULT_CANVAS_SPACER: ReactElement = (
+    <div className={'part-spacer'}></div>
+)
+
+const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
+
+function CoreCanvasRepresentation ({
+    part, parts, canvasCtxs, mToPx, gap, setCenter, setPart,
+    widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
+}: CoreCanvasRepresentationProps): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
@@ -124,7 +134,11 @@ function CoreCanvasRepresentation (
     })
 
     return <>
-        <div ref={wrapRef} className={'part-column'}>
+        <div
+            ref={wrapRef}
+            className={'part-column'}
+            style={{ '--gap-size': `${gap}px` } as React.CSSProperties}
+        >
             { parts.map((id, i) =>
                 <React.Fragment key={i}>
                     <div
@@ -133,16 +147,13 @@ function CoreCanvasRepresentation (
                         ref={id === part ? partRef : null}
                     >
                         { canvasCtxs[id] &&
-                            <CanvasRenderer
+                            customRender(<CanvasRenderer
                                 canvas={canvasCtxs[id].canvas}
-                                width={`${PART_WIDTH_M * mToPx}px`}
+                                width={`${PART_WIDTH_M * mToPx * widthScale}px`}
                                 height={`${depths[id].length * mToPx}px`}
-                            /> }
+                            />) }
                     </div>
-                    <div
-                        className={'part-spacer'}
-                        style={{ '--size': `${gap * 0.33333}px` } as React.CSSProperties}
-                    ></div>
+                    {canvasSpacer}
                 </React.Fragment>
             ) }
         </div>
@@ -194,6 +205,7 @@ function CorePunchcardRepresentation (
 function CoreChannelPunchcardRepresentation (
     { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
+    const WIDTH_SCALE = 2
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
 
     useEffect(() => {
@@ -213,7 +225,8 @@ function CoreChannelPunchcardRepresentation (
                 vis.getChannelPunchcard(
                     part,
                     canvasCtxs[part],
-                    PART_WIDTH_M * mToPx * window.devicePixelRatio
+                    PART_WIDTH_M * mToPx * window.devicePixelRatio,
+                    WIDTH_SCALE
                 )
             }
         }
@@ -228,6 +241,15 @@ function CoreChannelPunchcardRepresentation (
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
+            widthScale={WIDTH_SCALE}
+            canvasSpacer={
+                <div className={'channel-punch-spacer'}></div>
+            }
+            customRender={canvas => <>
+                <div className={'channel-punch-ticks'}></div>
+                {canvas}
+                <div className={'channel-punch-ticks'}></div>
+            </>}
         />
     )
 }
