@@ -17,7 +17,11 @@ type CoreRepresentationProps = {
     gap: number
 }
 
-type CoreRepresentation = (p: CoreRepresentationProps) => ReactElement
+type CoreRepresentation = {
+    element: (p: CoreRepresentationProps) => ReactElement,
+    fullScale?: boolean,
+    largeWidth?: boolean
+}
 
 function CoreLineRepresentation (
     { part, setCenter }: CoreRepresentationProps

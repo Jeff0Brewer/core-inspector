@@ -90,10 +90,10 @@ function PartView (
             part={part}
             parts={vis?.getParts() || []}
             representations={[
-                CoreLineRepresentation,
-                CoreRectRepresentation,
-                CorePunchcardRepresentation,
-                CoreChannelPunchcardRepresentation
+                { element: CoreLineRepresentation, fullScale: true },
+                { element: CoreRectRepresentation },
+                { element: CorePunchcardRepresentation },
+                { element: CoreChannelPunchcardRepresentation, largeWidth: true }
             ]}
             setPart={setPart}
         />

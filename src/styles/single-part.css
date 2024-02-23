@@ -332,6 +332,10 @@
     flex-shrink: 0;
 }
 
+.scale-column[data-large="true"] {
+    width: 60px;
+}
+
 .representation-wrap {
     position: relative;
     display: flex;
