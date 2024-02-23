@@ -47,21 +47,17 @@ function CoreRectRepresentation (
     const partRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const getCenter = (): void => {
-            const partDiv = partRef.current
-            const wrapDiv = wrapRef.current
-            if (!partDiv || !wrapDiv) { return }
+        const partDiv = partRef.current
+        const wrapDiv = wrapRef.current
+        if (!partDiv || !wrapDiv) { return }
 
-            const partRect = partDiv.getBoundingClientRect()
-            const wrapRect = wrapDiv.getBoundingClientRect()
+        const partRect = partDiv.getBoundingClientRect()
+        const wrapRect = wrapDiv.getBoundingClientRect()
 
-            const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
-            const wrapHeight = wrapRect.height
+        const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
+        const wrapHeight = wrapRect.height
 
-            setCenter(partCenter / wrapHeight)
-        }
-
-        getCenter()
+        setCenter(partCenter / wrapHeight)
     })
 
     return (
@@ -70,20 +66,19 @@ function CoreRectRepresentation (
             className={'part-column'}
             style={{ gap: `${gap}px` }}
         >
-            { parts.map((id, i) => {
-                const refProp = id === part ? { ref: partRef } : {}
-                return <div
-                    onClick={() => setPart(id)}
-                    {...refProp}
-                    key={i}
+            { parts.map((id, i) =>
+                <div
                     className={'part-rect'}
+                    ref={id === part ? partRef : null}
+                    onClick={() => setPart(id)}
                     style={{
                         width: `${PART_WIDTH_M * mToPx}px`,
                         height: `${depths[id].length * mToPx}px`
                     }}
+                    key={i}
                 >
                 </div>
-            }) }
+            ) }
         </div>
     )
 }
@@ -116,21 +111,17 @@ function CoreCanvasRepresentation ({
     const partRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        const getCenter = (): void => {
-            const partDiv = partRef.current
-            const wrapDiv = wrapRef.current
-            if (!partDiv || !wrapDiv) { return }
+        const partDiv = partRef.current
+        const wrapDiv = wrapRef.current
+        if (!partDiv || !wrapDiv) { return }
 
-            const partRect = partDiv.getBoundingClientRect()
-            const wrapRect = wrapDiv.getBoundingClientRect()
+        const partRect = partDiv.getBoundingClientRect()
+        const wrapRect = wrapDiv.getBoundingClientRect()
 
-            const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
-            const wrapHeight = wrapRect.height
+        const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
+        const wrapHeight = wrapRect.height
 
-            setCenter(partCenter / wrapHeight)
-        }
-
-        getCenter()
+        setCenter(partCenter / wrapHeight)
     })
 
     return <>
@@ -143,15 +134,16 @@ function CoreCanvasRepresentation ({
                 <React.Fragment key={i}>
                     <div
                         className={'part-canvas'}
-                        onClick={() => setPart(id)}
                         ref={id === part ? partRef : null}
+                        onClick={() => setPart(id)}
                     >
-                        { canvasCtxs[id] &&
-                            customRender(<CanvasRenderer
+                        { canvasCtxs[id] && customRender(
+                            <CanvasRenderer
                                 canvas={canvasCtxs[id].canvas}
                                 width={`${PART_WIDTH_M * mToPx * widthScale}px`}
                                 height={`${depths[id].length * mToPx}px`}
-                            />) }
+                            />
+                        ) }
                     </div>
                     {canvasSpacer}
                 </React.Fragment>
@@ -167,8 +159,6 @@ function CorePunchcardRepresentation (
     const blending = useBlendState()
 
     useEffect(() => {
-        if (parts.length === 0) { return }
-
         const canvasCtxs: StringMap<CanvasCtx> = {}
         for (const part of parts) {
             canvasCtxs[part] = getCanvasCtx()
@@ -178,14 +168,9 @@ function CorePunchcardRepresentation (
 
     useEffect(() => {
         if (!vis) { return }
-        for (const part of parts) {
-            if (canvasCtxs[part]) {
-                vis.getPunchcard(
-                    part,
-                    canvasCtxs[part],
-                    PART_WIDTH_M * mToPx * window.devicePixelRatio
-                )
-            }
+        const canvasWidth = PART_WIDTH_M * mToPx * window.devicePixelRatio
+        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
+            vis.getPunchcard(part, canvasCtx, canvasWidth)
         }
     }, [parts, vis, mToPx, canvasCtxs, blending])
 
@@ -205,12 +190,10 @@ function CorePunchcardRepresentation (
 function CoreChannelPunchcardRepresentation (
     { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
-    const WIDTH_SCALE = 2
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const WIDTH_SCALE = 2
 
     useEffect(() => {
-        if (parts.length === 0) { return }
-
         const canvasCtxs: StringMap<CanvasCtx> = {}
         for (const part of parts) {
             canvasCtxs[part] = getCanvasCtx()
@@ -220,15 +203,9 @@ function CoreChannelPunchcardRepresentation (
 
     useEffect(() => {
         if (!vis) { return }
-        for (const part of parts) {
-            if (canvasCtxs[part]) {
-                vis.getChannelPunchcard(
-                    part,
-                    canvasCtxs[part],
-                    PART_WIDTH_M * mToPx * window.devicePixelRatio,
-                    WIDTH_SCALE
-                )
-            }
+        const canvasWidth = PART_WIDTH_M * mToPx * window.devicePixelRatio
+        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
+            vis.getChannelPunchcard(part, canvasCtx, canvasWidth, WIDTH_SCALE)
         }
     }, [parts, vis, mToPx, canvasCtxs])
 
