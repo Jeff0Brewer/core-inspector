@@ -82,7 +82,7 @@ function CoreScaleColumn (
     const hasNext = representations.length > 1
 
     return <>
-        <div className={'scale-column'} ref={columnRef}t>
+        <div className={'scale-column'} ref={columnRef}>
             <div
                 className={'representation-wrap'}
                 style={
