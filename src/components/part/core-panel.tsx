@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { clamp } from '../../lib/util'
 import PartRenderer from '../../vis/part'
@@ -26,7 +26,7 @@ function CoreScaleColumn (
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
 
-    // get m / px scale of column
+    // get meter to pixel scale of column
     useEffect(() => {
         const getScale = (): void => {
             const column = columnRef.current
@@ -47,19 +47,16 @@ function CoreScaleColumn (
 
     // get visible parts within depth range
     useEffect(() => {
-        const visibleParts: Array<string> = []
+        setVisibleParts(
+            parts.filter(part => {
+                if (!depths[part]) { return false }
 
-        parts.forEach(part => {
-            if (!depths[part]) { return }
+                const partTopDepth = depths[part].topDepth
+                const partBottomDepth = partTopDepth + depths[part].length
 
-            const partTopDepth = depths[part].topDepth
-            const partBottomDepth = partTopDepth + depths[part].length
-            if (partBottomDepth > topDepth && partTopDepth < bottomDepth) {
-                visibleParts.push(part)
-            }
-        })
-
-        setVisibleParts(visibleParts)
+                return (partBottomDepth > topDepth && partTopDepth < bottomDepth)
+            })
+        )
     }, [parts, depths, topDepth, bottomDepth])
 
     // get next column's depth range
@@ -68,39 +65,40 @@ function CoreScaleColumn (
         const nextDepthRange = Math.pow(depthRange, 0.45)
 
         const center = clamp(
-            depths[part].topDepth + 0.5 * depths[part].length,
+            depths[part].topDepth + depths[part].length * 0.5,
             topDepth + nextDepthRange * 0.5,
             bottomDepth - nextDepthRange * 0.5
 
         )
-        setNextTopDepth(center - 0.5 * nextDepthRange)
-        setNextBottomDepth(center + 0.5 * nextDepthRange)
+        setNextTopDepth(center - nextDepthRange * 0.5)
+        setNextBottomDepth(center + nextDepthRange * 0.5)
     }, [part, depths, topDepth, bottomDepth])
 
-    const { element: Element, fullScale, largeWidth } = representations[0]
+    const {
+        element: RepresentationElement,
+        fullScale,
+        largeWidth
+    } = representations[0]
     const hasNext = representations.length > 1
+
+    const representationStyle: React.CSSProperties = {}
+    if (!fullScale) {
+        // center selected part if not viewing full core depth range
+        representationStyle.transform = `translateY(-${windowCenter * 100}%)`
+        representationStyle.top = '50%'
+    }
+
+    const windowStyle: React.CSSProperties = {
+        top: `${windowCenter * 100}%`,
+        height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
+    }
 
     return <>
         <div ref={columnRef} className={'scale-column'} data-large={largeWidth}>
-            <div
-                className={'representation-wrap'}
-                style={
-                    fullScale
-                        ? {}
-                        : {
-                            top: '50%',
-                            transform: `translateY(-${windowCenter * 100}%)`
-                        }
-                }
-            >
-                { hasNext && <div
-                    className={'next-window'}
-                    style={{
-                        top: `${windowCenter * 100}%`,
-                        height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
-                    }}
-                ></div> }
-                <Element
+            <div className={'representation-wrap'} style={representationStyle}>
+                { hasNext &&
+                    <div className={'next-window'} style={windowStyle}></div> }
+                <RepresentationElement
                     vis={vis}
                     part={part}
                     parts={visibleParts}
@@ -161,18 +159,16 @@ function CorePanel (
 }
 
 function getZoomSvg (
-    center: number,
+    windowCenter: number,
     depthRange: number,
     nextDepthRange: number
 ): ReactElement {
-    if (depthRange === 0) {
-        return <></>
-    }
+    if (depthRange === 0) { return <></> }
 
     const windowHeight = nextDepthRange / depthRange
+    const topPercent = (windowCenter - windowHeight * 0.5) * 100
+    const bottomPercent = (windowCenter + windowHeight * 0.5) * 100
 
-    const topPercent = (center - windowHeight * 0.5) * 100
-    const bottomPercent = (center + windowHeight * 0.5) * 100
     const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
