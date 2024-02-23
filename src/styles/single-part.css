@@ -324,7 +324,7 @@
 
 .scale-column {
     position: relative;
-    width: 40px;
+    width: 30px;
     height: 100%;
     background-color: #333;
     overflow: hidden;
@@ -350,7 +350,7 @@
 
 .zoom-lines {
     position: relative;
-    width: 30px;
+    width: 60px;
     height: 100%;
 }
 
