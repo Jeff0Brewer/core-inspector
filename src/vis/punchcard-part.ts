@@ -15,6 +15,7 @@ class PunchcardPartRenderer {
     setPointSize: (s: number) => void
     setBinWidth: (b: vec2) => void
     setOffsetX: (o: number) => void
+    setWidthScale: (s: number) => void
 
     constructor (gl: GlContext) {
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -26,9 +27,11 @@ class PunchcardPartRenderer {
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
         const binWidthLoc = this.program.getUniformLocation(gl, 'binWidth')
         const offsetXLoc = this.program.getUniformLocation(gl, 'offsetX')
+        const widthScaleLoc = this.program.getUniformLocation(gl, 'widthScale')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
         this.setBinWidth = (b: vec2): void => { gl.uniform2fv(binWidthLoc, b) }
         this.setOffsetX = (o: number): void => { gl.uniform1f(offsetXLoc, o) }
+        this.setWidthScale = (s: number): void => { gl.uniform1f(widthScaleLoc, s) }
     }
 
     getChannelPunchcard (
@@ -37,15 +40,16 @@ class PunchcardPartRenderer {
         part: string,
         minerals: MineralBlender,
         output: CanvasCtx,
-        width: number
+        width: number,
+        widthScale: number
     ): void {
         const tile = metadata.tiles[part]
         const tileAspect = (2 * tile.height / tile.width)
 
         const numColumns = minerals.sources.length
         const numRows = Math.round(numColumns * tileAspect)
-        width = Math.round(width)
         const height = Math.round(width * tileAspect)
+        width = Math.round(widthScale * width)
 
         const xInc = 2 / numColumns
         const yInc = 2 / numRows
@@ -79,6 +83,7 @@ class PunchcardPartRenderer {
         const binHeight = binWidth * texHeight / texWidth
         this.setBinWidth([binWidth, binHeight])
         this.setPointSize(0.8 * width / numColumns)
+        this.setWidthScale(widthScale)
 
         gl.viewport(0, 0, width, height)
         for (let i = 0; i < numColumns; i++) {
@@ -150,6 +155,7 @@ class PunchcardPartRenderer {
         this.setBinWidth([binWidth, binHeight])
         this.setPointSize(0.8 * width / pointPerRow)
         this.setOffsetX(0)
+        this.setWidthScale(1)
 
         gl.viewport(0, 0, width, height)
         gl.drawArrays(gl.POINTS, 0, numVertex)

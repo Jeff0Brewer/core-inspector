@@ -93,7 +93,12 @@ class PartRenderer {
         )
     }
 
-    getChannelPunchcard (part: string, output: CanvasCtx, width: number): void {
+    getChannelPunchcard (
+        part: string,
+        output: CanvasCtx,
+        width: number,
+        widthScale: number
+    ): void {
         if (this.dropped) { return }
         this.punchcardPart.getChannelPunchcard(
             this.gl,
@@ -101,7 +106,8 @@ class PartRenderer {
             part,
             this.coreMinerals,
             output,
-            width
+            width,
+            widthScale
         )
     }
 

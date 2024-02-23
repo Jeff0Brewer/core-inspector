@@ -12,12 +12,11 @@ type CoreScaleColumnProps = {
     bottomDepth: number,
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
-    fullScale?: boolean,
     gap?: number
 }
 
 function CoreScaleColumn (
-    { vis, part, parts, topDepth, bottomDepth, representations, setPart, fullScale = false, gap = 1 }: CoreScaleColumnProps
+    { vis, part, parts, topDepth, bottomDepth, representations, setPart, gap = 1 }: CoreScaleColumnProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -66,7 +65,7 @@ function CoreScaleColumn (
     // get next column's depth range
     useEffect(() => {
         const depthRange = bottomDepth - topDepth
-        const nextDepthRange = Math.pow(depthRange, 0.4)
+        const nextDepthRange = Math.pow(depthRange, 0.45)
 
         const center = clamp(
             depths[part].topDepth + 0.5 * depths[part].length,
@@ -78,11 +77,11 @@ function CoreScaleColumn (
         setNextBottomDepth(center + 0.5 * nextDepthRange)
     }, [part, depths, topDepth, bottomDepth])
 
-    const Representation = representations[0]
+    const { element: Element, fullScale, largeWidth } = representations[0]
     const hasNext = representations.length > 1
 
     return <>
-        <div className={'scale-column'} ref={columnRef}>
+        <div ref={columnRef} className={'scale-column'} data-large={largeWidth}>
             <div
                 className={'representation-wrap'}
                 style={
@@ -101,7 +100,7 @@ function CoreScaleColumn (
                         height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
                     }}
                 ></div> }
-                <Representation
+                <Element
                     vis={vis}
                     part={part}
                     parts={visibleParts}
@@ -139,8 +138,7 @@ type CorePanelProps = {
     part: string,
     parts: Array<string>,
     representations: Array<CoreRepresentation>,
-    setPart: (p: string | null) => void,
-    fullScale?: boolean
+    setPart: (p: string | null) => void
 }
 
 function CorePanel (
@@ -157,7 +155,6 @@ function CorePanel (
                 bottomDepth={bottomDepth}
                 representations={representations}
                 setPart={setPart}
-                fullScale={true}
             />
         </div>
     )
@@ -179,7 +176,7 @@ function getZoomSvg (
     const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polygon fill="#727280" points={points} />
+            <polygon fill="#1d1d1e" points={points} />
         </svg>
     )
 }
