@@ -274,9 +274,9 @@
 }
 
 /* ----- LABEL CONTENT ----- */
-.punch-label {
+.empty-label {
     grid-area: label-side;
-    grid-column: label-side / label-punch;
+    grid-column: label-side;
     background-color: #444;
 }
 
@@ -320,6 +320,31 @@
     position: relative;
     display: flex;
     height: 100%;
+}
+
+.scale-column-labels {
+    position: relative;
+    grid-area: label-punch;
+    background-color: #444;
+
+    display: flex;
+    gap: 60px;
+}
+
+.scale-column-label {
+    position: relative;
+    display: grid;
+    place-content: center;
+    width: 30px;
+    height: 100%;
+    white-space: nowrap;
+    font-size: 0.5rem;
+    font-weight: 600;
+    color: var(--color4);
+}
+
+.scale-column-label[data-large="true"] {
+    width: 60px;
 }
 
 .scale-column {

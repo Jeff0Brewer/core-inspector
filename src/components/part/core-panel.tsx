@@ -4,7 +4,37 @@ import { clamp } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 
-type CoreScaleColumnProps = {
+type ScaleColumnLabelProps = {
+    topDepth: number,
+    bottomDepth: number,
+    largeWidth: boolean
+}
+
+function formatDepthRange (topDepth: number, bottomDepth: number): string {
+    const topStr = Math.max(topDepth, 0).toFixed(1)
+    const bottomStr = bottomDepth.toFixed(1)
+    return `${topStr}-${bottomStr} m`
+}
+
+function ScaleColumnLabel (
+    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
+): ReactElement {
+    return (
+        <div className={'scale-column-label'} data-large={largeWidth}>
+            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+        </div>
+    )
+}
+
+type CorePanelProps = {
+    vis: PartRenderer | null,
+    part: string,
+    parts: Array<string>,
+    representations: Array<CoreRepresentation>,
+    setPart: (p: string | null) => void
+}
+
+type ScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
@@ -12,12 +42,15 @@ type CoreScaleColumnProps = {
     bottomDepth: number,
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
-    gap?: number
+    setLabel: (l: ScaleColumnLabelProps, i: number) => void,
+    gap?: number,
+    index?: number
 }
 
-function CoreScaleColumn (
-    { vis, part, parts, topDepth, bottomDepth, representations, setPart, gap = 1 }: CoreScaleColumnProps
-): ReactElement {
+function ScaleColumn ({
+    vis, part, parts, topDepth, bottomDepth, representations,
+    setPart, setLabel, gap = 1, index = 0
+}: ScaleColumnProps): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [mToPx, setMToPx] = useState<number>(0)
@@ -25,6 +58,13 @@ function CoreScaleColumn (
     const [nextTopDepth, setNextTopDepth] = useState<number>(0)
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
+
+    const {
+        element: RepresentationElement,
+        fullScale,
+        largeWidth = false
+    } = representations[0]
+    const hasNext = representations.length > 1
 
     // get meter to pixel scale of column
     useEffect(() => {
@@ -74,12 +114,14 @@ function CoreScaleColumn (
         setNextBottomDepth(center + nextDepthRange * 0.5)
     }, [part, depths, topDepth, bottomDepth])
 
-    const {
-        element: RepresentationElement,
-        fullScale,
-        largeWidth
-    } = representations[0]
-    const hasNext = representations.length > 1
+    useEffect(() => {
+        setLabel({ topDepth, bottomDepth, largeWidth }, index)
+
+        // disable exhaustive deps since setLabel is
+        // reinitialized every core panel render
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [index, topDepth, bottomDepth, largeWidth])
 
     const representationStyle: React.CSSProperties = {}
     if (!fullScale) {
@@ -117,7 +159,7 @@ function CoreScaleColumn (
                     nextBottomDepth - nextTopDepth
                 )}
             </div>
-            <CoreScaleColumn
+            <ScaleColumn
                 vis={vis}
                 part={part}
                 parts={visibleParts}
@@ -125,27 +167,33 @@ function CoreScaleColumn (
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
                 setPart={setPart}
+                setLabel={setLabel}
                 gap={gap * 3}
+                index={index + 1}
             />
         </> }
     </>
-}
-
-type CorePanelProps = {
-    vis: PartRenderer | null,
-    part: string,
-    parts: Array<string>,
-    representations: Array<CoreRepresentation>,
-    setPart: (p: string | null) => void
 }
 
 function CorePanel (
     { vis, part, parts, representations, setPart }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
-    return (
+    const [labels, setLabels] = useState<Array<ScaleColumnLabelProps>>([])
+
+    const setLabel = (props: ScaleColumnLabelProps, ind: number): void => {
+        labels[ind] = props
+        setLabels([...labels])
+    }
+
+    return <>
+        <div className={'scale-column-labels'}>
+            {labels.map((props, i) =>
+                <ScaleColumnLabel {...props} key={i} />
+            )}
+        </div>
         <div className={'core-panel'}>
-            <CoreScaleColumn
+            <ScaleColumn
                 vis={vis}
                 part={part}
                 parts={parts}
@@ -153,9 +201,10 @@ function CorePanel (
                 bottomDepth={bottomDepth}
                 representations={representations}
                 setPart={setPart}
+                setLabel={setLabel}
             />
         </div>
-    )
+    </>
 }
 
 function getZoomSvg (

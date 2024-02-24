@@ -77,7 +77,7 @@ function PartView (
         <button className={'close-button'} onClick={() => setPart(null)}>
             {ICONS.close}
         </button>
-        <div className={'punch-label'}></div>
+        <div className={'empty-label'}></div>
         <PartInfoHeader core={core} part={part} />
         <PartMineralChannels
             vis={vis}
