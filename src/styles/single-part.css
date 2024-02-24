@@ -339,9 +339,8 @@
     width: 30px;
     height: 100%;
     white-space: nowrap;
-    font-size: 0.5rem;
-    font-weight: 700;
-    text-transform: uppercase;
+    font-size: 0.55rem;
+    font-weight: 500;
     color: var(--color4);
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp } from '../../lib/util'
+import { clamp, roundTo } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 
@@ -11,8 +11,8 @@ type ScaleColumnLabelProps = {
 }
 
 function formatDepthRange (topDepth: number, bottomDepth: number): string {
-    const topStr = Math.max(topDepth, 0).toFixed(1)
-    const bottomStr = bottomDepth.toFixed(1)
+    const topStr = roundTo(Math.max(topDepth, 0), 1).toString()
+    const bottomStr = roundTo(bottomDepth, 1).toString()
     return `${topStr} - ${bottomStr}m`
 }
 
