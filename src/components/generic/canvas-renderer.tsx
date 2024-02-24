@@ -12,25 +12,22 @@ function CanvasRenderer (
 ): ReactElement {
     const wrapRef = useRef<HTMLDivElement>(null)
 
-    // Add HTML canvas element to react element via ref,
-    // allows access of canvas reference when not rendered to dom
+    // add HTML canvas element as child of react element via ref,
+    // affords accessing canvas reference when not rendered to dom
     useEffect(() => {
         const wrap = wrapRef.current
         if (!wrap) {
             throw new Error('No reference to canvas container')
         }
-        while (wrap.lastChild) {
-            wrap.removeChild(wrap.lastChild)
-        }
         wrap.appendChild(canvas)
 
-        // Cleanup when the component is unmounted
+        // cleanup canvas element when component is unmounted
         return () => {
             if (wrap.contains(canvas)) {
                 wrap.removeChild(canvas)
             }
         }
-    }, [canvas, width, height])
+    })
 
     return (
         <div
