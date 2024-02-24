@@ -333,14 +333,18 @@
 
 .scale-column-label {
     position: relative;
-    display: grid;
-    place-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: space-around;
+    padding-bottom: 5px;
     width: 30px;
     height: 100%;
     white-space: nowrap;
     font-size: 0.5rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color4);
+    text-transform: uppercase;
 }
 
 .scale-column-label[data-large="true"] {

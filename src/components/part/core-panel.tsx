@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp } from '../../lib/util'
+import { clamp, padZeros } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 
 type ScaleColumnLabelProps = {
     topDepth: number,
     bottomDepth: number,
+    numParts: number,
     largeWidth: boolean
 }
 
 function formatDepthRange (topDepth: number, bottomDepth: number): string {
     const topStr = Math.max(topDepth, 0).toFixed(1)
     const bottomStr = bottomDepth.toFixed(1)
-    return `${topStr}-${bottomStr} m`
+    return `${topStr} - ${bottomStr}m`
 }
 
 function ScaleColumnLabel (
-    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
+    { topDepth, bottomDepth, numParts, largeWidth }: ScaleColumnLabelProps
 ): ReactElement {
     return (
         <div className={'scale-column-label'} data-large={largeWidth}>
             <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+            <p>{numParts} pieces</p>
         </div>
     )
 }
@@ -115,13 +117,14 @@ function ScaleColumn ({
     }, [part, depths, topDepth, bottomDepth])
 
     useEffect(() => {
-        setLabel({ topDepth, bottomDepth, largeWidth }, index)
+        const numParts = visibleParts.length
+        setLabel({ topDepth, bottomDepth, numParts, largeWidth }, index)
 
         // disable exhaustive deps since setLabel is
         // reinitialized every core panel render
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [index, topDepth, bottomDepth, largeWidth])
+    }, [index, topDepth, bottomDepth, visibleParts, largeWidth])
 
     const representationStyle: React.CSSProperties = {}
     if (!fullScale) {
