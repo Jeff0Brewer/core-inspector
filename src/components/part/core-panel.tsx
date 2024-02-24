@@ -1,10 +1,40 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp } from '../../lib/util'
+import { clamp, roundTo } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 
-type CoreScaleColumnProps = {
+type ScaleColumnLabelProps = {
+    topDepth: number,
+    bottomDepth: number,
+    largeWidth: boolean
+}
+
+function formatDepthRange (topDepth: number, bottomDepth: number): string {
+    const topStr = roundTo(Math.max(topDepth, 0), 1).toString()
+    const bottomStr = roundTo(bottomDepth, 1).toString()
+    return `${topStr} - ${bottomStr}m`
+}
+
+function ScaleColumnLabel (
+    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
+): ReactElement {
+    return (
+        <div className={'scale-column-label'} data-large={largeWidth}>
+            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+        </div>
+    )
+}
+
+type CorePanelProps = {
+    vis: PartRenderer | null,
+    part: string,
+    parts: Array<string>,
+    representations: Array<CoreRepresentation>,
+    setPart: (p: string | null) => void
+}
+
+type ScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
@@ -12,12 +42,15 @@ type CoreScaleColumnProps = {
     bottomDepth: number,
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
-    gap?: number
+    setLabel: (l: ScaleColumnLabelProps, i: number) => void,
+    gap?: number,
+    index?: number
 }
 
-function CoreScaleColumn (
-    { vis, part, parts, topDepth, bottomDepth, representations, setPart, gap = 1 }: CoreScaleColumnProps
-): ReactElement {
+function ScaleColumn ({
+    vis, part, parts, topDepth, bottomDepth, representations,
+    setPart, setLabel, gap = 1, index = 0
+}: ScaleColumnProps): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [mToPx, setMToPx] = useState<number>(0)
@@ -26,7 +59,14 @@ function CoreScaleColumn (
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
 
-    // get m / px scale of column
+    const {
+        element: RepresentationElement,
+        fullScale,
+        largeWidth = false
+    } = representations[0]
+    const hasNext = representations.length > 1
+
+    // get meter to pixel scale of column
     useEffect(() => {
         const getScale = (): void => {
             const column = columnRef.current
@@ -47,19 +87,16 @@ function CoreScaleColumn (
 
     // get visible parts within depth range
     useEffect(() => {
-        const visibleParts: Array<string> = []
+        setVisibleParts(
+            parts.filter(part => {
+                if (!depths[part]) { return false }
 
-        parts.forEach(part => {
-            if (!depths[part]) { return }
+                const partTopDepth = depths[part].topDepth
+                const partBottomDepth = partTopDepth + depths[part].length
 
-            const partTopDepth = depths[part].topDepth
-            const partBottomDepth = partTopDepth + depths[part].length
-            if (partBottomDepth > topDepth && partTopDepth < bottomDepth) {
-                visibleParts.push(part)
-            }
-        })
-
-        setVisibleParts(visibleParts)
+                return (partBottomDepth > topDepth && partTopDepth < bottomDepth)
+            })
+        )
     }, [parts, depths, topDepth, bottomDepth])
 
     // get next column's depth range
@@ -68,39 +105,42 @@ function CoreScaleColumn (
         const nextDepthRange = Math.pow(depthRange, 0.45)
 
         const center = clamp(
-            depths[part].topDepth + 0.5 * depths[part].length,
+            depths[part].topDepth + depths[part].length * 0.5,
             topDepth + nextDepthRange * 0.5,
             bottomDepth - nextDepthRange * 0.5
 
         )
-        setNextTopDepth(center - 0.5 * nextDepthRange)
-        setNextBottomDepth(center + 0.5 * nextDepthRange)
+        setNextTopDepth(center - nextDepthRange * 0.5)
+        setNextBottomDepth(center + nextDepthRange * 0.5)
     }, [part, depths, topDepth, bottomDepth])
 
-    const { element: Element, fullScale, largeWidth } = representations[0]
-    const hasNext = representations.length > 1
+    useEffect(() => {
+        setLabel({ topDepth, bottomDepth, largeWidth }, index)
+
+        // disable exhaustive deps since setLabel is
+        // reinitialized every core panel render
+        //
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [index, topDepth, bottomDepth, largeWidth])
+
+    const representationStyle: React.CSSProperties = {}
+    if (!fullScale) {
+        // center selected part if not viewing full core depth range
+        representationStyle.transform = `translateY(-${windowCenter * 100}%)`
+        representationStyle.top = '50%'
+    }
+
+    const windowStyle: React.CSSProperties = {
+        top: `${windowCenter * 100}%`,
+        height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
+    }
 
     return <>
         <div ref={columnRef} className={'scale-column'} data-large={largeWidth}>
-            <div
-                className={'representation-wrap'}
-                style={
-                    fullScale
-                        ? {}
-                        : {
-                            top: '50%',
-                            transform: `translateY(-${windowCenter * 100}%)`
-                        }
-                }
-            >
-                { hasNext && <div
-                    className={'next-window'}
-                    style={{
-                        top: `${windowCenter * 100}%`,
-                        height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`
-                    }}
-                ></div> }
-                <Element
+            <div className={'representation-wrap'} style={representationStyle}>
+                { hasNext &&
+                    <div className={'next-window'} style={windowStyle}></div> }
+                <RepresentationElement
                     vis={vis}
                     part={part}
                     parts={visibleParts}
@@ -119,7 +159,7 @@ function CoreScaleColumn (
                     nextBottomDepth - nextTopDepth
                 )}
             </div>
-            <CoreScaleColumn
+            <ScaleColumn
                 vis={vis}
                 part={part}
                 parts={visibleParts}
@@ -127,27 +167,33 @@ function CoreScaleColumn (
                 bottomDepth={nextBottomDepth}
                 representations={representations.slice(1)}
                 setPart={setPart}
+                setLabel={setLabel}
                 gap={gap * 3}
+                index={index + 1}
             />
         </> }
     </>
-}
-
-type CorePanelProps = {
-    vis: PartRenderer | null,
-    part: string,
-    parts: Array<string>,
-    representations: Array<CoreRepresentation>,
-    setPart: (p: string | null) => void
 }
 
 function CorePanel (
     { vis, part, parts, representations, setPart }: CorePanelProps
 ): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
-    return (
+    const [labels, setLabels] = useState<Array<ScaleColumnLabelProps>>([])
+
+    const setLabel = (props: ScaleColumnLabelProps, ind: number): void => {
+        labels[ind] = props
+        setLabels([...labels])
+    }
+
+    return <>
+        <div className={'scale-column-labels'}>
+            {labels.map((props, i) =>
+                <ScaleColumnLabel {...props} key={i} />
+            )}
+        </div>
         <div className={'core-panel'}>
-            <CoreScaleColumn
+            <ScaleColumn
                 vis={vis}
                 part={part}
                 parts={parts}
@@ -155,24 +201,23 @@ function CorePanel (
                 bottomDepth={bottomDepth}
                 representations={representations}
                 setPart={setPart}
+                setLabel={setLabel}
             />
         </div>
-    )
+    </>
 }
 
 function getZoomSvg (
-    center: number,
+    windowCenter: number,
     depthRange: number,
     nextDepthRange: number
 ): ReactElement {
-    if (depthRange === 0) {
-        return <></>
-    }
+    if (depthRange === 0) { return <></> }
 
     const windowHeight = nextDepthRange / depthRange
+    const topPercent = (windowCenter - windowHeight * 0.5) * 100
+    const bottomPercent = (windowCenter + windowHeight * 0.5) * 100
 
-    const topPercent = (center - windowHeight * 0.5) * 100
-    const bottomPercent = (center + windowHeight * 0.5) * 100
     const points = `0,${topPercent} 0,${bottomPercent} 100,100 100,0`
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">

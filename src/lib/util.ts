@@ -9,6 +9,11 @@ function clamp (v: number, min: number, max: number): number {
     return Math.max(Math.min(v, max), min)
 }
 
+function roundTo (n: number, decimals: number): number {
+    const scale = Math.pow(10, decimals)
+    return Math.round(n * scale) / scale
+}
+
 function byteToHex (byte: number): string {
     const hex = byte.toString(16)
     return hex.length === 1 ? '0' + hex : hex
@@ -90,6 +95,7 @@ type StringMap<T> = { [key: string]: T }
 export {
     ease,
     clamp,
+    roundTo,
     bytesToHex,
     floatsToHex,
     formatFloat,

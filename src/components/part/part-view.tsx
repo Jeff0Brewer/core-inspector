@@ -77,14 +77,8 @@ function PartView (
         <button className={'close-button'} onClick={() => setPart(null)}>
             {ICONS.close}
         </button>
-        <div className={'punch-label'}></div>
+        <div className={'empty-label'}></div>
         <PartInfoHeader core={core} part={part} />
-        <PartMineralChannels
-            vis={vis}
-            part={part}
-            channels={channels}
-            visible={visible}
-        />
         <CorePanel
             vis={vis}
             part={part}
@@ -96,6 +90,12 @@ function PartView (
                 { element: CoreChannelPunchcardRepresentation, largeWidth: true }
             ]}
             setPart={setPart}
+        />
+        <PartMineralChannels
+            vis={vis}
+            part={part}
+            channels={channels}
+            visible={visible}
         />
         <PartMineralControls
             minerals={minerals}
