@@ -13,11 +13,13 @@ type PartMineralChannelsProps = {
     vis: PartRenderer | null,
     part: string,
     channels: StringMap<CanvasCtx>,
-    visible: StringMap<boolean>
+    visible: StringMap<boolean>,
+    setDepthTop: (d: number) => void,
+    setDepthBottom: (d: number) => void,
 }
 
 function PartMineralChannels (
-    { vis, part, channels, visible }: PartMineralChannelsProps
+    { vis, part, channels, visible, setDepthTop, setDepthBottom }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -27,8 +29,6 @@ function PartMineralChannels (
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
-    const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
-    const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const [abundances, setAbundances] = useState<StringMap<number>>({})
@@ -79,8 +79,8 @@ function PartMineralChannels (
             const scrollTop = content.scrollTop / content.scrollHeight
             const scrollBottom = (content.scrollTop + content.clientHeight) / content.scrollHeight
             const { topDepth, length } = depths[part]
-            setScrollDepthTop(scrollTop * length + topDepth)
-            setScrollDepthBottom(scrollBottom * length + topDepth)
+            setDepthTop(scrollTop * length + topDepth)
+            setDepthBottom(scrollBottom * length + topDepth)
         }
 
         scroll()
@@ -89,12 +89,7 @@ function PartMineralChannels (
         return () => {
             content.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, channelHeight])
-
-    // temp
-    useEffect(() => {
-        console.log(scrollDepthTop, scrollDepthBottom)
-    }, [scrollDepthTop, scrollDepthBottom])
+    }, [part, depths, channelHeight, setDepthTop, setDepthBottom])
 
     // get css values for layout from current zoom / spacing
     useEffect(() => {

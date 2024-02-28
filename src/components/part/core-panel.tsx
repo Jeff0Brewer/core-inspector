@@ -26,14 +26,6 @@ function ScaleColumnLabel (
     )
 }
 
-type CorePanelProps = {
-    vis: PartRenderer | null,
-    part: string,
-    parts: Array<string>,
-    representations: Array<CoreRepresentation>,
-    setPart: (p: string | null) => void
-}
-
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
@@ -43,13 +35,16 @@ type ScaleColumnProps = {
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
     setLabel: (l: ScaleColumnLabelProps, i: number) => void,
+    finalTopDepth: number,
+    finalBottomDepth: number,
     gap?: number,
     index?: number
 }
 
 function ScaleColumn ({
     vis, part, parts, topDepth, bottomDepth, representations,
-    setPart, setLabel, gap = 1, index = 0
+    setPart, setLabel, finalTopDepth, finalBottomDepth,
+    gap = 1, index = 0
 }: ScaleColumnProps): ReactElement {
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
@@ -101,6 +96,11 @@ function ScaleColumn ({
 
     // get next column's depth range
     useEffect(() => {
+        if (representations.length === 1) {
+            setNextTopDepth(finalTopDepth)
+            setNextBottomDepth(finalBottomDepth)
+            return
+        }
         const depthRange = bottomDepth - topDepth
         const nextDepthRange = Math.pow(depthRange, 0.45)
 
@@ -112,7 +112,7 @@ function ScaleColumn ({
         )
         setNextTopDepth(center - nextDepthRange * 0.5)
         setNextBottomDepth(center + nextDepthRange * 0.5)
-    }, [part, depths, topDepth, bottomDepth])
+    }, [part, depths, topDepth, bottomDepth, finalTopDepth, finalBottomDepth, representations])
 
     useEffect(() => {
         setLabel({ topDepth, bottomDepth, largeWidth }, index)
@@ -138,8 +138,7 @@ function ScaleColumn ({
     return <>
         <div ref={columnRef} className={'scale-column'} data-large={largeWidth}>
             <div className={'representation-wrap'} style={representationStyle}>
-                { hasNext &&
-                    <div className={'next-window'} style={windowStyle}></div> }
+                <div className={'next-window'} style={windowStyle}></div>
                 <RepresentationElement
                     vis={vis}
                     part={part}
@@ -151,14 +150,14 @@ function ScaleColumn ({
                 />
             </div>
         </div>
-        { hasNext && <>
-            <div className={'zoom-lines'}>
-                {getZoomSvg(
-                    fullScale ? windowCenter : 0.5,
-                    bottomDepth - topDepth,
-                    nextBottomDepth - nextTopDepth
-                )}
-            </div>
+        <div className={'zoom-lines'}>
+            {getZoomSvg(
+                fullScale ? windowCenter : 0.5,
+                bottomDepth - topDepth,
+                nextBottomDepth - nextTopDepth
+            )}
+        </div>
+        { hasNext &&
             <ScaleColumn
                 vis={vis}
                 part={part}
@@ -170,14 +169,26 @@ function ScaleColumn ({
                 setLabel={setLabel}
                 gap={gap * 3}
                 index={index + 1}
-            />
-        </> }
+                finalTopDepth={finalTopDepth}
+                finalBottomDepth={finalBottomDepth}
+            /> }
     </>
 }
 
-function CorePanel (
-    { vis, part, parts, representations, setPart }: CorePanelProps
-): ReactElement {
+type CorePanelProps = {
+    vis: PartRenderer | null,
+    part: string,
+    parts: Array<string>,
+    representations: Array<CoreRepresentation>,
+    setPart: (p: string | null) => void,
+    finalTopDepth?: number,
+    finalBottomDepth?: number
+}
+
+function CorePanel ({
+    vis, part, parts, representations, setPart,
+    finalTopDepth = 0, finalBottomDepth = 0
+}: CorePanelProps): ReactElement {
     const { topDepth, bottomDepth } = useCoreMetadata()
     const [labels, setLabels] = useState<Array<ScaleColumnLabelProps>>([])
 
@@ -202,6 +213,8 @@ function CorePanel (
                 representations={representations}
                 setPart={setPart}
                 setLabel={setLabel}
+                finalTopDepth={finalTopDepth}
+                finalBottomDepth={finalBottomDepth}
             />
         </div>
     </>
