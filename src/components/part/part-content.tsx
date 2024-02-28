@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, ReactElement } from 'react'
 import { StringMap } from '../../lib/util'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
@@ -23,10 +23,6 @@ function PartContent (
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-
-    useEffect(() => {
-        console.log(scrollDepthTop, scrollDepthBottom)
-    }, [scrollDepthTop, scrollDepthBottom])
 
     return <>
         <CorePanel

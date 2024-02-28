@@ -49,6 +49,7 @@ function ScaleColumn ({
     const { depths } = useCoreMetadata()
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [mToPx, setMToPx] = useState<number>(0)
+    const [partCenter, setPartCenter] = useState<number>(0)
     const [windowCenter, setWindowCenter] = useState<number>(0)
     const [nextTopDepth, setNextTopDepth] = useState<number>(0)
     const [nextBottomDepth, setNextBottomDepth] = useState<number>(0)
@@ -123,10 +124,18 @@ function ScaleColumn ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [index, topDepth, bottomDepth, largeWidth])
 
+    useEffect(() => {
+        if (representations.length > 1) {
+            setWindowCenter(fullScale ? partCenter : 0.5)
+        } else {
+            setWindowCenter(((finalBottomDepth + finalTopDepth) * 0.5 - topDepth) / (bottomDepth - topDepth))
+        }
+    }, [finalBottomDepth, finalTopDepth, representations, fullScale, topDepth, bottomDepth, partCenter])
+
     const representationStyle: React.CSSProperties = {}
     if (!fullScale) {
         // center selected part if not viewing full core depth range
-        representationStyle.transform = `translateY(-${windowCenter * 100}%)`
+        representationStyle.transform = `translateY(-${partCenter * 100}%)`
         representationStyle.top = '50%'
     }
 
@@ -137,25 +146,21 @@ function ScaleColumn ({
 
     return <>
         <div ref={columnRef} className={'scale-column'} data-large={largeWidth}>
+            <div className={'next-window'} style={windowStyle}></div>
             <div className={'representation-wrap'} style={representationStyle}>
-                <div className={'next-window'} style={windowStyle}></div>
                 <RepresentationElement
                     vis={vis}
                     part={part}
                     parts={visibleParts}
                     mToPx={mToPx}
-                    setCenter={setWindowCenter}
+                    setCenter={setPartCenter}
                     setPart={setPart}
                     gap={gap}
                 />
             </div>
         </div>
         <div className={'zoom-lines'}>
-            {getZoomSvg(
-                fullScale ? windowCenter : 0.5,
-                bottomDepth - topDepth,
-                nextBottomDepth - nextTopDepth
-            )}
+            {getZoomSvg(windowCenter, bottomDepth - topDepth, nextBottomDepth - nextTopDepth)}
         </div>
         { hasNext &&
             <ScaleColumn
