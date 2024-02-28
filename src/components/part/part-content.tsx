@@ -1,9 +1,10 @@
-import { useState, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { StringMap } from '../../lib/util'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
 import {
+    CoreRepresentation,
     CoreLineRepresentation,
     CoreRectRepresentation,
     CorePunchcardRepresentation,
@@ -23,18 +24,25 @@ function PartContent (
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
+    const [parts, setParts] = useState<Array<string>>([])
+    const [representations] = useState<Array<{element: CoreRepresentation, fullScale?: boolean, largeWidth?: boolean }>>([
+        { element: CoreLineRepresentation, fullScale: true },
+        { element: CoreRectRepresentation },
+        { element: CorePunchcardRepresentation },
+        { element: CoreChannelPunchcardRepresentation, largeWidth: true }
+    ])
+
+    useEffect(() => {
+        if (!vis) { return }
+        setParts(vis.getParts())
+    }, [vis])
 
     return <>
         <CorePanel
             vis={vis}
             part={part}
-            parts={vis?.getParts() || []}
-            representations={[
-                { element: CoreLineRepresentation, fullScale: true },
-                { element: CoreRectRepresentation },
-                { element: CorePunchcardRepresentation },
-                { element: CoreChannelPunchcardRepresentation, largeWidth: true }
-            ]}
+            parts={parts}
+            representations={representations}
             setPart={setPart}
             finalTopDepth={scrollDepthTop}
             finalBottomDepth={scrollDepthBottom}

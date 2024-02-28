@@ -29,28 +29,25 @@ function ScaleColumnLabel (
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
-    representation: CoreRepresentation,
+    Representation: CoreRepresentation,
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
     nextTopDepth: number,
     nextBottomDepth: number,
     gap: number,
-    setPart: (p: string | null) => void
+    setPart: (p: string | null) => void,
+    fullScale: boolean,
+    largeWidth: boolean
 }
 
 function ScaleColumn ({
-    vis, part, representation, parts, topDepth, bottomDepth,
+    Representation, fullScale, largeWidth, vis, part, parts, topDepth, bottomDepth,
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement {
     const [mToPx, setMToPx] = useState<number>(0)
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
-    const {
-        element: RepresentationElement,
-        fullScale,
-        largeWidth
-    } = representation
 
     // get meter to pixel scale of column
     useEffect(() => {
@@ -99,7 +96,7 @@ function ScaleColumn ({
                         top: '50%'
                     }}
             >
-                <RepresentationElement
+                <Representation
                     vis={vis}
                     part={part}
                     parts={parts}
@@ -116,11 +113,25 @@ function ScaleColumn ({
     </>
 }
 
+type CoreColumn = {
+    parts: Array<string>,
+    representation: CoreRepresentation,
+    topDepth: number,
+    bottomDepth: number,
+    gap: number,
+    fullScale: boolean,
+    largeWidth: boolean
+}
+
 type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    representations: Array<CoreRepresentation>,
+    representations: Array<{
+        element: CoreRepresentation,
+        fullScale?: boolean,
+        largeWidth?: boolean
+    }>,
     setPart: (p: string | null) => void,
     finalTopDepth?: number,
     finalBottomDepth?: number
@@ -131,73 +142,83 @@ function CorePanel ({
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement {
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
-    const [topDepths, setTopDepths] = useState<Array<number>>([])
-    const [bottomDepths, setBottomDepths] = useState<Array<number>>([])
-    const [gaps, setGaps] = useState<Array<number>>([])
-    const [visibleParts, setVisibleParts] = useState<Array<Array<string>>>([])
+    const [columns, setColumns] = useState<Array<CoreColumn>>([])
 
     useEffect(() => {
-        const topDepths = [minDepth]
-        const bottomDepths = [maxDepth]
-        const visibleParts = [parts]
-        const gaps = [1]
+        const columns: Array<CoreColumn> = [{
+            representation: representations[0].element,
+            fullScale: !!representations[0].fullScale,
+            largeWidth: !!representations[0].largeWidth,
+            parts,
+            topDepth: minDepth,
+            bottomDepth: maxDepth,
+            gap: 1
+        }]
 
         const partCenter = depths[part].topDepth + depths[part].length * 0.5
         for (let i = 1; i < representations.length; i++) {
-            const lastDepthRange = bottomDepths[i - 1] - topDepths[i - 1]
-            const depthRange = Math.pow(lastDepthRange, 0.45)
+            const {
+                topDepth: lastTop,
+                bottomDepth: lastBottom,
+                gap: lastGap
+            } = columns[i - 1]
+            const depthRange = Math.pow(lastBottom - lastTop, 0.45)
             const depthCenter = clamp(
                 partCenter,
-                topDepths[i - 1] + depthRange * 0.5,
-                bottomDepths[i - 1] - depthRange * 0.5
+                lastTop + depthRange * 0.5,
+                lastBottom - depthRange * 0.5
             )
             const topDepth = depthCenter - depthRange * 0.5
             const bottomDepth = depthCenter + depthRange * 0.5
-            topDepths.push(topDepth)
-            bottomDepths.push(bottomDepth)
-            visibleParts.push(
-                parts.filter(part => {
-                    if (!depths[part]) { return false }
+            const visibleParts = parts.filter(part => {
+                if (!depths[part]) { return false }
 
-                    const partTopDepth = depths[part].topDepth
-                    const partBottomDepth = partTopDepth + depths[part].length
+                const partTopDepth = depths[part].topDepth
+                const partBottomDepth = partTopDepth + depths[part].length
 
-                    return (partBottomDepth > topDepth && partTopDepth < bottomDepth)
-                })
-            )
-            gaps.push(gaps[i - 1] * 3)
+                return (partBottomDepth > topDepth && partTopDepth < bottomDepth)
+            })
+            const gap = 3 * lastGap
+
+            columns.push({
+                parts: visibleParts,
+                representation: representations[i].element,
+                fullScale: !!representations[i].fullScale,
+                largeWidth: !!representations[i].largeWidth,
+                topDepth,
+                bottomDepth,
+                gap
+            })
         }
-
-        setTopDepths(topDepths)
-        setBottomDepths(bottomDepths)
-        setVisibleParts(visibleParts)
-        setGaps(gaps)
+        setColumns(columns)
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
     return <>
         <div className={'scale-column-labels'}>
-            { representations.map((representation, i) =>
+            { columns.map((column, i) =>
                 <ScaleColumnLabel
-                    topDepth={topDepths[i] || 0}
-                    bottomDepth={bottomDepths[i] || 0}
-                    largeWidth={!!representation.largeWidth}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    largeWidth={column.largeWidth}
                     key={i}
                 />
             ) }
         </div>
         <div className={'core-panel'}>
-            { representations.map((representation, i) =>
+            { columns.map((column, i) =>
                 <ScaleColumn
                     vis={vis}
                     part={part}
-                    representation={representation}
-                    parts={visibleParts[i] || []}
-                    topDepth={topDepths[i] || 0}
-                    bottomDepth={bottomDepths[i] || 0}
-                    nextTopDepth={topDepths[i + 1] || finalTopDepth}
-                    nextBottomDepth={bottomDepths[i + 1] || finalBottomDepth}
-                    gap={gaps[i]}
+                    Representation={column.representation}
+                    parts={column.parts}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    nextTopDepth={columns[i + 1]?.topDepth || finalTopDepth}
+                    nextBottomDepth={columns[i + 1]?.bottomDepth || finalBottomDepth}
+                    gap={column.gap}
                     setPart={setPart}
+                    fullScale={column.fullScale}
+                    largeWidth={column.largeWidth}
                     key={i}
                 />
             ) }
