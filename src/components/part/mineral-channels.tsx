@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useBlendState } from '../../hooks/blend-context'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
@@ -26,6 +27,8 @@ function PartMineralChannels (
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
+    const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
+    const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const [abundances, setAbundances] = useState<StringMap<number>>({})
@@ -42,6 +45,8 @@ function PartMineralChannels (
         mode,
         monochrome
     } = useBlendState()
+
+    const { depths } = useCoreMetadata()
 
     // apply blending on change to params
     useEffect(() => {
@@ -67,14 +72,29 @@ function PartMineralChannels (
         }
 
         const scroll = (): void => {
+            // align labels with channel canvases
             labels.style.left = `${-content.scrollLeft}px`
+
+            // get top / bottom view depth for final core panel window
+            const scrollTop = content.scrollTop / content.scrollHeight
+            const scrollBottom = (content.scrollTop + content.clientHeight) / content.scrollHeight
+            const { topDepth, length } = depths[part]
+            setScrollDepthTop(scrollTop * length + topDepth)
+            setScrollDepthBottom(scrollBottom * length + topDepth)
         }
+
+        scroll()
 
         content.addEventListener('scroll', scroll)
         return () => {
             content.removeEventListener('scroll', scroll)
         }
-    }, [])
+    }, [part, depths, channelHeight])
+
+    // temp
+    useEffect(() => {
+        console.log(scrollDepthTop, scrollDepthBottom)
+    }, [scrollDepthTop, scrollDepthBottom])
 
     // get css values for layout from current zoom / spacing
     useEffect(() => {
