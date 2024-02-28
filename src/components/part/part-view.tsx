@@ -7,15 +7,8 @@ import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
-import PartMineralChannels from '../../components/part/mineral-channels'
 import PartMineralControls from '../../components/part/mineral-controls'
-import CorePanel from '../../components/part/core-panel'
-import {
-    CoreLineRepresentation,
-    CoreRectRepresentation,
-    CorePunchcardRepresentation,
-    CoreChannelPunchcardRepresentation
-} from '../../components/part/core-representations'
+import PartContent from '../../components/part/part-content'
 import '../../styles/single-part.css'
 
 type PartViewProps = {
@@ -79,21 +72,10 @@ function PartView (
         </button>
         <div className={'empty-label'}></div>
         <PartInfoHeader core={core} part={part} />
-        <CorePanel
+        <PartContent
             vis={vis}
             part={part}
-            parts={vis?.getParts() || []}
-            representations={[
-                { element: CoreLineRepresentation, fullScale: true },
-                { element: CoreRectRepresentation },
-                { element: CorePunchcardRepresentation },
-                { element: CoreChannelPunchcardRepresentation, largeWidth: true }
-            ]}
             setPart={setPart}
-        />
-        <PartMineralChannels
-            vis={vis}
-            part={part}
             channels={channels}
             visible={visible}
         />
