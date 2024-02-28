@@ -25,7 +25,7 @@ function PartContent (
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [parts, setParts] = useState<Array<string>>([])
-    const [representations] = useState<Array<{element: CoreRepresentation, fullScale?: boolean, largeWidth?: boolean }>>([
+    const [representations] = useState<Array<CoreRepresentation>>([
         { element: CoreLineRepresentation, fullScale: true },
         { element: CoreRectRepresentation },
         { element: CorePunchcardRepresentation },
