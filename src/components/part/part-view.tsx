@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useBlendState } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
@@ -29,6 +29,33 @@ function PartView (
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
+
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    // apply blending on change to params or current channels.
+    // requires layout effect to ensure blending is applied
+    // before used in child elements
+    useLayoutEffect(() => {
+        if (!vis) { return }
+        const params = {
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        }
+        vis.setBlending(params)
+    }, [channels, vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
@@ -72,31 +99,6 @@ function PartView (
 
         getChannels()
     }, [vis, core, part, minerals])
-
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
-    // apply blending on change to params or current channels
-    useEffect(() => {
-        if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        vis.setBlending(params)
-    }, [channels, vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     return <>
         <button className={'close-button'} onClick={() => setPart(null)}>
