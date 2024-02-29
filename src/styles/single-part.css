@@ -174,11 +174,11 @@
 }
 
 .mineral-channels .channel-wrap:first-of-type {
-    padding-left: 50px;
+    padding-left: 30px;
 }
 
 .mineral-channels .channel-wrap:last-of-type {
-    padding-right: 50px;
+    padding-right: 30px;
 }
 
 .channel-wrap {
@@ -293,7 +293,7 @@
     position: relative;
     display: flex;
     height: 100%;
-    padding-left: 50px;
+    padding-left: 30px;
 }
 
 .channel-label {
