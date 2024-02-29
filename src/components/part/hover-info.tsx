@@ -23,7 +23,7 @@ function PartHoverInfo (
                 <div className={'abundance-bar'} key={i}>
                     <div
                         className={'abundance'}
-                        style={{ height: `${(abundance / 255) * 100}%` }}
+                        style={{ height: `${(abundance / 255) * 80}%` }}
                     ></div>
                     <p>{mineral.substring(0, 2)}</p>
                 </div>
