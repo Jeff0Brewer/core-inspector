@@ -107,7 +107,7 @@ function getAbundanceFilepaths (
     const coreId = getCoreId(core)
     const partId = getPartId(part)
     const fullId = `${coreId}_${partId}`
-    const extension = 'factor_1to001.abundance.local.png'
+    const extension = 'factor_1to001.abundance.global.png'
 
     const paths: StringMap<string> = {}
 
