@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
-import { useBlendState } from '../../hooks/blend-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { StringMap } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
@@ -36,32 +35,7 @@ function PartMineralChannels (
     const contentRef = useRef<HTMLDivElement>(null)
     const labelsRef = useRef<HTMLDivElement>(null)
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
     const { depths } = useCoreMetadata()
-
-    // apply blending on change to params
-    useEffect(() => {
-        if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        vis.setBlending(params)
-    }, [vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
 
     // add event listener to coordinate label / content scroll
     useEffect(() => {
@@ -94,25 +68,25 @@ function PartMineralChannels (
     // get css values for layout from current zoom / spacing
     useEffect(() => {
         if (!vis) { return }
-        const { width, height } = vis.canvas
-        if (!width || !height) { return }
 
         const channelWidth = zoom * 250 + 50
-        const channelHeight = channelWidth * height / width
         const channelGap = channelWidth * spacing
-
         setViewWidth(channelWidth)
-        setViewHeight(channelHeight)
         setViewGap(channelGap)
 
-        setChannelHeight(channelHeight)
-    }, [zoom, spacing, vis, setChannelHeight])
+        const { width, height } = vis.canvas
+        if (width) {
+            const channelHeight = channelWidth * height / width
+            setViewHeight(channelHeight)
+            setChannelHeight(channelHeight)
+        }
+    }, [channels, zoom, spacing, vis, setChannelHeight])
 
     useEffect(() => {
         if (!vis) { return }
         setImgWidth(vis.canvas.width)
         setImgHeight(vis.canvas.height)
-    }, [vis])
+    }, [vis, channels])
 
     useEffect(() => {
         if (!mousePos) { return }
@@ -154,10 +128,7 @@ function PartMineralChannels (
         </div>
         <div className={'mineral-channels-wrap'} ref={contentRef}>
             <LoadIcon loading={!vis} showDelayMs={0} />
-            <PartHoverInfo
-                abundances={abundances}
-                visible={!!mousePos}
-            />
+            <PartHoverInfo abundances={abundances} visible={!!mousePos} />
             <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
                 { vis &&
                     <MineralCanvas

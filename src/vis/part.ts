@@ -20,7 +20,7 @@ class PartRenderer {
     program: GlProgram
     buffer: GlBuffer
     numVertex: number
-    partMinerals: MineralBlender
+    partMinerals: MineralBlender | null
     coreMinerals: MineralBlender
     punchcardPart: PunchcardPartRenderer
     tileMetadata: TileTextureMetadata
@@ -28,15 +28,14 @@ class PartRenderer {
 
     constructor (
         minerals: Array<string>,
-        partMinerals: Array<HTMLImageElement>,
         coreMinerals: Array<HTMLImageElement>,
         metadata: TileTextureMetadata
     ) {
         this.tileMetadata = metadata
 
         this.canvas = document.createElement('canvas')
-        this.canvas.width = partMinerals[0].width
-        this.canvas.height = partMinerals[0].height
+        this.canvas.width = 0
+        this.canvas.height = 0
 
         this.gl = initGl(this.canvas)
         this.gl.enable(this.gl.BLEND)
@@ -57,12 +56,21 @@ class PartRenderer {
         this.buffer.addAttribute(this.gl, this.program, 'position', POS_FPV, STRIDE, 0)
         this.buffer.addAttribute(this.gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
 
-        this.partMinerals = new MineralBlender(this.gl, partMinerals, minerals)
         this.coreMinerals = new MineralBlender(this.gl, coreMinerals, minerals)
+        this.partMinerals = null
 
         this.punchcardPart = new PunchcardPartRenderer(this.gl)
 
         this.dropped = false
+    }
+
+    setPart (minerals: Array<string>, maps: Array<HTMLImageElement>): void {
+        this.partMinerals?.drop(this.gl)
+
+        this.partMinerals = new MineralBlender(this.gl, maps, minerals)
+
+        this.canvas.width = maps[0].width
+        this.canvas.height = maps[0].height
     }
 
     setBlending (params: BlendParams): void {
@@ -70,8 +78,8 @@ class PartRenderer {
 
         this.coreMinerals.update(this.gl, params)
 
-        this.partMinerals.update(this.gl, params)
-        this.partMinerals.bindTexture(this.gl)
+        this.partMinerals?.update(this.gl, params)
+        this.partMinerals?.bindTexture(this.gl)
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null)
         this.program.bind(this.gl)
@@ -131,7 +139,7 @@ class PartRenderer {
     }
 
     drop (): void {
-        this.partMinerals.drop(this.gl)
+        this.partMinerals?.drop(this.gl)
         this.coreMinerals.drop(this.gl)
         this.dropped = true
     }
