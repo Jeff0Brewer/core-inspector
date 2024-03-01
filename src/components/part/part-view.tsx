@@ -1,5 +1,6 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
+import { useBlendState } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { get2dContext, padZeros, StringMap } from '../../lib/util'
@@ -29,32 +30,65 @@ function PartView (
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    // apply blending on change to params or current channels.
+    // requires layout effect to ensure blending is applied
+    // before used in child elements
+    useLayoutEffect(() => {
+        if (!vis) { return }
+        const params = {
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        }
+        vis.setBlending(params)
+    }, [channels, vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+
     useEffect(() => {
         const visible: StringMap<boolean> = {}
         minerals.forEach(mineral => { visible[mineral] = true })
         setVisible(visible)
 
-        const getChannels = async (): Promise<void> => {
-            const partPaths = getAbundanceFilepaths(core, part, minerals)
+        const initVis = async (): Promise<void> => {
             const corePaths: StringMap<string> = {}
             minerals.forEach((mineral, i) => {
                 corePaths[mineral] = `./data/${core}/downscaled/${i}.png`
             })
 
-            const [partMaps, coreMaps, tileMetadata] = await Promise.all([
-                Promise.all(minerals.map(mineral => loadImageAsync(partPaths[mineral]))),
+            const [coreMaps, tileMetadata] = await Promise.all([
                 Promise.all(minerals.map(mineral => loadImageAsync(corePaths[mineral]))),
                 fetch(`./data/${core}/tile-metadata.json`).then(res => res.json())
             ])
 
-            setVis(
-                new PartRenderer(
-                    minerals,
-                    partMaps,
-                    coreMaps,
-                    tileMetadata
-                )
+            setVis(new PartRenderer(minerals, coreMaps, tileMetadata))
+        }
+
+        initVis()
+    }, [core, minerals])
+
+    useEffect(() => {
+        if (!vis) { return }
+        const getChannels = async (): Promise<void> => {
+            const partPaths = getAbundanceFilepaths(core, part, minerals)
+
+            const partMaps = await Promise.all(
+                minerals.map(mineral => loadImageAsync(partPaths[mineral]))
             )
+
+            vis.setPart(minerals, partMaps)
 
             const channels: StringMap<CanvasCtx> = {}
             minerals.forEach((mineral, i) => {
@@ -64,7 +98,7 @@ function PartView (
         }
 
         getChannels()
-    }, [core, part, minerals])
+    }, [vis, core, part, minerals])
 
     return <>
         <button className={'close-button'} onClick={() => setPart(null)}>

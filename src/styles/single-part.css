@@ -174,11 +174,11 @@
 }
 
 .mineral-channels .channel-wrap:first-of-type {
-    padding-left: 50px;
+    padding-left: 30px;
 }
 
 .mineral-channels .channel-wrap:last-of-type {
-    padding-right: 50px;
+    padding-right: 30px;
 }
 
 .channel-wrap {
@@ -187,7 +187,7 @@
 }
 
 .channel-wrap:before, .channel-wrap:after {
-    opacity: 0.3;
+    opacity: 0.2;
     transition: opacity var(--transition-param);
 }
 
@@ -293,7 +293,7 @@
     position: relative;
     display: flex;
     height: 100%;
-    padding-left: 50px;
+    padding-left: 30px;
 }
 
 .channel-label {
@@ -363,12 +363,11 @@
 }
 
 .representation-wrap {
-    position: relative;
+    position: absolute;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    min-height: 100%;
 }
 
 .next-window {
@@ -387,7 +386,7 @@
     position: absolute;
     margin: 0 auto;
     width: 1px;
-    height: 100%;
+    height: 100vh;
     background-color: #fff;
 }
 
@@ -459,7 +458,7 @@
     flex-grow: 0;
     flex-shrink: 0;
     min-margin: 4px;
-    margin: calc(var(--gap-size, 0) * 0.5 - 5px);
+    margin: calc(var(--gap-size, 0) * 0.5);
 
 }
 
@@ -468,8 +467,24 @@
     flex-grow: 0;
     flex-shrink: 0;
     width: 100%;
+    height: 0;
+}
+
+.channel-punch-ticks[data-side="top"] {
+    bottom: 5px;
+}
+
+.channel-punch-ticks[data-side="bottom"] {
+    top: 5px;
+}
+.channel-punch-ticks:after {
+    content: "";
+    display: block;
+    position: relative;
+    z-index: 10;
+    transform: translateY(-50%);
     height: 5px;
-    margin: 2px 0;
+    width: 100%;
     background-size: 11.111% 100%;
     background-position: 5.555% 0;
     background-image: linear-gradient(to right, #fff 1px, transparent 1px);

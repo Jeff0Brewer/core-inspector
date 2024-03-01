@@ -82,8 +82,8 @@ class PunchcardPartRenderer {
         const binWidth = tile.width
         const binHeight = binWidth * texHeight / texWidth
         this.setBinWidth([binWidth, binHeight])
-        this.setPointSize(0.8 * width / numColumns)
-        this.setWidthScale(widthScale)
+        this.setPointSize(0.8 * width / (widthScale * numColumns))
+        this.setWidthScale(1 / widthScale)
 
         gl.viewport(0, 0, width, height)
         for (let i = 0; i < numColumns; i++) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { clamp, roundTo } from '../../lib/util'
 import PartRenderer from '../../vis/part'
@@ -59,7 +59,7 @@ function CorePanel ({
                 const partTopDepth = depths[part].topDepth
                 const partBottomDepth = partTopDepth + depths[part].length
 
-                return (partBottomDepth > topDepth && partTopDepth < bottomDepth)
+                return partBottomDepth > topDepth && partTopDepth < bottomDepth
             })
             const gap = 3 * lastGap
 
@@ -86,21 +86,24 @@ function CorePanel ({
             ) }
         </div>
         <div className={'core-panel'}>
-            { columns.map((column, i) =>
-                <ScaleColumn
+            { columns.map((column, i) => {
+                const isLast = (i === columns.length - 1)
+                const nextTop = isLast ? finalTopDepth : columns[i + 1].topDepth
+                const nextBottom = isLast ? finalBottomDepth : columns[i + 1].bottomDepth
+                return <ScaleColumn
                     vis={vis}
                     part={part}
                     representation={column.representation}
                     parts={column.parts}
                     topDepth={column.topDepth}
                     bottomDepth={column.bottomDepth}
-                    nextTopDepth={columns[i + 1]?.topDepth || finalTopDepth}
-                    nextBottomDepth={columns[i + 1]?.bottomDepth || finalBottomDepth}
+                    nextTopDepth={nextTop}
+                    nextBottomDepth={nextBottom}
                     gap={column.gap}
                     setPart={setPart}
                     key={i}
                 />
-            ) }
+            }) }
         </div>
     </>
 }
@@ -125,6 +128,7 @@ function ScaleColumn ({
     const [mToPx, setMToPx] = useState<number>(0)
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
+    const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const {
         element: RepresentationElement,
         fullScale = false,
@@ -138,7 +142,7 @@ function ScaleColumn ({
             if (!column) { return }
 
             const heightM = bottomDepth - topDepth
-            const heightPx = column.getBoundingClientRect().height
+            const heightPx = column.clientHeight
             setMToPx(heightPx / heightM)
         }
 
@@ -148,7 +152,17 @@ function ScaleColumn ({
         return () => {
             window.removeEventListener('resize', getScale)
         }
-    }, [topDepth, bottomDepth])
+    }, [topDepth, bottomDepth, parts, gap])
+
+    const wrapStyle: React.CSSProperties = {}
+    if (topDepth === minDepth) {
+        wrapStyle.top = '0'
+    } else if (bottomDepth === maxDepth) {
+        wrapStyle.bottom = '0'
+    } else if (!fullScale) {
+        wrapStyle.transform = `translateY(-${partCenter * 100}%)`
+        wrapStyle.top = '50%'
+    }
 
     const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
@@ -162,15 +176,7 @@ function ScaleColumn ({
                     bottom: `${(1 - windowBottom) * 100}%`
                 }}
             ></div>
-            <div
-                className={'representation-wrap'}
-                style={fullScale
-                    ? {}
-                    : {
-                        transform: `translateY(-${partCenter * 100}%)`,
-                        top: '50%'
-                    }}
-            >
+            <div className={'representation-wrap'} style={wrapStyle}>
                 <RepresentationElement
                     vis={vis}
                     part={part}
