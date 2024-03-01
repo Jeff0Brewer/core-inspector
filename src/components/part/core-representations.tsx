@@ -223,9 +223,9 @@ function CoreChannelPunchcardRepresentation (
                 <div className={'channel-punch-spacer'}></div>
             }
             customRender={canvas => <>
-                <div className={'channel-punch-ticks'}></div>
+                <div className={'channel-punch-ticks'} data-side={'top'}></div>
                 {canvas}
-                <div className={'channel-punch-ticks'}></div>
+                <div className={'channel-punch-ticks'} data-side={'bottom'}></div>
             </>}
         />
     )

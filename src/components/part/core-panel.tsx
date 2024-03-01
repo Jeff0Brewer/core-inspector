@@ -142,7 +142,7 @@ function ScaleColumn ({
             if (!column) { return }
 
             const heightM = bottomDepth - topDepth
-            const heightPx = column.getBoundingClientRect().height
+            const heightPx = column.clientHeight
             setMToPx(heightPx / heightM)
         }
 
@@ -152,7 +152,7 @@ function ScaleColumn ({
         return () => {
             window.removeEventListener('resize', getScale)
         }
-    }, [topDepth, bottomDepth])
+    }, [topDepth, bottomDepth, parts, gap])
 
     const wrapStyle: React.CSSProperties = {}
     if (topDepth === minDepth) {
