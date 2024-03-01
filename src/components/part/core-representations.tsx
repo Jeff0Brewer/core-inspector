@@ -145,7 +145,7 @@ function CoreCanvasRepresentation ({
                             />
                         ) }
                     </div>
-                    {canvasSpacer}
+                    {i !== parts.length - 1 && canvasSpacer}
                 </React.Fragment>
             ) }
         </div>
