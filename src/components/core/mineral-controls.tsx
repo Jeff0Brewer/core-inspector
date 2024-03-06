@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
@@ -29,7 +29,7 @@ function CoreMineralControls (
     } = useBlendState()
 
     // apply blending on change to params
-    useEffect(() => {
+    useLayoutEffect(() => {
         vis?.setBlending({
             magnitudes,
             visibilities,
