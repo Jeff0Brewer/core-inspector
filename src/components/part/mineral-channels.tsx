@@ -7,6 +7,7 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
+import MineralWorker from '../../workers/mineral-read?worker'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
@@ -36,6 +37,31 @@ function PartMineralChannels (
     const labelsRef = useRef<HTMLDivElement>(null)
 
     const { depths } = useCoreMetadata()
+
+    const [readWorker, setReadWorker] = useState<Worker | null>(null)
+
+    useEffect(() => {
+        const readWorker = new MineralWorker()
+        readWorker.addEventListener('message', e => {
+            setAbundances(e.data.abundances)
+        })
+        setReadWorker(readWorker)
+    }, [])
+
+    useEffect(() => {
+        if (!vis) { return }
+        setImgWidth(vis.canvas.width)
+        setImgHeight(vis.canvas.height)
+    }, [vis, channels])
+
+    useEffect(() => {
+        if (!readWorker || !imgWidth || !imgHeight) { return }
+        const imgData: StringMap<ImageData> = {}
+        Object.entries(channels).forEach(([mineral, canvasCtx]) => {
+            imgData[mineral] = canvasCtx.ctx.getImageData(0, 0, imgWidth, imgHeight)
+        })
+        readWorker.postMessage({ messageType: 'imgData', imgData, imgWidth })
+    }, [readWorker, channels, imgWidth, imgHeight])
 
     // add event listener to coordinate label / content scroll
     useEffect(() => {
@@ -83,22 +109,12 @@ function PartMineralChannels (
     }, [channels, zoom, spacing, vis, setChannelHeight])
 
     useEffect(() => {
-        if (!vis) { return }
-        setImgWidth(vis.canvas.width)
-        setImgHeight(vis.canvas.height)
-    }, [vis, channels])
-
-    useEffect(() => {
-        if (!mousePos) { return }
+        if (!mousePos || !readWorker) { return }
         const x = mousePos[0] / viewWidth * imgWidth
         const y = mousePos[1] / viewHeight * imgHeight
 
-        const abundances: StringMap<number> = {}
-        Object.entries(channels).forEach(([mineral, channel]) => {
-            abundances[mineral] = channel.ctx.getImageData(x, y, 1, 1).data[0]
-        })
-        setAbundances(abundances)
-    }, [mousePos, channels, viewWidth, viewHeight, imgWidth, imgHeight])
+        readWorker.postMessage({ messageType: 'mousePosition', x, y })
+    }, [readWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
 
     const width = `${viewWidth}px`
     const height = `${viewHeight}px`
