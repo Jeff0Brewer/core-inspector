@@ -1,4 +1,4 @@
-type StringMap<T> = { [id: string]: T }
+import { StringMap } from '../lib/util'
 
 let imgData: StringMap<ImageData> = {}
 let imgWidth: number = 0
@@ -6,10 +6,7 @@ let imgWidth: number = 0
 onmessage = ({ data }): void => {
     if (data.type === 'imgData') {
         imgData = data.imgData
-        const channels = Object.values(imgData)
-        if (channels.length !== 0) {
-            imgWidth = channels[0].width
-        }
+        imgWidth = data.imgWidth
     } else if (data.type === 'mousePosition') {
         const { x, y } = data
         const rowIndex = Math.round(x) * 4

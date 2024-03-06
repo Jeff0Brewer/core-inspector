@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { StringMap } from '../../lib/util'
+import { StringMap, getImageData } from '../../lib/util'
 import LoadIcon from '../../components/generic/load-icon'
-import PartRenderer, { CanvasCtx } from '../../vis/part'
+import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
@@ -12,7 +12,7 @@ import MineralWorker from '../../workers/mineral-read?worker'
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
     part: string,
-    channels: StringMap<CanvasCtx>,
+    channels: StringMap<HTMLImageElement>,
     visible: StringMap<boolean>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
@@ -42,10 +42,14 @@ function PartMineralChannels (
 
     useEffect(() => {
         const readWorker = new MineralWorker()
-        readWorker.addEventListener('message', e => {
-            setAbundances(e.data.abundances)
-        })
+        readWorker.addEventListener('message', ({ data }) =>
+            setAbundances(data.abundances)
+        )
         setReadWorker(readWorker)
+
+        return () => {
+            readWorker.terminate()
+        }
     }, [])
 
     useEffect(() => {
@@ -55,13 +59,16 @@ function PartMineralChannels (
     }, [vis, channels])
 
     useEffect(() => {
-        if (!readWorker || !imgWidth || !imgHeight) { return }
+        const numChannels = Object.keys(channels).length
+        if (!readWorker || !numChannels) { return }
+
         const imgData: StringMap<ImageData> = {}
-        Object.entries(channels).forEach(([mineral, canvasCtx]) => {
-            imgData[mineral] = canvasCtx.ctx.getImageData(0, 0, imgWidth, imgHeight)
+        Object.entries(channels).forEach(([mineral, img]) => {
+            imgData[mineral] = getImageData(img)
         })
-        readWorker.postMessage({ type: 'imgData', imgData })
-    }, [readWorker, channels, imgWidth, imgHeight])
+
+        readWorker.postMessage({ type: 'imgData', imgData, imgWidth })
+    }, [readWorker, channels, imgWidth])
 
     // add event listener to coordinate label / content scroll
     useEffect(() => {
@@ -147,8 +154,8 @@ function PartMineralChannels (
             <PartHoverInfo abundances={abundances} visible={!!mousePos} />
             <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
                 { vis &&
-                    <MineralCanvas
-                        canvas={vis.canvas}
+                    <MineralChannel
+                        source={vis.canvas}
                         width={width}
                         height={height}
                         mousePos={mousePos}
@@ -156,9 +163,9 @@ function PartMineralChannels (
                     /> }
                 { Object.entries(channels)
                     .filter(([mineral, _]) => visible[mineral])
-                    .map(([_, channel], i) =>
-                        <MineralCanvas
-                            canvas={channel.canvas}
+                    .map(([_, img], i) =>
+                        <MineralChannel
+                            source={img.src}
                             width={width}
                             height={height}
                             mousePos={mousePos}
@@ -171,18 +178,19 @@ function PartMineralChannels (
     </>
 }
 
-type MineralCanvasProps = {
-    canvas: HTMLCanvasElement,
+type MineralChannelProps = {
+    source: HTMLCanvasElement | string,
     width: string,
     height: string,
     mousePos: [number, number] | null,
     setMousePos: (p: [number, number] | null) => void
 }
 
-function MineralCanvas (
-    { canvas, width, height, mousePos, setMousePos }: MineralCanvasProps
+function MineralChannel (
+    { source, width, height, mousePos, setMousePos }: MineralChannelProps
 ): ReactElement {
     const channelRef = useRef<HTMLDivElement>(null)
+    const isPathSource = typeof source === 'string'
 
     useEffect(() => {
         const channel = channelRef.current
@@ -220,7 +228,10 @@ function MineralCanvas (
                 >
                     {ICONS.cursor}
                 </div> }
-                <CanvasRenderer canvas={canvas} width={width} height={height} />
+                { !isPathSource &&
+                    <CanvasRenderer canvas={source} width={width} height={height} /> }
+                { isPathSource &&
+                    <img src={source} style={{ width, height }} />}
             </div>
         </div>
     )

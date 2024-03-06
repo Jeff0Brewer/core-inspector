@@ -1,6 +1,6 @@
 import { useState, useEffect, ReactElement } from 'react'
 import { StringMap } from '../../lib/util'
-import PartRenderer, { CanvasCtx } from '../../vis/part'
+import PartRenderer from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
 import {
@@ -15,7 +15,7 @@ type PartContentProps = {
     vis: PartRenderer | null,
     part: string,
     setPart: (p: string | null) => void,
-    channels: StringMap<CanvasCtx>,
+    channels: StringMap<HTMLImageElement>,
     visible: StringMap<boolean>
 }
 
