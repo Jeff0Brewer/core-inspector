@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
