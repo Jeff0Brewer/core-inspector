@@ -1,12 +1,12 @@
-import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
+import { useState, useEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
-import { useBlendState } from '../../hooks/blend-context'
+import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
-import { get2dContext, padZeros, StringMap } from '../../lib/util'
+import { padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
-import PartRenderer, { CanvasCtx } from '../../vis/part'
+import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartContent from '../../components/part/part-content'
@@ -24,38 +24,14 @@ function PartView (
     { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<CanvasCtx>>({})
+    const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
     const [visible, setVisible] = useState<StringMap<boolean>>({})
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
-    // apply blending on change to params or current channels.
-    // requires layout effect to ensure blending is applied
-    // before used in child elements
-    useLayoutEffect(() => {
-        if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        vis.setBlending(params)
-    }, [channels, vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+    // apply blending on change to params or current channels
+    useBlending(vis, channels)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
@@ -82,17 +58,15 @@ function PartView (
     useEffect(() => {
         if (!vis) { return }
         const getChannels = async (): Promise<void> => {
-            const partPaths = getAbundanceFilepaths(core, part, minerals)
-
-            const partMaps = await Promise.all(
-                minerals.map(mineral => loadImageAsync(partPaths[mineral]))
+            const channelPaths = getAbundanceFilepaths(core, part, minerals)
+            const channelMaps = await Promise.all(
+                minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
             )
 
-            vis.setPart(minerals, partMaps)
-
-            const channels: StringMap<CanvasCtx> = {}
+            vis.setPart(minerals, channelMaps)
+            const channels: StringMap<HTMLImageElement> = {}
             minerals.forEach((mineral, i) => {
-                channels[mineral] = imgToCanvasCtx(partMaps[i])
+                channels[mineral] = channelMaps[i]
             })
             setChannels(channels)
         }
@@ -120,17 +94,6 @@ function PartView (
             setVisible={setVisible}
         />
     </>
-}
-
-function imgToCanvasCtx (img: HTMLImageElement): CanvasCtx {
-    const canvas = document.createElement('canvas')
-    const ctx = get2dContext(canvas, { willReadFrequently: true })
-
-    canvas.width = img.width
-    canvas.height = img.height
-    ctx.drawImage(img, 0, 0)
-
-    return { canvas, ctx }
 }
 
 function getAbundanceFilepaths (

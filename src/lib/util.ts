@@ -72,7 +72,7 @@ type CanvasRenderingContext2DSettings = {
 }
 
 function get2dContext (
-    canvas: HTMLCanvasElement,
+    canvas: HTMLCanvasElement | OffscreenCanvas,
     settings: CanvasRenderingContext2DSettings = {}
 ): CanvasRenderingContext2D {
     const ctx = canvas.getContext('2d', settings)
@@ -81,6 +81,16 @@ function get2dContext (
     }
     // cast required due to custom settings type defined above
     return ctx as CanvasRenderingContext2D
+}
+
+function getImageData (img: HTMLImageElement): ImageData {
+    const { width, height } = img
+
+    const canvas = new OffscreenCanvas(width, height)
+    const ctx = get2dContext(canvas)
+    ctx.drawImage(img, 0, 0)
+
+    return ctx.getImageData(0, 0, width, height)
 }
 
 type BoundRect = {
@@ -104,7 +114,8 @@ export {
     padZeros,
     getCssColor,
     checkStringType,
-    get2dContext
+    get2dContext,
+    getImageData
 }
 export type {
     BoundRect,
