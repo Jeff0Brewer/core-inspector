@@ -60,7 +60,7 @@ function PartMineralChannels (
         Object.entries(channels).forEach(([mineral, canvasCtx]) => {
             imgData[mineral] = canvasCtx.ctx.getImageData(0, 0, imgWidth, imgHeight)
         })
-        readWorker.postMessage({ messageType: 'imgData', imgData, imgWidth })
+        readWorker.postMessage({ type: 'imgData', imgData })
     }, [readWorker, channels, imgWidth, imgHeight])
 
     // add event listener to coordinate label / content scroll
@@ -113,7 +113,7 @@ function PartMineralChannels (
         const x = mousePos[0] / viewWidth * imgWidth
         const y = mousePos[1] / viewHeight * imgHeight
 
-        readWorker.postMessage({ messageType: 'mousePosition', x, y })
+        readWorker.postMessage({ type: 'mousePosition', x, y })
     }, [readWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
 
     const width = `${viewWidth}px`
