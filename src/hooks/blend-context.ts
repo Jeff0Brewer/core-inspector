@@ -1,6 +1,8 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useLayoutEffect } from 'react'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode } from '../vis/mineral-blend'
+import CoreRenderer from '../vis/core'
+import PartRenderer from '../vis/part'
 
 type BlendContextProps = {
     palette: GenericPalette,
@@ -29,5 +31,44 @@ const useBlendState = (): BlendContextProps => {
     return context
 }
 
+const useBlending = (
+    vis: CoreRenderer | PartRenderer | null,
+    // allow any type for dependency, as is default for react
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    extraDependency?: any
+): void => {
+    const {
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome
+    } = useBlendState()
+
+    useLayoutEffect(() => {
+        vis?.setBlending({
+            magnitudes,
+            visibilities,
+            palette,
+            saturation,
+            threshold,
+            mode,
+            monochrome
+        })
+    }, [
+        vis,
+        magnitudes,
+        visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome,
+        extraDependency
+    ])
+}
+
 export default BlendContext
-export { useBlendState }
+export { useBlendState, useBlending }

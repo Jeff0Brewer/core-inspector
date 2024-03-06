@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, ReactElement } from 'react'
 import { IoMdClose } from 'react-icons/io'
-import { useBlendState } from '../../hooks/blend-context'
+import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { padZeros, StringMap } from '../../lib/util'
@@ -30,32 +30,8 @@ function PartView (
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
-    const {
-        magnitudes,
-        visibilities,
-        palette,
-        saturation,
-        threshold,
-        mode,
-        monochrome
-    } = useBlendState()
-
-    // apply blending on change to params or current channels.
-    // requires layout effect to ensure blending is applied
-    // before used in child elements
-    useLayoutEffect(() => {
-        if (!vis) { return }
-        const params = {
-            magnitudes,
-            visibilities,
-            palette,
-            saturation,
-            threshold,
-            mode,
-            monochrome
-        }
-        vis.setBlending(params)
-    }, [channels, vis, magnitudes, visibilities, palette, saturation, threshold, mode, monochrome])
+    // apply blending on change to params or current channels
+    useBlending(vis, channels)
 
     useEffect(() => {
         const visible: StringMap<boolean> = {}
