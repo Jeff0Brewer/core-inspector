@@ -8,6 +8,11 @@ import { GenericPalette } from '../lib/palettes'
 import { BlendMode, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
+import styles from '../styles/blend-menu.module.css'
+import paletteDropdownStyles from '../styles/palette-dropdown.module.css'
+import blendModeDropdownStyles from '../styles/blend-mode-dropdown.module.css'
+import mineralSliderStyles from '../styles/mineral-slider.module.css'
+import paramSliderStyles from '../styles/param-slider.module.css'
 
 type BlendMenuProps = {
     minerals: Array<string>,
@@ -46,7 +51,7 @@ function BlendMenu (
     }
 
     return (
-        <section className={'blend-menu'}>
+        <section className={styles.blendMenu}>
             <MonochromeToggle
                 palette={palette}
                 monochrome={monochrome}
@@ -59,7 +64,7 @@ function BlendMenu (
                     selected={palette.type === 'labelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
-                    customClass={'palette-dropdown'}
+                    customStyles={paletteDropdownStyles}
                 />
             </div>
             <p>color presets</p>
@@ -69,11 +74,11 @@ function BlendMenu (
                     selected={palette.type === 'unlabelled' ? palette : null}
                     setSelected={setPalette}
                     Element={ColorPalette}
-                    customClass={'palette-dropdown'}
+                    customStyles={paletteDropdownStyles}
                 />
             </div>
             <p>mineral color mixer</p>
-            <div className={'mineral-mixer'}>
+            <div className={styles.mineralMixer}>
                 { minerals.map((mineral, i) =>
                     <MineralSlider
                         mineral={mineral}
@@ -92,9 +97,9 @@ function BlendMenu (
                 items={['additive', 'maximum']}
                 selected={mode}
                 setSelected={setMode}
-                customClass={'blend-mode-dropdown'}
+                customStyles={blendModeDropdownStyles}
             />
-            <div className={'params'}>
+            <div className={styles.params}>
                 <p>saturation</p>
                 <ParamSlider
                     value={saturation}
@@ -118,15 +123,16 @@ function BlendMenu (
 
 type ColorSwatchProps = {
     color: vec3 | null,
-    mineral: string | null
+    mineral: string | null,
+    customClass?: string
 }
 
 function ColorSwatch (
-    { color, mineral }: ColorSwatchProps
+    { color, mineral, customClass }: ColorSwatchProps
 ): ReactElement {
     return (
         <div
-            className={'swatch'}
+            className={`${styles.swatch} ${customClass}`}
             style={{ backgroundColor: getCssColor(color) }}
             data-color={!!color}
         >
@@ -143,7 +149,7 @@ function ColorPalette (
     { item }: ColorPaletteProps
 ): ReactElement {
     return (
-        <div className={'palette'}>
+        <div className={styles.palette}>
             { Object.entries(item.colors).map(([mineral, color], i) =>
                 <ColorSwatch
                     mineral={item.type === 'labelled' ? mineral : null}
@@ -170,7 +176,7 @@ function MineralSlider (
 ): ReactElement {
     return (
         <div
-            className={'mineral-input'}
+            className={mineralSliderStyles.wrap}
             data-visible={visible}
         >
             <Slider
@@ -179,29 +185,33 @@ function MineralSlider (
                 min={0}
                 max={1}
                 format={{ apply: formatPercent, parse: parsePercent }}
-                customClass={'mineral-slider'}
+                customStyles={mineralSliderStyles}
                 customElement={textInput => <>
                     <div>
                         <button
-                            className={'visibility-button'}
+                            className={mineralSliderStyles.visibilityButton}
                             onClick={() => setVisible(!visible)}
                         >
                             <MdRemoveRedEye />
                         </button>
-                        <p className={'label'}>
+                        <p className={mineralSliderStyles.label}>
                             {mineral}
-                            <span className={'shortcut'}>
+                            <span className={mineralSliderStyles.shortcut}>
                                 ({index + 1})
                             </span>
                         </p>
                     </div>
                     <div>
                         {textInput}
-                        <ColorSwatch color={color} mineral={null} />
+                        <ColorSwatch
+                            color={color}
+                            mineral={null}
+                            customClass={mineralSliderStyles.sliderSwatch}
+                        />
                     </div>
                 </>}
                 customHandle={
-                    <div className={'slider-handle'}>
+                    <div className={mineralSliderStyles.sliderHandle}>
                         <IoCaretDownSharp />
                     </div>
                 }
@@ -229,11 +239,11 @@ function ParamSlider (
 
     return (
         <Slider
-            customClass={'param-slider'}
             value={value}
             setValue={setValue}
             min={min}
             max={max}
+            customStyles={paramSliderStyles}
             customElement={textInput => <>
                 {textInput}
                 <button
@@ -262,7 +272,7 @@ function MonochromeToggle (
 
     return (
         <button
-            className={'monochrome-toggle'}
+            className={styles.monochromeToggle}
             style={{ backgroundColor: color }}
             onClick={() => setMonochrome(!monochrome)}
         ></button>

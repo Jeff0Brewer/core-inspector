@@ -4,7 +4,7 @@ import BlendProvider from '../components/blend-provider'
 import CoreMetadataProvider from '../components/core-metadata-provider'
 import CoreView from '../components/core/core-view'
 import PartView from '../components/part/part-view'
-import '../styles/app.css'
+import styles from '../styles/app.module.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']
 const MINERALS = [
@@ -24,7 +24,7 @@ function App (): ReactElement {
     const [part, setPart] = useState<string | null>(null)
 
     return (
-        <main className={'app'}>
+        <main className={styles.app}>
             <CoreMetadataProvider core={core}>
                 <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
                     { part === null &&

@@ -3,7 +3,7 @@ import { usePopupPosition } from '../../hooks/popup-position'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { padZeros, formatFloat } from '../../lib/util'
 import CoreRenderer from '../../vis/core'
-import '../../styles/metadata-hover.css'
+import styles from '../../styles/metadata-hover.module.css'
 
 type MetadataHoverProps = {
     vis: CoreRenderer | null
@@ -26,14 +26,14 @@ function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
 
     return (
         <div
-            className={'metadata'}
+            className={styles.metadata}
             ref={popupRef}
             data-hovered={!!hovered}
         >
-            { hovered && <div className={'id'}>
+            { hovered && <div className={styles.id}>
                 {formatId(hovered)}
             </div> }
-            { hasData && <div className={'data'}>
+            { hasData && <div className={styles.data}>
                 { depths[hovered] && <div>
                     <p>top depth</p>
                     <span>{formatFloat(depths[hovered].topDepth)}m</span>

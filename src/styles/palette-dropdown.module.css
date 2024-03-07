@@ -1,0 +1,9 @@
+.dropdown {
+    --height: 22px;
+    width: 220px;
+    height: var(--height);
+}
+
+.dropdown-selected {
+    border: 1px solid var(--color3);
+}

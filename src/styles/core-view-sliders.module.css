@@ -1,8 +1,7 @@
-.core-view-sliders {
+.sliders {
     position: relative;
     z-index: 2;
-    grid-area: label-side;
-    grid-row: label-side / side;
+    grid-area: side-bar;
     width: 100%;
     height: 100%;
     z-index: 5;

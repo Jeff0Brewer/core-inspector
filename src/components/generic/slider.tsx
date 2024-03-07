@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
-import { clamp, formatFloat } from '../../lib/util'
-import '../../styles/slider.css'
+import { clamp, formatFloat, StringMap } from '../../lib/util'
+import styles from '../../styles/slider.module.css'
 
 // closure that takes slider's coordinated text input as an argument
 // and returns full custom dom for slider supplemental elements
@@ -28,15 +28,14 @@ type SliderProps = {
     setValue: (v: number) => void,
     min: number,
     max: number,
-    customClass?: string,
+    customStyles?: StringMap<string>,
     customHandle?: ReactElement
     customElement?: SliderCustomElement,
     format?: SliderTextFormatter,
 }
 
 function Slider ({
-    value, setValue, min, max,
-    customClass = '',
+    value, setValue, min, max, customStyles,
     customHandle = <></>,
     customElement = DEFAULT_ELEMENT,
     format = DEFAULT_FORMATTER
@@ -130,23 +129,23 @@ function Slider ({
     }
 
     return (
-        <div className={`slider-wrap ${customClass}`}>
+        <div className={`${styles.slider} ${customStyles?.slider}`}>
             <div
-                className={'slider-bar'}
+                className={`${styles.sliderBar} ${customStyles?.sliderBar}`}
                 data-dragging={dragging}
                 ref={sliderRef}
             >
                 <div
-                    className={'slider-value'}
+                    className={`${styles.sliderValue} ${customStyles?.sliderValue}`}
                     style={{ width: `${(value - min) / (max - min) * 100}%` }}
                 >
                     {customHandle}
                 </div>
             </div>
-            <div className={'slider-elements'}>
+            <div className={`${styles.sliderElements} ${customStyles?.sliderElements}`}>
                 { customElement(
                     <input
-                        className={'text-input'}
+                        className={`${styles.textInput} ${customStyles?.textInput}`}
                         ref={textInputRef}
                         type={'text'}
                         onInput={updateFromText}

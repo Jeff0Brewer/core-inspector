@@ -1,0 +1,17 @@
+.dropdown-label, .dropdown-items {
+    border: 1px solid var(--color2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.dropdown-label * {
+    border: none;
+}
+
+.dropdown-items {
+    margin-top: 1px;
+}
+
+.dropdown button {
+    border: none;
+}

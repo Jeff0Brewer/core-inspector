@@ -1,5 +1,5 @@
 import { useEffect, useRef, ReactElement } from 'react'
-import '../../styles/vertical-slider.css'
+import styles from '../../styles/vertical-slider.module.css'
 
 type VerticalSliderProps = {
     value: number,
@@ -33,8 +33,9 @@ function VerticalSlider ({
     }, [value, step])
 
     return (
-        <div className={'vertical-slider'}>
+        <div className={styles.wrap}>
             <input
+                className={styles.slider}
                 ref={inputRef}
                 type={'range'}
                 defaultValue={value}
@@ -43,8 +44,8 @@ function VerticalSlider ({
                 step={step}
                 onChange={e => setValue(e.target.valueAsNumber)}
             />
-            { label && <p>{label}</p> }
-            { icon && <div>{icon}</div> }
+            { label && <p className={styles.label}>{label}</p> }
+            { icon && <div className={styles.icon}>{icon}</div> }
         </div>
     )
 }

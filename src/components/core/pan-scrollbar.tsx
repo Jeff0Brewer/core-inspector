@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { clamp } from '../../lib/util'
 import CoreRenderer from '../../vis/core'
-import '../../styles/pan-scrollbar.css'
+import styles from '../../styles/pan-scrollbar.module.css'
 
 type PanScrollbarProps = {
     vis: CoreRenderer | null
@@ -69,13 +69,13 @@ function PanScrollbar (
 
     return (
         <div
-            className={'scrollbar-wrap'}
+            className={styles.wrap}
             data-visible={panWidth > 0 && panWidth < 1}
             data-dragging={dragging}
             ref={scrollbarWrapRef}
         >
             <div
-                className={'scrollbar-handle'}
+                className={styles.handle}
                 style={{
                     width: `${(panWidth || 0) * 100}%`,
                     left: `${pan * 100}%`

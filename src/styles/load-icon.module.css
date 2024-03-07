@@ -1,4 +1,4 @@
-.load-icon {
+.icon {
     position: absolute;
     overflow: hidden;
     pointer-events: none;
@@ -13,7 +13,7 @@
     animation: rotate 1s linear infinite;
 }
 
-.load-icon:before {
+.icon:before {
     content: "";
     display: block;
     width: 200%;
@@ -22,7 +22,7 @@
     border: 5px solid #fff;
 }
 
-.load-icon[data-visible="true"] {
+.visible {
     opacity: 1;
 }
 

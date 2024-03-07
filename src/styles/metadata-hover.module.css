@@ -21,13 +21,13 @@
         opacity 250ms ease 50ms;
 }
 
-.metadata > .id {
+.id {
     width: 100%;
     padding: 5px;
     background-color: var(--color0);
 }
 
-.metadata > .data {
+.data {
     display: flex;
     flex-direction: column;
     flex-gap: 5px;
@@ -36,17 +36,17 @@
     font-size: 0.55rem;
 }
 
-.metadata > .data > div {
+.data > div {
     display: flex;
     justify-content: space-between;
     gap: 0 10px;
 }
 
-.metadata > .data p {
+.data p {
     white-space: nowrap;
     color: var(--color5);
 }
 
-.metadata > .data span {
+.data span {
     text-transform: lowercase;
 }

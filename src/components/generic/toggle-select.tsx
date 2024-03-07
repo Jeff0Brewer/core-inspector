@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import '../../styles/toggle-select.css'
+import styles from '../../styles/toggle-select.module.css'
 
 type ToggleItem<T> = {
     value: T,
@@ -17,14 +17,16 @@ function ToggleSelect<T> (
     { currValue, setValue, item0, item1 }: ToggleSelectProps<T>
 ): ReactElement {
     return (
-        <div className={'toggle-select'}>
+        <div className={styles.toggleSelect}>
             <button
+                className={styles.toggleButton}
                 data-active={currValue === item0.value}
                 onClick={() => setValue(item0.value)}
             >
                 {item0.icon}
             </button>
             <button
+                className={styles.toggleButton}
                 data-active={currValue === item1.value}
                 onClick={() => setValue(item1.value)}
             >
