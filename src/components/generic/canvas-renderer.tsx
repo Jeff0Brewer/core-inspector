@@ -1,5 +1,5 @@
 import { useEffect, useRef, ReactElement } from 'react'
-import '../../styles/canvas-renderer.css'
+import styles from '../../styles/generic/canvas-renderer.module.css'
 
 type CanvasRendererProps = {
     canvas: HTMLCanvasElement,
@@ -30,11 +30,7 @@ function CanvasRenderer (
     })
 
     return (
-        <div
-            ref={wrapRef}
-            className={'canvas-renderer'}
-            style={{ width, height }}
-        ></div>
+        <div ref={wrapRef} className={styles.wrap} style={{ width, height }}></div>
     )
 }
 
