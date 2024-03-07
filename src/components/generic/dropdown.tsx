@@ -1,7 +1,7 @@
 import { useState, ReactElement } from 'react'
 import { PiCaretDownBold } from 'react-icons/pi'
 import { checkStringType, StringMap } from '../../lib/util'
-import styles from '../../styles/dropdown.module.css'
+import styles from '../../styles/generic/dropdown.module.css'
 
 // default item renderer for dropdown
 // uses generic type for flexibility but must be castable to string

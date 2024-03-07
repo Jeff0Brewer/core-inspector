@@ -9,7 +9,7 @@ import CoreViewSliders from '../../components/core/view-sliders'
 import CoreMineralControls from '../../components/core/mineral-controls'
 import MetadataHover from '../../components/core/metadata-hover'
 import PanScrollbar from '../../components/core/pan-scrollbar'
-import styles from '../../styles/full-core.module.css'
+import styles from '../../styles/core/core-view.module.css'
 
 type CoreViewProps = {
     cores: Array<string>,

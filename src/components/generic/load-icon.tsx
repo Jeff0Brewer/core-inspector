@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
-import styles from '../../styles/load-icon.module.css'
+import styles from '../../styles/generic/load-icon.module.css'
 
 type LoadIconProps = {
     loading: boolean,

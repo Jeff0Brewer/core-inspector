@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { clamp, formatFloat, StringMap } from '../../lib/util'
-import styles from '../../styles/slider.module.css'
+import styles from '../../styles/generic/slider.module.css'
 
 // closure that takes slider's coordinated text input as an argument
 // and returns full custom dom for slider supplemental elements

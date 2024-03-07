@@ -4,7 +4,7 @@ import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
-import styles from '../../styles/core-mineral-controls.module.css'
+import styles from '../../styles/core/mineral-controls.module.css'
 
 type CoreMineralControlsProps = {
     vis: CoreRenderer | null,

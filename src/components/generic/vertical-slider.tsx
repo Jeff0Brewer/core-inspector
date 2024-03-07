@@ -1,5 +1,5 @@
 import { useEffect, useRef, ReactElement } from 'react'
-import styles from '../../styles/vertical-slider.module.css'
+import styles from '../../styles/generic/vertical-slider.module.css'
 
 type VerticalSliderProps = {
     value: number,

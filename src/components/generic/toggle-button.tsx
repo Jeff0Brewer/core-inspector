@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import styles from '../../styles/toggle-button.module.css'
+import styles from '../../styles/generic/toggle-button.module.css'
 
 type ToggleButtonProps = {
     active: boolean,

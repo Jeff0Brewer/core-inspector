@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { clamp } from '../../lib/util'
 import CoreRenderer from '../../vis/core'
-import styles from '../../styles/pan-scrollbar.module.css'
+import styles from '../../styles/core/pan-scrollbar.module.css'
 
 type PanScrollbarProps = {
     vis: CoreRenderer | null

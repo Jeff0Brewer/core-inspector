@@ -3,7 +3,7 @@ import { usePopupPosition } from '../../hooks/popup-position'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { padZeros, formatFloat } from '../../lib/util'
 import CoreRenderer from '../../vis/core'
-import styles from '../../styles/metadata-hover.module.css'
+import styles from '../../styles/core/metadata-hover.module.css'
 
 type MetadataHoverProps = {
     vis: CoreRenderer | null

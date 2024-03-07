@@ -9,10 +9,10 @@ import { BlendMode, getBlendColor } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
 import styles from '../styles/blend-menu.module.css'
-import paletteDropdownStyles from '../styles/palette-dropdown.module.css'
-import blendModeDropdownStyles from '../styles/blend-mode-dropdown.module.css'
-import mineralSliderStyles from '../styles/mineral-slider.module.css'
-import paramSliderStyles from '../styles/param-slider.module.css'
+import paletteDropdownStyles from '../styles/custom/palette-dropdown.module.css'
+import blendModeDropdownStyles from '../styles/custom/blend-mode-dropdown.module.css'
+import mineralSliderStyles from '../styles/custom/mineral-slider.module.css'
+import paramSliderStyles from '../styles/custom/param-slider.module.css'
 
 type BlendMenuProps = {
     minerals: Array<string>,

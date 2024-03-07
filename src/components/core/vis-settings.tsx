@@ -8,8 +8,8 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
-import styles from '../../styles/core-vis-settings.module.css'
-import coreDropdownStyles from '../../styles/core-dropdown.module.css'
+import styles from '../../styles/core/vis-settings.module.css'
+import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
 type CoreVisSettingsProps = {
     vis: CoreRenderer | null,
