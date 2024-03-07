@@ -5,9 +5,9 @@
     overflow: hidden;
     display: grid;
     grid-template-rows: 50px 1fr 32px;
-    grid-template-columns: 70px 1fr;
+    grid-template-columns: 1fr;
     grid-template-areas:
-        "top-bar top-bar"
-        "side-bar content"
-        "bottom-bar bottom-bar";
+        "top-bar"
+        "content"
+        "bottom-bar";
 }

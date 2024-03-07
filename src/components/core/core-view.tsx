@@ -87,10 +87,6 @@ function CoreView (
 
     return <>
         <LoadIcon loading={!vis} showDelayMs={0} />
-        <canvas
-            ref={canvasRef}
-            className={`${styles.visCanvas} ${!!vis && styles.visible}`}
-        ></canvas>
         <CoreVisSettings
             vis={vis}
             cores={cores}
@@ -98,6 +94,10 @@ function CoreView (
             setCore={setCore}
         />
         <CoreViewSliders vis={vis} />
+        <canvas
+            ref={canvasRef}
+            className={`${styles.visCanvas} ${!!vis && styles.visible}`}
+        ></canvas>
         <CoreMineralControls
             vis={vis}
             minerals={minerals}
