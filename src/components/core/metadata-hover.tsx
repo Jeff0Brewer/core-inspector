@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { padZeros, formatFloat } from '../../lib/util'
+import { formatFloat } from '../../lib/util'
+import { getPartId } from '../../lib/ids'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/metadata-hover.module.css'
 
@@ -26,12 +27,11 @@ function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
 
     return (
         <div
-            className={styles.metadata}
             ref={popupRef}
-            data-hovered={!!hovered}
+            className={`${styles.metadata} ${!!hovered && styles.visible}`}
         >
             { hovered && <div className={styles.id}>
-                {formatId(hovered)}
+                {getPartId(hovered)}
             </div> }
             { hasData && <div className={styles.data}>
                 { depths[hovered] && <div>
@@ -49,11 +49,6 @@ function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
             </div> }
         </div>
     )
-}
-
-function formatId (id: string): string {
-    const [section, part] = id.split('_')
-    return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
 }
 
 export default MetadataHover

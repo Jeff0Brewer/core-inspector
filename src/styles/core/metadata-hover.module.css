@@ -14,7 +14,7 @@
     transition: transform var(--transition-param);
 }
 
-.metadata[data-hovered="true"] {
+.visible {
     opacity: 1;
     transition:
         transform var(--transition-param),
