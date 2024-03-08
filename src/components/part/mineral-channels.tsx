@@ -8,6 +8,7 @@ import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import MineralWorker from '../../workers/mineral-read?worker'
+import styles from '../../styles/part/mineral-channels.module.css'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
@@ -34,7 +35,6 @@ function PartMineralChannels (
     const [abundances, setAbundances] = useState<StringMap<number>>({})
 
     const contentRef = useRef<HTMLDivElement>(null)
-    const labelsRef = useRef<HTMLDivElement>(null)
 
     const { depths } = useCoreMetadata()
 
@@ -70,18 +70,22 @@ function PartMineralChannels (
         readWorker.postMessage({ type: 'imgData', imgData, imgWidth })
     }, [readWorker, channels, imgWidth])
 
+    useEffect(() => {
+        if (!mousePos || !readWorker) { return }
+        const x = mousePos[0] / viewWidth * imgWidth
+        const y = mousePos[1] / viewHeight * imgHeight
+
+        readWorker.postMessage({ type: 'mousePosition', x, y })
+    }, [readWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
+
     // add event listener to coordinate label / content scroll
     useEffect(() => {
         const content = contentRef.current
-        const labels = labelsRef.current
-        if (!content || !labels) {
-            throw new Error('No reference to layout elements')
+        if (!content) {
+            throw new Error('No reference to content element')
         }
 
         const scroll = (): void => {
-            // align labels with channel canvases
-            labels.style.left = `${-content.scrollLeft}px`
-
             // get top / bottom view depth for final core panel window
             const scrollTop = content.scrollTop / content.scrollHeight
             const scrollBottom = (content.scrollTop + content.clientHeight) / content.scrollHeight
@@ -115,14 +119,6 @@ function PartMineralChannels (
         }
     }, [channels, zoom, spacing, vis, setChannelHeight])
 
-    useEffect(() => {
-        if (!mousePos || !readWorker) { return }
-        const x = mousePos[0] / viewWidth * imgWidth
-        const y = mousePos[1] / viewHeight * imgHeight
-
-        readWorker.postMessage({ type: 'mousePosition', x, y })
-    }, [readWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
-
     const width = `${viewWidth}px`
     const height = `${viewHeight}px`
     const gap = `${viewGap}px`
@@ -135,25 +131,22 @@ function PartMineralChannels (
             setSpacing={setSpacing}
             channelHeight={channelHeight}
         />
-        <div className={'channel-labels-wrap'}>
-            <div className={'channel-labels'} ref={labelsRef} style={{ gap }}>
-                <div className={'channel-label'} style={{ width }}>
+        <div className={styles.content}>
+            <div className={styles.labels} style={{ gap }}>
+                <p className={styles.channelLabel} style={{ width }}>
                     [blended]
-                </div>
+                </p>
                 { Object.keys(channels)
                     .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
-                        <div className={'channel-label'} style={{ width }} key={i}>
+                        <p className={styles.channelLabel} style={{ width }} key={i}>
                             {mineral}
-                        </div>
+                        </p>
                     ) }
             </div>
-        </div>
-        <div className={'mineral-channels-wrap'} ref={contentRef}>
-            <LoadIcon loading={!vis} showDelayMs={0} />
-            <PartHoverInfo abundances={abundances} visible={!!mousePos} />
-            <div className={'mineral-channels'} style={{ gap }} data-visible={!!vis}>
-                { vis &&
+            <div className={styles.channelsWrap} ref={contentRef}>
+                <div className={styles.channels} style={{ gap }}>
+                    { vis &&
                     <MineralChannel
                         source={vis.canvas}
                         width={width}
@@ -161,18 +154,21 @@ function PartMineralChannels (
                         mousePos={mousePos}
                         setMousePos={setMousePos}
                     /> }
-                { Object.entries(channels)
-                    .filter(([mineral, _]) => visible[mineral])
-                    .map(([_, img], i) =>
-                        <MineralChannel
-                            source={img.src}
-                            width={width}
-                            height={height}
-                            mousePos={mousePos}
-                            setMousePos={setMousePos}
-                            key={i}
-                        />
-                    ) }
+                    { Object.entries(channels)
+                        .filter(([mineral, _]) => visible[mineral])
+                        .map(([_, img], i) =>
+                            <MineralChannel
+                                source={img.src}
+                                width={width}
+                                height={height}
+                                mousePos={mousePos}
+                                setMousePos={setMousePos}
+                                key={i}
+                            />
+                        ) }
+                    <LoadIcon loading={!vis} showDelayMs={0} />
+                    <PartHoverInfo abundances={abundances} visible={!!mousePos} />
+                </div>
             </div>
         </div>
     </>
@@ -205,6 +201,7 @@ function MineralChannel (
                 e.clientY - top
             ])
         }
+
         const clearMousePos = (): void => {
             setMousePos(null)
         }
@@ -220,18 +217,18 @@ function MineralChannel (
     }, [setMousePos])
 
     return (
-        <div className={'channel-wrap'}>
-            <div className={'canvas-wrap'} ref={channelRef}>
+        <div className={styles.channel}>
+            <div className={styles.canvasWrap} ref={channelRef}>
                 { mousePos && <div
-                    className={'channel-cursor'}
+                    className={styles.ghostCursor}
                     style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
                 >
                     {ICONS.cursor}
                 </div> }
                 { !isPathSource &&
-                    <CanvasRenderer canvas={source} width={width} height={height} /> }
+                        <CanvasRenderer canvas={source} width={width} height={height} /> }
                 { isPathSource &&
-                    <img src={source} style={{ width, height }} />}
+                        <img src={source} style={{ width, height }} />}
             </div>
         </div>
     )

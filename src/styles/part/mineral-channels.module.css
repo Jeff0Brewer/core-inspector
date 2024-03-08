@@ -1,0 +1,95 @@
+.content {
+    grid-area: main;
+    grid-row: label-main / main;
+    position: relative;
+    max-width: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+.labels {
+    grid-area: label-main;
+    background-color: #444;
+    width: fit-content;
+}
+
+.labels, .channels {
+    display: flex;
+    padding: 0 30px 0 30px;
+}
+
+.channels-wrap {
+    grid-area: main;
+    height: 100%;
+    width: fit-content;
+    overflow-y: scroll;
+}
+
+.channels {
+    position: relative;
+    display: flex;
+    background-image: url('../../assets/ruler-bg.svg');
+    background-repeat: infinite;
+    padding-bottom: 32px;
+    background-color: #202020;
+}
+
+.channel {
+    position: relative;
+}
+
+.channel-label {
+    position: relative;
+    height: 20px;
+    margin: 0 5px 0 15px;
+    display: grid;
+    place-content: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    border: solid var(--color3);
+    border-width: 0 1px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.canvas-wrap {
+    position: relative;
+    height: fit-content;
+    display: flex;
+}
+
+.canvas-wrap:before, .canvas-wrap:after {
+    position: relative;
+    content: "";
+    display: block;
+    min-height: 100%;
+    background-repeat: infinite;
+    opacity: 0.2;
+    transition: opacity var(--transition-param);
+}
+
+.canvas-wrap:hover:before, .canvas-wrap:hover:after {
+    opacity: 1;
+}
+
+.canvas-wrap:before {
+    width: 15px;
+    background-image: url('../../assets/ruler-left.svg')
+}
+
+.canvas-wrap:after {
+    width: 5px;
+    background-image: url('../../assets/ruler-right.svg')
+}
+
+.ghost-cursor {
+    position: absolute;
+    z-index: 2;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.channel:hover .ghost-cursor {
+    display: none;
+}

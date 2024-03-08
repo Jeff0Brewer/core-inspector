@@ -1,0 +1,63 @@
+.core-panel {
+    position: relative;
+    display: flex;
+    height: 100%;
+    background-color: #191919;
+    grid-area: punch;
+    overflow: hidden;
+}
+
+.column {
+    position: relative;
+    width: 30px;
+    height: 100%;
+    background-color: #333;
+    display: grid;
+    grid-template-rows: 20px 1fr;
+}
+
+.largeColumn {
+    width: 60px;
+}
+
+.column-label {
+    position: relative;
+    display: grid;
+    place-content: center;
+    white-space: nowrap;
+    font-size: 0.55rem;
+    font-weight: 500;
+    color: var(--color4);
+    overflow: hidden;
+    width: 100%;
+}
+
+.column-content {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.representation {
+    position: abolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.next-window {
+    position: absolute;
+    width: 100%;
+    background-color: #111;
+}
+
+
+.zoom-lines {
+    position: relative;
+    width: 60px;
+    height: 100%;
+}
