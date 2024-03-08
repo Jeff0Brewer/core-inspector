@@ -30,6 +30,7 @@ function CorePanel ({
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
 
+    // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
         const columns: Array<CoreColumn> = [{
             representation: representations[0],
@@ -40,12 +41,14 @@ function CorePanel ({
         }]
 
         const partCenter = depths[part].topDepth + depths[part].length * 0.5
+
         for (let i = 1; i < representations.length; i++) {
             const {
                 topDepth: lastTop,
                 bottomDepth: lastBottom,
                 gap: lastGap
             } = columns[i - 1]
+
             const depthRange = Math.pow(lastBottom - lastTop, 0.45)
             const depthCenter = clamp(
                 partCenter,
@@ -54,6 +57,7 @@ function CorePanel ({
             )
             const topDepth = depthCenter - depthRange * 0.5
             const bottomDepth = depthCenter + depthRange * 0.5
+
             const visibleParts = parts.filter(part => {
                 if (!depths[part]) { return false }
 
@@ -72,57 +76,53 @@ function CorePanel ({
                 gap
             })
         }
+
         setColumns(columns)
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
-    return (
-        <div className={styles.corePanel}>
+    return <>
+        <div className={styles.labels}>
+            { columns.map((column, i) =>
+                <ScaleColumnLabel
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    largeWidth={!!column.representation.largeWidth}
+                    key={i}
+                />
+            ) }
+        </div>
+        <div className={styles.columns}>
             { columns.map((column, i) => {
-                const isLast = (i === columns.length - 1)
-                const isLarge = !!column.representation.largeWidth
-                const nextTop = isLast ? finalTopDepth : columns[i + 1].topDepth
-                const nextBottom = isLast ? finalBottomDepth : columns[i + 1].bottomDepth
-                const windowTop = (nextTop - column.topDepth) / (column.bottomDepth - column.topDepth)
-                const windowBottom = (nextBottom - column.topDepth) / (column.bottomDepth - column.topDepth)
-                return <React.Fragment key={i}>
-                    <div className={`${styles.column} ${isLarge && styles.largeColumn}`}>
-                        <ScaleColumnLabel
-                            topDepth={column.topDepth}
-                            bottomDepth={column.bottomDepth}
-                        />
-                        <ScaleColumn
-                            vis={vis}
-                            part={part}
-                            representation={column.representation}
-                            parts={column.parts}
-                            topDepth={column.topDepth}
-                            bottomDepth={column.bottomDepth}
-                            nextTopDepth={nextTop}
-                            nextBottomDepth={nextBottom}
-                            gap={column.gap}
-                            setPart={setPart}
-                        />
-                    </div>
-                    <div className={styles.zoomLines}>
-                        {getZoomSvg(windowTop, windowBottom)}
-                    </div>
-                </React.Fragment>
+                const isLast = i === columns.length - 1
+                return <ScaleColumn
+                    vis={vis}
+                    parts={column.parts}
+                    part={part}
+                    setPart={setPart}
+                    representation={column.representation}
+                    gap={column.gap}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
+                    nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
+                    key={i}
+                />
             }) }
         </div>
-    )
+    </>
 }
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
-    part: string,
-    representation: CoreRepresentation,
     parts: Array<string>,
+    part: string,
+    setPart: (p: string | null) => void,
+    representation: CoreRepresentation,
+    gap: number,
     topDepth: number,
     bottomDepth: number,
     nextTopDepth: number,
     nextBottomDepth: number,
-    gap: number,
-    setPart: (p: string | null) => void
 }
 
 function ScaleColumn ({
@@ -135,17 +135,18 @@ function ScaleColumn ({
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const {
         element: RepresentationElement,
-        fullScale = false
+        fullScale = false,
+        largeWidth = false
     } = representation
 
     // get meter to pixel scale of column
     useEffect(() => {
         const getScale = (): void => {
-            const column = columnRef.current
-            if (!column) { return }
+            if (!columnRef.current) { return }
 
+            const heightPx = columnRef.current.clientHeight
             const heightM = bottomDepth - topDepth
-            const heightPx = column.clientHeight
+
             setMToPx(heightPx / heightM)
         }
 
@@ -171,7 +172,10 @@ function ScaleColumn ({
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
 
     return <>
-        <div ref={columnRef} className={styles.columnContent}>
+        <div
+            ref={columnRef}
+            className={`${styles.column} ${largeWidth && styles.largeWidth}`}
+        >
             <div
                 className={styles.nextWindow}
                 style={{
@@ -191,7 +195,26 @@ function ScaleColumn ({
                 />
             </div>
         </div>
+        <div className={styles.zoomLines}>
+            { getZoomSvg(windowTop, windowBottom) }
+        </div>
     </>
+}
+
+type ScaleColumnLabelProps = {
+    topDepth: number,
+    bottomDepth: number,
+    largeWidth: boolean
+}
+
+function ScaleColumnLabel (
+    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
+): ReactElement {
+    return (
+        <div className={`${styles.label} ${largeWidth && styles.largeWidth}`}>
+            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+        </div>
+    )
 }
 
 function getZoomSvg (
@@ -208,21 +231,6 @@ function getZoomSvg (
                 points={`0,${windowTop * 100} 0,${windowBottom * 100} 100,100 100,0`}
             />
         </svg>
-    )
-}
-
-type ScaleColumnLabelProps = {
-    topDepth: number,
-    bottomDepth: number
-}
-
-function ScaleColumnLabel (
-    { topDepth, bottomDepth }: ScaleColumnLabelProps
-): ReactElement {
-    return (
-        <div className={styles.columnLabel}>
-            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
-        </div>
     )
 }
 
