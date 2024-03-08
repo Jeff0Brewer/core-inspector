@@ -7,7 +7,7 @@ import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
-import MineralWorker from '../../workers/mineral-read?worker'
+import AbundanceWorker from '../../workers/abundances?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
 type PartMineralChannelsProps = {
@@ -83,7 +83,7 @@ function PartMineralChannels (
     }, [channels, zoom, spacing, vis, setChannelHeight])
 
     useEffect(() => {
-        const abundanceWorker = new MineralWorker()
+        const abundanceWorker = new AbundanceWorker()
         abundanceWorker.addEventListener('message', ({ data }) =>
             setAbundances(data.abundances)
         )
