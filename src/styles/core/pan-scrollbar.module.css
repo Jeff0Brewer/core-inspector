@@ -1,4 +1,4 @@
-.wrap {
+.track {
     position: absolute;
     z-index: 2;
     bottom: 25px;
@@ -11,12 +11,12 @@
     pointer-events: none;
 }
 
-.wrap[data-visible="false"] {
+.track-hidden {
     opacity: 0;
 }
 
 /* add transitions + delay to width / left to persist last state during animation */
-.wrap[data-visible="false"] .handle {
+.handle-hidden {
     transition:
         width var(--transition-param),
         left var(--transition-param);
@@ -41,7 +41,7 @@
         border-radius var(--transition-param);
 }
 
-.handle:hover:after, .wrap[data-dragging="true"] .handle:after {
+.handle:hover:after, .handle-expanded:after {
     height: 6px;
     border-radius: 3px;
 }
