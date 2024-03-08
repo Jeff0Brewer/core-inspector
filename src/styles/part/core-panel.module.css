@@ -1,3 +1,9 @@
+.core-panel {
+    grid-area: punch;
+    grid-row: label-punch / punch;
+    min-width: 390px;
+}
+
 .label, .column {
     width: 30px;
 }
@@ -15,6 +21,7 @@
 .labels {
     display: flex;
     gap: 60px;
+    height: 20px;
     background-color: #444;
 }
 
@@ -26,8 +33,12 @@
     font-size: 0.55rem;
     font-weight: 500;
     color: var(--color4);
+    transition: opacity var(--transition-param);
 }
 
+.core-panel-collapsed .label {
+    opacity: 0;
+}
 
 .columns {
     position: relative;
