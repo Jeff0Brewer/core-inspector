@@ -167,6 +167,9 @@ function ScaleColumn ({
         wrapStyle.transform = `translateY(-${partCenter * 100}%)`
         wrapStyle.top = '50%'
     }
+    if (fullScale) {
+        wrapStyle.height = '100%'
+    }
 
     const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)

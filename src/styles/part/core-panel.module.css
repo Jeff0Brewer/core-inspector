@@ -43,6 +43,7 @@
     position: relative;
     height: 100%;
     background-color: #333;
+    overflow: hidden;
 }
 
 .column-content {
@@ -55,7 +56,7 @@
 }
 
 .representation {
-    position: abolute;
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
