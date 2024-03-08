@@ -4,7 +4,7 @@ import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
-import '../../styles/core-mineral-controls.css'
+import styles from '../../styles/core/mineral-controls.module.css'
 
 type CoreMineralControlsProps = {
     vis: CoreRenderer | null,
@@ -66,9 +66,9 @@ function CoreMineralControls (
     }
 
     return (
-        <div className={'core-mineral-controls'}>
-            <div className={'mineral-bar'}>
-                <div className={'minerals'}>
+        <div className={styles.mineralControls}>
+            <div className={styles.mineralBar}>
+                <div className={styles.minerals}>
                     { minerals.map((mineral, i) => (
                         <button
                             onClick={getMineralSetter(i)}
@@ -80,7 +80,7 @@ function CoreMineralControls (
                     )) }
                 </div>
                 <button
-                    className={'blend-menu-toggle'}
+                    className={styles.blendMenuToggle}
                     data-active={menuOpen}
                     onClick={() => setMenuOpen(!menuOpen)}
                 >
@@ -88,10 +88,10 @@ function CoreMineralControls (
                 </button>
             </div>
             { menuOpen &&
-            <BlendMenu
-                minerals={minerals}
-                palettes={palettes}
-            /> }
+                <BlendMenu
+                    minerals={minerals}
+                    palettes={palettes}
+                /> }
         </div>
     )
 }

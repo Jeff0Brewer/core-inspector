@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { clamp } from '../../lib/util'
 import CoreRenderer from '../../vis/core'
-import '../../styles/pan-scrollbar.css'
+import styles from '../../styles/core/pan-scrollbar.module.css'
 
 type PanScrollbarProps = {
     vis: CoreRenderer | null
@@ -13,6 +13,7 @@ function PanScrollbar (
     const [pan, setPan] = useState<number>(0)
     const [panWidth, setPanWidth] = useState<number>(0)
     const [dragging, setDragging] = useState<boolean>(false)
+    const [visible, setVisible] = useState<boolean>(false)
     const [handleClickOffset, setHandleClickOffset] = useState<number>(0)
 
     const scrollbarWrapRef = useRef<HTMLDivElement>(null)
@@ -24,6 +25,10 @@ function PanScrollbar (
         vis.uiState.setPan = setPan
         vis.uiState.setPanWidth = setPanWidth
     }, [vis])
+
+    useEffect(() => {
+        setVisible(panWidth > 0 && panWidth < 1)
+    }, [panWidth])
 
     useEffect(() => {
         if (!vis) { return }
@@ -69,13 +74,15 @@ function PanScrollbar (
 
     return (
         <div
-            className={'scrollbar-wrap'}
-            data-visible={panWidth > 0 && panWidth < 1}
-            data-dragging={dragging}
+            className={`${styles.track} ${!visible && styles.trackHidden}`}
             ref={scrollbarWrapRef}
         >
             <div
-                className={'scrollbar-handle'}
+                className={`${
+                    styles.handle} ${
+                    !visible && styles.handleHidden} ${
+                    dragging && styles.handleExpanded
+                }`}
                 style={{
                     width: `${(panWidth || 0) * 100}%`,
                     left: `${pan * 100}%`

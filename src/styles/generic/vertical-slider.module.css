@@ -1,4 +1,4 @@
-.vertical-slider {
+.wrap {
     --width: 60px;
     --length: 80px;
     position: relative;
@@ -7,7 +7,7 @@
     font-size: 8px;
 }
 
-.vertical-slider > input[type="range"] {
+.slider {
     position: absolute;
     top: -15px;
     left: calc(0.5 * var(--width));
@@ -16,12 +16,12 @@
     transform: rotate(270deg);
 }
 
-.vertical-slider > p {
+.label {
     text-align: center;
     text-transform: uppercase;
 }
 
-.vertical-slider > div {
+.icon {
     display: grid;
     place-items: center;
     width: 100%;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
-import '../../styles/load-icon.css'
+import styles from '../../styles/generic/load-icon.module.css'
 
 type LoadIconProps = {
     loading: boolean,
@@ -47,10 +47,7 @@ function LoadIcon (
     }
 
     return (
-        <div
-            data-visible={visible}
-            className={'load-icon'}
-        ></div>
+        <div className={`${styles.icon} ${visible && styles.visible}`}></div>
     )
 }
 

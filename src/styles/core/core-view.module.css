@@ -1,4 +1,4 @@
-.full-core-canvas {
+.vis-canvas {
     position: absolute;
     z-index: 1;
     width: 100vw;
@@ -7,7 +7,7 @@
     transition: opacity var(--transition-param);
 }
 
-.full-core-canvas[data-visible="true"] {
+.visible {
     transition-delay: 250ms;
     opacity: 1;
 }

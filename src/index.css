@@ -27,11 +27,15 @@ body {
     overscroll-behavior-y: none;
 }
 
+input[type="text"] {
+    font: inherit;
+}
+
 button, a {
     cursor: pointer;
 }
 
-button, input[type="text"] {
+button {
     color: inherit;
     border: none;
     font: inherit;

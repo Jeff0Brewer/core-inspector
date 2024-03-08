@@ -1,0 +1,55 @@
+.mineral-controls {
+    position: relative;
+    z-index: 2;
+    grid-area: bottom-bar;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    background-color: var(--menu-bg-color);
+}
+
+.mineral-bar {
+    display: grid;
+    grid-template-columns: 1fr 40px;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.minerals {
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    max-width: 1000px;
+    overflow-x: scroll;
+}
+
+.mineral-bar button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    overflow: hidden;
+    white-space: nowrap;
+    flex-grow: 1;
+
+    min-width: 30px;
+    height: 16px;
+    padding: 10px;
+    margin: 6px;
+    border-radius: var(--radius);
+    text-transform: uppercase;
+}
+
+.mineral-bar .blend-menu-toggle {
+    position: relative;
+    margin-left: auto;
+    display: grid;
+    place-content: center;
+    max-width: 30px;
+    font-size: 14px;
+    border-radius: var(--radius);
+}

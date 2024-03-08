@@ -10,6 +10,7 @@ import {
     CorePunchcardRepresentation,
     CoreChannelPunchcardRepresentation
 } from '../../components/part/core-representations'
+import styles from '../../styles/part/content.module.css'
 
 type PartContentProps = {
     vis: PartRenderer | null,
@@ -19,43 +20,46 @@ type PartContentProps = {
     visible: StringMap<boolean>
 }
 
+const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
+    { element: CoreLineRepresentation, fullScale: true },
+    { element: CoreRectRepresentation },
+    { element: CorePunchcardRepresentation },
+    { element: CoreChannelPunchcardRepresentation, largeWidth: true }
+]
+
 function PartContent (
     { vis, part, setPart, channels, visible }: PartContentProps
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [parts, setParts] = useState<Array<string>>([])
-    const [representations] = useState<Array<CoreRepresentation>>([
-        { element: CoreLineRepresentation, fullScale: true },
-        { element: CoreRectRepresentation },
-        { element: CorePunchcardRepresentation },
-        { element: CoreChannelPunchcardRepresentation, largeWidth: true }
-    ])
 
     useEffect(() => {
         if (!vis) { return }
         setParts(vis.getParts())
     }, [vis])
 
-    return <>
-        <CorePanel
-            vis={vis}
-            part={part}
-            parts={parts}
-            representations={representations}
-            setPart={setPart}
-            finalTopDepth={scrollDepthTop}
-            finalBottomDepth={scrollDepthBottom}
-        />
-        <PartMineralChannels
-            vis={vis}
-            part={part}
-            channels={channels}
-            visible={visible}
-            setDepthTop={setScrollDepthTop}
-            setDepthBottom={setScrollDepthBottom}
-        />
-    </>
+    return (
+        <div className={styles.content}>
+            <CorePanel
+                vis={vis}
+                part={part}
+                parts={parts}
+                representations={CORE_PANEL_REPRESENTATIONS}
+                setPart={setPart}
+                finalTopDepth={scrollDepthTop}
+                finalBottomDepth={scrollDepthBottom}
+            />
+            <PartMineralChannels
+                vis={vis}
+                part={part}
+                channels={channels}
+                visible={visible}
+                setDepthTop={setScrollDepthTop}
+                setDepthBottom={setScrollDepthBottom}
+            />
+        </div>
+    )
 }
 
 export default PartContent

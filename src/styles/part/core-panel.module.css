@@ -1,0 +1,70 @@
+.label, .column {
+    width: 30px;
+}
+
+.large-width {
+    width: 60px;
+}
+
+.zoom-lines {
+    position: relative;
+    width: 60px;
+    height: 100%;
+}
+
+.labels {
+    display: flex;
+    gap: 60px;
+    background-color: #444;
+}
+
+.label {
+    position: relative;
+    display: grid;
+    place-content: center;
+    white-space: nowrap;
+    font-size: 0.55rem;
+    font-weight: 500;
+    color: var(--color4);
+}
+
+
+.columns {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    background-color: #191919;
+    grid-area: punch;
+    overflow: hidden;
+}
+
+.column {
+    position: relative;
+    height: 100%;
+    background-color: #333;
+    overflow: hidden;
+}
+
+.column-content {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.representation {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.next-window {
+    position: absolute;
+    width: 100%;
+    background-color: #111;
+}

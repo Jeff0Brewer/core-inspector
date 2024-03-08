@@ -8,7 +8,8 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
-import '../../styles/core-vis-settings.css'
+import styles from '../../styles/core/vis-settings.module.css'
+import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
 type CoreVisSettingsProps = {
     vis: CoreRenderer | null,
@@ -50,7 +51,7 @@ function CoreVisSettings (
     }
 
     return (
-        <div className={'core-vis-settings'}>
+        <div className={styles.settings}>
             <ToggleButton
                 active={calibration === 'show'}
                 toggleValue={toggleCalibration}
@@ -68,13 +69,13 @@ function CoreVisSettings (
                 item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                 item1={{ value: 'punchcard', icon: ICONS.punchcard }}
             />
-            <div className={'core-info'}>
+            <div className={styles.info}>
                 <p>core</p>
                 <Dropdown
                     items={cores}
                     selected={core}
                     setSelected={setCore}
-                    customClass={'core-dropdown'}
+                    customStyles={coreDropdownStyles}
                 />
                 <p>
                     sections
@@ -95,7 +96,7 @@ const ICONS = {
     calibration: <IoGridSharp style={{ fontSize: '16px' }} />,
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
-    downscaled: <div className={'downscaled-icon'}></div>,
+    downscaled: <div className={styles.downscaledIcon}></div>,
     punchcard: <RxDragHandleDots1 style={{ fontSize: '25px' }} />
 }
 

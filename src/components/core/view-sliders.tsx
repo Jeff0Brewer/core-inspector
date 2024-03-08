@@ -3,7 +3,7 @@ import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import CoreRenderer from '../../vis/core'
-import '../../styles/core-view-sliders.css'
+import styles from '../../styles/core/view-sliders.module.css'
 
 type CoreViewSlidersProps = {
     vis: CoreRenderer | null
@@ -30,7 +30,7 @@ function CoreViewSliders (
     }, [vis])
 
     return (
-        <div className={'core-view-sliders'}>
+        <div className={styles.sliders}>
             <VerticalSlider
                 value={zoom}
                 setValue={v => vis?.setZoom(v)}
@@ -64,8 +64,8 @@ function CoreViewSliders (
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
-    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>,
-    verticalDist: <div className={'distance-icon'} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
+    horizontalDist: <div className={styles.distanceIcon}><PiArrowsHorizontalBold /></div>,
+    verticalDist: <div className={styles.distanceIcon} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
 
 export default CoreViewSliders

@@ -3,6 +3,7 @@ import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import VerticalSlider from '../../components/generic/vertical-slider'
+import styles from '../../styles/part/view-controls.module.css'
 
 type PartViewControlsProps = {
     part: string,
@@ -17,7 +18,7 @@ function PartViewControls (
     { part, zoom, setZoom, spacing, setSpacing, channelHeight }: PartViewControlsProps
 ): ReactElement {
     return (
-        <div className={'vertical-controls'}>
+        <div className={styles.viewControls}>
             <ScaleRuler
                 part={part}
                 channelHeight={channelHeight}
@@ -61,8 +62,8 @@ function ScaleRuler (
     }, [part, depths, channelHeight])
 
     return (
-        <div className={'scale-ruler'}>
-            <div className={'scale-ruler-center'}>
+        <div className={styles.scaleRuler}>
+            <div className={styles.scaleRulerCenter}>
                 <p>{scale.toFixed(1)} cm</p>
                 <div></div>
                 <p>75 px</p>
@@ -73,7 +74,7 @@ function ScaleRuler (
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
-    horizontalDist: <div className={'distance-icon'}><PiArrowsHorizontalBold /></div>
+    horizontalDist: <div className={styles.distanceIcon}><PiArrowsHorizontalBold /></div>
 }
 
 export default PartViewControls

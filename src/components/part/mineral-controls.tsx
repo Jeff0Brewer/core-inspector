@@ -3,6 +3,7 @@ import { MdColorLens } from 'react-icons/md'
 import { StringMap } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
+import styles from '../../styles/part/mineral-controls.module.css'
 
 type PartMineralControlsProps = {
     minerals: Array<string>,
@@ -22,10 +23,11 @@ function PartMineralControls (
     }
 
     return (
-        <div className={'mineral-controls'}>
-            <div className={'mineral-toggles'}>
+        <div className={styles.mineralControls}>
+            <div className={styles.toggles}>
                 { minerals.map((mineral, i) =>
                     <button
+                        className={styles.mineralToggle}
                         onClick={() => toggleMineralVisible(mineral)}
                         data-active={visible[mineral]}
                         key={i}
@@ -35,7 +37,7 @@ function PartMineralControls (
                 ) }
             </div>
             <button
-                className={'blend-toggle'}
+                className={styles.blendToggle}
                 onClick={() => setMenuOpen(!menuOpen)}
                 data-active={menuOpen}
             >

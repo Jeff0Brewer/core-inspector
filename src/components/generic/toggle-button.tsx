@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import '../../styles/toggle-button.css'
+import styles from '../../styles/generic/toggle-button.module.css'
 
 type ToggleButtonProps = {
     active: boolean,
@@ -12,9 +12,9 @@ function ToggleButton (
 ): ReactElement {
     return (
         <button
-            className={'toggle-button'}
-            data-active={active}
             onClick={toggleValue}
+            className={styles.toggleButton}
+            data-active={active}
         >
             {icon}
         </button>

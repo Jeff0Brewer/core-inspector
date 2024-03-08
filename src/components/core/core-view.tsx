@@ -9,7 +9,7 @@ import CoreViewSliders from '../../components/core/view-sliders'
 import CoreMineralControls from '../../components/core/mineral-controls'
 import MetadataHover from '../../components/core/metadata-hover'
 import PanScrollbar from '../../components/core/pan-scrollbar'
-import '../../styles/full-core.css'
+import styles from '../../styles/core/core-view.module.css'
 
 type CoreViewProps = {
     cores: Array<string>,
@@ -87,11 +87,6 @@ function CoreView (
 
     return <>
         <LoadIcon loading={!vis} showDelayMs={0} />
-        <canvas
-            className={'full-core-canvas'}
-            ref={canvasRef}
-            data-visible={!!vis}
-        ></canvas>
         <CoreVisSettings
             vis={vis}
             cores={cores}
@@ -99,6 +94,10 @@ function CoreView (
             setCore={setCore}
         />
         <CoreViewSliders vis={vis} />
+        <canvas
+            ref={canvasRef}
+            className={`${styles.visCanvas} ${!!vis && styles.visible}`}
+        ></canvas>
         <CoreMineralControls
             vis={vis}
             minerals={minerals}

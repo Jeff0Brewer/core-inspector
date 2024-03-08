@@ -1,0 +1,89 @@
+.wrap {
+    position: relative;
+    width: 300px;
+    height: 22px;
+}
+
+.text-input, .slider-bar, .slider-shortcut, .slider-handle {
+    transition: opacity var(--transition-param);
+}
+
+.wrap[data-visible="false"] .text-input,
+.wrap[data-visible="false"] .slider-value,
+.slider-bar,
+.shortcut,
+.slider-handle {
+    opacity: 0;
+}
+
+.wrap:hover .slider-bar,
+.wrap:hover .shortcut,
+.wrap .slider-bar[data-dragging="true"] .slider-handle,
+.wrap .slider-bar[data-dragging="true"] {
+    opacity: 1;
+}
+
+.visibility-button {
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 100%;
+    font-size: 14px;
+    transition: color var(--transition-param);
+}
+
+.wrap[data-visible="false"] .visibility-button {
+    color: var(--color3);
+}
+
+.text-input {
+    text-align: right;
+    width: 35px;
+    padding-right: 3px;
+}
+
+.slider-bar {
+    background-color: var(--color2);
+    border: none;
+}
+
+.slider-elements {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    left: 0;
+    right: 0;
+    top: 0;
+    padding: 2px;
+    height: 20px;
+    background-color: var(--color0);
+    pointer-events: none;
+}
+
+.text-input, .visibility-button {
+    pointer-events: auto;
+}
+
+.slider-swatch {
+    margin: 0;
+}
+
+.slider-elements > div {
+    position: relative;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    gap: 5px;
+}
+
+.label {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    letter-spacing: 1px;
+}
+
+.slider-handle {
+    font-size: 10px;
+    height: 10px;
+}

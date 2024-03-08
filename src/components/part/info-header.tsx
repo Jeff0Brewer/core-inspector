@@ -1,20 +1,30 @@
-import { ReactElement } from 'react'
+import { ReactElement, useCallback } from 'react'
+import { IoMdClose } from 'react-icons/io'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { getCoreId, getPartId } from '../../lib/ids'
 import { formatFloat } from '../../lib/util'
+import styles from '../../styles/part/info-header.module.css'
 
 type PartInfoHeaderProps = {
     core: string,
-    part: string
+    part: string,
+    setPart: (p: string | null) => void
 }
 
 function PartInfoHeader (
-    { core, part }: PartInfoHeaderProps
+    { core, part, setPart }: PartInfoHeaderProps
 ): ReactElement {
     const { depths, hydrations } = useCoreMetadata()
 
+    const clearPart = useCallback(() => {
+        setPart(null)
+    }, [setPart])
+
     return (
-        <div className={'section-info'}>
+        <div className={styles.partInfo}>
+            <button className={styles.closeButton} onClick={clearPart}>
+                {ICONS.close}
+            </button>
             <p>
                 core
                 <span>
@@ -30,13 +40,13 @@ function PartInfoHeader (
             { !!depths[part] && <>
                 <p>
                     top depth
-                    <span className={'lower'}>
+                    <span className={styles.lowercase}>
                         {formatFloat(depths[part].topDepth)}m
                     </span>
                 </p>
                 <p>
                     length
-                    <span className={'lower'}>
+                    <span className={styles.lowercase}>
                         {formatFloat(depths[part].length)}m
                     </span>
                 </p>
@@ -50,6 +60,10 @@ function PartInfoHeader (
                 </p> }
         </div>
     )
+}
+
+const ICONS = {
+    close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
 export default PartInfoHeader

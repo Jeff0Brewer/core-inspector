@@ -4,6 +4,7 @@ import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, StringMap } from '../../lib/util'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
+import styles from '../../styles/part/core-representations.module.css'
 
 const PART_WIDTH_M = 0.0525
 
@@ -35,7 +36,7 @@ function CoreLineRepresentation (
     }, [part, depths, topDepth, bottomDepth, setCenter])
 
     return <>
-        <div className={'core-line'}></div>
+        <div className={styles.line}></div>
     </>
 }
 
@@ -63,12 +64,12 @@ function CoreRectRepresentation (
     return (
         <div
             ref={wrapRef}
-            className={'part-column'}
+            className={styles.parts}
             style={{ gap: `${gap}px` }}
         >
             { parts.map((id, i) =>
                 <div
-                    className={'part-rect'}
+                    className={styles.rect}
                     ref={id === part ? partRef : null}
                     onClick={() => setPart(id)}
                     style={{
@@ -97,7 +98,7 @@ type CoreCanvasRepresentationProps = {
 }
 
 const DEFAULT_CANVAS_SPACER: ReactElement = (
-    <div className={'part-spacer'}></div>
+    <div className={styles.canvasSpacer}></div>
 )
 
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
@@ -127,13 +128,13 @@ function CoreCanvasRepresentation ({
     return <>
         <div
             ref={wrapRef}
-            className={'part-column'}
+            className={styles.parts}
             style={{ '--gap-size': `${gap}px` } as React.CSSProperties}
         >
             { parts.map((id, i) =>
                 <React.Fragment key={i}>
                     <div
-                        className={'part-canvas'}
+                        className={styles.canvas}
                         ref={id === part ? partRef : null}
                         onClick={() => setPart(id)}
                     >
@@ -220,12 +221,12 @@ function CoreChannelPunchcardRepresentation (
             setPart={setPart}
             widthScale={WIDTH_SCALE}
             canvasSpacer={
-                <div className={'channel-punch-spacer'}></div>
+                <div className={styles.channelPunchSpacer}></div>
             }
             customRender={canvas => <>
-                <div className={'channel-punch-ticks'} data-side={'top'}></div>
+                <div className={styles.channelTicksTop}></div>
                 {canvas}
-                <div className={'channel-punch-ticks'} data-side={'bottom'}></div>
+                <div className={styles.channelTicksBottom}></div>
             </>}
         />
     )

@@ -1,0 +1,109 @@
+.line {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1px;
+    height: 100%;
+    background-color: #fff;
+}
+
+.parts {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+}
+
+.rect, .canvas {
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 0;
+    cursor: pointer;
+}
+
+.rect {
+    background-color: #fff;
+    transition:
+        background-color var(--transition-param),
+        transform var(--transition-param);
+}
+
+.rect:hover {
+    background-color: #ebffc8;
+    transform: scaleX(200%);
+}
+
+.canvas {
+    position: relative;
+    width: fit-content;
+}
+
+.canvas:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    transition: background-color var(--transition-param);
+}
+
+.canvas:hover:after {
+    background-color: rgba(235, 255, 200, 0.1)
+}
+
+.canvas-spacer {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: #fff;
+    min-width: 4px;
+    min-height: 4px;
+    min-margin: 4px;
+    --spacer-size: calc(var(--gap-size, 0) * 0.3333);
+    width: var(--spacer-size);
+    height: var(--spacer-size);
+    margin: var(--spacer-size);
+}
+
+.channel-punch-spacer {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-margin: 4px;
+    margin: calc(var(--gap-size, 0) * 0.5);
+
+}
+
+.channel-ticks-top, .channel-ticks-bottom {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 100%;
+    height: 0;
+}
+
+.channel-ticks-top:after, .channel-ticks-bottom:after {
+    content: "";
+    display: block;
+    position: relative;
+    z-index: 10;
+    transform: translateY(-50%);
+    height: 5px;
+    width: 100%;
+    background-size: 11.111% 100%;
+    background-position: 5.555% 0;
+    background-image: linear-gradient(to right, #fff 1px, transparent 1px);
+}
+
+.channel-ticks-top {
+    bottom: 5px;
+}
+
+.channel-ticks-bottom {
+    top: 5px;
+}

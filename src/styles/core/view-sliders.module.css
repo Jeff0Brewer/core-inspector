@@ -1,9 +1,8 @@
-.core-view-sliders {
+.sliders {
     position: relative;
     z-index: 2;
-    grid-area: label-side;
-    grid-row: label-side / side;
-    width: 100%;
+    grid-area: content;
+    width: 70px;
     height: 100%;
     z-index: 5;
     display: flex;

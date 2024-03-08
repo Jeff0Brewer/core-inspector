@@ -1,6 +1,7 @@
 import { useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { StringMap } from '../../lib/util'
+import styles from '../../styles/part/hover-info.module.css'
 
 type PartHoverInfoProps = {
     abundances: StringMap<number>,
@@ -15,14 +16,13 @@ function PartHoverInfo (
 
     return (
         <div
-            className={'hover-info'}
             ref={popupRef}
-            data-visible={visible}
+            className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
             {Object.entries(abundances).map(([mineral, abundance], i) =>
-                <div className={'abundance-bar'} key={i}>
+                <div className={styles.abundanceBar} key={i}>
                     <div
-                        className={'abundance'}
+                        className={styles.abundance}
                         style={{ height: `${(abundance / 255) * 80}%` }}
                     ></div>
                     <p>{mineral.substring(0, 2)}</p>

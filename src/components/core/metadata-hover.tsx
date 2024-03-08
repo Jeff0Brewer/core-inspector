@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { padZeros, formatFloat } from '../../lib/util'
+import { formatFloat } from '../../lib/util'
+import { getPartId } from '../../lib/ids'
 import CoreRenderer from '../../vis/core'
-import '../../styles/metadata-hover.css'
+import styles from '../../styles/core/metadata-hover.module.css'
 
 type MetadataHoverProps = {
     vis: CoreRenderer | null
@@ -26,14 +27,13 @@ function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
 
     return (
         <div
-            className={'metadata'}
             ref={popupRef}
-            data-hovered={!!hovered}
+            className={`${styles.metadata} ${!!hovered && styles.visible}`}
         >
-            { hovered && <div className={'id'}>
-                {formatId(hovered)}
+            { hovered && <div className={styles.id}>
+                {getPartId(hovered)}
             </div> }
-            { hasData && <div className={'data'}>
+            { hasData && <div className={styles.data}>
                 { depths[hovered] && <div>
                     <p>top depth</p>
                     <span>{formatFloat(depths[hovered].topDepth)}m</span>
@@ -49,11 +49,6 @@ function MetadataHover ({ vis }: MetadataHoverProps): ReactElement {
             </div> }
         </div>
     )
-}
-
-function formatId (id: string): string {
-    const [section, part] = id.split('_')
-    return `${padZeros(section, 4)}Z-${padZeros(part, 2)}`
 }
 
 export default MetadataHover

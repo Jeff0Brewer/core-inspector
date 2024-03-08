@@ -1,5 +1,4 @@
 import { useState, useEffect, ReactElement } from 'react'
-import { IoMdClose } from 'react-icons/io'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
@@ -10,7 +9,7 @@ import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartContent from '../../components/part/part-content'
-import '../../styles/single-part.css'
+// import '../../styles/single-part.css'
 
 type PartViewProps = {
     part: string,
@@ -75,11 +74,7 @@ function PartView (
     }, [vis, core, part, minerals])
 
     return <>
-        <button className={'close-button'} onClick={() => setPart(null)}>
-            {ICONS.close}
-        </button>
-        <div className={'empty-label'}></div>
-        <PartInfoHeader core={core} part={part} />
+        <PartInfoHeader core={core} part={part} setPart={setPart} />
         <PartContent
             vis={vis}
             part={part}
@@ -115,10 +110,6 @@ function getAbundanceFilepaths (
     })
 
     return paths
-}
-
-const ICONS = {
-    close: <IoMdClose style={{ fontSize: '16px' }} />
 }
 
 export default PartView

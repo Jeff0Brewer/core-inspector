@@ -7,9 +7,7 @@ onmessage = ({ data }): void => {
     if (data.type === 'imgData') {
         const imgData: StringMap<ImageData> = data.imgData
         const minerals = Object.keys(imgData)
-        const monochromeData = Object.values(imgData).map(
-            imgData => imageDataToMonochromeBytes(imgData)
-        )
+        const monochromeData = Object.values(imgData).map(imageDataToMonochromeBytes)
         pixels = {}
         minerals.forEach((mineral, i) => {
             pixels[mineral] = monochromeData[i]
