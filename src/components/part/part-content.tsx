@@ -42,18 +42,6 @@ function PartContent (
         setParts(vis.getParts())
     }, [vis])
 
-    useEffect(() => {
-        const t = (e: KeyboardEvent): void => {
-            if (e.key === ' ') {
-                setPanelVisible(!panelVisible)
-            }
-        }
-        window.addEventListener('keydown', t)
-        return () => {
-            window.removeEventListener('keydown', t)
-        }
-    }, [panelVisible])
-
     return (
         <div className={`${styles.content} ${!panelVisible && styles.panelCollapsed}`}>
             <button
