@@ -16,9 +16,8 @@ function PartHoverInfo (
 
     return (
         <div
-            className={styles.hoverInfo}
             ref={popupRef}
-            data-visible={visible}
+            className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
             {Object.entries(abundances).map(([mineral, abundance], i) =>
                 <div className={styles.abundanceBar} key={i}>
