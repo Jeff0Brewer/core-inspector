@@ -19,6 +19,7 @@
 }
 
 .channels-wrap {
+    position: relative;
     grid-area: main;
     height: 100%;
     width: fit-content;
@@ -30,8 +31,8 @@
     display: flex;
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
-    padding-bottom: 32px;
     background-color: #202020;
+    padding-bottom: 60px;
 }
 
 .channel {
