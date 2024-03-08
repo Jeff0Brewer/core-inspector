@@ -11,6 +11,7 @@
     grid-area: label-main;
     background-color: #444;
     width: fit-content;
+    min-width: 100%;
 }
 
 .labels, .channels {
