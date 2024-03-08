@@ -30,27 +30,11 @@ function PartMineralChannels (
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
-
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const [abundances, setAbundances] = useState<StringMap<number>>({})
-
+    const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const contentRef = useRef<HTMLDivElement>(null)
-
     const { depths } = useCoreMetadata()
-
-    const [readWorker, setReadWorker] = useState<Worker | null>(null)
-
-    useEffect(() => {
-        const readWorker = new MineralWorker()
-        readWorker.addEventListener('message', ({ data }) =>
-            setAbundances(data.abundances)
-        )
-        setReadWorker(readWorker)
-
-        return () => {
-            readWorker.terminate()
-        }
-    }, [])
 
     useEffect(() => {
         if (!vis) { return }
@@ -59,39 +43,19 @@ function PartMineralChannels (
     }, [vis, channels])
 
     useEffect(() => {
-        const numChannels = Object.keys(channels).length
-        if (!readWorker || !numChannels) { return }
-
-        const imgData: StringMap<ImageData> = {}
-        Object.entries(channels).forEach(([mineral, img]) => {
-            imgData[mineral] = getImageData(img)
-        })
-
-        readWorker.postMessage({ type: 'imgData', imgData, imgWidth })
-    }, [readWorker, channels, imgWidth])
-
-    useEffect(() => {
-        if (!mousePos || !readWorker) { return }
-        const x = mousePos[0] / viewWidth * imgWidth
-        const y = mousePos[1] / viewHeight * imgHeight
-
-        readWorker.postMessage({ type: 'mousePosition', x, y })
-    }, [readWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
-
-    // add event listener to coordinate label / content scroll
-    useEffect(() => {
         const content = contentRef.current
         if (!content) {
             throw new Error('No reference to content element')
         }
 
         const scroll = (): void => {
-            // get top / bottom view depth for final core panel window
-            const scrollTop = content.scrollTop / content.scrollHeight
-            const scrollBottom = (content.scrollTop + content.clientHeight) / content.scrollHeight
+            const { scrollTop, scrollHeight, clientHeight } = content
+            const topPercent = scrollTop / scrollHeight
+            const bottomPercent = (scrollTop + clientHeight) / scrollHeight
+
             const { topDepth, length } = depths[part]
-            setDepthTop(scrollTop * length + topDepth)
-            setDepthBottom(scrollBottom * length + topDepth)
+            setDepthTop(topPercent * length + topDepth)
+            setDepthBottom(bottomPercent * length + topDepth)
         }
 
         scroll()
@@ -102,7 +66,6 @@ function PartMineralChannels (
         }
     }, [part, depths, channelHeight, setDepthTop, setDepthBottom])
 
-    // get css values for layout from current zoom / spacing
     useEffect(() => {
         if (!vis) { return }
 
@@ -118,6 +81,38 @@ function PartMineralChannels (
             setChannelHeight(channelHeight)
         }
     }, [channels, zoom, spacing, vis, setChannelHeight])
+
+    useEffect(() => {
+        const abundanceWorker = new MineralWorker()
+        abundanceWorker.addEventListener('message', ({ data }) =>
+            setAbundances(data.abundances)
+        )
+        setAbundanceWorker(abundanceWorker)
+
+        return () => {
+            abundanceWorker.terminate()
+        }
+    }, [])
+
+    useEffect(() => {
+        const numChannels = Object.keys(channels).length
+        if (!abundanceWorker || !numChannels) { return }
+
+        const imgData: StringMap<ImageData> = {}
+        Object.entries(channels).forEach(([mineral, img]) => {
+            imgData[mineral] = getImageData(img)
+        })
+
+        abundanceWorker.postMessage({ type: 'imgData', imgData, imgWidth })
+    }, [abundanceWorker, channels, imgWidth])
+
+    useEffect(() => {
+        if (!mousePos || !abundanceWorker) { return }
+        const x = mousePos[0] / viewWidth * imgWidth
+        const y = mousePos[1] / viewHeight * imgHeight
+
+        abundanceWorker.postMessage({ type: 'mousePosition', x, y })
+    }, [abundanceWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
 
     const width = `${viewWidth}px`
     const height = `${viewHeight}px`
@@ -186,7 +181,6 @@ function MineralChannel (
     { source, width, height, mousePos, setMousePos }: MineralChannelProps
 ): ReactElement {
     const channelRef = useRef<HTMLDivElement>(null)
-    const isPathSource = typeof source === 'string'
 
     useEffect(() => {
         const channel = channelRef.current
@@ -218,18 +212,17 @@ function MineralChannel (
 
     return (
         <div className={styles.channel}>
-            <div className={styles.canvasWrap} ref={channelRef}>
-                { mousePos && <div
-                    className={styles.ghostCursor}
-                    style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
-                >
-                    {ICONS.cursor}
-                </div> }
-                { !isPathSource &&
-                        <CanvasRenderer canvas={source} width={width} height={height} /> }
-                { isPathSource &&
-                        <img src={source} style={{ width, height }} />}
+            <div ref={channelRef}>
+                { typeof source === 'string'
+                    ? <img src={source} style={{ width, height }} />
+                    : <CanvasRenderer canvas={source} width={width} height={height} /> }
             </div>
+            { mousePos && <div
+                className={styles.ghostCursor}
+                style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
+            >
+                {ICONS.cursor}
+            </div> }
         </div>
     )
 }

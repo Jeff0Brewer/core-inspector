@@ -38,6 +38,8 @@
 
 .channel {
     position: relative;
+    height: fit-content;
+    display: flex;
 }
 
 .channel-label {
@@ -55,13 +57,7 @@
     flex-shrink: 0;
 }
 
-.canvas-wrap {
-    position: relative;
-    height: fit-content;
-    display: flex;
-}
-
-.canvas-wrap:before, .canvas-wrap:after {
+.channel:before, .channel:after {
     position: relative;
     content: "";
     display: block;
@@ -71,16 +67,16 @@
     transition: opacity var(--transition-param);
 }
 
-.canvas-wrap:hover:before, .canvas-wrap:hover:after {
+.channel:hover:before, .channel:hover:after {
     opacity: 1;
 }
 
-.canvas-wrap:before {
+.channel:before {
     width: 15px;
     background-image: url('../../assets/ruler-left.svg')
 }
 
-.canvas-wrap:after {
+.channel:after {
     width: 5px;
     background-image: url('../../assets/ruler-right.svg')
 }
