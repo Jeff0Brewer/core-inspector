@@ -132,9 +132,8 @@ function ColorSwatch (
 ): ReactElement {
     return (
         <div
-            className={`${styles.swatch} ${customClass}`}
+            className={`${styles.swatch} ${!color && styles.emptySwatch} ${customClass}`}
             style={{ backgroundColor: getCssColor(color) }}
-            data-color={!!color}
         >
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
