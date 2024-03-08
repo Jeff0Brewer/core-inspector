@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { StringMap, getImageData } from '../../lib/util'
-import LoadIcon from '../../components/generic/load-icon'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
@@ -161,7 +160,6 @@ function PartMineralChannels (
                                 key={i}
                             />
                         ) }
-                    <LoadIcon loading={!vis} showDelayMs={0} />
                     <PartHoverInfo abundances={abundances} visible={!!mousePos} />
                 </div>
             </div>
