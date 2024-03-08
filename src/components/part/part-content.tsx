@@ -1,4 +1,5 @@
 import { useState, useEffect, ReactElement } from 'react'
+import { PiCaretLeftBold } from 'react-icons/pi'
 import { StringMap } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
@@ -33,15 +34,25 @@ function PartContent (
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [parts, setParts] = useState<Array<string>>([])
+    const [panelVisible, setPanelVisible] = useState<boolean>(true)
 
+    // TODO: add full parts list to metadata
     useEffect(() => {
         if (!vis) { return }
         setParts(vis.getParts())
     }, [vis])
 
     return (
-        <div className={styles.content}>
+        <div className={`${styles.content} ${!panelVisible && styles.panelCollapsed}`}>
+            <button
+                className={styles.panelToggle}
+                style={{ transform: `rotate(${panelVisible ? '0' : '180deg'})` }}
+                onClick={(): void => setPanelVisible(!panelVisible)}
+            >
+                <PiCaretLeftBold />
+            </button>
             <CorePanel
+                visible={panelVisible}
                 vis={vis}
                 part={part}
                 parts={parts}

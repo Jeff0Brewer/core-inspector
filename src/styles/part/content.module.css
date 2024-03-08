@@ -10,4 +10,29 @@
     grid-template-areas:
         "label-side label-punch label-main"
         "side punch main";
+    transition: grid-template-columns 0.5s ease;
+}
+
+.panel-collapsed {
+    grid-template-columns: 70px 0 1fr;
+}
+
+.panel-toggle {
+    grid-area: label-punch;
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    right: -10px;
+    height: 20px;
+    width: 20px;
+    display: grid;
+    place-content: center;
+    transition:
+        color var(--transition-param),
+        transform var(--transition-param);
+    font-size: 12px;
+}
+
+.panel-toggle:hover {
+    color: var(--color4);
 }
