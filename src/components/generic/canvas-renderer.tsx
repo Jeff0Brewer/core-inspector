@@ -30,7 +30,11 @@ function CanvasRenderer (
     })
 
     return (
-        <div ref={wrapRef} className={styles.wrap} style={{ width, height }}></div>
+        <div
+            ref={wrapRef}
+            className={styles.canvasWrap}
+            style={{ width, height }}
+        ></div>
     )
 }
 

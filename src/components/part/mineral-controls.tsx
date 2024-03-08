@@ -23,7 +23,7 @@ function PartMineralControls (
     }
 
     return (
-        <div className={styles.wrap}>
+        <div className={styles.mineralControls}>
             <div className={styles.toggles}>
                 { minerals.map((mineral, i) =>
                     <button

@@ -1,9 +1,9 @@
-.wrap {
+.canvas-wrap {
     position: relative;
     pointer-events: none;
 }
 
-.wrap > canvas {
+.canvas-wrap > canvas {
     position: relative;
     width: 100%;
     height: 100%;

@@ -1,4 +1,4 @@
-.wrap {
+.part-info {
     position: relative;
     grid-area: top-bar;
     display: flex;
@@ -13,12 +13,12 @@
 
 }
 
-.wrap p {
+.part-info p {
     color: var(--color4);
     white-space: nowrap;
 }
 
-.wrap span {
+.part-info span {
     color: #fff;
     margin-left: 5px;
     white-space: nowrap;

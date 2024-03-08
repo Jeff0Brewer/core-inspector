@@ -21,7 +21,7 @@ function PartInfoHeader (
     }, [setPart])
 
     return (
-        <div className={styles.wrap}>
+        <div className={styles.partInfo}>
             <button className={styles.closeButton} onClick={clearPart}>
                 {ICONS.close}
             </button>
