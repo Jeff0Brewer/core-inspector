@@ -1,4 +1,4 @@
-import { useRef, ReactElement } from 'react'
+import { useRef, useState, useEffect, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
@@ -32,14 +32,37 @@ function PartHoverInfo (
                 )}
             </div>
             <div className={styles.spectrum}>
-                {spectrum.map((intensity, i) =>
-                    <div
-                        className={styles.spectrumBar}
-                        style={{ height: `${intensity * 100}%` }}
-                        key={i}
-                    ></div>
-                )}
+                <SvgPlot data={spectrum} />
             </div>
+        </div>
+    )
+}
+
+type SvgPlotProps = {
+    data: Array<number>
+}
+
+function SvgPlot (
+    { data }: SvgPlotProps
+): ReactElement {
+    const [points, setPoints] = useState<string>('')
+
+    useEffect(() => {
+        const points = ['100,100', '0,100']
+        const xInc = 100 / (data.length - 1)
+        for (let i = 0; i < data.length; i++) {
+            points.push(`${i * xInc},${(1 - data[i]) * 100}`)
+        }
+        points.push('100,100')
+
+        setPoints(points.join(' '))
+    }, [data])
+
+    return (
+        <div className={styles.svgPlot}>
+            <svg fill={'#fff'} viewBox={'0 0 100 100'} preserveAspectRatio={'none'}>
+                <polygon points={points} />
+            </svg>
         </div>
     )
 }
