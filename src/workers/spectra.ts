@@ -33,7 +33,7 @@ const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
 
 let basePath = ''
 let imgHeight = 0
-const sliceCache: StringMap<SpectraChunk> = {}
+let sliceCache: StringMap<SpectraChunk> = {}
 
 function getSpectraBasePath (core: string, part: string): string {
     const coreId = `${core.toUpperCase()}A`
@@ -89,6 +89,7 @@ onmessage = ({ data }): void => {
     if (data.type === 'id') {
         basePath = getSpectraBasePath(data.core, data.part)
         imgHeight = data.imgHeight
+        sliceCache = {}
     } else if (data.type === 'mousePosition') {
         const { x, y } = data
         const path = `${basePath}.${getSlicesPath(Math.round(y), imgHeight)}`
