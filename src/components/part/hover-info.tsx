@@ -51,7 +51,7 @@ function SvgPlot (
         const points = ['100,100', '0,100']
         const xInc = 100 / (data.length - 1)
         for (let i = 0; i < data.length; i++) {
-            points.push(`${i * xInc},${(1 - data[i]) * 100}`)
+            points.push(`${i * xInc},${(1 - data[i] * 2) * 100}`)
         }
         points.push('100,100')
 
