@@ -5,11 +5,12 @@ import styles from '../../styles/part/hover-info.module.css'
 
 type PartHoverInfoProps = {
     abundances: StringMap<number>,
+    spectrum: Array<number>,
     visible: boolean
 }
 
 function PartHoverInfo (
-    { abundances, visible }: PartHoverInfoProps
+    { abundances, spectrum, visible }: PartHoverInfoProps
 ): ReactElement {
     const popupRef = useRef<HTMLDivElement>(null)
     usePopupPosition(popupRef)
@@ -19,15 +20,26 @@ function PartHoverInfo (
             ref={popupRef}
             className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
-            {Object.entries(abundances).map(([mineral, abundance], i) =>
-                <div className={styles.abundanceBar} key={i}>
+            <div className={styles.abundances}>
+                {Object.entries(abundances).map(([mineral, abundance], i) =>
+                    <div className={styles.abundanceBar} key={i}>
+                        <div
+                            className={styles.abundance}
+                            style={{ height: `${(abundance / 255) * 80}%` }}
+                        ></div>
+                        <p>{mineral.substring(0, 2)}</p>
+                    </div>
+                )}
+            </div>
+            <div className={styles.spectrum}>
+                {spectrum.map((intensity, i) =>
                     <div
-                        className={styles.abundance}
-                        style={{ height: `${(abundance / 255) * 80}%` }}
+                        className={styles.spectrumBar}
+                        style={{ height: `${intensity * 100}%` }}
+                        key={i}
                     ></div>
-                    <p>{mineral.substring(0, 2)}</p>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     )
 }

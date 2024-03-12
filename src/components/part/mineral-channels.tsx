@@ -182,6 +182,7 @@ function PartMineralChannels (
                         ) }
                     <PartHoverInfo
                         abundances={abundances}
+                        spectrum={spectrum}
                         visible={!!mousePos}
                     />
                 </div>

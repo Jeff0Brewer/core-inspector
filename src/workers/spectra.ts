@@ -1,4 +1,4 @@
-import { padZeros, StringMap } from '../lib/util'
+import { padZeros, clamp, StringMap } from '../lib/util'
 
 type SpectraData = {
     width: number,
@@ -17,13 +17,23 @@ type SpectraData = {
     data: Array<number>
 }
 
+type SpectraChunk = {
+    reduceFactor: number,
+    width: number,
+    height: number,
+    samples: number,
+    startSlice: number,
+    endSlice: number,
+    data: Array<Array<Array<number>>>
+}
+
 const REDUCE_FACTOR = 4
 const SLICE_COUNT = 16
 const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
 
 let basePath = ''
 let imgHeight = 0
-const sliceCache: StringMap<SpectraData> = {}
+const sliceCache: StringMap<SpectraChunk> = {}
 
 function getSpectraBasePath (core: string, part: string): string {
     const coreId = `${core.toUpperCase()}A`
@@ -40,15 +50,39 @@ function getSlicesPath (sliceInd: number, imgHeight: number): string {
     return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.json`
 }
 
-async function getSlices (path: string): Promise<SpectraData> {
-    const cached = sliceCache[path]
-    if (cached) { return cached }
-
+async function getSlices (path: string): Promise<void> {
     const res = await fetch(path)
     const data: SpectraData = await res.json()
-    sliceCache[path] = data
 
-    return data
+    const chunk: SpectraChunk = {
+        reduceFactor: REDUCE_FACTOR,
+        width: data.width_reduced,
+        height: data.height_reduced,
+        samples: data.nsamples_reduced,
+        startSlice: data.start_slice,
+        endSlice: data.end_slice,
+        data: []
+    }
+    for (let y = 0; y < chunk.height; y++) {
+        const ySlices = []
+        for (let x = 0; x < chunk.width; x++) {
+            const xSlices = []
+            for (let i = 0; i < chunk.samples; i++) {
+                const ind = x + (i + y * chunk.samples) * chunk.width
+                xSlices.push(
+                    clamp(
+                        (data.data[ind] - data.min_value) / (data.max_value - data.min_value),
+                        0,
+                        1
+                    )
+                )
+            }
+            ySlices.push(xSlices)
+        }
+        chunk.data.push(ySlices)
+    }
+
+    sliceCache[path] = chunk
 }
 
 onmessage = ({ data }): void => {
@@ -61,15 +95,16 @@ onmessage = ({ data }): void => {
 
         const slices = sliceCache[path]
         if (slices) {
-            const rowIndex = Math.round(x / slices.width_reducefactor)
-            const colIndex = Math.round((y - slices.start_slice) / slices.height_reducefactor)
-            const startInd = (rowIndex + colIndex * slices.width_reduced) * slices.nsamples_reduced
-            const spectrum = slices.data
-                .slice(startInd, startInd + slices.nsamples_reduced)
-                .map(value => (value - slices.min_value) / (slices.max_value - slices.min_value))
-            postMessage({ spectrum })
+            const { reduceFactor, startSlice, data, width, height } = slices
+            const rowIndex = clamp(Math.round(x / reduceFactor), 0, width - 1)
+            const colIndex = clamp(Math.round((y - startSlice) / reduceFactor), 0, height - 1)
+            const spectrum = data[colIndex][rowIndex]
+            if (spectrum) {
+                postMessage({ spectrum })
+            }
         } else {
             getSlices(path)
+            postMessage({ spectrum: [] })
         }
     }
 }

@@ -1,11 +1,9 @@
 .hover-info {
     position: fixed;
+    display: flex;
+    flex-direction: column;
     pointer-events: none;
     z-index: 200;
-    display: flex;
-    gap: 2px;
-    padding: 5px;
-    height: 50px;
     background-color: var(--menu-bg-color);
     border-radius: var(--radius);
     transition:
@@ -19,12 +17,20 @@
     opacity: 1
 }
 
-.hover-info .abundance-bar {
+.abundance-bar {
     position: relative;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+}
+
+.abundances {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    padding: 5px;
+    height: 50px;
 }
 
 .abundance-bar > .abundance {
@@ -41,4 +47,17 @@
     width: 12px;
     height: 10px;
     font-size: 0.4rem;
+}
+
+.spectrum {
+    display: flex;
+    gap: 1px;
+    height: 50px;
+}
+
+.spectrum-bar {
+    position: relative;
+    margin-top: auto;
+    width: 1px;
+    background-color: #fff;
 }
