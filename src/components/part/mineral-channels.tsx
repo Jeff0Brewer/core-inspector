@@ -7,10 +7,12 @@ import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import AbundanceWorker from '../../workers/abundances?worker'
+import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
+    core: string,
     part: string,
     channels: StringMap<HTMLImageElement>,
     visible: StringMap<boolean>,
@@ -19,7 +21,7 @@ type PartMineralChannelsProps = {
 }
 
 function PartMineralChannels (
-    { vis, part, channels, visible, setDepthTop, setDepthBottom }: PartMineralChannelsProps
+    { vis, core, part, channels, visible, setDepthTop, setDepthBottom }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -30,8 +32,12 @@ function PartMineralChannels (
     const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
+
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
+    const [spectrum, setSpectrum] = useState<Array<number>>([])
+    const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
+
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
 
@@ -88,8 +94,15 @@ function PartMineralChannels (
         )
         setAbundanceWorker(abundanceWorker)
 
+        const spectraWorker = new SpectraWorker()
+        spectraWorker.addEventListener('message', ({ data }) => {
+            setSpectrum(data.spectrum)
+        })
+        setSpectraWorker(spectraWorker)
+
         return () => {
             abundanceWorker.terminate()
+            spectraWorker.terminate()
         }
     }, [])
 
@@ -106,12 +119,19 @@ function PartMineralChannels (
     }, [abundanceWorker, channels, imgWidth])
 
     useEffect(() => {
-        if (!mousePos || !abundanceWorker) { return }
+        if (!spectraWorker || !imgHeight) { return }
+
+        spectraWorker.postMessage({ type: 'id', core, part, imgHeight })
+    }, [spectraWorker, imgHeight, core, part])
+
+    useEffect(() => {
+        if (!mousePos || !abundanceWorker || !spectraWorker) { return }
         const x = mousePos[0] / viewWidth * imgWidth
         const y = mousePos[1] / viewHeight * imgHeight
 
         abundanceWorker.postMessage({ type: 'mousePosition', x, y })
-    }, [abundanceWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
+        spectraWorker.postMessage({ type: 'mousePosition', x, y })
+    }, [abundanceWorker, spectraWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
 
     const width = `${viewWidth}px`
     const height = `${viewHeight}px`
@@ -160,7 +180,11 @@ function PartMineralChannels (
                                 key={i}
                             />
                         ) }
-                    <PartHoverInfo abundances={abundances} visible={!!mousePos} />
+                    <PartHoverInfo
+                        abundances={abundances}
+                        spectrum={spectrum}
+                        visible={!!mousePos}
+                    />
                 </div>
             </div>
         </div>

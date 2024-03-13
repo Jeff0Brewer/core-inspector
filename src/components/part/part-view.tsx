@@ -77,6 +77,7 @@ function PartView (
         <PartInfoHeader core={core} part={part} setPart={setPart} />
         <PartContent
             vis={vis}
+            core={core}
             part={part}
             setPart={setPart}
             channels={channels}
