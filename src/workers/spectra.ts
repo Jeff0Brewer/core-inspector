@@ -14,7 +14,7 @@ type SpectraData = {
     end_slice: number,
     min_value: number,
     max_value: number,
-    data: Array<number>
+    data: string
 }
 
 type SpectraChunk = {
@@ -24,7 +24,7 @@ type SpectraChunk = {
     samples: number,
     startSlice: number,
     endSlice: number,
-    data: Array<Array<Array<number>>>
+    data: Uint8Array
 }
 
 const REDUCE_FACTOR = 4
@@ -36,11 +36,10 @@ let imgHeight = 0
 let sliceCache: StringMap<SpectraChunk> = {}
 
 function getSpectraBasePath (core: string, part: string): string {
-    const coreId = `${core.toUpperCase()}A`
     const [section, piece] = part.split('_').map(s => parseInt(s))
 
-    const dir = `/data/temp/${coreId}/${padZeros(section, 4)}Z/${padZeros(piece, 3)}/spectra/${SPECTRA_TYPE}`
-    const file = `${coreId}_${padZeros(section, 3)}Z-${piece}_${SPECTRA_TYPE}`
+    const dir = `/data/${core}/spectra`
+    const file = `${core.toUpperCase()}A_${padZeros(section, 3)}Z-${piece}_${SPECTRA_TYPE}`
     return `${dir}/${file}`
 }
 
@@ -48,6 +47,15 @@ function getSlicesPath (sliceInd: number, imgHeight: number): string {
     const minSlice = sliceInd - (sliceInd % SLICE_COUNT)
     const maxSlice = Math.min(minSlice + SLICE_COUNT, imgHeight) - 1
     return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.json`
+}
+
+function base64ToU8 (base64: string): Uint8Array {
+    const binaryString = atob(base64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+    }
+    return bytes
 }
 
 async function getSlices (path: string): Promise<void> {
@@ -61,25 +69,7 @@ async function getSlices (path: string): Promise<void> {
         samples: data.nsamples_reduced,
         startSlice: data.start_slice,
         endSlice: data.end_slice,
-        data: []
-    }
-    for (let y = 0; y < chunk.height; y++) {
-        const ySlices = []
-        for (let x = 0; x < chunk.width; x++) {
-            const xSlices = []
-            for (let i = 0; i < chunk.samples; i++) {
-                const ind = x + (i + y * chunk.samples) * chunk.width
-                xSlices.push(
-                    clamp(
-                        (data.data[ind] - data.min_value) / (data.max_value - data.min_value),
-                        0,
-                        1
-                    )
-                )
-            }
-            ySlices.push(xSlices)
-        }
-        chunk.data.push(ySlices)
+        data: base64ToU8(data.data)
     }
 
     sliceCache[path] = chunk
@@ -92,17 +82,17 @@ onmessage = ({ data }): void => {
         sliceCache = {}
     } else if (data.type === 'mousePosition') {
         const { x, y } = data
-        const path = `${basePath}.${getSlicesPath(Math.round(y), imgHeight)}`
+        const slicePath = getSlicesPath(Math.round(y), imgHeight)
+        const path = `${basePath}.${slicePath}`
 
         const slices = sliceCache[path]
         if (slices) {
-            const { reduceFactor, startSlice, data, width, height } = slices
+            const { reduceFactor, startSlice, data, width, height, samples } = slices
             const rowIndex = clamp(Math.round(x / reduceFactor), 0, width - 1)
             const colIndex = clamp(Math.round((y - startSlice) / reduceFactor), 0, height - 1)
-            const spectrum = data[colIndex][rowIndex]
-            if (spectrum) {
-                postMessage({ spectrum })
-            }
+            const startIndex = (colIndex * width + rowIndex) * samples
+            const spectrum = data.slice(startIndex, startIndex + samples)
+            postMessage({ spectrum })
         } else {
             getSlices(path)
             postMessage({ spectrum: [] })
