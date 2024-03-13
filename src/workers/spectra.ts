@@ -1,3 +1,4 @@
+import { TextWriter, BlobReader, ZipReader } from '@zip.js/zip.js'
 import { padZeros, clamp, StringMap } from '../lib/util'
 
 type SpectraData = {
@@ -38,7 +39,7 @@ let sliceCache: StringMap<SpectraChunk> = {}
 function getSpectraBasePath (core: string, part: string): string {
     const [section, piece] = part.split('_').map(s => parseInt(s))
 
-    const dir = `/data/${core}/spectra`
+    const dir = `/data/${core}/spectra-zip`
     const file = `${core.toUpperCase()}A_${padZeros(section, 3)}Z-${piece}_${SPECTRA_TYPE}`
     return `${dir}/${file}`
 }
@@ -46,7 +47,7 @@ function getSpectraBasePath (core: string, part: string): string {
 function getSlicesPath (sliceInd: number, imgHeight: number): string {
     const minSlice = sliceInd - (sliceInd % SLICE_COUNT)
     const maxSlice = Math.min(minSlice + SLICE_COUNT, imgHeight) - 1
-    return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.json`
+    return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.json.zip`
 }
 
 function base64ToU8 (base64: string): Uint8Array {
@@ -58,9 +59,26 @@ function base64ToU8 (base64: string): Uint8Array {
     return bytes
 }
 
-async function getSlices (path: string): Promise<void> {
+async function getZipText (path: string): Promise<string> {
     const res = await fetch(path)
-    const data: SpectraData = await res.json()
+    const blob = await res.blob()
+
+    const zipReader = new ZipReader(new BlobReader(blob))
+    const firstEntry = (await zipReader.getEntries())[0]
+    if (!firstEntry || !firstEntry.getData) {
+        throw new Error('No data in zip file')
+    }
+
+    const textWriter = new TextWriter()
+    const text = await firstEntry.getData(textWriter)
+    zipReader.close()
+
+    return text
+}
+
+async function getSlices (path: string): Promise<void> {
+    const jsonString = await getZipText(path)
+    const data: SpectraData = JSON.parse(jsonString)
 
     const chunk: SpectraChunk = {
         reduceFactor: REDUCE_FACTOR,
