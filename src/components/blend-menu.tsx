@@ -15,12 +15,13 @@ import mineralSliderStyles from '../styles/custom/mineral-slider.module.css'
 import paramSliderStyles from '../styles/custom/param-slider.module.css'
 
 type BlendMenuProps = {
+    open: boolean,
     minerals: Array<string>,
-    palettes: Array<GenericPalette>
+    palettes: Array<GenericPalette>,
 }
 
 function BlendMenu (
-    { minerals, palettes }: BlendMenuProps
+    { open, minerals, palettes }: BlendMenuProps
 ): ReactElement {
     const {
         palette, setPalette,
@@ -78,6 +79,10 @@ function BlendMenu (
             visibilities[index] = v
             setVisibilities([...visibilities])
         }
+    }
+
+    if (!open) {
+        return <></>
     }
 
     return (

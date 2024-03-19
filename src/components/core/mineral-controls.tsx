@@ -1,4 +1,4 @@
-import { useState, ReactElement } from 'react'
+import { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { GenericPalette } from '../../lib/palettes'
@@ -21,16 +21,18 @@ function CoreMineralControls (
         setVisibilities,
         setMonochrome
     } = useBlendState()
+
     useBlending(vis)
 
-    // sets parameters to show one channel in monochrome
-    const getMineralSetter = (i: number): (() => void) => {
-        return () => {
+    const onMineralButtonClick = (e: MouseEvent, i: number): void => {
+        if (e.shiftKey) {
+            visibilities[i] = !visibilities[i]
+        } else {
             visibilities.fill(false)
             visibilities[i] = true
-            setVisibilities([...visibilities])
             setMonochrome(true)
         }
+        setVisibilities([...visibilities])
     }
 
     return (
@@ -39,7 +41,7 @@ function CoreMineralControls (
                 <div className={styles.minerals}>
                     { minerals.map((mineral, i) => (
                         <button
-                            onClick={getMineralSetter(i)}
+                            onClick={(e): void => onMineralButtonClick(e, i)}
                             data-active={visibilities[i]}
                             key={i}
                         >
@@ -55,11 +57,11 @@ function CoreMineralControls (
                     <MdColorLens />
                 </button>
             </div>
-            { menuOpen &&
-                <BlendMenu
-                    minerals={minerals}
-                    palettes={palettes}
-                /> }
+            <BlendMenu
+                open={menuOpen}
+                minerals={minerals}
+                palettes={palettes}
+            />
         </div>
     )
 }

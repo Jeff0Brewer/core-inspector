@@ -43,7 +43,11 @@ function PartMineralControls (
             >
                 <MdColorLens />
             </button>
-            { menuOpen && <BlendMenu minerals={minerals} palettes={palettes} /> }
+            <BlendMenu
+                open={menuOpen}
+                minerals={minerals}
+                palettes={palettes}
+            />
         </div>
     )
 }
