@@ -142,6 +142,20 @@ class MineralBlender {
     }
 }
 
+function getToggleableMinerals (
+    minerals: Array<string>,
+    palette: GenericPalette,
+    visibilities: Array<boolean>
+): Array<string> {
+    if (palette.type === 'labelled') {
+        return Object.keys(palette.colors)
+    }
+    const numVisible = visibilities.filter(v => v).length
+    return minerals.filter((_, i) =>
+        visibilities[i] || numVisible < palette.colors.length
+    )
+}
+
 // maps colors to minerals based on blend params
 function getBlendColor (
     palette: GenericPalette,
@@ -158,10 +172,9 @@ function getBlendColor (
     }
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
-    } else {
-        const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
-        return palette.colors[priorNumVisible] || null
     }
+    const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
+    return palette.colors[priorNumVisible] || null
 }
 
 // create fragment shader dynamically to blend from variable number of input textures.
@@ -228,7 +241,10 @@ function getBlendFrag (numTexture: number): string {
 }
 
 export default MineralBlender
-export { getBlendColor }
+export {
+    getBlendColor,
+    getToggleableMinerals
+}
 export type {
     BlendParams,
     BlendMode

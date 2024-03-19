@@ -5,7 +5,7 @@ import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
 import { GenericPalette } from '../lib/palettes'
-import { BlendMode, getBlendColor } from '../vis/mineral-blend'
+import { BlendMode, getBlendColor, getToggleableMinerals } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
 import styles from '../styles/blend-menu.module.css'
@@ -32,6 +32,8 @@ function BlendMenu (
         mode, setMode,
         monochrome, setMonochrome
     } = useBlendState()
+
+    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
 
     // update visibilities to match newly selected palette on change
     useEffect(() => {
@@ -118,6 +120,7 @@ function BlendMenu (
                         setMagnitude={getMagnitudeSetter(i)}
                         visible={visibilities[i]}
                         setVisible={getVisibilitySetter(i)}
+                        disabled={!toggleable.includes(mineral)}
                         index={i}
                         key={i}
                     />
@@ -199,14 +202,18 @@ type MineralSliderProps = {
     setMagnitude: (m: number) => void,
     visible: boolean,
     setVisible: (v: boolean) => void,
+    disabled: boolean
 }
 
 function MineralSlider (
-    { mineral, index, color, magnitude, setMagnitude, visible, setVisible }: MineralSliderProps
+    { mineral, index, color, magnitude, setMagnitude, visible, setVisible, disabled }: MineralSliderProps
 ): ReactElement {
     return (
         <div
-            className={mineralSliderStyles.wrap}
+            className={`${
+                mineralSliderStyles.wrap} ${
+                disabled && mineralSliderStyles.disabled
+            }`}
             data-visible={visible}
         >
             <Slider

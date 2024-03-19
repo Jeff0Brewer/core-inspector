@@ -53,3 +53,8 @@
     font-size: 14px;
     border-radius: var(--radius);
 }
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
