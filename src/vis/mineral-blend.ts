@@ -3,6 +3,7 @@ import { GlContext, GlProgram, GlBuffer, GlTexture, GlTextureFramebuffer, getTex
 import { GenericPalette } from '../lib/palettes'
 import { POS_FPV, TEX_FPV, FULLSCREEN_RECT } from '../lib/vert-gen'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
+import fragSource from '../shaders/mineral-blend-frag.glsl?raw'
 
 // get enum for blend modes since must send as uniform to shader
 const BLEND_MODES = { additive: 0, maximum: 1 } as const
@@ -43,7 +44,6 @@ class MineralBlender {
 
         this.minerals = minerals
 
-        const fragSource = getBlendFrag(sources.length)
         this.program = new GlProgram(gl, vertSource, fragSource)
 
         this.buffer = new GlBuffer(gl)
@@ -175,69 +175,6 @@ function getBlendColor (
     }
     const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
     return palette.colors[priorNumVisible] || null
-}
-
-// create fragment shader dynamically to blend from variable number of input textures.
-function getBlendFrag (numTexture: number): string {
-    const uniforms = [
-        'uniform float saturation;',
-        'uniform float threshold;',
-        'uniform float mode;'
-    ]
-    const variables = [
-        `bool isMaximumMode = abs(mode - ${BLEND_MODES.maximum.toFixed(1)}) < 0.001;`,
-        'float maxValue = 0.0;'
-    ]
-    const abundances = []
-    const values = []
-    const maxCalcs = []
-    const blendCalcs = []
-
-    for (let i = 0; i < numTexture; i++) {
-        // add uniforms for each channel's texture / color / blend magnitude
-        uniforms.push(
-            `uniform sampler2D texture${i};`,
-            `uniform vec3 color${i};`,
-            `uniform float magnitude${i};`
-        )
-
-        // get mineral abundance from texture
-        abundances.push(`float abundance${i} = texture2D(texture${i}, vTexCoord).x;`)
-
-        // get blend value from abundance / blend magnitude / threshold
-        values.push(`float value${i} = magnitude${i} * smoothstep(threshold, 1.0, abundance${i});`)
-
-        // get maximum blend value for comparison in maximum mode
-        maxCalcs.push(`maxValue = max(maxValue, value${i});`)
-
-        // get on / off value to control if all sources are added together
-        // or if only the maximum should be used
-        const isMaximumValue = `(maxValue == value${i})`
-        const checkMax = `((!isMaximumMode || ${isMaximumValue}) ? 1.0 : 0.0)`
-
-        // get final blended color by summing texture values with params applied
-        const semicolonOrPlus = i === numTexture - 1 ? ';' : ' +'
-        blendCalcs.push(
-            `${checkMax} * value${i} * color${i}${semicolonOrPlus}`
-        )
-    }
-
-    const fragSource = [
-        'precision highp float;',
-        'varying vec2 vTexCoord;',
-        ...uniforms,
-        'void main() {',
-        ...variables,
-        ...abundances,
-        ...values,
-        ...maxCalcs,
-        'vec3 color =',
-        ...blendCalcs,
-        'gl_FragColor = vec4(color * saturation, 1.0);',
-        '}'
-    ].join('\n')
-
-    return fragSource
 }
 
 export default MineralBlender
