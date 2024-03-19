@@ -50,6 +50,10 @@ button[data-active="true"] {
     background-color: var(--color0);
 }
 
+button[data-active="true"]:hover {
+    background-color: var(--color1);
+}
+
 button[data-active="false"] {
     background-color: var(--color2);
 }
