@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import { ReactElement, useEffect } from 'react'
 import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
@@ -31,6 +31,36 @@ function BlendMenu (
         mode, setMode,
         monochrome, setMonochrome
     } = useBlendState()
+
+    // update visibilities to match newly selected palette on change
+    useEffect(() => {
+        if (palette.type === 'labelled') {
+            const visibleMinerals = Object.keys(palette.colors)
+            setVisibilities(minerals.map(mineral => visibleMinerals.includes(mineral)))
+        } else {
+            const numVisible = palette.colors.length
+            setVisibilities(minerals.map((_, i) => i < numVisible))
+        }
+    }, [palette, minerals, setVisibilities])
+
+    // setup keyboard shortcuts
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent): void => {
+            if (e.key === 'b') {
+                setMonochrome(!monochrome)
+                return
+            }
+            const numKey = parseInt(e.key)
+            if (numKey > 0 && numKey <= minerals.length) {
+                visibilities[numKey - 1] = !visibilities[numKey - 1]
+                setVisibilities([...visibilities])
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
 
     // sets magnitude for single index, used in mineral sliders
     const getMagnitudeSetter = (index: number): ((m: number) => void) => {
