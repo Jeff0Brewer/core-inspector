@@ -81,12 +81,8 @@ function BlendMenu (
         }
     }
 
-    if (!open) {
-        return <></>
-    }
-
     return (
-        <section className={styles.blendMenu}>
+        <section className={`${styles.blendMenu} ${!open && styles.hidden}`}>
             <MonochromeToggle
                 palette={palette}
                 monochrome={monochrome}
@@ -117,12 +113,12 @@ function BlendMenu (
                 { minerals.map((mineral, i) =>
                     <MineralSlider
                         mineral={mineral}
-                        index={i}
                         color={getBlendColor(palette, visibilities, monochrome, mineral, i)}
                         magnitude={magnitudes[i]}
                         setMagnitude={getMagnitudeSetter(i)}
                         visible={visibilities[i]}
                         setVisible={getVisibilitySetter(i)}
+                        index={i}
                         key={i}
                     />
                 ) }

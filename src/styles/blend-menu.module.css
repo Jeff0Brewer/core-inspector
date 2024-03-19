@@ -8,6 +8,10 @@
     background-color: var(--menu-bg-color);
 }
 
+.hidden {
+    display: none;
+}
+
 .blend-menu > div {
     display: flex;
     justify-content: space-between;
