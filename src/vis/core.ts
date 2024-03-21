@@ -26,7 +26,6 @@ const PROJECTION_PARAMS = {
     near: 0.01,
     far: 5
 }
-const POINT_PER_ROW = 3
 
 /*
  * UI STATE
@@ -58,6 +57,7 @@ class CoreRenderer {
     canvas: HTMLCanvasElement
     gl: GlContext
     mineralBlender: MineralBlender
+    punchcardBlender: MineralBlender
     downscaledCore: DownscaledCoreRenderer
     punchcardCore: PunchcardCoreRenderer
     stencilCore: StencilCoreRenderer
@@ -79,10 +79,14 @@ class CoreRenderer {
     uiState: UiState
     dropped: boolean
 
+    ids: Array<string>
+
     constructor (
         canvas: HTMLCanvasElement,
         mineralMaps: Array<HTMLImageElement>,
+        punchcardMaps: Array<HTMLImageElement>,
         metadata: TileTextureMetadata,
+        ids: Array<string>,
         minerals: Array<string>,
         uiState: UiState = {}
     ) {
@@ -101,6 +105,8 @@ class CoreRenderer {
         this.mousePos = [0, 0]
         this.dropped = false
 
+        this.ids = ids
+
         this.gl = initGl(this.canvas)
         this.gl.enable(this.gl.BLEND)
         this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA)
@@ -112,15 +118,11 @@ class CoreRenderer {
         this.camera = new Camera2D(0, 'spiral')
 
         this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
+        this.punchcardBlender = new MineralBlender(this.gl, punchcardMaps, minerals)
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-            this.metadata,
-            POINT_PER_ROW,
-            this.calibrationT
-        )
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, this.calibrationT)
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             this.metadata,
-            POINT_PER_ROW,
             this.spacing,
             this.getViewportBounds(),
             this.targetShape,
@@ -139,8 +141,6 @@ class CoreRenderer {
 
         this.punchcardCore = new PunchcardCoreRenderer(
             this.gl,
-            this.metadata,
-            POINT_PER_ROW,
             punchPositions,
             punchTexCoords,
             this.targetShape
@@ -149,13 +149,15 @@ class CoreRenderer {
         this.stencilCore = new StencilCoreRenderer(
             this.gl,
             downPositions,
-            this.metadata
+            this.metadata,
+            this.ids
         )
 
         this.hoverHighlight = new HoverHighlightRenderer(
             this.gl,
             downPositions,
-            this.metadata
+            this.metadata,
+            this.ids
         )
 
         this.accentLines = new AccentLineRenderer(
@@ -204,6 +206,7 @@ class CoreRenderer {
 
     setBlending (params: BlendParams): void {
         this.mineralBlender.update(this.gl, params)
+        this.punchcardBlender.update(this.gl, params)
     }
 
     setHovered (id: string | null): void {
@@ -277,11 +280,7 @@ class CoreRenderer {
     }
 
     genTexCoords (): void {
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(
-            this.metadata,
-            POINT_PER_ROW,
-            ease(this.calibrationT)
-        )
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, ease(this.calibrationT))
         this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
         this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
     }
@@ -294,7 +293,6 @@ class CoreRenderer {
         const viewportBounds = this.getViewportBounds()
         const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
             this.metadata,
-            POINT_PER_ROW,
             this.spacing,
             viewportBounds,
             this.targetShape,
@@ -322,7 +320,6 @@ class CoreRenderer {
             // but still < 16ms and this edge case happens very rarely so fine for now
             const { punchPositions } = getCorePositions(
                 this.metadata,
-                POINT_PER_ROW,
                 this.spacing,
                 viewportBounds,
                 otherShape,
@@ -448,7 +445,7 @@ class CoreRenderer {
         } else {
             this.punchcardCore.draw(
                 this.gl,
-                this.mineralBlender,
+                this.punchcardBlender,
                 this.camera.matrix,
                 easedShapeT
             )

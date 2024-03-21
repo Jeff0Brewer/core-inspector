@@ -30,7 +30,8 @@ class StencilCoreRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        metadata: TileTextureMetadata
+        metadata: TileTextureMetadata,
+        ids: Array<string>
     ) {
         this.lastMousePos = [-1, -1]
 
@@ -49,7 +50,7 @@ class StencilCoreRenderer {
         this.positionBuffer.setData(gl, positions)
         this.positionBuffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
-        const { colors, map } = getStencilColors(metadata, vertPerTile)
+        const { colors, map } = getStencilColors(metadata, ids, vertPerTile)
         this.colorIdMap = map
         this.colorBuffer = new GlBuffer(gl)
         this.colorBuffer.setData(gl, colors)
@@ -137,6 +138,7 @@ class StencilCoreRenderer {
 // and map for converting rendered color to original id
 const getStencilColors = (
     metadata: TileTextureMetadata,
+    ids: Array<string>,
     vertPerTile: number
 ): {
     colors: Uint8Array,
@@ -145,8 +147,6 @@ const getStencilColors = (
     const map: ColorIdMap = {}
     const colors = new Uint8Array(metadata.numTiles * vertPerTile * COL_FPV)
     let offset = 0
-
-    const ids = Object.keys(metadata.tiles)
 
     for (let i = 0; i < ids.length; i++) {
         const { hex, vec } = indToColor(i)
