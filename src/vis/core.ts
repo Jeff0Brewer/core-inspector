@@ -220,7 +220,7 @@ class CoreRenderer {
     }
 
     setZoom (t: number): void {
-        this.camera.zoom(t)
+        this.camera.zoom(1 - t)
         this.wrapColumns()
         this.uiState.setZoom?.(t)
     }
