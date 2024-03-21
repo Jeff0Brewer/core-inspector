@@ -24,14 +24,17 @@ class PartRenderer {
     coreMinerals: MineralBlender
     punchcardPart: PunchcardPartRenderer
     tileMetadata: TileTextureMetadata
+    ids: Array<string>
     dropped: boolean
 
     constructor (
         minerals: Array<string>,
         coreMinerals: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata
+        metadata: TileTextureMetadata,
+        ids: Array<string>
     ) {
         this.tileMetadata = metadata
+        this.ids = ids
 
         this.canvas = document.createElement('canvas')
         this.canvas.width = 0
@@ -94,6 +97,7 @@ class PartRenderer {
         this.punchcardPart.getPunchcard(
             this.gl,
             this.tileMetadata,
+            this.ids,
             part,
             this.coreMinerals,
             output,
@@ -111,31 +115,13 @@ class PartRenderer {
         this.punchcardPart.getChannelPunchcard(
             this.gl,
             this.tileMetadata,
+            this.ids,
             part,
             this.coreMinerals,
             output,
             width,
             widthScale
         )
-    }
-
-    // TEMPORARY, add parts list to metadata
-    getParts (): Array<string> {
-        return Object.keys(this.tileMetadata.tiles)
-    }
-
-    getPartAspects (): StringMap<{width: number, height: number}> {
-        const aspects: StringMap<{
-            width: number,
-            height: number
-        }> = {}
-        Object.entries(this.tileMetadata.tiles).forEach(([part, rect]) => {
-            aspects[part] = {
-                width: rect.width,
-                height: rect.height * 2
-            }
-        })
-        return aspects
     }
 
     drop (): void {

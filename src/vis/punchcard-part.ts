@@ -5,7 +5,6 @@ import { CanvasCtx, glToCanvas } from '../vis/part'
 import MineralBlender from '../vis/mineral-blend'
 import vertSource from '../shaders/punchcard-part-vert.glsl?raw'
 import fragSource from '../shaders/punchcard-part-frag.glsl?raw'
-import { vec2 } from 'gl-matrix'
 
 const STRIDE = POS_FPV + TEX_FPV
 
@@ -13,7 +12,6 @@ class PunchcardPartRenderer {
     program: GlProgram
     buffer: GlBuffer
     setPointSize: (s: number) => void
-    setBinWidth: (b: vec2) => void
     setOffsetX: (o: number) => void
     setWidthScale: (s: number) => void
 
@@ -25,11 +23,9 @@ class PunchcardPartRenderer {
         this.buffer.addAttribute(gl, this.program, 'texCoord', TEX_FPV, STRIDE, POS_FPV)
 
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
-        const binWidthLoc = this.program.getUniformLocation(gl, 'binWidth')
         const offsetXLoc = this.program.getUniformLocation(gl, 'offsetX')
         const widthScaleLoc = this.program.getUniformLocation(gl, 'widthScale')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
-        this.setBinWidth = (b: vec2): void => { gl.uniform2fv(binWidthLoc, b) }
         this.setOffsetX = (o: number): void => { gl.uniform1f(offsetXLoc, o) }
         this.setWidthScale = (s: number): void => { gl.uniform1f(widthScaleLoc, s) }
     }
@@ -37,13 +33,15 @@ class PunchcardPartRenderer {
     getChannelPunchcard (
         gl: GlContext,
         metadata: TileTextureMetadata,
+        ids: Array<string>,
         part: string,
         minerals: MineralBlender,
         output: CanvasCtx,
         width: number,
         widthScale: number
     ): void {
-        const tile = metadata.tiles[part]
+        const partInd = ids.indexOf(part)
+        const tile = metadata.punchTiles[partInd]
         const tileAspect = (2 * tile.height / tile.width)
 
         const numColumns = minerals.sources.length
@@ -78,10 +76,6 @@ class PunchcardPartRenderer {
         this.program.bind(gl)
         this.buffer.bind(gl)
 
-        const [texWidth, texHeight] = metadata.textureDims
-        const binWidth = tile.width
-        const binHeight = binWidth * texHeight / texWidth
-        this.setBinWidth([binWidth, binHeight])
         this.setPointSize(0.8 * width / (widthScale * numColumns))
         this.setWidthScale(1 / widthScale)
 
@@ -103,16 +97,18 @@ class PunchcardPartRenderer {
     getPunchcard (
         gl: GlContext,
         metadata: TileTextureMetadata,
+        ids: Array<string>,
         part: string,
         minerals: MineralBlender,
         output: CanvasCtx,
         width: number
     ): void {
-        const tile = metadata.tiles[part]
+        const partInd = ids.indexOf(part)
+        const tile = metadata.punchTiles[partInd]
 
         // temp
         const pointPerRow = 3
-        const numRows = Math.round(pointPerRow * (2 * tile.height / tile.width))
+        const numRows = metadata.punchNumRows[partInd]
         width = Math.round(width)
         const height = 2 * Math.round(width * tile.height / tile.width)
 
@@ -149,10 +145,6 @@ class PunchcardPartRenderer {
         this.buffer.bind(gl)
         minerals.bindTexture(gl)
 
-        const [texWidth, texHeight] = metadata.textureDims
-        const binWidth = tile.width / pointPerRow
-        const binHeight = binWidth * texHeight / texWidth
-        this.setBinWidth([binWidth, binHeight])
         this.setPointSize(0.8 * width / pointPerRow)
         this.setOffsetX(0)
         this.setWidthScale(1)

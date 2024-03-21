@@ -6,7 +6,8 @@ type CoreMetadataContextProps = {
     topDepth: number,
     bottomDepth: number,
     depths: DepthMetadata,
-    hydrations: HydrationMetadata
+    hydrations: HydrationMetadata,
+    ids: Array<string>
 }
 
 const CoreMetadataContext = createContext<CoreMetadataContextProps | null>(null)
