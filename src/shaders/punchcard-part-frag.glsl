@@ -1,6 +1,7 @@
 precision highp float;
 
 uniform float widthScale;
+uniform sampler2D minerals;
 
 varying vec3 vColor;
 

@@ -23,7 +23,8 @@ class HoverHighlightRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        metadata: TileTextureMetadata
+        metadata: TileTextureMetadata,
+        ids: Array<string>
     ) {
         this.positions = positions
         this.lastHovered = null
@@ -34,7 +35,7 @@ class HoverHighlightRenderer {
         // assumes that all tiles have same number of vertices
         const floatPerTile = positions.length / metadata.numTiles
         this.idIndMap = {}
-        Object.keys(metadata.tiles).forEach((id, index) => {
+        ids.forEach((id, index) => {
             const start = index * floatPerTile
             const end = (index + 1) * floatPerTile
             this.idIndMap[id] = [start, end]

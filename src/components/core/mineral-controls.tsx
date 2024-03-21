@@ -1,6 +1,7 @@
-import { useState, useEffect, ReactElement } from 'react'
+import { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
+import { getToggleableMinerals } from '../../vis/mineral-blend'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
@@ -20,64 +21,38 @@ function CoreMineralControls (
         palette,
         visibilities,
         setVisibilities,
-        monochrome,
         setMonochrome
     } = useBlendState()
+
     useBlending(vis)
 
-    // setup keyboard shortcuts
-    useEffect(() => {
-        const keydown = (e: KeyboardEvent): void => {
-            if (e.key === 'b') {
-                setMonochrome(!monochrome)
-                return
-            }
-            const numKey = parseInt(e.key)
-            if (numKey > 0 && numKey <= minerals.length) {
-                visibilities[numKey - 1] = !visibilities[numKey - 1]
-                setVisibilities([...visibilities])
-            }
-        }
-        window.addEventListener('keydown', keydown)
-        return () => {
-            window.removeEventListener('keydown', keydown)
-        }
-    }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
-
-    // update visibilities to match newly selected palette on change
-    useEffect(() => {
-        if (palette.type === 'labelled') {
-            const visibleMinerals = Object.keys(palette.colors)
-            setVisibilities(minerals.map(mineral => visibleMinerals.includes(mineral)))
+    const onMineralButtonClick = (e: MouseEvent, i: number): void => {
+        if (e.shiftKey) {
+            visibilities[i] = !visibilities[i]
         } else {
-            const numVisible = palette.colors.length
-            setVisibilities(minerals.map((_, i) => i < numVisible))
-        }
-    }, [palette, minerals, setVisibilities])
-
-    // sets parameters to show one channel in monochrome
-    const getMineralSetter = (i: number): (() => void) => {
-        return () => {
             visibilities.fill(false)
             visibilities[i] = true
-            setVisibilities([...visibilities])
             setMonochrome(true)
         }
+        setVisibilities([...visibilities])
     }
+
+    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
 
     return (
         <div className={styles.mineralControls}>
             <div className={styles.mineralBar}>
                 <div className={styles.minerals}>
-                    { minerals.map((mineral, i) => (
+                    { minerals.map((mineral, i) =>
                         <button
-                            onClick={getMineralSetter(i)}
+                            className={`${!toggleable.includes(mineral) && styles.disabled}`}
+                            onClick={(e): void => onMineralButtonClick(e, i)}
                             data-active={visibilities[i]}
                             key={i}
                         >
                             {mineral}
                         </button>
-                    )) }
+                    ) }
                 </div>
                 <button
                     className={styles.blendMenuToggle}
@@ -87,11 +62,11 @@ function CoreMineralControls (
                     <MdColorLens />
                 </button>
             </div>
-            { menuOpen &&
-                <BlendMenu
-                    minerals={minerals}
-                    palettes={palettes}
-                /> }
+            <BlendMenu
+                open={menuOpen}
+                minerals={minerals}
+                palettes={palettes}
+            />
         </div>
     )
 }

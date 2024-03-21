@@ -9,7 +9,6 @@ import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import PartMineralControls from '../../components/part/mineral-controls'
 import PartContent from '../../components/part/part-content'
-// import '../../styles/single-part.css'
 
 type PartViewProps = {
     part: string,
@@ -40,15 +39,16 @@ function PartView (
         const initVis = async (): Promise<void> => {
             const corePaths: StringMap<string> = {}
             minerals.forEach((mineral, i) => {
-                corePaths[mineral] = `./data/${core}/downscaled/${i}.png`
+                corePaths[mineral] = `./data/${core}/punchcard/${i}.png`
             })
 
-            const [coreMaps, tileMetadata] = await Promise.all([
+            const [coreMaps, tileMetadata, idMetadata] = await Promise.all([
                 Promise.all(minerals.map(mineral => loadImageAsync(corePaths[mineral]))),
-                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json())
+                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json()),
+                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
             ])
 
-            setVis(new PartRenderer(minerals, coreMaps, tileMetadata))
+            setVis(new PartRenderer(minerals, coreMaps, tileMetadata, idMetadata.ids))
         }
 
         initVis()

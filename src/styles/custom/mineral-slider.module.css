@@ -2,6 +2,7 @@
     position: relative;
     width: 300px;
     height: 22px;
+    transition: opacity var(--transition-param);
 }
 
 .text-input, .slider-bar, .slider-shortcut, .slider-handle {
@@ -86,4 +87,13 @@
 .slider-handle {
     font-size: 10px;
     height: 10px;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.disabled * {
+    pointer-events: none;
 }

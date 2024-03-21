@@ -39,15 +39,15 @@ let sliceCache: StringMap<SpectraChunk> = {}
 function getSpectraBasePath (core: string, part: string): string {
     const [section, piece] = part.split('_').map(s => parseInt(s))
 
-    const dir = `/data/${core}/spectra-zip`
-    const file = `${core.toUpperCase()}A_${padZeros(section, 3)}Z-${piece}_${SPECTRA_TYPE}`
+    const dir = `/data/${core}/spectra/${SPECTRA_TYPE}`
+    const file = `${core.toUpperCase()}A_${section}Z-${piece}_${SPECTRA_TYPE}`
     return `${dir}/${file}`
 }
 
 function getSlicesPath (sliceInd: number, imgHeight: number): string {
     const minSlice = sliceInd - (sliceInd % SLICE_COUNT)
     const maxSlice = Math.min(minSlice + SLICE_COUNT, imgHeight) - 1
-    return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.json.zip`
+    return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}.HWS.byte-b64.json.zip`
 }
 
 function base64ToU8 (base64: string): Uint8Array {

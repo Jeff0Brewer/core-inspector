@@ -27,7 +27,7 @@
     overflow-x: scroll;
 }
 
-.mineral-bar button {
+.mineral-bar button[data-active] {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -42,9 +42,12 @@
     margin: 6px;
     border-radius: var(--radius);
     text-transform: uppercase;
+    transition:
+        background-color var(--transition-param),
+        opacity var(--transition-param);
 }
 
-.mineral-bar .blend-menu-toggle {
+.mineral-bar > .blend-menu-toggle[data-active] {
     position: relative;
     margin-left: auto;
     display: grid;
@@ -52,4 +55,13 @@
     max-width: 30px;
     font-size: 14px;
     border-radius: var(--radius);
+}
+
+.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.disabled * {
+    pointer-events: none;
 }

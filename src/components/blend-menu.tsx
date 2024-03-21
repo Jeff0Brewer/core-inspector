@@ -1,11 +1,11 @@
-import { ReactElement } from 'react'
+import { ReactElement, useEffect } from 'react'
 import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
 import { GenericPalette } from '../lib/palettes'
-import { BlendMode, getBlendColor } from '../vis/mineral-blend'
+import { BlendMode, getBlendColor, getToggleableMinerals } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
 import styles from '../styles/blend-menu.module.css'
@@ -15,12 +15,13 @@ import mineralSliderStyles from '../styles/custom/mineral-slider.module.css'
 import paramSliderStyles from '../styles/custom/param-slider.module.css'
 
 type BlendMenuProps = {
+    open: boolean,
     minerals: Array<string>,
-    palettes: Array<GenericPalette>
+    palettes: Array<GenericPalette>,
 }
 
 function BlendMenu (
-    { minerals, palettes }: BlendMenuProps
+    { open, minerals, palettes }: BlendMenuProps
 ): ReactElement {
     const {
         palette, setPalette,
@@ -31,6 +32,38 @@ function BlendMenu (
         mode, setMode,
         monochrome, setMonochrome
     } = useBlendState()
+
+    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
+
+    // update visibilities to match newly selected palette on change
+    useEffect(() => {
+        if (palette.type === 'labelled') {
+            const visibleMinerals = Object.keys(palette.colors)
+            setVisibilities(minerals.map(mineral => visibleMinerals.includes(mineral)))
+        } else {
+            const numVisible = palette.colors.length
+            setVisibilities(minerals.map((_, i) => i < numVisible))
+        }
+    }, [palette, minerals, setVisibilities])
+
+    // setup keyboard shortcuts
+    useEffect(() => {
+        const keydown = (e: KeyboardEvent): void => {
+            if (e.key === 'b') {
+                setMonochrome(!monochrome)
+                return
+            }
+            const numKey = parseInt(e.key)
+            if (numKey > 0 && numKey <= minerals.length) {
+                visibilities[numKey - 1] = !visibilities[numKey - 1]
+                setVisibilities([...visibilities])
+            }
+        }
+        window.addEventListener('keydown', keydown)
+        return () => {
+            window.removeEventListener('keydown', keydown)
+        }
+    }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
 
     // sets magnitude for single index, used in mineral sliders
     const getMagnitudeSetter = (index: number): ((m: number) => void) => {
@@ -51,7 +84,7 @@ function BlendMenu (
     }
 
     return (
-        <section className={styles.blendMenu}>
+        <section className={`${styles.blendMenu} ${!open && styles.hidden}`}>
             <MonochromeToggle
                 palette={palette}
                 monochrome={monochrome}
@@ -82,12 +115,13 @@ function BlendMenu (
                 { minerals.map((mineral, i) =>
                     <MineralSlider
                         mineral={mineral}
-                        index={i}
                         color={getBlendColor(palette, visibilities, monochrome, mineral, i)}
                         magnitude={magnitudes[i]}
                         setMagnitude={getMagnitudeSetter(i)}
                         visible={visibilities[i]}
                         setVisible={getVisibilitySetter(i)}
+                        disabled={!toggleable.includes(mineral)}
+                        index={i}
                         key={i}
                     />
                 ) }
@@ -168,14 +202,18 @@ type MineralSliderProps = {
     setMagnitude: (m: number) => void,
     visible: boolean,
     setVisible: (v: boolean) => void,
+    disabled: boolean
 }
 
 function MineralSlider (
-    { mineral, index, color, magnitude, setMagnitude, visible, setVisible }: MineralSliderProps
+    { mineral, index, color, magnitude, setMagnitude, visible, setVisible, disabled }: MineralSliderProps
 ): ReactElement {
     return (
         <div
-            className={mineralSliderStyles.wrap}
+            className={`${
+                mineralSliderStyles.wrap} ${
+                disabled && mineralSliderStyles.disabled
+            }`}
             data-visible={visible}
         >
             <Slider

@@ -15,23 +15,27 @@ function CoreMetadataProvider (
     const [bottomDepth, setBottomDepth] = useState<number>(0)
     const [depths, setDepths] = useState<DepthMetadata>({})
     const [hydrations, setHydrations] = useState<HydrationMetadata>({})
+    const [ids, setIds] = useState<Array<string>>([])
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
             const [
                 { numSection, topDepth, bottomDepth },
                 { depth },
-                { hydration }
+                { hydration },
+                { ids }
             ] = await Promise.all([
                 fetch(`./data/${core}/core-metadata.json`).then(res => res.json()),
                 fetch(`./data/${core}/depth-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/hydration-metadata.json`).then(res => res.json())
+                fetch(`./data/${core}/hydration-metadata.json`).then(res => res.json()),
+                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
             ])
             setNumSection(numSection)
             setTopDepth(topDepth)
             setBottomDepth(bottomDepth)
             setDepths(depth)
             setHydrations(hydration)
+            setIds(ids)
         }
 
         getData()
@@ -42,7 +46,8 @@ function CoreMetadataProvider (
         topDepth,
         bottomDepth,
         depths,
-        hydrations
+        hydrations,
+        ids
     }
 
     return (
