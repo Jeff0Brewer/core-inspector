@@ -13,6 +13,7 @@ class PunchcardPartRenderer {
     buffer: GlBuffer
     setPointSize: (s: number) => void
     setOffsetX: (o: number) => void
+    setBinX: (b: number) => void
     setWidthScale: (s: number) => void
 
     constructor (gl: GlContext) {
@@ -24,9 +25,11 @@ class PunchcardPartRenderer {
 
         const pointSizeLoc = this.program.getUniformLocation(gl, 'pointSize')
         const offsetXLoc = this.program.getUniformLocation(gl, 'offsetX')
+        const binXLoc = this.program.getUniformLocation(gl, 'binX')
         const widthScaleLoc = this.program.getUniformLocation(gl, 'widthScale')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
         this.setOffsetX = (o: number): void => { gl.uniform1f(offsetXLoc, o) }
+        this.setBinX = (b: number): void => { gl.uniform1f(binXLoc, b) }
         this.setWidthScale = (s: number): void => { gl.uniform1f(widthScaleLoc, s) }
     }
 
@@ -78,6 +81,7 @@ class PunchcardPartRenderer {
 
         this.setPointSize(0.8 * width / (widthScale * numColumns))
         this.setWidthScale(1 / widthScale)
+        this.setBinX(tile.width / 3)
 
         gl.viewport(0, 0, width, height)
         for (let i = 0; i < numColumns; i++) {
@@ -147,6 +151,7 @@ class PunchcardPartRenderer {
 
         this.setPointSize(0.8 * width / pointPerRow)
         this.setOffsetX(0)
+        this.setBinX(0)
         this.setWidthScale(1)
 
         gl.viewport(0, 0, width, height)

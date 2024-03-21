@@ -1,6 +1,5 @@
 import { initGl, GlContext, GlBuffer, GlProgram, GlTextureFramebuffer } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/tile-texture'
-import { StringMap } from '../lib/util'
 import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import PunchcardPartRenderer from '../vis/punchcard-part'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
