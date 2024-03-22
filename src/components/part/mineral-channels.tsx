@@ -42,9 +42,11 @@ function PartMineralChannels (
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
 
+    // TODO: prevent attaching / removing handler on
+    // spectrum / mousepos state change
     useEffect(() => {
         const mousedown = (): void => {
-            if (spectrum.length > 0) {
+            if (spectrum.length > 0 && mousePos !== null) {
                 setPanelSpectra(spectrum)
             }
         }
@@ -52,7 +54,7 @@ function PartMineralChannels (
         return () => {
             window.removeEventListener('mousedown', mousedown)
         }
-    }, [spectrum, setPanelSpectra])
+    }, [spectrum, setPanelSpectra, mousePos])
 
     useEffect(() => {
         if (!vis) { return }
