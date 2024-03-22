@@ -81,9 +81,7 @@ function PartContent (
             >
                 <PiCaretRightBold />
             </button>
-            <SpectraPanel
-                spectra={null}
-            />
+            <SpectraPanel spectra={panelSpectra} />
         </div>
     )
 }
