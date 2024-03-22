@@ -18,10 +18,11 @@ type PartMineralChannelsProps = {
     visible: StringMap<boolean>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
+    setPanelSpectra: (s: Array<number> | null) => void
 }
 
 function PartMineralChannels (
-    { vis, core, part, channels, visible, setDepthTop, setDepthBottom }: PartMineralChannelsProps
+    { vis, core, part, channels, visible, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -40,6 +41,18 @@ function PartMineralChannels (
 
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
+
+    useEffect(() => {
+        const mousedown = (): void => {
+            if (spectrum.length > 0) {
+                setPanelSpectra(spectrum)
+            }
+        }
+        window.addEventListener('mousedown', mousedown)
+        return () => {
+            window.removeEventListener('mousedown', mousedown)
+        }
+    }, [spectrum, setPanelSpectra])
 
     useEffect(() => {
         if (!vis) { return }
