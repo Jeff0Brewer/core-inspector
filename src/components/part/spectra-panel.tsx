@@ -14,7 +14,10 @@ function SpectraPanel (
         <div className={styles.spectraPanel}>
             { spectra !== null && <>
                 <div className={styles.mainPlot}>
-                    <SvgPlot data={spectra} />
+                    <SvgPlot
+                        data={spectra}
+                        fillOpacity={'0.3'}
+                    />
                 </div>
 
             </>}
