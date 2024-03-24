@@ -81,38 +81,36 @@ function CorePanel ({
         setColumns(columns)
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
-    return (
-        <div className={`${styles.corePanel} ${!visible && styles.corePanelCollapsed}`}>
-            <div className={styles.labels}>
-                { columns.map((column, i) =>
-                    <ScaleColumnLabel
-                        topDepth={column.topDepth}
-                        bottomDepth={column.bottomDepth}
-                        largeWidth={!!column.representation.largeWidth}
-                        key={i}
-                    />
-                ) }
-            </div>
-            <div className={styles.columns}>
-                { columns.map((column, i) => {
-                    const isLast = i === columns.length - 1
-                    return <ScaleColumn
-                        vis={vis}
-                        parts={column.parts}
-                        part={part}
-                        setPart={setPart}
-                        representation={column.representation}
-                        gap={column.gap}
-                        topDepth={column.topDepth}
-                        bottomDepth={column.bottomDepth}
-                        nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
-                        nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
-                        key={i}
-                    />
-                }) }
-            </div>
+    return <>
+        <div className={styles.labels}>
+            { columns.map((column, i) =>
+                <ScaleColumnLabel
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    largeWidth={!!column.representation.largeWidth}
+                    key={i}
+                />
+            ) }
         </div>
-    )
+        <div className={styles.columns}>
+            { columns.map((column, i) => {
+                const isLast = i === columns.length - 1
+                return <ScaleColumn
+                    vis={vis}
+                    parts={column.parts}
+                    part={part}
+                    setPart={setPart}
+                    representation={column.representation}
+                    gap={column.gap}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
+                    nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
+                    key={i}
+                />
+            }) }
+        </div>
+    </>
 }
 
 type ScaleColumnProps = {

@@ -1,15 +1,12 @@
 .view-controls {
     position: relative;
     grid-area: side;
-    grid-row: label-side / side;
 
     display: flex;
     flex-direction: column;
     align-items: center;
 
     background-color: #262626;
-    /* TODO: fix label style */
-    border-top: 20px solid #444;
 }
 
 .header, .scale {
@@ -35,9 +32,6 @@
     width: 100%;
     height: 100%;
     padding: 20px 0;
-
-    /* TODO: remove content overlap with bottom bar, temp hack */
-    margin-bottom: 40px;
 }
 
 

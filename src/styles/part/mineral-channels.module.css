@@ -1,6 +1,6 @@
 .content {
     grid-area: main;
-    grid-row: label-main / main;
+    grid-row: label-main / bottom-main;
     position: relative;
     max-width: 100%;
     overflow-x: scroll;
