@@ -1,5 +1,5 @@
 .view-controls {
-    background-color: #606060;
+    background-color: #262626;
     grid-area: side;
     grid-row: label-side / side;
     display: flex;
