@@ -82,7 +82,7 @@ function CorePanel ({
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
     return <>
-        <div className={styles.labels}>
+        <div className={styles.topLabels}>
             { columns.map((column, i) =>
                 <ScaleColumnLabel
                     topDepth={column.topDepth}
@@ -109,6 +109,8 @@ function CorePanel ({
                     key={i}
                 />
             }) }
+        </div>
+        <div className={styles.bottomLabels}>
         </div>
     </>
 }

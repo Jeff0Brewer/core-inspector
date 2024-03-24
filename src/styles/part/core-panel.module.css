@@ -1,12 +1,18 @@
-.labels {
-    grid-area: label-punch;
-    display: flex;
-    justify-content: flex-end;
-    height: 100%;
+.top-labels, .bottom-labels {
     background-color: #444;
     padding-right: 30px;
-
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
     min-width: 460px;
+}
+
+.top-labels {
+    grid-area: label-punch;
+}
+
+.bottom-labels {
+    grid-area: bottom-punch;
 }
 
 .zoom-lines {
