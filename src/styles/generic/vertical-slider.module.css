@@ -1,9 +1,8 @@
 .wrap {
-    --width: 60px;
-    --length: 80px;
+    --width: 50px;
     position: relative;
     width: var(--width);
-    margin-top: calc(var(--length) + 20px);
+    margin-top: calc(var(--height, 0) + 20px);
     font-size: 8px;
 }
 
@@ -11,7 +10,7 @@
     position: absolute;
     top: -15px;
     left: calc(0.5 * var(--width));
-    width: var(--length);
+    width: var(--height, 0);
     transform-origin: left center;
     transform: rotate(270deg);
 }
@@ -19,6 +18,8 @@
 .label {
     text-align: center;
     text-transform: uppercase;
+    font-size: 0.5rem;
+    line-height: 0.7rem;
 }
 
 .icon {

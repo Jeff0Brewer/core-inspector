@@ -1,9 +1,10 @@
-import { useEffect, useRef, ReactElement } from 'react'
+import React, { useEffect, useRef, ReactElement } from 'react'
 import styles from '../../styles/generic/vertical-slider.module.css'
 
 type VerticalSliderProps = {
     value: number,
     setValue: (v: number) => void,
+    height?: string,
     label?: string,
     icon?: ReactElement,
     min?: number,
@@ -13,6 +14,7 @@ type VerticalSliderProps = {
 
 function VerticalSlider ({
     value, setValue, label, icon,
+    height = '80px',
     min = 0,
     max = 1,
     step = 0.1
@@ -32,8 +34,11 @@ function VerticalSlider ({
         }
     }, [value, step])
 
+    // cast required to set css variable
+    const heightStyle = { '--height': height } as React.CSSProperties
+
     return (
-        <div className={styles.wrap}>
+        <div className={styles.wrap} style={heightStyle}>
             <input
                 className={styles.slider}
                 ref={inputRef}
