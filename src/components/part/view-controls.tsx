@@ -5,6 +5,7 @@ import VerticalSlider from '../../components/generic/vertical-slider'
 import styles from '../../styles/part/view-controls.module.css'
 
 type PartViewControlsProps = {
+    scale: number,
     zoom: number,
     spacing: number,
     setZoom: (z: number) => void,
@@ -12,7 +13,7 @@ type PartViewControlsProps = {
 }
 
 function PartViewControls (
-    { zoom, spacing, setZoom, setSpacing }: PartViewControlsProps
+    { scale, zoom, spacing, setZoom, setSpacing }: PartViewControlsProps
 ): ReactElement {
     return (
         <div className={styles.viewControls}>
@@ -30,16 +31,21 @@ function PartViewControls (
                     max={1}
                     step={0.01}
                 />
-                <VerticalSlider
-                    value={zoom}
-                    setValue={setZoom}
-                    label={'zoom single track'}
-                    icon={ICONS.zoom}
-                    height={'180px'}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                />
+                <div>
+                    <p className={styles.scale}>
+                        x1/{scale.toFixed(0)}
+                    </p>
+                    <VerticalSlider
+                        value={zoom}
+                        setValue={setZoom}
+                        label={'zoom single track'}
+                        icon={ICONS.zoom}
+                        height={'180px'}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                    />
+                </div>
             </div>
         </div>
     )

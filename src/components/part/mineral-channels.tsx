@@ -10,6 +10,8 @@ import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
+const MIN_WIDTH_PX = 50
+
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
@@ -88,7 +90,7 @@ function PartMineralChannels (
     useEffect(() => {
         if (!vis) { return }
 
-        const channelWidth = zoom * 250 + 50
+        const channelWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
         const channelGap = channelWidth * spacing
         setViewWidth(channelWidth)
         setViewGap(channelGap)
@@ -99,7 +101,7 @@ function PartMineralChannels (
             setViewHeight(channelHeight)
             setChannelHeight(channelHeight)
         }
-    }, [channels, zoom, spacing, vis, setChannelHeight])
+    }, [channels, zoom, spacing, vis, imgWidth, setChannelHeight])
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
@@ -152,12 +154,11 @@ function PartMineralChannels (
     const gap = `${viewGap}px`
     return <>
         <PartViewControls
-            part={part}
+            scale={imgWidth / viewWidth}
             zoom={zoom}
-            setZoom={setZoom}
             spacing={spacing}
+            setZoom={setZoom}
             setSpacing={setSpacing}
-            channelHeight={channelHeight}
         />
         <div className={styles.content}>
             <div className={styles.labels} style={{ gap }}>
