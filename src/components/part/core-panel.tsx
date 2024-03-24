@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
+import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp, roundTo } from '../../lib/util'
+import { clamp } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -14,7 +15,6 @@ type CoreColumn = {
 }
 
 type CorePanelProps = {
-    visible: boolean,
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
@@ -25,7 +25,7 @@ type CorePanelProps = {
 }
 
 function CorePanel ({
-    visible, vis, part, parts, representations, setPart,
+    vis, part, parts, representations, setPart,
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement {
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -214,9 +214,25 @@ type ScaleColumnLabelProps = {
 function ScaleColumnLabel (
     { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
 ): ReactElement {
+    const range = bottomDepth - topDepth
     return (
-        <div className={`${styles.label} ${largeWidth && styles.largeWidth}`}>
-            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+        <div className={`${styles.label} `}>
+            <div className={`${styles.topBottomDepths} ${largeWidth && styles.largeWidth}`}>
+                <p>{topDepth.toFixed(1)}</p>
+                <p>{bottomDepth.toFixed(1)}</p>
+            </div>
+            <div className={styles.depthLabel}>
+                <div className={styles.topBottomUnits}>
+                    <p>m</p>
+                    <p>m</p>
+                </div>
+                <div className={styles.rangeIcon}>
+                    <PiArrowsVerticalLight />
+                </div>
+                <p className={styles.rangeLabel}>
+                    {range.toFixed(range >= 100 ? 0 : 1)}m
+                </p>
+            </div>
         </div>
     )
 }
@@ -236,12 +252,6 @@ function getZoomSvg (
             />
         </svg>
     )
-}
-
-function formatDepthRange (topDepth: number, bottomDepth: number): string {
-    const topStr = roundTo(Math.max(topDepth, 0), 1).toString()
-    const bottomStr = roundTo(bottomDepth, 1).toString()
-    return `${topStr} - ${bottomStr}m`
 }
 
 export default CorePanel

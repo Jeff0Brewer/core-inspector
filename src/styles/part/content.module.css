@@ -8,7 +8,7 @@
 
     display: grid;
     grid-template-columns: 70px var(--core-panel-width, 0) 1fr var(--spectra-panel-width, 0);
-    grid-template-rows: 20px 1fr 32px;
+    grid-template-rows: 30px 1fr 32px;
     grid-template-areas:
         "label-punch label-punch label-main label-spectra"
         "side punch main spectra"

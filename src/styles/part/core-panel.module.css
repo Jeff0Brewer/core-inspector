@@ -2,20 +2,11 @@
     grid-area: label-punch;
     display: flex;
     justify-content: flex-end;
-    gap: 60px;
-    height: 20px;
+    height: 100%;
     background-color: #444;
-    padding-right: 60px;
+    padding-right: 30px;
 
     min-width: 460px;
-}
-
-.label, .column {
-    width: 30px;
-}
-
-.large-width {
-    width: 60px;
 }
 
 .zoom-lines {
@@ -26,13 +17,62 @@
 
 .label {
     position: relative;
+    display: flex;
+    align-items: center;
+    width: 90px;
+    padding: 2px 0;
+
+    font-size: 0.45rem;
+    transition: opacity var(--transition-param);
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.depth-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    color: #909090;
+}
+
+.column, .top-bottom-depths {
+    width: 30px;
+}
+
+.top-bottom-depths, .top-bottom-units {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.top-bottom-depths > p {
+    position: relative;
+    width: 100%;
+    text-align: right;
+    padding: 1px 4px;
+    background-color: #545454;
+}
+
+.top-bottom-units > p {
+    position: relative;
+    padding: 1px 2px;
+}
+
+.range-icon {
+    position: relative;
+    height: 100%;
     display: grid;
     place-content: center;
-    white-space: nowrap;
-    font-size: 0.55rem;
-    font-weight: 500;
-    color: var(--color4);
-    transition: opacity var(--transition-param);
+    font-size: 18px;
+    width: 8px;
+    color: #fff;
+}
+
+.rangeLabel {
+    margin-left: 2px;
 }
 
 .columns {
@@ -51,9 +91,14 @@
 
 .column {
     position: relative;
+    width: 30px;
     height: 100%;
     background-color: #333;
     overflow: hidden;
+}
+
+.large-width {
+    width: 60px;
 }
 
 .column-content {

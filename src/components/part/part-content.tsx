@@ -54,7 +54,6 @@ function PartContent (
                 <PiCaretLeftBold />
             </button>
             <CorePanel
-                visible={corePanelVisible}
                 vis={vis}
                 part={part}
                 parts={ids}
