@@ -16,24 +16,31 @@ function PartViewControls (
 ): ReactElement {
     return (
         <div className={styles.viewControls}>
-            <VerticalSlider
-                value={spacing}
-                setValue={setSpacing}
-                label={'horizontal distance'}
-                icon={ICONS.horizontalDist}
-                min={0}
-                max={1}
-                step={0.01}
-            />
-            <VerticalSlider
-                value={zoom}
-                setValue={setZoom}
-                label={'zoom single track'}
-                icon={ICONS.zoom}
-                min={0}
-                max={1}
-                step={0.01}
-            />
+            <h2 className={styles.header}>
+                view settings
+            </h2>
+            <div className={styles.sliders}>
+                <VerticalSlider
+                    value={spacing}
+                    setValue={setSpacing}
+                    label={'horizontal distance'}
+                    icon={ICONS.horizontalDist}
+                    height={'100px'}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                />
+                <VerticalSlider
+                    value={zoom}
+                    setValue={setZoom}
+                    label={'zoom single track'}
+                    icon={ICONS.zoom}
+                    height={'180px'}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                />
+            </div>
         </div>
     )
 }
