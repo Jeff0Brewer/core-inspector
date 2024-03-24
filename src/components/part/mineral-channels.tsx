@@ -15,14 +15,13 @@ type PartMineralChannelsProps = {
     core: string,
     part: string,
     channels: StringMap<HTMLImageElement>,
-    visible: StringMap<boolean>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
     setPanelSpectra: (s: Array<number> | null) => void
 }
 
 function PartMineralChannels (
-    { vis, core, part, channels, visible, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
+    { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -166,7 +165,6 @@ function PartMineralChannels (
                     [blended]
                 </p>
                 { Object.keys(channels)
-                    .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
                         <p className={styles.channelLabel} style={{ width }} key={i}>
                             {mineral}
@@ -184,7 +182,6 @@ function PartMineralChannels (
                         setMousePos={setMousePos}
                     /> }
                     { Object.entries(channels)
-                        .filter(([mineral, _]) => visible[mineral])
                         .map(([_, img], i) =>
                             <MineralChannel
                                 source={img.src}

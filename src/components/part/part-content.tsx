@@ -20,8 +20,7 @@ type PartContentProps = {
     core: string,
     part: string,
     setPart: (p: string | null) => void,
-    channels: StringMap<HTMLImageElement>,
-    visible: StringMap<boolean>
+    channels: StringMap<HTMLImageElement>
 }
 
 const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
@@ -32,7 +31,7 @@ const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
 ]
 
 function PartContent (
-    { vis, core, part, setPart, channels, visible }: PartContentProps
+    { vis, core, part, setPart, channels }: PartContentProps
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
@@ -69,7 +68,6 @@ function PartContent (
                 core={core}
                 part={part}
                 channels={channels}
-                visible={visible}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
                 setPanelSpectra={setPanelSpectra}

@@ -23,7 +23,6 @@ function PartView (
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
-    const [visible, setVisible] = useState<StringMap<boolean>>({})
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -32,10 +31,6 @@ function PartView (
     useBlending(vis, channels)
 
     useEffect(() => {
-        const visible: StringMap<boolean> = {}
-        minerals.forEach(mineral => { visible[mineral] = true })
-        setVisible(visible)
-
         const initVis = async (): Promise<void> => {
             const corePaths: StringMap<string> = {}
             minerals.forEach((mineral, i) => {
@@ -81,13 +76,10 @@ function PartView (
             part={part}
             setPart={setPart}
             channels={channels}
-            visible={visible}
         />
         <PartMineralControls
             minerals={minerals}
             palettes={palettes}
-            visible={visible}
-            setVisible={setVisible}
         />
     </>
 }

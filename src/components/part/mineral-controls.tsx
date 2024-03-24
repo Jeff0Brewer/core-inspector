@@ -1,26 +1,18 @@
 import { useState, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
-import { StringMap } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import styles from '../../styles/part/mineral-controls.module.css'
 
 type PartMineralControlsProps = {
     minerals: Array<string>,
-    palettes: Array<GenericPalette>,
-    visible: StringMap<boolean>,
-    setVisible: (v: StringMap<boolean>) => void,
+    palettes: Array<GenericPalette>
 }
 
 function PartMineralControls (
-    { minerals, palettes, visible, setVisible }: PartMineralControlsProps
+    { minerals, palettes }: PartMineralControlsProps
 ): ReactElement {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
-
-    const toggleMineralVisible = (mineral: string): void => {
-        visible[mineral] = !visible[mineral]
-        setVisible({ ...visible })
-    }
 
     return (
         <div className={styles.mineralControls}>
@@ -28,8 +20,7 @@ function PartMineralControls (
                 { minerals.map((mineral, i) =>
                     <button
                         className={styles.mineralToggle}
-                        onClick={() => toggleMineralVisible(mineral)}
-                        data-active={visible[mineral]}
+                        data-active={true /* TODO: add functionality */}
                         key={i}
                     >
                         {mineral}
