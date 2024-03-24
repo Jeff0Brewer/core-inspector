@@ -1,0 +1,16 @@
+.content {
+    position: relative;
+    grid-area: content;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #202020;
+
+    display: grid;
+    grid-template-columns: 70px var(--core-panel-width, 0) 1fr var(--spectra-panel-width, 0);
+    grid-template-rows: 20px 1fr;
+    grid-template-areas:
+        "label-side label-punch label-main label-spectra"
+        "side punch main spectra";
+    transition: grid-template-columns 0.5s ease;
+}

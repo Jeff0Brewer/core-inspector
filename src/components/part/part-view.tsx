@@ -7,7 +7,7 @@ import { getCoreId, getPartId } from '../../lib/ids'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
-import PartMineralControls from '../../components/part/mineral-controls'
+import BlendMenuToggle from '../../components/part/blend-menu-toggle'
 import PartContent from '../../components/part/part-content'
 
 type PartViewProps = {
@@ -77,7 +77,7 @@ function PartView (
             setPart={setPart}
             channels={channels}
         />
-        <PartMineralControls
+        <BlendMenuToggle
             minerals={minerals}
             palettes={palettes}
         />
