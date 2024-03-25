@@ -131,11 +131,8 @@ function CorePanel ({
         </div>
         <div className={styles.bottomLabels}>
             { columns.map((column, i) =>
-                <div className={styles.bottomLabel}>
-                    <p
-                        className={`${column.representation.largeWidth && styles.largeWidth}`}
-                        key={i}
-                    >
+                <div className={styles.bottomLabel} key={i}>
+                    <p className={`${column.representation.largeWidth && styles.largeWidth}`}>
                         { getScale(column.mToPx * PART_WIDTH_M) }
                     </p>
                 </div>
