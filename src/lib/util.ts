@@ -96,8 +96,7 @@ function getImageData (img: HTMLImageElement): ImageData {
 // TODO: use dynamic img width
 const IMG_WIDTH = 320
 function getScale (viewWidth: number): string {
-    const denominator = IMG_WIDTH / viewWidth
-    return `x1/${denominator.toFixed(0)}`
+    return `x1/${(IMG_WIDTH / viewWidth).toFixed(0)}`
 }
 
 type BoundRect = {
