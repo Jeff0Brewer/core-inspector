@@ -154,11 +154,11 @@ function PartMineralChannels (
     const gap = `${viewGap}px`
     return <>
         <PartViewControls
-            scale={imgWidth / viewWidth}
             zoom={zoom}
             spacing={spacing}
             setZoom={setZoom}
             setSpacing={setSpacing}
+            channelWidth={viewWidth}
         />
         <div className={styles.content}>
             <div className={styles.labels} style={{ gap }}>

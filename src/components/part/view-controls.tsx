@@ -1,19 +1,20 @@
 import { ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
+import { getScale } from '../../lib/util'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import styles from '../../styles/part/view-controls.module.css'
 
 type PartViewControlsProps = {
-    scale: number,
     zoom: number,
     spacing: number,
     setZoom: (z: number) => void,
-    setSpacing: (s: number) => void
+    setSpacing: (s: number) => void,
+    channelWidth: number
 }
 
 function PartViewControls (
-    { scale, zoom, spacing, setZoom, setSpacing }: PartViewControlsProps
+    { zoom, spacing, setZoom, setSpacing, channelWidth }: PartViewControlsProps
 ): ReactElement {
     return (
         <div className={styles.viewControls}>
@@ -33,7 +34,7 @@ function PartViewControls (
                 />
                 <div>
                     <p className={styles.scale}>
-                        x1/{scale.toFixed(0)}
+                        {getScale(channelWidth)}
                     </p>
                     <VerticalSlider
                         value={zoom}
