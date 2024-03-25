@@ -72,15 +72,28 @@
     max-width: 100px;
     height: 20px;
     overflow: hidden;
+    transition: background-color var(--transition-param);
 }
 
 .blend-button {
     background-color: #202020;
 }
 
+.blend-button:hover {
+    background-color: #303030;
+}
+
 .toggle-button {
     background-color: #fff;
     color: #000;
+}
+
+.toggle-button:hover {
+    background-color: #ccc;
+}
+
+.disabled {
+    opacity: 0.5;
 }
 
 .channels-wrap {

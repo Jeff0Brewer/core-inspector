@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
+import { useBlendState } from '../../hooks/blend-context'
 import { StringMap, getImageData } from '../../lib/util'
+import { isToggleable } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
@@ -42,6 +44,7 @@ function PartMineralChannels (
 
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
+    const { setVisibilities, visibilities, palette } = useBlendState()
 
     // TODO: prevent attaching / removing handler on
     // spectrum / mousepos state change
@@ -209,7 +212,16 @@ function PartMineralChannels (
                 { Object.keys(channels)
                     .map((mineral, i) =>
                         <div className={styles.bottomLabel} style={{ width }} key={i}>
-                            <button className={styles.blendButton}>
+                            <button
+                                className={`${
+                                    styles.blendButton} ${
+                                    !isToggleable(mineral, palette, visibilities) && styles.disabled
+                                }`}
+                                onClick={() => {
+                                    visibilities[mineral] = !visibilities[mineral]
+                                    setVisibilities({ ...visibilities })
+                                }}
+                            >
                                 {mineral}
                             </button>
                         </div>
