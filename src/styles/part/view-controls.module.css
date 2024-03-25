@@ -1,49 +1,44 @@
 .view-controls {
-    background-color: #606060;
-    grid-area: side;
-    grid-row: label-side / side;
-    display: flex;
-    flex-direction: column;
-    width: 70px;
-    height: 100%;
-    align-items: center;
-    gap: 20px;
-    padding: 10px 0 32px 0;
-    border-top: 20px solid #444;
-}
-
-.scale-ruler {
     position: relative;
-    border: 1px solid #999;
-    border-left: 0;
-    height: 150px;
-    width: 15px;
-    overflow: visible;
-}
+    grid-area: side;
 
-.scale-ruler-center {
-    position: absolute;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: end;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: -15px;
-    font-size: 0.5rem;
+    align-items: center;
+
+    background-color: #262626;
+}
+
+.header, .scale {
+    color: #909090;
+    font-weight: 500;
+}
+
+.header {
+    position: relative;
+    font-size: 0.4rem;
     text-transform: uppercase;
-    white-space: nowrap;
+    padding-top: 10px;
 }
 
-.scale-ruler-center > div {
-    width: 15px;
-    height: 1px;
-    background-color: #999;
+.sliders, .sliders > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.scale-ruler-center > p {
-    margin: 2px;
+.sliders {
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    padding: 20px 0;
+}
+
+
+.scale {
+    color: #909090;
+    font-size: 0.7rem;
+    padding: 10px;
 }
 
 .distance-icon {

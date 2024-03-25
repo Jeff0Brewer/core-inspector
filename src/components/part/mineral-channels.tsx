@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { StringMap, getImageData } from '../../lib/util'
+import { useBlendState } from '../../hooks/blend-context'
+import { StringMap, getImageData, getCssColor } from '../../lib/util'
+import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
@@ -10,18 +12,20 @@ import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
+const MIN_WIDTH_PX = 50
+
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
     channels: StringMap<HTMLImageElement>,
-    visible: StringMap<boolean>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
+    setPanelSpectra: (s: Array<number> | null) => void
 }
 
 function PartMineralChannels (
-    { vis, core, part, channels, visible, setDepthTop, setDepthBottom }: PartMineralChannelsProps
+    { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
@@ -40,6 +44,21 @@ function PartMineralChannels (
 
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
+    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+
+    // TODO: prevent attaching / removing handler on
+    // spectrum / mousepos state change
+    useEffect(() => {
+        const mousedown = (): void => {
+            if (spectrum.length > 0 && mousePos !== null) {
+                setPanelSpectra(spectrum)
+            }
+        }
+        window.addEventListener('mousedown', mousedown)
+        return () => {
+            window.removeEventListener('mousedown', mousedown)
+        }
+    }, [spectrum, setPanelSpectra, mousePos])
 
     useEffect(() => {
         if (!vis) { return }
@@ -74,7 +93,7 @@ function PartMineralChannels (
     useEffect(() => {
         if (!vis) { return }
 
-        const channelWidth = zoom * 250 + 50
+        const channelWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
         const channelGap = channelWidth * spacing
         setViewWidth(channelWidth)
         setViewGap(channelGap)
@@ -85,7 +104,7 @@ function PartMineralChannels (
             setViewHeight(channelHeight)
             setChannelHeight(channelHeight)
         }
-    }, [channels, zoom, spacing, vis, setChannelHeight])
+    }, [channels, zoom, spacing, vis, imgWidth, setChannelHeight])
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
@@ -138,22 +157,20 @@ function PartMineralChannels (
     const gap = `${viewGap}px`
     return <>
         <PartViewControls
-            part={part}
             zoom={zoom}
-            setZoom={setZoom}
             spacing={spacing}
+            setZoom={setZoom}
             setSpacing={setSpacing}
-            channelHeight={channelHeight}
+            channelWidth={viewWidth}
         />
         <div className={styles.content}>
-            <div className={styles.labels} style={{ gap }}>
-                <p className={styles.channelLabel} style={{ width }}>
+            <div className={styles.topLabels} style={{ gap }}>
+                <p className={styles.topLabel} style={{ width }}>
                     [blended]
                 </p>
                 { Object.keys(channels)
-                    .filter(mineral => visible[mineral])
                     .map((mineral, i) =>
-                        <p className={styles.channelLabel} style={{ width }} key={i}>
+                        <p className={styles.topLabel} style={{ width }} key={i}>
                             {mineral}
                         </p>
                     ) }
@@ -169,7 +186,6 @@ function PartMineralChannels (
                         setMousePos={setMousePos}
                     /> }
                     { Object.entries(channels)
-                        .filter(([mineral, _]) => visible[mineral])
                         .map(([_, img], i) =>
                             <MineralChannel
                                 source={img.src}
@@ -186,6 +202,38 @@ function PartMineralChannels (
                         visible={!!mousePos}
                     />
                 </div>
+            </div>
+            <div className={styles.bottomLabels} style={{ gap }}>
+                <div className={styles.bottomLabel} style={{ width }}>
+                    <button className={styles.toggleButton}>
+                        blended
+                    </button>
+                </div>
+                { Object.keys(channels)
+                    .map((mineral, i) =>
+                        <div className={styles.bottomLabel} style={{ width }} key={i}>
+                            <div
+                                className={styles.blendColor}
+                                style={{
+                                    backgroundColor: getCssColor(
+                                        getBlendColor(palette, visibilities, monochrome, mineral)
+                                    )
+                                }}
+                            ></div>
+                            <button
+                                className={`${
+                                    styles.blendButton} ${
+                                    !isToggleable(mineral, palette, visibilities) && styles.disabled
+                                }`}
+                                onClick={() => {
+                                    visibilities[mineral] = !visibilities[mineral]
+                                    setVisibilities({ ...visibilities })
+                                }}
+                            >
+                                {mineral}
+                            </button>
+                        </div>
+                    ) }
             </div>
         </div>
     </>

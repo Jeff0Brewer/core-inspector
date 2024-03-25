@@ -1,10 +1,10 @@
 import { useState, ReactElement } from 'react'
-import { PiCaretLeftBold } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { StringMap } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
+import SpectraPanel from '../../components/part/spectra-panel'
 import {
     CoreRepresentation,
     CoreLineRepresentation,
@@ -12,15 +12,13 @@ import {
     CorePunchcardRepresentation,
     CoreChannelPunchcardRepresentation
 } from '../../components/part/core-representations'
-import styles from '../../styles/part/content.module.css'
 
 type PartContentProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
     setPart: (p: string | null) => void,
-    channels: StringMap<HTMLImageElement>,
-    visible: StringMap<boolean>
+    channels: StringMap<HTMLImageElement>
 }
 
 const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
@@ -31,24 +29,16 @@ const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
 ]
 
 function PartContent (
-    { vis, core, part, setPart, channels, visible }: PartContentProps
+    { vis, core, part, setPart, channels }: PartContentProps
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-    const [panelVisible, setPanelVisible] = useState<boolean>(true)
+    const [panelSpectra, setPanelSpectra] = useState<Array<number> | null>(null)
     const { ids } = useCoreMetadata()
 
     return (
-        <div className={`${styles.content} ${!panelVisible && styles.panelCollapsed}`}>
-            <button
-                className={styles.panelToggle}
-                style={{ transform: `rotate(${panelVisible ? '0' : '180deg'})` }}
-                onClick={(): void => setPanelVisible(!panelVisible)}
-            >
-                <PiCaretLeftBold />
-            </button>
+        <>
             <CorePanel
-                visible={panelVisible}
                 vis={vis}
                 part={part}
                 parts={ids}
@@ -62,11 +52,12 @@ function PartContent (
                 core={core}
                 part={part}
                 channels={channels}
-                visible={visible}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
+                setPanelSpectra={setPanelSpectra}
             />
-        </div>
+            <SpectraPanel spectra={panelSpectra} />
+        </>
     )
 }
 

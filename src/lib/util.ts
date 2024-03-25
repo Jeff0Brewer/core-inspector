@@ -93,6 +93,12 @@ function getImageData (img: HTMLImageElement): ImageData {
     return ctx.getImageData(0, 0, width, height)
 }
 
+// TODO: use dynamic img width
+const IMG_WIDTH = 320
+function getScale (viewWidth: number): string {
+    return `x1/${(IMG_WIDTH / viewWidth).toFixed(0)}`
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -115,7 +121,8 @@ export {
     getCssColor,
     checkStringType,
     get2dContext,
-    getImageData
+    getImageData,
+    getScale
 }
 export type {
     BoundRect,

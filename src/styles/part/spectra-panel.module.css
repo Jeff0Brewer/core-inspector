@@ -1,0 +1,22 @@
+.spectra-label {
+    grid-area: label-spectra;
+    background-color: #444;
+}
+
+.spectra-panel {
+    grid-area: spectra;
+    position: relative;
+    min-width: 300px;
+    width: 100%;
+    height: 100%;
+    background-color: #606060;
+    padding: 20px;
+}
+
+.main-plot {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    border: solid #fff;
+    border-width: 0 0 1px 1px;
+}

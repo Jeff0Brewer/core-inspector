@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
+import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp, roundTo } from '../../lib/util'
+import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 import styles from '../../styles/part/core-panel.module.css'
+
+const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
     representation: CoreRepresentation,
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
+    mToPx: number,
     gap: number
 }
 
 type CorePanelProps = {
-    visible: boolean,
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
@@ -25,94 +28,117 @@ type CorePanelProps = {
 }
 
 function CorePanel ({
-    visible, vis, part, parts, representations, setPart,
+    vis, part, parts, representations, setPart,
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement {
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
+    const columnsRef = useRef<HTMLDivElement>(null)
 
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
-        const columns: Array<CoreColumn> = [{
-            representation: representations[0],
-            parts,
-            topDepth: minDepth,
-            bottomDepth: maxDepth,
-            gap: 1
-        }]
+        const getColumns = (): void => {
+            if (!columnsRef.current) { return }
 
-        const partCenter = depths[part].topDepth + depths[part].length * 0.5
+            const heightPx = columnsRef.current.clientHeight
 
-        for (let i = 1; i < representations.length; i++) {
-            const {
-                topDepth: lastTop,
-                bottomDepth: lastBottom,
-                gap: lastGap
-            } = columns[i - 1]
+            const columns: Array<CoreColumn> = [{
+                representation: representations[0],
+                parts,
+                topDepth: minDepth,
+                bottomDepth: maxDepth,
+                gap: 1,
+                mToPx: heightPx / (maxDepth - minDepth)
+            }]
 
-            const depthRange = Math.pow(lastBottom - lastTop, 0.45)
-            const depthCenter = clamp(
-                partCenter,
-                lastTop + depthRange * 0.5,
-                lastBottom - depthRange * 0.5
-            )
-            const topDepth = depthCenter - depthRange * 0.5
-            const bottomDepth = depthCenter + depthRange * 0.5
+            const partCenter = depths[part].topDepth + depths[part].length * 0.5
 
-            const visibleParts = parts.filter(part => {
-                if (!depths[part]) { return false }
+            for (let i = 1; i < representations.length; i++) {
+                const {
+                    topDepth: lastTop,
+                    bottomDepth: lastBottom,
+                    gap: lastGap
+                } = columns[i - 1]
 
-                const partTopDepth = depths[part].topDepth
-                const partBottomDepth = partTopDepth + depths[part].length
+                const depthRange = Math.pow(lastBottom - lastTop, 0.45)
+                const depthCenter = clamp(
+                    partCenter,
+                    lastTop + depthRange * 0.5,
+                    lastBottom - depthRange * 0.5
+                )
+                const topDepth = depthCenter - depthRange * 0.5
+                const bottomDepth = depthCenter + depthRange * 0.5
 
-                return partBottomDepth > topDepth && partTopDepth < bottomDepth
-            })
-            const gap = 3 * lastGap
+                const visibleParts = parts.filter(part => {
+                    if (!depths[part]) { return false }
 
-            columns.push({
-                parts: visibleParts,
-                representation: representations[i],
-                topDepth,
-                bottomDepth,
-                gap
-            })
+                    const partTopDepth = depths[part].topDepth
+                    const partBottomDepth = partTopDepth + depths[part].length
+
+                    return partBottomDepth > topDepth && partTopDepth < bottomDepth
+                })
+                const gap = 3 * lastGap
+
+                columns.push({
+                    parts: visibleParts,
+                    representation: representations[i],
+                    topDepth,
+                    bottomDepth,
+                    mToPx: heightPx / (bottomDepth - topDepth),
+                    gap
+                })
+            }
+
+            setColumns(columns)
         }
+        getColumns()
 
-        setColumns(columns)
+        window.addEventListener('resize', getColumns)
+        return () => {
+            window.removeEventListener('resize', getColumns)
+        }
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
-    return (
-        <div className={`${styles.corePanel} ${!visible && styles.corePanelCollapsed}`}>
-            <div className={styles.labels}>
-                { columns.map((column, i) =>
-                    <ScaleColumnLabel
-                        topDepth={column.topDepth}
-                        bottomDepth={column.bottomDepth}
-                        largeWidth={!!column.representation.largeWidth}
-                        key={i}
-                    />
-                ) }
-            </div>
-            <div className={styles.columns}>
-                { columns.map((column, i) => {
-                    const isLast = i === columns.length - 1
-                    return <ScaleColumn
-                        vis={vis}
-                        parts={column.parts}
-                        part={part}
-                        setPart={setPart}
-                        representation={column.representation}
-                        gap={column.gap}
-                        topDepth={column.topDepth}
-                        bottomDepth={column.bottomDepth}
-                        nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
-                        nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
-                        key={i}
-                    />
-                }) }
-            </div>
+    return <>
+        <div className={styles.topLabels}>
+            { columns.map((column, i) =>
+                <ScaleColumnLabel
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    largeWidth={!!column.representation.largeWidth}
+                    key={i}
+                />
+            ) }
         </div>
-    )
+        <div className={styles.columns} ref={columnsRef}>
+            { columns.map((column, i) => {
+                const isLast = i === columns.length - 1
+                return <ScaleColumn
+                    vis={vis}
+                    parts={column.parts}
+                    part={part}
+                    setPart={setPart}
+                    representation={column.representation}
+                    gap={column.gap}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    mToPx={column.mToPx}
+                    nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
+                    nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
+                    key={i}
+                />
+            }) }
+        </div>
+        <div className={styles.bottomLabels}>
+            { columns.map((column, i) =>
+                <div className={styles.bottomLabel} key={i}>
+                    <p className={`${column.representation.largeWidth && styles.largeWidth}`}>
+                        { getScale(column.mToPx * PART_WIDTH_M) }
+                    </p>
+                </div>
+            ) }
+        </div>
+    </>
 }
 
 type ScaleColumnProps = {
@@ -124,15 +150,15 @@ type ScaleColumnProps = {
     gap: number,
     topDepth: number,
     bottomDepth: number,
+    mToPx: number,
     nextTopDepth: number,
     nextBottomDepth: number,
 }
 
 function ScaleColumn ({
-    representation, vis, part, parts, topDepth, bottomDepth,
+    representation, vis, part, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement {
-    const [mToPx, setMToPx] = useState<number>(0)
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -141,25 +167,6 @@ function ScaleColumn ({
         fullScale = false,
         largeWidth = false
     } = representation
-
-    // get meter to pixel scale of column
-    useEffect(() => {
-        const getScale = (): void => {
-            if (!columnRef.current) { return }
-
-            const heightPx = columnRef.current.clientHeight
-            const heightM = bottomDepth - topDepth
-
-            setMToPx(heightPx / heightM)
-        }
-
-        getScale()
-
-        window.addEventListener('resize', getScale)
-        return () => {
-            window.removeEventListener('resize', getScale)
-        }
-    }, [topDepth, bottomDepth, parts, gap])
 
     const wrapStyle: React.CSSProperties = {}
     if (topDepth === minDepth) {
@@ -195,6 +202,7 @@ function ScaleColumn ({
                     part={part}
                     parts={parts}
                     mToPx={mToPx}
+                    widthM={PART_WIDTH_M}
                     setCenter={setPartCenter}
                     setPart={setPart}
                     gap={gap}
@@ -216,9 +224,25 @@ type ScaleColumnLabelProps = {
 function ScaleColumnLabel (
     { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
 ): ReactElement {
+    const range = bottomDepth - topDepth
     return (
-        <div className={`${styles.label} ${largeWidth && styles.largeWidth}`}>
-            <p>{formatDepthRange(topDepth, bottomDepth)}</p>
+        <div className={styles.label}>
+            <div className={`${styles.topBottomDepths} ${largeWidth && styles.largeWidth}`}>
+                <p>{topDepth.toFixed(1)}</p>
+                <p>{bottomDepth.toFixed(1)}</p>
+            </div>
+            <div className={styles.depthLabel}>
+                <div className={styles.topBottomUnits}>
+                    <p>m</p>
+                    <p>m</p>
+                </div>
+                <div className={styles.rangeIcon}>
+                    <PiArrowsVerticalLight />
+                </div>
+                <p className={styles.rangeLabel}>
+                    {range.toFixed(range >= 100 ? 0 : 1)}m
+                </p>
+            </div>
         </div>
     )
 }
@@ -238,12 +262,6 @@ function getZoomSvg (
             />
         </svg>
     )
-}
-
-function formatDepthRange (topDepth: number, bottomDepth: number): string {
-    const topStr = roundTo(Math.max(topDepth, 0), 1).toString()
-    const bottomStr = roundTo(bottomDepth, 1).toString()
-    return `${topStr} - ${bottomStr}m`
 }
 
 export default CorePanel

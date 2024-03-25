@@ -1,6 +1,7 @@
 import { vec3 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTexture, GlTextureFramebuffer, getTextureAttachments } from '../lib/gl-wrap'
 import { GenericPalette } from '../lib/palettes'
+import { StringMap } from '../lib/util'
 import { POS_FPV, TEX_FPV, FULLSCREEN_RECT } from '../lib/vert-gen'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'
 import fragSource from '../shaders/mineral-blend-frag.glsl?raw'
@@ -10,8 +11,8 @@ const BLEND_MODES = { additive: 0, maximum: 1 } as const
 type BlendMode = keyof typeof BLEND_MODES
 
 type BlendParams = {
-    magnitudes: Array<number>,
-    visibilities: Array<boolean>,
+    magnitudes: StringMap<number>,
+    visibilities: StringMap<boolean>,
     palette: GenericPalette,
     saturation: number,
     threshold: number,
@@ -98,8 +99,8 @@ class MineralBlender {
     update (gl: GlContext, params: BlendParams): void {
         const { palette, magnitudes, visibilities, saturation, threshold, mode, monochrome } = params
 
-        const colors = this.minerals.map((mineral, i) =>
-            getBlendColor(palette, visibilities, monochrome, mineral, i)
+        const colors = this.minerals.map(mineral =>
+            getBlendColor(palette, visibilities, monochrome, mineral)
         )
 
         this.framebuffer.bind(gl)
@@ -111,7 +112,7 @@ class MineralBlender {
 
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].bind(gl)
-            this.setMagUniform[i](colors[i] !== null ? magnitudes[i] : 0)
+            this.setMagUniform[i](colors[i] !== null ? magnitudes[this.minerals[i]] : 0)
             this.setColUniform[i](colors[i] || [0, 0, 0])
         }
 
@@ -142,45 +143,48 @@ class MineralBlender {
     }
 }
 
-function getToggleableMinerals (
-    minerals: Array<string>,
+function isToggleable (
+    mineral: string,
     palette: GenericPalette,
-    visibilities: Array<boolean>
-): Array<string> {
-    if (palette.type === 'labelled') {
-        return Object.keys(palette.colors)
+    visibilities: StringMap<boolean>
+): boolean {
+    if (visibilities[mineral]) {
+        return true
     }
-    const numVisible = visibilities.filter(v => v).length
-    return minerals.filter((_, i) =>
-        visibilities[i] || numVisible < palette.colors.length
-    )
+    if (palette.type === 'labelled') {
+        return mineral in palette.colors
+    } else {
+        const numVisible = Object.values(visibilities).filter(v => v).length
+        return numVisible < palette.colors.length
+    }
 }
 
+// TODO: simplify
 // maps colors to minerals based on blend params
 function getBlendColor (
     palette: GenericPalette,
-    visibilities: Array<boolean>,
+    visibilities: StringMap<boolean>,
     monochrome: boolean,
-    mineral: string,
-    index: number
+    mineral: string
 ): vec3 | null {
-    if (!visibilities[index]) {
+    if (!visibilities[mineral]) {
         return null
     }
-    if (monochrome && visibilities.filter(v => v).length === 1) {
+    if (monochrome && Object.values(visibilities).filter(v => v).length === 1) {
         return [1, 1, 1]
     }
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
     }
-    const priorNumVisible = visibilities.slice(0, index).filter(v => v).length
+    const mineralIndex = Object.keys(visibilities).indexOf(mineral)
+    const priorNumVisible = Object.values(visibilities).slice(0, mineralIndex).filter(v => v).length
     return palette.colors[priorNumVisible] || null
 }
 
 export default MineralBlender
 export {
     getBlendColor,
-    getToggleableMinerals
+    isToggleable
 }
 export type {
     BlendParams,

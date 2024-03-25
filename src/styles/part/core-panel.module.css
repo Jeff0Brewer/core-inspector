@@ -1,14 +1,31 @@
-.core-panel {
-    grid-area: punch;
-    grid-row: label-punch / punch;
-    min-width: 390px;
+.top-labels, .bottom-labels {
+    background-color: #444;
+    height: 100%;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 460px;
 }
 
-.label, .column {
+.top-labels {
+    grid-area: label-punch;
+    padding-right: 30px;
+}
+
+.bottom-labels {
+    grid-area: bottom-punch;
+    gap: 60px;
+    padding-right: 60px;
+    color: #909090;
+}
+
+.bottom-label > p {
     width: 30px;
+    display: grid;
+    place-content: center;
+    height: 100%;
 }
 
-.large-width {
+.bottom-label > .large-width {
     width: 60px;
 }
 
@@ -18,29 +35,70 @@
     height: 100%;
 }
 
-.labels {
-    display: flex;
-    gap: 60px;
-    height: 20px;
-    background-color: #444;
-}
-
 .label {
     position: relative;
-    display: grid;
-    place-content: center;
-    white-space: nowrap;
-    font-size: 0.55rem;
-    font-weight: 500;
-    color: var(--color4);
+    display: flex;
+    align-items: center;
+    width: 90px;
+    padding: 2px 0;
+
+    font-size: 0.45rem;
     transition: opacity var(--transition-param);
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
-.core-panel-collapsed .label {
-    opacity: 0;
+.depth-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    color: #909090;
+}
+
+.column, .top-bottom-depths {
+    width: 30px;
+}
+
+.top-bottom-depths, .top-bottom-units {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.top-bottom-depths > p {
+    position: relative;
+    width: 100%;
+    text-align: right;
+    padding: 1px 4px;
+    background-color: #545454;
+}
+
+.top-bottom-units > p {
+    position: relative;
+    padding: 1px 2px;
+}
+
+.range-icon {
+    position: relative;
+    height: 100%;
+    display: grid;
+    place-content: center;
+    font-size: 18px;
+    width: 8px;
+    color: #fff;
+}
+
+.rangeLabel {
+    margin-left: 2px;
 }
 
 .columns {
+    grid-area: punch;
     position: relative;
     display: flex;
     width: 100%;
@@ -48,13 +106,21 @@
     background-color: #191919;
     grid-area: punch;
     overflow: hidden;
+
+    /* TODO: fix size value */
+    min-width: 390px;
 }
 
 .column {
     position: relative;
+    width: 30px;
     height: 100%;
     background-color: #333;
     overflow: hidden;
+}
+
+.large-width {
+    width: 60px;
 }
 
 .column-content {

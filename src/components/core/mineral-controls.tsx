@@ -1,7 +1,7 @@
 import { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
-import { getToggleableMinerals } from '../../vis/mineral-blend'
+import { isToggleable } from '../../vis/mineral-blend'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
@@ -26,18 +26,18 @@ function CoreMineralControls (
 
     useBlending(vis)
 
-    const onMineralButtonClick = (e: MouseEvent, i: number): void => {
+    const onMineralButtonClick = (e: MouseEvent, mineral: string): void => {
         if (e.shiftKey) {
-            visibilities[i] = !visibilities[i]
+            visibilities[mineral] = !visibilities[mineral]
         } else {
-            visibilities.fill(false)
-            visibilities[i] = true
+            minerals.forEach(mineral => {
+                visibilities[mineral] = false
+            })
+            visibilities[mineral] = true
             setMonochrome(true)
         }
-        setVisibilities([...visibilities])
+        setVisibilities({ ...visibilities })
     }
-
-    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
 
     return (
         <div className={styles.mineralControls}>
@@ -45,9 +45,9 @@ function CoreMineralControls (
                 <div className={styles.minerals}>
                     { minerals.map((mineral, i) =>
                         <button
-                            className={`${!toggleable.includes(mineral) && styles.disabled}`}
-                            onClick={(e): void => onMineralButtonClick(e, i)}
-                            data-active={visibilities[i]}
+                            className={`${!isToggleable(mineral, palette, visibilities) && styles.disabled}`}
+                            onClick={(e): void => onMineralButtonClick(e, mineral)}
+                            data-active={visibilities[mineral]}
                             key={i}
                         >
                             {mineral}
