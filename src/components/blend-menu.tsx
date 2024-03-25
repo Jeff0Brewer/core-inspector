@@ -5,7 +5,7 @@ import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent, StringMap } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
 import { GenericPalette } from '../lib/palettes'
-import { BlendMode, getBlendColor, getToggleableMinerals } from '../vis/mineral-blend'
+import { BlendMode, getBlendColor, isToggleable } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
 import styles from '../styles/blend-menu.module.css'
@@ -32,9 +32,6 @@ function BlendMenu (
         mode, setMode,
         monochrome, setMonochrome
     } = useBlendState()
-
-    // TODO: remove
-    const toggleable = getToggleableMinerals(minerals, palette, Object.values(visibilities))
 
     // update visibilities to match newly selected palette on change
     useEffect(() => {
@@ -126,7 +123,7 @@ function BlendMenu (
                         setMagnitude={getMagnitudeSetter(mineral)}
                         visible={visibilities[mineral]}
                         setVisible={getVisibilitySetter(mineral)}
-                        disabled={!toggleable.includes(mineral)}
+                        disabled={!isToggleable(mineral, palette, visibilities)}
                         index={i}
                         key={i}
                     />

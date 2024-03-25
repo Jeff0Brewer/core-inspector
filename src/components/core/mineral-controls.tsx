@@ -1,7 +1,7 @@
 import { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
-import { getToggleableMinerals } from '../../vis/mineral-blend'
+import { isToggleable } from '../../vis/mineral-blend'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
@@ -39,15 +39,13 @@ function CoreMineralControls (
         setVisibilities({ ...visibilities })
     }
 
-    const toggleable = getToggleableMinerals(minerals, palette, Object.values(visibilities))
-
     return (
         <div className={styles.mineralControls}>
             <div className={styles.mineralBar}>
                 <div className={styles.minerals}>
                     { minerals.map((mineral, i) =>
                         <button
-                            className={`${!toggleable.includes(mineral) && styles.disabled}`}
+                            className={`${!isToggleable(mineral, palette, visibilities) && styles.disabled}`}
                             onClick={(e): void => onMineralButtonClick(e, mineral)}
                             data-active={visibilities[mineral]}
                             key={i}

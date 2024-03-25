@@ -143,18 +143,20 @@ class MineralBlender {
     }
 }
 
-function getToggleableMinerals (
-    minerals: Array<string>,
+function isToggleable (
+    mineral: string,
     palette: GenericPalette,
-    visibilities: Array<boolean>
-): Array<string> {
-    if (palette.type === 'labelled') {
-        return Object.keys(palette.colors)
+    visibilities: StringMap<boolean>
+): boolean {
+    if (visibilities[mineral]) {
+        return true
     }
-    const numVisible = visibilities.filter(v => v).length
-    return minerals.filter((_, i) =>
-        visibilities[i] || numVisible < palette.colors.length
-    )
+    if (palette.type === 'labelled') {
+        return mineral in palette.colors
+    } else {
+        const numVisible = Object.values(visibilities).filter(v => v).length
+        return numVisible < palette.colors.length
+    }
 }
 
 // TODO: simplify
@@ -182,7 +184,7 @@ function getBlendColor (
 export default MineralBlender
 export {
     getBlendColor,
-    getToggleableMinerals
+    isToggleable
 }
 export type {
     BlendParams,
