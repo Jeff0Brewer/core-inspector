@@ -2,8 +2,8 @@ import { useState, useRef, useEffect, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
-import { StringMap, getImageData } from '../../lib/util'
-import { isToggleable } from '../../vis/mineral-blend'
+import { StringMap, getImageData, getCssColor } from '../../lib/util'
+import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
 import PartViewControls from '../../components/part/view-controls'
@@ -44,7 +44,7 @@ function PartMineralChannels (
 
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
-    const { setVisibilities, visibilities, palette } = useBlendState()
+    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     // TODO: prevent attaching / removing handler on
     // spectrum / mousepos state change
@@ -212,6 +212,14 @@ function PartMineralChannels (
                 { Object.keys(channels)
                     .map((mineral, i) =>
                         <div className={styles.bottomLabel} style={{ width }} key={i}>
+                            <div
+                                className={styles.blendColor}
+                                style={{
+                                    backgroundColor: getCssColor(
+                                        getBlendColor(palette, visibilities, monochrome, mineral)
+                                    )
+                                }}
+                            ></div>
                             <button
                                 className={`${
                                     styles.blendButton} ${
