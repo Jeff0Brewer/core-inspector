@@ -1,4 +1,5 @@
 import { createContext, useContext, useLayoutEffect } from 'react'
+import { StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode } from '../vis/mineral-blend'
 import CoreRenderer from '../vis/core'
@@ -7,10 +8,10 @@ import PartRenderer from '../vis/part'
 type BlendContextProps = {
     palette: GenericPalette,
     setPalette: (p: GenericPalette) => void,
-    magnitudes: Array<number>,
-    setMagnitudes: (m: Array<number>) => void,
-    visibilities: Array<boolean>,
-    setVisibilities: (v: Array<boolean>) => void,
+    magnitudes: StringMap<number>,
+    setMagnitudes: (m: StringMap<number>) => void,
+    visibilities: StringMap<boolean>,
+    setVisibilities: (v: StringMap<boolean>) => void,
     saturation: number,
     setSaturation: (s: number) => void,
     threshold: number,

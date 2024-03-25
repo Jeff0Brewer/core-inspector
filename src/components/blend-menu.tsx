@@ -2,7 +2,7 @@ import { ReactElement, useEffect } from 'react'
 import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
-import { getCssColor, formatPercent, parsePercent } from '../lib/util'
+import { getCssColor, formatPercent, parsePercent, StringMap } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode, getBlendColor, getToggleableMinerals } from '../vis/mineral-blend'
@@ -33,17 +33,22 @@ function BlendMenu (
         monochrome, setMonochrome
     } = useBlendState()
 
-    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
+    // TODO: remove
+    const toggleable = getToggleableMinerals(minerals, palette, Object.values(visibilities))
 
     // update visibilities to match newly selected palette on change
     useEffect(() => {
+        const visibilities: StringMap<boolean> = {}
         if (palette.type === 'labelled') {
-            const visibleMinerals = Object.keys(palette.colors)
-            setVisibilities(minerals.map(mineral => visibleMinerals.includes(mineral)))
+            minerals.forEach(mineral => {
+                visibilities[mineral] = mineral in palette.colors
+            })
         } else {
-            const numVisible = palette.colors.length
-            setVisibilities(minerals.map((_, i) => i < numVisible))
+            minerals.forEach((mineral, i) => {
+                visibilities[mineral] = i < palette.colors.length
+            })
         }
+        setVisibilities(visibilities)
     }, [palette, minerals, setVisibilities])
 
     // setup keyboard shortcuts
@@ -55,8 +60,9 @@ function BlendMenu (
             }
             const numKey = parseInt(e.key)
             if (numKey > 0 && numKey <= minerals.length) {
-                visibilities[numKey - 1] = !visibilities[numKey - 1]
-                setVisibilities([...visibilities])
+                const mineral = minerals[numKey - 1]
+                visibilities[mineral] = !visibilities[mineral]
+                setVisibilities({ ...visibilities })
             }
         }
         window.addEventListener('keydown', keydown)
@@ -66,20 +72,20 @@ function BlendMenu (
     }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
 
     // sets magnitude for single index, used in mineral sliders
-    const getMagnitudeSetter = (index: number): ((m: number) => void) => {
+    const getMagnitudeSetter = (mineral: string): ((m: number) => void) => {
         return (m: number) => {
-            if (visibilities[index]) {
-                magnitudes[index] = m
-                setMagnitudes([...magnitudes])
+            if (visibilities[mineral]) {
+                magnitudes[mineral] = m
+                setMagnitudes({ ...magnitudes })
             }
         }
     }
 
     // sets visiblility for single index, used in mineral sliders
-    const getVisibilitySetter = (index: number): ((v: boolean) => void) => {
+    const getVisibilitySetter = (mineral: string): ((v: boolean) => void) => {
         return (v: boolean) => {
-            visibilities[index] = v
-            setVisibilities([...visibilities])
+            visibilities[mineral] = v
+            setVisibilities({ ...visibilities })
         }
     }
 
@@ -115,11 +121,11 @@ function BlendMenu (
                 { minerals.map((mineral, i) =>
                     <MineralSlider
                         mineral={mineral}
-                        color={getBlendColor(palette, visibilities, monochrome, mineral, i)}
-                        magnitude={magnitudes[i]}
-                        setMagnitude={getMagnitudeSetter(i)}
-                        visible={visibilities[i]}
-                        setVisible={getVisibilitySetter(i)}
+                        color={getBlendColor(palette, visibilities, monochrome, mineral)}
+                        magnitude={magnitudes[mineral]}
+                        setMagnitude={getMagnitudeSetter(mineral)}
+                        visible={visibilities[mineral]}
+                        setVisible={getVisibilitySetter(mineral)}
                         disabled={!toggleable.includes(mineral)}
                         index={i}
                         key={i}

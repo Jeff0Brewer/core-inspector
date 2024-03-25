@@ -26,18 +26,20 @@ function CoreMineralControls (
 
     useBlending(vis)
 
-    const onMineralButtonClick = (e: MouseEvent, i: number): void => {
+    const onMineralButtonClick = (e: MouseEvent, mineral: string): void => {
         if (e.shiftKey) {
-            visibilities[i] = !visibilities[i]
+            visibilities[mineral] = !visibilities[mineral]
         } else {
-            visibilities.fill(false)
-            visibilities[i] = true
+            minerals.forEach(mineral => {
+                visibilities[mineral] = false
+            })
+            visibilities[mineral] = true
             setMonochrome(true)
         }
-        setVisibilities([...visibilities])
+        setVisibilities({ ...visibilities })
     }
 
-    const toggleable = getToggleableMinerals(minerals, palette, visibilities)
+    const toggleable = getToggleableMinerals(minerals, palette, Object.values(visibilities))
 
     return (
         <div className={styles.mineralControls}>
@@ -46,8 +48,8 @@ function CoreMineralControls (
                     { minerals.map((mineral, i) =>
                         <button
                             className={`${!toggleable.includes(mineral) && styles.disabled}`}
-                            onClick={(e): void => onMineralButtonClick(e, i)}
-                            data-active={visibilities[i]}
+                            onClick={(e): void => onMineralButtonClick(e, mineral)}
+                            data-active={visibilities[mineral]}
                             key={i}
                         >
                             {mineral}
