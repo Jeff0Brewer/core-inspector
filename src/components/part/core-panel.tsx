@@ -218,7 +218,7 @@ function ScaleColumnLabel (
 ): ReactElement {
     const range = bottomDepth - topDepth
     return (
-        <div className={`${styles.label} `}>
+        <div className={styles.label}>
             <div className={`${styles.topBottomDepths} ${largeWidth && styles.largeWidth}`}>
                 <p>{topDepth.toFixed(1)}</p>
                 <p>{bottomDepth.toFixed(1)}</p>

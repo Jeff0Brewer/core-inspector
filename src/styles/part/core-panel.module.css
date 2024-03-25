@@ -52,6 +52,8 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
 .top-bottom-depths > p {
