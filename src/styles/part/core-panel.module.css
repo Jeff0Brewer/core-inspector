@@ -1,6 +1,5 @@
 .top-labels, .bottom-labels {
     background-color: #444;
-    padding-right: 30px;
     height: 100%;
     display: flex;
     justify-content: flex-end;
@@ -9,10 +8,25 @@
 
 .top-labels {
     grid-area: label-punch;
+    padding-right: 30px;
 }
 
 .bottom-labels {
     grid-area: bottom-punch;
+    gap: 60px;
+    padding-right: 60px;
+    color: #909090;
+}
+
+.bottom-label > p {
+    width: 30px;
+    display: grid;
+    place-content: center;
+    height: 100%;
+}
+
+.bottom-label > .large-width {
+    width: 60px;
 }
 
 .zoom-lines {
