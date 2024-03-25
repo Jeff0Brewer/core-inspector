@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { clamp } from '../../lib/util'
+import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
 import styles from '../../styles/part/core-panel.module.css'
+
+const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
     representation: CoreRepresentation,
@@ -128,6 +130,11 @@ function CorePanel ({
             }) }
         </div>
         <div className={styles.bottomLabels}>
+            { columns.map((column, i) =>
+                <p key={i}>
+                    { getScale(column.mToPx * PART_WIDTH_M) }
+                </p>
+            ) }
         </div>
     </>
 }
@@ -193,6 +200,7 @@ function ScaleColumn ({
                     part={part}
                     parts={parts}
                     mToPx={mToPx}
+                    widthM={PART_WIDTH_M}
                     setCenter={setPartCenter}
                     setPart={setPart}
                     gap={gap}

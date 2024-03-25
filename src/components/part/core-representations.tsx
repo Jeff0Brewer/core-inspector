@@ -6,13 +6,12 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/core-representations.module.css'
 
-const PART_WIDTH_M = 0.0525
-
 type CoreRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
     mToPx: number,
+    widthM: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
     gap: number
@@ -41,7 +40,7 @@ function CoreLineRepresentation (
 }
 
 function CoreRectRepresentation (
-    { part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
+    { part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
@@ -73,7 +72,7 @@ function CoreRectRepresentation (
                     ref={id === part ? partRef : null}
                     onClick={() => setPart(id)}
                     style={{
-                        width: `${PART_WIDTH_M * mToPx}px`,
+                        width: `${widthM * mToPx}px`,
                         height: `${depths[id].length * mToPx}px`
                     }}
                     key={i}
@@ -89,6 +88,7 @@ type CoreCanvasRepresentationProps = {
     parts: Array<string>,
     canvasCtxs: StringMap<CanvasCtx>,
     mToPx: number,
+    widthM: number,
     gap: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
@@ -104,7 +104,7 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
 function CoreCanvasRepresentation ({
-    part, parts, canvasCtxs, mToPx, gap, setCenter, setPart,
+    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CoreCanvasRepresentationProps): ReactElement {
     const { depths } = useCoreMetadata()
@@ -141,7 +141,7 @@ function CoreCanvasRepresentation ({
                         { canvasCtxs[id] && customRender(
                             <CanvasRenderer
                                 canvas={canvasCtxs[id].canvas}
-                                width={`${PART_WIDTH_M * mToPx * widthScale}px`}
+                                width={`${widthM * mToPx * widthScale}px`}
                                 height={`${depths[id].length * mToPx}px`}
                             />
                         ) }
@@ -154,7 +154,7 @@ function CoreCanvasRepresentation ({
 }
 
 function CorePunchcardRepresentation (
-    { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
+    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
@@ -169,11 +169,11 @@ function CorePunchcardRepresentation (
 
     useEffect(() => {
         if (!vis) { return }
-        const canvasWidth = PART_WIDTH_M * mToPx * window.devicePixelRatio
+        const canvasWidth = widthM * mToPx * window.devicePixelRatio
         for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
             vis.getPunchcard(part, canvasCtx, canvasWidth)
         }
-    }, [parts, vis, mToPx, canvasCtxs, blending])
+    }, [parts, vis, mToPx, widthM, canvasCtxs, blending])
 
     return (
         <CoreCanvasRepresentation
@@ -181,6 +181,7 @@ function CorePunchcardRepresentation (
             parts={parts}
             canvasCtxs={canvasCtxs}
             mToPx={mToPx}
+            widthM={widthM}
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
@@ -189,7 +190,7 @@ function CorePunchcardRepresentation (
 }
 
 function CoreChannelPunchcardRepresentation (
-    { vis, part, parts, mToPx, gap, setCenter, setPart }: CoreRepresentationProps
+    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
 ): ReactElement {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
@@ -204,11 +205,11 @@ function CoreChannelPunchcardRepresentation (
 
     useEffect(() => {
         if (!vis) { return }
-        const canvasWidth = PART_WIDTH_M * mToPx * window.devicePixelRatio
+        const canvasWidth = widthM * mToPx * window.devicePixelRatio
         for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
             vis.getChannelPunchcard(part, canvasCtx, canvasWidth, WIDTH_SCALE)
         }
-    }, [parts, vis, mToPx, canvasCtxs])
+    }, [parts, vis, mToPx, widthM, canvasCtxs])
 
     return (
         <CoreCanvasRepresentation
@@ -216,6 +217,7 @@ function CoreChannelPunchcardRepresentation (
             parts={parts}
             canvasCtxs={canvasCtxs}
             mToPx={mToPx}
+            widthM={widthM}
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
