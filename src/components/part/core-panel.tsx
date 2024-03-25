@@ -11,6 +11,7 @@ type CoreColumn = {
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
+    mToPx: number,
     gap: number
 }
 
@@ -30,55 +31,70 @@ function CorePanel ({
 }: CorePanelProps): ReactElement {
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
+    const columnsRef = useRef<HTMLDivElement>(null)
 
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
-        const columns: Array<CoreColumn> = [{
-            representation: representations[0],
-            parts,
-            topDepth: minDepth,
-            bottomDepth: maxDepth,
-            gap: 1
-        }]
+        const getColumns = (): void => {
+            if (!columnsRef.current) { return }
 
-        const partCenter = depths[part].topDepth + depths[part].length * 0.5
+            const heightPx = columnsRef.current.clientHeight
 
-        for (let i = 1; i < representations.length; i++) {
-            const {
-                topDepth: lastTop,
-                bottomDepth: lastBottom,
-                gap: lastGap
-            } = columns[i - 1]
+            const columns: Array<CoreColumn> = [{
+                representation: representations[0],
+                parts,
+                topDepth: minDepth,
+                bottomDepth: maxDepth,
+                gap: 1,
+                mToPx: heightPx / (maxDepth - minDepth)
+            }]
 
-            const depthRange = Math.pow(lastBottom - lastTop, 0.45)
-            const depthCenter = clamp(
-                partCenter,
-                lastTop + depthRange * 0.5,
-                lastBottom - depthRange * 0.5
-            )
-            const topDepth = depthCenter - depthRange * 0.5
-            const bottomDepth = depthCenter + depthRange * 0.5
+            const partCenter = depths[part].topDepth + depths[part].length * 0.5
 
-            const visibleParts = parts.filter(part => {
-                if (!depths[part]) { return false }
+            for (let i = 1; i < representations.length; i++) {
+                const {
+                    topDepth: lastTop,
+                    bottomDepth: lastBottom,
+                    gap: lastGap
+                } = columns[i - 1]
 
-                const partTopDepth = depths[part].topDepth
-                const partBottomDepth = partTopDepth + depths[part].length
+                const depthRange = Math.pow(lastBottom - lastTop, 0.45)
+                const depthCenter = clamp(
+                    partCenter,
+                    lastTop + depthRange * 0.5,
+                    lastBottom - depthRange * 0.5
+                )
+                const topDepth = depthCenter - depthRange * 0.5
+                const bottomDepth = depthCenter + depthRange * 0.5
 
-                return partBottomDepth > topDepth && partTopDepth < bottomDepth
-            })
-            const gap = 3 * lastGap
+                const visibleParts = parts.filter(part => {
+                    if (!depths[part]) { return false }
 
-            columns.push({
-                parts: visibleParts,
-                representation: representations[i],
-                topDepth,
-                bottomDepth,
-                gap
-            })
+                    const partTopDepth = depths[part].topDepth
+                    const partBottomDepth = partTopDepth + depths[part].length
+
+                    return partBottomDepth > topDepth && partTopDepth < bottomDepth
+                })
+                const gap = 3 * lastGap
+
+                columns.push({
+                    parts: visibleParts,
+                    representation: representations[i],
+                    topDepth,
+                    bottomDepth,
+                    mToPx: heightPx / (bottomDepth - topDepth),
+                    gap
+                })
+            }
+
+            setColumns(columns)
         }
+        getColumns()
 
-        setColumns(columns)
+        window.addEventListener('resize', getColumns)
+        return () => {
+            window.removeEventListener('resize', getColumns)
+        }
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
     return <>
@@ -92,7 +108,7 @@ function CorePanel ({
                 />
             ) }
         </div>
-        <div className={styles.columns}>
+        <div className={styles.columns} ref={columnsRef}>
             { columns.map((column, i) => {
                 const isLast = i === columns.length - 1
                 return <ScaleColumn
@@ -104,6 +120,7 @@ function CorePanel ({
                     gap={column.gap}
                     topDepth={column.topDepth}
                     bottomDepth={column.bottomDepth}
+                    mToPx={column.mToPx}
                     nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
                     nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
                     key={i}
@@ -124,15 +141,15 @@ type ScaleColumnProps = {
     gap: number,
     topDepth: number,
     bottomDepth: number,
+    mToPx: number,
     nextTopDepth: number,
     nextBottomDepth: number,
 }
 
 function ScaleColumn ({
-    representation, vis, part, parts, topDepth, bottomDepth,
+    representation, vis, part, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement {
-    const [mToPx, setMToPx] = useState<number>(0)
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -141,25 +158,6 @@ function ScaleColumn ({
         fullScale = false,
         largeWidth = false
     } = representation
-
-    // get meter to pixel scale of column
-    useEffect(() => {
-        const getScale = (): void => {
-            if (!columnRef.current) { return }
-
-            const heightPx = columnRef.current.clientHeight
-            const heightM = bottomDepth - topDepth
-
-            setMToPx(heightPx / heightM)
-        }
-
-        getScale()
-
-        window.addEventListener('resize', getScale)
-        return () => {
-            window.removeEventListener('resize', getScale)
-        }
-    }, [topDepth, bottomDepth, parts, gap])
 
     const wrapStyle: React.CSSProperties = {}
     if (topDepth === minDepth) {
