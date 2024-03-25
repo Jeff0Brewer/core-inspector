@@ -161,13 +161,13 @@ function PartMineralChannels (
             channelWidth={viewWidth}
         />
         <div className={styles.content}>
-            <div className={styles.labels} style={{ gap }}>
-                <p className={styles.channelLabel} style={{ width }}>
+            <div className={styles.topLabels} style={{ gap }}>
+                <p className={styles.topLabel} style={{ width }}>
                     [blended]
                 </p>
                 { Object.keys(channels)
                     .map((mineral, i) =>
-                        <p className={styles.channelLabel} style={{ width }} key={i}>
+                        <p className={styles.topLabel} style={{ width }} key={i}>
                             {mineral}
                         </p>
                     ) }
@@ -199,6 +199,21 @@ function PartMineralChannels (
                         visible={!!mousePos}
                     />
                 </div>
+            </div>
+            <div className={styles.bottomLabels} style={{ gap }}>
+                <div className={styles.bottomLabel} style={{ width }}>
+                    <button className={styles.toggleButton}>
+                        blended
+                    </button>
+                </div>
+                { Object.keys(channels)
+                    .map((mineral, i) =>
+                        <div className={styles.bottomLabel} style={{ width }} key={i}>
+                            <button className={styles.blendButton}>
+                                {mineral}
+                            </button>
+                        </div>
+                    ) }
             </div>
         </div>
     </>

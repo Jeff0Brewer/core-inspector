@@ -5,23 +5,87 @@
     max-width: 100%;
     overflow-x: scroll;
     overflow-y: hidden;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 30px 1fr 32px;
+    grid-template-areas:
+        "top-label"
+        "channels"
+        "bottom-label";
 }
 
-.labels {
-    grid-area: label-main;
-    background-color: #444;
+.top-labels, .bottom-labels, .channels {
+    padding: 0 30px 0 30px;
+}
+
+.top-labels {
+    display: flex;
+    grid-area: top-label;
+    position: relative;
     width: fit-content;
+    height: 30px;
+    padding-top: 10px;
+    background-color: #444;
     min-width: 100%;
 }
 
-.labels, .channels {
+.bottom-labels {
     display: flex;
-    padding: 0 30px 0 30px;
+    grid-area: bottom-label;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #2B2B2B;
+}
+
+.top-label, .bottom-label {
+    position: relative;
+    margin: 0 5px 0 15px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.top-label {
+    display: grid;
+    place-content: center;
+    height: 100%;
+    border: solid var(--color3);
+    border-width: 0 1px;
+}
+
+.bottom-label {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.blend-button, .toggle-button {
+    text-transform: uppercase;
+    text-align: left;
+    padding: 0 10px;
+    width: 100%;
+    max-width: 120px;
+    height: 20px;
+    overflow: hidden;
+}
+
+.blend-button {
+    background-color: #202020;
+}
+
+.toggle-button {
+    background-color: #fff;
+    color: #000;
 }
 
 .channels-wrap {
     position: relative;
-    grid-area: main;
+    grid-area: channels;
     height: 100%;
     width: fit-content;
     overflow-y: scroll;
@@ -33,7 +97,6 @@
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
     background-color: #202020;
-    padding-bottom: 60px;
     /* TODO: fix height */
     min-height: 100vh;
 }
@@ -42,21 +105,6 @@
     position: relative;
     height: fit-content;
     display: flex;
-}
-
-.channel-label {
-    position: relative;
-    height: 20px;
-    margin: 0 5px 0 15px;
-    display: grid;
-    place-content: center;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    border: solid var(--color3);
-    border-width: 0 1px;
-    flex-grow: 0;
-    flex-shrink: 0;
 }
 
 .channel:before, .channel:after {
