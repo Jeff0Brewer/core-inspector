@@ -1,4 +1,5 @@
-import { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
+import { PiCaretLeftBold, PiCaretRightBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
@@ -9,6 +10,7 @@ import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import BlendMenuToggle from '../../components/part/blend-menu-toggle'
 import PartContent from '../../components/part/part-content'
+import styles from '../../styles/part/part-view.module.css'
 
 type PartViewProps = {
     part: string,
@@ -23,6 +25,8 @@ function PartView (
 ): ReactElement {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
+    const [corePanelVisible, setCorePanelVisible] = useState<boolean>(true)
+    const [panelSpectra, setPanelSpectra] = useState<Array<number> | null>(null)
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -68,8 +72,32 @@ function PartView (
         getChannels()
     }, [vis, core, part, minerals])
 
-    return <>
-        <PartInfoHeader core={core} part={part} setPart={setPart} />
+    const gridParams = {
+        '--core-panel-width': corePanelVisible ? '390px' : '0',
+        '--spectra-panel-width': panelSpectra === null ? '0' : '300px'
+    } as React.CSSProperties
+
+    return <div className={styles.partView} style={gridParams}>
+        <div className={styles.topLeft}>
+            <button className={styles.closeButton} onClick={() => setPart(null)}>
+                <PiCaretLeftBold />
+            </button>
+        </div>
+        <PartInfoHeader core={core} part={part} />
+        <button
+            className={styles.corePanelToggle}
+            style={{ transform: `rotate(${corePanelVisible ? '0' : '180deg'})` }}
+            onClick={(): void => setCorePanelVisible(!corePanelVisible)}
+        >
+            <PiCaretLeftBold />
+        </button>
+        <button
+            className={styles.spectraPanelHide}
+            style={{ opacity: panelSpectra === null ? '0' : '1' }}
+            onClick={(): void => setPanelSpectra(null)}
+        >
+            <PiCaretRightBold />
+        </button>
         <PartContent
             vis={vis}
             core={core}
@@ -81,7 +109,7 @@ function PartView (
             minerals={minerals}
             palettes={palettes}
         />
-    </>
+    </div>
 }
 
 function getAbundanceFilepaths (

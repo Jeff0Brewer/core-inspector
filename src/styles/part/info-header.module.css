@@ -1,6 +1,6 @@
 .part-info {
     position: relative;
-    grid-area: top-bar;
+    grid-area: top-right;
     display: flex;
     align-items: center;
     width: 100%;
@@ -9,8 +9,8 @@
     font-size: 0.85rem;
     font-weight: 300;
     text-transform: uppercase;
-    background-color: #444;
-
+    background-color: #252525;
+    padding-left: 30px;
 }
 
 .part-info p {
@@ -22,13 +22,6 @@
     color: #fff;
     margin-left: 5px;
     white-space: nowrap;
-}
-
-.close-button {
-    display: grid;
-    place-content: center;
-    width: 70px;
-    height: 30px;
 }
 
 .lowercase {

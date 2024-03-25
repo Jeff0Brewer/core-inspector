@@ -1,30 +1,20 @@
-import { ReactElement, useCallback } from 'react'
-import { IoMdClose } from 'react-icons/io'
+import { ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { getCoreId, getPartId } from '../../lib/ids'
-import { formatFloat } from '../../lib/util'
 import styles from '../../styles/part/info-header.module.css'
 
 type PartInfoHeaderProps = {
     core: string,
-    part: string,
-    setPart: (p: string | null) => void
+    part: string
 }
 
 function PartInfoHeader (
-    { core, part, setPart }: PartInfoHeaderProps
+    { core, part }: PartInfoHeaderProps
 ): ReactElement {
-    const { depths, hydrations } = useCoreMetadata()
-
-    const clearPart = useCallback(() => {
-        setPart(null)
-    }, [setPart])
+    const { depths } = useCoreMetadata()
 
     return (
         <div className={styles.partInfo}>
-            <button className={styles.closeButton} onClick={clearPart}>
-                {ICONS.close}
-            </button>
             <p>
                 core
                 <span>
@@ -37,33 +27,19 @@ function PartInfoHeader (
                     {getPartId(part)}
                 </span>
             </p>
-            { !!depths[part] && <>
-                <p>
-                    top depth
-                    <span className={styles.lowercase}>
-                        {formatFloat(depths[part].topDepth)}m
-                    </span>
-                </p>
-                <p>
-                    length
-                    <span className={styles.lowercase}>
-                        {formatFloat(depths[part].length)}m
-                    </span>
-                </p>
-            </> }
-            { !!hydrations[part] &&
-                <p>
-                    hydration
-                    <span>
-                        {formatFloat(hydrations[part] * 100)}%
-                    </span>
-                </p> }
+            { !!depths[part] && <p>
+                depth
+                <span className={styles.lowercase}>
+                    {formatDepthInfo(depths[part].topDepth, depths[part].length)}
+                </span>
+            </p> }
         </div>
     )
 }
 
-const ICONS = {
-    close: <IoMdClose style={{ fontSize: '16px' }} />
+function formatDepthInfo (topDepth: number, length: number): string {
+    const bottomDepth = topDepth + length
+    return `${topDepth.toFixed(2)}m - ${bottomDepth.toFixed(2)}m (${(length * 100).toFixed(0)}cm)`
 }
 
 export default PartInfoHeader
