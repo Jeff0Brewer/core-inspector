@@ -3,6 +3,7 @@ import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { StringMap, getImageData, getCssColor } from '../../lib/util'
+import { getCoreId, getPartId } from '../../lib/ids'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
@@ -27,6 +28,7 @@ type PartMineralChannelsProps = {
 function PartMineralChannels (
     { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
+    const [rgbPath, setRGBPath] = useState<string>('')
     const [imgWidth, setImgWidth] = useState<number>(0)
     const [imgHeight, setImgHeight] = useState<number>(0)
     const [viewWidth, setViewWidth] = useState<number>(0)
@@ -36,15 +38,15 @@ function PartMineralChannels (
     const [spacing, setSpacing] = useState<number>(0.25)
     const [channelHeight, setChannelHeight] = useState<number>(0)
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
-
-    const [abundances, setAbundances] = useState<StringMap<number>>({})
-    const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
-    const [spectrum, setSpectrum] = useState<Array<number>>([])
-    const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
-
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+
+    const [abundances, setAbundances] = useState<StringMap<number>>({})
+    const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
+
+    const [spectrum, setSpectrum] = useState<Array<number>>([])
+    const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
 
     // TODO: prevent attaching / removing handler on
     // spectrum / mousepos state change
@@ -59,6 +61,10 @@ function PartMineralChannels (
             window.removeEventListener('mousedown', mousedown)
         }
     }, [spectrum, setPanelSpectra, mousePos])
+
+    useEffect(() => {
+        setRGBPath(`./data/${core}/rgb/${getCoreId(core)}_${getPartId(part)}_rgb.png`)
+    }, [core, part])
 
     useEffect(() => {
         if (!vis) { return }
@@ -166,6 +172,9 @@ function PartMineralChannels (
         <div className={styles.content}>
             <div className={styles.topLabels} style={{ gap }}>
                 <p className={styles.topLabel} style={{ width }}>
+                    [visual range]
+                </p>
+                <p className={styles.topLabel} style={{ width }}>
                     [blended]
                 </p>
                 { Object.keys(channels)
@@ -177,6 +186,13 @@ function PartMineralChannels (
             </div>
             <div className={styles.channelsWrap} ref={contentRef}>
                 <div className={styles.channels} style={{ gap }}>
+                    <MineralChannel
+                        source={rgbPath}
+                        width={width}
+                        height={height}
+                        mousePos={mousePos}
+                        setMousePos={setMousePos}
+                    />
                     { vis &&
                     <MineralChannel
                         source={vis.canvas}
@@ -204,6 +220,11 @@ function PartMineralChannels (
                 </div>
             </div>
             <div className={styles.bottomLabels} style={{ gap }}>
+                <div className={styles.bottomLabel} style={{ width }}>
+                    <button className={styles.toggleButton}>
+                        visual range
+                    </button>
+                </div>
                 <div className={styles.bottomLabel} style={{ width }}>
                     <button className={styles.toggleButton}>
                         blended

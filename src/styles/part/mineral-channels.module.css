@@ -79,6 +79,12 @@
     background-color: #202020;
 }
 
+.toggle-button {
+    background-color: #fff;
+    color: #000;
+    pointer-events: none;
+}
+
 .blend-button:hover {
     background-color: #303030;
 }
@@ -109,15 +115,6 @@
 
 .blend-color:after {
     background-color: inherit;
-}
-
-.toggle-button {
-    background-color: #fff;
-    color: #000;
-}
-
-.toggle-button:hover {
-    background-color: #ccc;
 }
 
 .disabled {
