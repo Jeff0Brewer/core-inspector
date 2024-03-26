@@ -15,6 +15,7 @@ import styles from '../../styles/part/mineral-channels.module.css'
 
 const MIN_WIDTH_PX = 50
 
+// TODO: simplify
 type PartMineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
