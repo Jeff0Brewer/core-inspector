@@ -29,14 +29,11 @@ function PartMineralChannels (
     { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
     const [rgbPath, setRGBPath] = useState<string>('')
-    const [imgWidth, setImgWidth] = useState<number>(0)
-    const [imgHeight, setImgHeight] = useState<number>(0)
-    const [viewWidth, setViewWidth] = useState<number>(0)
-    const [viewHeight, setViewHeight] = useState<number>(0)
+    const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
+    const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
-    const [channelHeight, setChannelHeight] = useState<number>(0)
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
@@ -68,8 +65,7 @@ function PartMineralChannels (
 
     useEffect(() => {
         if (!vis) { return }
-        setImgWidth(vis.canvas.width)
-        setImgHeight(vis.canvas.height)
+        setImgDims([vis.canvas.width, vis.canvas.height])
     }, [vis, channels])
 
     useEffect(() => {
@@ -94,23 +90,19 @@ function PartMineralChannels (
         return () => {
             content.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, channelHeight, setDepthTop, setDepthBottom])
+    }, [part, depths, setDepthTop, setDepthBottom])
 
     useEffect(() => {
-        if (!vis) { return }
+        const [imgWidth, imgHeight] = imgDims
+        if (!vis || !imgWidth || !imgHeight) { return }
 
-        const channelWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
-        const channelGap = channelWidth * spacing
-        setViewWidth(channelWidth)
-        setViewGap(channelGap)
+        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
+        const viewHeight = viewWidth * imgHeight / imgWidth
+        const viewGap = viewWidth * spacing
 
-        const { width, height } = vis.canvas
-        if (width) {
-            const channelHeight = channelWidth * height / width
-            setViewHeight(channelHeight)
-            setChannelHeight(channelHeight)
-        }
-    }, [channels, zoom, spacing, vis, imgWidth, setChannelHeight])
+        setViewDims([viewWidth, viewHeight])
+        setViewGap(viewGap)
+    }, [channels, zoom, spacing, vis, imgDims])
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
@@ -140,26 +132,27 @@ function PartMineralChannels (
             imgData[mineral] = getImageData(img)
         })
 
-        abundanceWorker.postMessage({ type: 'imgData', imgData, imgWidth })
-    }, [abundanceWorker, channels, imgWidth])
+        abundanceWorker.postMessage({ type: 'imgData', imgData, imgWidth: imgDims[0] })
+    }, [abundanceWorker, channels, imgDims])
 
     useEffect(() => {
+        const imgHeight = imgDims[1]
         if (!spectraWorker || !imgHeight) { return }
 
         spectraWorker.postMessage({ type: 'id', core, part, imgHeight })
-    }, [spectraWorker, imgHeight, core, part])
+    }, [spectraWorker, imgDims, core, part])
 
     useEffect(() => {
         if (!mousePos || !abundanceWorker || !spectraWorker) { return }
-        const x = mousePos[0] / viewWidth * imgWidth
-        const y = mousePos[1] / viewHeight * imgHeight
+        const x = mousePos[0] / viewDims[0] * imgDims[0]
+        const y = mousePos[1] / viewDims[1] * imgDims[1]
 
         abundanceWorker.postMessage({ type: 'mousePosition', x, y })
         spectraWorker.postMessage({ type: 'mousePosition', x, y })
-    }, [abundanceWorker, spectraWorker, mousePos, viewWidth, viewHeight, imgWidth, imgHeight])
+    }, [abundanceWorker, spectraWorker, mousePos, viewDims, imgDims])
 
-    const width = `${viewWidth}px`
-    const height = `${viewHeight}px`
+    const width = `${viewDims[0]}px`
+    const height = `${viewDims[1]}px`
     const gap = `${viewGap}px`
     return <>
         <PartViewControls
@@ -167,7 +160,7 @@ function PartMineralChannels (
             spacing={spacing}
             setZoom={setZoom}
             setSpacing={setSpacing}
-            channelWidth={viewWidth}
+            channelWidth={viewDims[0]}
         />
         <div className={styles.content}>
             <div className={styles.topLabels} style={{ gap }}>
