@@ -305,7 +305,7 @@ function MineralChannel (
         <div className={styles.channel}>
             <div ref={channelRef}>
                 { typeof source === 'string'
-                    ? <img src={source} style={{ width, height }} />
+                    ? <img src={source} style={{ width, height }} draggable={false} />
                     : <CanvasRenderer canvas={source} width={width} height={height} /> }
             </div>
             { mousePos && <div
