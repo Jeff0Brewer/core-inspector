@@ -22,42 +22,31 @@ type PartMineralChannelsProps = {
     channels: StringMap<HTMLImageElement>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setPanelSpectra: (s: Array<number> | null) => void
 }
 
 function PartMineralChannels (
-    { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
+    { vis, core, part, channels, setDepthTop, setDepthBottom }: PartMineralChannelsProps
 ): ReactElement {
-    const [rgbPath, setRGBPath] = useState<string>('')
-    const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
-    const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
-    const [viewGap, setViewGap] = useState<number>(0)
-    const [zoom, setZoom] = useState<number>(0.25)
-    const [spacing, setSpacing] = useState<number>(0.25)
-    const [mousePos, setMousePos] = useState<[number, number] | null>(null)
     const contentRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+
+    const [rgbPath, setRGBPath] = useState<string>('')
+
+    const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
+    const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
+    const [viewGap, setViewGap] = useState<number>(0)
+
+    const [zoom, setZoom] = useState<number>(0.25)
+    const [spacing, setSpacing] = useState<number>(0.25)
+
+    const [mousePos, setMousePos] = useState<[number, number] | null>(null)
 
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
 
     const [spectrum, setSpectrum] = useState<Array<number>>([])
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
-
-    // TODO: prevent attaching / removing handler on
-    // spectrum / mousepos state change
-    useEffect(() => {
-        const mousedown = (): void => {
-            if (spectrum.length > 0 && mousePos !== null) {
-                setPanelSpectra(spectrum)
-            }
-        }
-        window.addEventListener('mousedown', mousedown)
-        return () => {
-            window.removeEventListener('mousedown', mousedown)
-        }
-    }, [spectrum, setPanelSpectra, mousePos])
 
     useEffect(() => {
         setRGBPath(`./data/${core}/rgb/${getCoreId(core)}_${getPartId(part)}_rgb.png`)

@@ -4,7 +4,6 @@ import { StringMap } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import PartMineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
-import SpectraPanel from '../../components/part/spectra-panel'
 import {
     CoreRepresentation,
     CoreLineRepresentation,
@@ -33,7 +32,6 @@ function PartContent (
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-    const [panelSpectra, setPanelSpectra] = useState<Array<number> | null>(null)
     const { ids } = useCoreMetadata()
 
     return (
@@ -54,9 +52,7 @@ function PartContent (
                 channels={channels}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
-                setPanelSpectra={setPanelSpectra}
             />
-            <SpectraPanel spectra={panelSpectra} />
         </>
     )
 }
