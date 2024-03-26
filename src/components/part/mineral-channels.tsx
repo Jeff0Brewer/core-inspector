@@ -27,11 +27,7 @@ type PartMineralChannelsProps = {
 function PartMineralChannels (
     { vis, core, part, channels, setDepthTop, setDepthBottom }: PartMineralChannelsProps
 ): ReactElement {
-    const contentRef = useRef<HTMLDivElement>(null)
-    const { depths } = useCoreMetadata()
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
-
-    const [rgbPath, setRGBPath] = useState<string>('')
 
     const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
@@ -39,6 +35,119 @@ function PartMineralChannels (
 
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
+
+    useEffect(() => {
+        if (!vis) { return }
+        setImgDims([vis.canvas.width, vis.canvas.height])
+    }, [vis, channels])
+
+    useEffect(() => {
+        const [imgWidth, imgHeight] = imgDims
+        if (!vis || !imgWidth || !imgHeight) { return }
+
+        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
+        const viewHeight = viewWidth * imgHeight / imgWidth
+        const viewGap = viewWidth * spacing
+
+        setViewDims([viewWidth, viewHeight])
+        setViewGap(viewGap)
+    }, [channels, zoom, spacing, vis, imgDims])
+
+    const width = `${viewDims[0]}px`
+    const gap = `${viewGap}px`
+    return <>
+        <PartViewControls
+            zoom={zoom}
+            spacing={spacing}
+            setZoom={setZoom}
+            setSpacing={setSpacing}
+            channelWidth={viewDims[0]}
+        />
+        <div className={styles.content}>
+            <div className={styles.topLabels} style={{ gap }}>
+                <p className={styles.topLabel} style={{ width }}>
+                    [visual range]
+                </p>
+                <p className={styles.topLabel} style={{ width }}>
+                    [blended]
+                </p>
+                { Object.keys(channels)
+                    .map((mineral, i) =>
+                        <p className={styles.topLabel} style={{ width }} key={i}>
+                            {mineral}
+                        </p>
+                    ) }
+            </div>
+            <ChannelsView
+                core={core}
+                part={part}
+                vis={vis}
+                channels={channels}
+                imgDims={imgDims}
+                viewDims={viewDims}
+                viewGap={viewGap}
+                setDepthTop={setDepthTop}
+                setDepthBottom={setDepthBottom}
+            />
+            <div className={styles.bottomLabels} style={{ gap }}>
+                <div className={styles.bottomLabel} style={{ width }}>
+                    <button className={styles.toggleButton}>
+                        visual range
+                    </button>
+                </div>
+                <div className={styles.bottomLabel} style={{ width }}>
+                    <button className={styles.toggleButton}>
+                        blended
+                    </button>
+                </div>
+                { Object.keys(channels)
+                    .map((mineral, i) =>
+                        <div className={styles.bottomLabel} style={{ width }} key={i}>
+                            <div
+                                className={styles.blendColor}
+                                style={{
+                                    backgroundColor: getCssColor(
+                                        getBlendColor(palette, visibilities, monochrome, mineral)
+                                    )
+                                }}
+                            ></div>
+                            <button
+                                className={`${
+                                    styles.blendButton} ${
+                                    !isToggleable(mineral, palette, visibilities) && styles.disabled
+                                }`}
+                                onClick={() => {
+                                    visibilities[mineral] = !visibilities[mineral]
+                                    setVisibilities({ ...visibilities })
+                                }}
+                            >
+                                {mineral}
+                            </button>
+                        </div>
+                    ) }
+            </div>
+        </div>
+    </>
+}
+
+type ChannelsViewProps = {
+    core: string,
+    part: string,
+    vis: PartRenderer | null,
+    channels: StringMap<HTMLImageElement>,
+    imgDims: [number, number],
+    viewDims: [number, number],
+    viewGap: number,
+    setDepthTop: (d: number) => void,
+    setDepthBottom: (d: number) => void,
+}
+
+function ChannelsView (
+    { core, part, vis, channels, imgDims, viewDims, viewGap, setDepthTop, setDepthBottom }: ChannelsViewProps
+): ReactElement {
+    const [rgbPath, setRGBPath] = useState<string>('')
+    const channelsRef = useRef<HTMLDivElement>(null)
+    const { depths } = useCoreMetadata()
 
     const [mousePos, setMousePos] = useState<[number, number] | null>(null)
 
@@ -53,18 +162,13 @@ function PartMineralChannels (
     }, [core, part])
 
     useEffect(() => {
-        if (!vis) { return }
-        setImgDims([vis.canvas.width, vis.canvas.height])
-    }, [vis, channels])
-
-    useEffect(() => {
-        const content = contentRef.current
-        if (!content) {
+        const wrap = channelsRef.current
+        if (!wrap) {
             throw new Error('No reference to content element')
         }
 
         const scroll = (): void => {
-            const { scrollTop, scrollHeight, clientHeight } = content
+            const { scrollTop, scrollHeight, clientHeight } = wrap
             const topPercent = scrollTop / scrollHeight
             const bottomPercent = (scrollTop + clientHeight) / scrollHeight
 
@@ -75,23 +179,11 @@ function PartMineralChannels (
 
         scroll()
 
-        content.addEventListener('scroll', scroll)
+        wrap.addEventListener('scroll', scroll)
         return () => {
-            content.removeEventListener('scroll', scroll)
+            wrap.removeEventListener('scroll', scroll)
         }
     }, [part, depths, setDepthTop, setDepthBottom])
-
-    useEffect(() => {
-        const [imgWidth, imgHeight] = imgDims
-        if (!vis || !imgWidth || !imgHeight) { return }
-
-        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
-        const viewHeight = viewWidth * imgHeight / imgWidth
-        const viewGap = viewWidth * spacing
-
-        setViewDims([viewWidth, viewHeight])
-        setViewGap(viewGap)
-    }, [channels, zoom, spacing, vis, imgDims])
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
@@ -143,39 +235,17 @@ function PartMineralChannels (
     const width = `${viewDims[0]}px`
     const height = `${viewDims[1]}px`
     const gap = `${viewGap}px`
-    return <>
-        <PartViewControls
-            zoom={zoom}
-            spacing={spacing}
-            setZoom={setZoom}
-            setSpacing={setSpacing}
-            channelWidth={viewDims[0]}
-        />
-        <div className={styles.content}>
-            <div className={styles.topLabels} style={{ gap }}>
-                <p className={styles.topLabel} style={{ width }}>
-                    [visual range]
-                </p>
-                <p className={styles.topLabel} style={{ width }}>
-                    [blended]
-                </p>
-                { Object.keys(channels)
-                    .map((mineral, i) =>
-                        <p className={styles.topLabel} style={{ width }} key={i}>
-                            {mineral}
-                        </p>
-                    ) }
-            </div>
-            <div className={styles.channelsWrap} ref={contentRef}>
-                <div className={styles.channels} style={{ gap }}>
-                    <MineralChannel
-                        source={rgbPath}
-                        width={width}
-                        height={height}
-                        mousePos={mousePos}
-                        setMousePos={setMousePos}
-                    />
-                    { vis &&
+    return (
+        <div className={styles.channelsWrap} ref={channelsRef}>
+            <div className={styles.channels} style={{ gap }}>
+                <MineralChannel
+                    source={rgbPath}
+                    width={width}
+                    height={height}
+                    mousePos={mousePos}
+                    setMousePos={setMousePos}
+                />
+                { vis &&
                     <MineralChannel
                         source={vis.canvas}
                         width={width}
@@ -183,63 +253,25 @@ function PartMineralChannels (
                         mousePos={mousePos}
                         setMousePos={setMousePos}
                     /> }
-                    { Object.entries(channels)
-                        .map(([_, img], i) =>
-                            <MineralChannel
-                                source={img.src}
-                                width={width}
-                                height={height}
-                                mousePos={mousePos}
-                                setMousePos={setMousePos}
-                                key={i}
-                            />
-                        ) }
-                    <PartHoverInfo
-                        abundances={abundances}
-                        spectrum={spectrum}
-                        visible={!!mousePos}
-                    />
-                </div>
-            </div>
-            <div className={styles.bottomLabels} style={{ gap }}>
-                <div className={styles.bottomLabel} style={{ width }}>
-                    <button className={styles.toggleButton}>
-                        visual range
-                    </button>
-                </div>
-                <div className={styles.bottomLabel} style={{ width }}>
-                    <button className={styles.toggleButton}>
-                        blended
-                    </button>
-                </div>
-                { Object.keys(channels)
-                    .map((mineral, i) =>
-                        <div className={styles.bottomLabel} style={{ width }} key={i}>
-                            <div
-                                className={styles.blendColor}
-                                style={{
-                                    backgroundColor: getCssColor(
-                                        getBlendColor(palette, visibilities, monochrome, mineral)
-                                    )
-                                }}
-                            ></div>
-                            <button
-                                className={`${
-                                    styles.blendButton} ${
-                                    !isToggleable(mineral, palette, visibilities) && styles.disabled
-                                }`}
-                                onClick={() => {
-                                    visibilities[mineral] = !visibilities[mineral]
-                                    setVisibilities({ ...visibilities })
-                                }}
-                            >
-                                {mineral}
-                            </button>
-                        </div>
+                { Object.entries(channels)
+                    .map(([_, img], i) =>
+                        <MineralChannel
+                            source={img.src}
+                            width={width}
+                            height={height}
+                            mousePos={mousePos}
+                            setMousePos={setMousePos}
+                            key={i}
+                        />
                     ) }
+                <PartHoverInfo
+                    abundances={abundances}
+                    spectrum={spectrum}
+                    visible={!!mousePos}
+                />
             </div>
         </div>
-    </>
+    )
 }
 
 type MineralChannelProps = {
