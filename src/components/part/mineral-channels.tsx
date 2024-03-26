@@ -184,7 +184,7 @@ function ChannelsView (
         return () => {
             wrap.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, setDepthTop, setDepthBottom])
+    }, [part, depths, setDepthTop, setDepthBottom, viewDims])
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
