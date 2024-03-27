@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ReactElement } from 'react'
-import { PiCaretLeftBold, PiCaretRightBold } from 'react-icons/pi'
+import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
