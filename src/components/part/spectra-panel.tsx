@@ -25,21 +25,33 @@ function SpectraPanel (
                 >
                     <PiCaretRightBold />
                 </button>
-                { spectra !== null && <>
-                    <SvgPlot
-                        customClass={styles.mainPlot}
-                        elements={[
-                            {
-                                data: spectra,
-                                fillOpacity: '0.3',
-                                strokeWidth: '2'
-                            }
-                        ]}
-                        labelX={'wavelength'}
-                        labelY={'reflectance'}
-                    />
+                <div className={styles.plots}>
+                    { spectra !== null && <>
+                        <SvgPlot
+                            customClass={styles.mainPlot}
+                            elements={[
+                                {
+                                    data: spectra,
+                                    fillOpacity: '0.3',
+                                    strokeWidth: '2'
+                                }
+                            ]}
+                            labelX={'wavelength'}
+                            labelY={'reflectance'}
+                            ticksX={{
+                                min: 1000,
+                                max: 2500,
+                                step: 100
+                            }}
+                            ticksY={{
+                                min: 0.125,
+                                max: 0.875,
+                                step: 0.125
+                            }}
+                        />
 
-                </>}
+                    </>}
+                </div>
             </div>
         </div>
     )

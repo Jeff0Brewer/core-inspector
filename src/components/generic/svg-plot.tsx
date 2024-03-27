@@ -47,19 +47,61 @@ function SvgPlotElement (
     </>
 }
 
+type SvgPlotTicks = {
+    min: number,
+    max: number,
+    step: number
+}
+
 type SvgPlotProps = {
     elements: Array<SvgPlotElementProps>,
     customClass?: string,
     labelX?: string,
-    labelY?: string
+    labelY?: string,
+    ticksX?: SvgPlotTicks
+    ticksY?: SvgPlotTicks
 }
 
 function SvgPlot (
-    { elements, customClass, labelX, labelY }: SvgPlotProps
+    { elements, customClass, labelX, labelY, ticksX, ticksY }: SvgPlotProps
 ): ReactElement {
+    const [tickValuesX, setTickValuesX] = useState<Array<number>>([])
+    const [tickValuesY, setTickValuesY] = useState<Array<number>>([])
+
+    useEffect(() => {
+        if (!ticksX) { return }
+
+        const tickValuesX = []
+        const { min, max, step } = ticksX
+        for (let i = min; i <= max; i += step) {
+            tickValuesX.push(i)
+        }
+
+        setTickValuesX(tickValuesX)
+    }, [ticksX])
+
+    useEffect(() => {
+        if (!ticksY) { return }
+
+        const tickValuesY = []
+        const { min, max, step } = ticksY
+        for (let i = max; i >= min; i -= step) {
+            tickValuesY.push(i)
+        }
+
+        setTickValuesY(tickValuesY)
+    }, [ticksY])
+
     return (
         <div className={`${styles.svgPlot} ${customClass}`}>
             <div className={styles.axisY}>
+                { ticksY && <div className={styles.ticksY}>
+                    { tickValuesY.map((value, i) =>
+                        <div className={styles.tickY} key={i}>
+                            <p>{value}</p>
+                        </div>
+                    ) }
+                </div> }
                 { labelY && <p className={styles.labelY}>
                     {labelY}
                 </p> }
@@ -70,6 +112,13 @@ function SvgPlot (
                 ) }
             </div>
             <div className={styles.axisX}>
+                { ticksX && <div className={styles.ticksX}>
+                    { tickValuesX.map((value, i) =>
+                        <div className={styles.tickX} key={i}>
+                            <p>{value}</p>
+                        </div>
+                    ) }
+                </div> }
                 { labelX && <p className={styles.labelX}>
                     {labelX}
                 </p> }

@@ -1,5 +1,5 @@
 .svg-plot {
-    --axis-size: 20px;
+    --tick-size: 15px;
     position: relative;
 }
 
@@ -19,23 +19,21 @@
 
 .axis-x, .axis-y {
     position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-content: center;
 }
 
 .axis-x {
     left: 0;
     right: 0;
-    height: var(--axis-size);
+    height: var(--tick-size);
 }
 
 .axis-y {
-    flex-direction: column;
-    left: calc(-1 * var(--axis-size));
+    left: calc(-1 * var(--tick-size));
     top: 0;
     bottom: 0;
-    width: var(--axis-size);
+    width: var(--tick-size);
 }
 
 .label-x, .label-y {
@@ -45,8 +43,61 @@
     width: 0;
     height: 0;
     overflow: visible;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+.label-x {
+    transform: translateY(35px);
 }
 
 .label-y {
-    transform: rotate(-90deg);
+    transform: rotate(-90deg) translateY(-55px);
+}
+
+.ticks-x, .ticks-y {
+    position: absolute;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: space-around;
+    font-size: 0.5rem;
+}
+
+.ticks-y {
+    flex-direction: column;
+    border-right: 1px solid #fff;
+}
+
+.ticks-x {
+    border-top: 1px solid #fff;
+}
+
+.tick-y {
+    position: relative;
+    width: var(--tick-size);
+    height: 1px;
+    background-color: #fff;
+}
+
+.tick-y > * {
+    position: absolute;
+    margin-right: 3px;
+    right: var(--tick-size);
+    transform: translateY(-50%);
+}
+
+.tick-x {
+    position: relative;
+    height: var(--tick-size);
+    width: 1px;
+    background-color: #fff;
+    transform: translateY(calc(-1 * var(--tick-size)));
+}
+
+.tick-x > * {
+    position: absolute;
+    top: var(--tick-size);
+    transform-origin: left center;
+    transform: rotate(90deg);
 }

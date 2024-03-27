@@ -25,10 +25,16 @@
     padding: 40px 80px;
 }
 
+.plots {
+    position: relative;
+    margin-left: 50px;
+}
+
 .main-plot {
     position: relative;
     width: 700px;
     height: 250px;
+    color: #ccc;
 }
 
 .collapse-button {
