@@ -48,17 +48,32 @@ function SvgPlotElement (
 }
 
 type SvgPlotProps = {
-    elements: Array<SvgPlotElementProps>
+    elements: Array<SvgPlotElementProps>,
+    customClass?: string,
+    labelX?: string,
+    labelY?: string
 }
 
 function SvgPlot (
-    { elements }: SvgPlotProps
+    { elements, customClass, labelX, labelY }: SvgPlotProps
 ): ReactElement {
     return (
-        <div className={styles.svgPlot}>
-            { elements.map((props, i) =>
-                <SvgPlotElement {...props} key={i} />
-            ) }
+        <div className={`${styles.svgPlot} ${customClass}`}>
+            <div className={styles.axisY}>
+                { labelY && <p className={styles.labelY}>
+                    {labelY}
+                </p> }
+            </div>
+            <div className={styles.plotWrap}>
+                { elements.map((props, i) =>
+                    <SvgPlotElement {...props} key={i} />
+                ) }
+            </div>
+            <div className={styles.axisX}>
+                { labelX && <p className={styles.labelX}>
+                    {labelX}
+                </p> }
+            </div>
         </div>
     )
 }

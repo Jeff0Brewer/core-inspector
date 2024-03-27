@@ -26,17 +26,18 @@ function SpectraPanel (
                     <PiCaretRightBold />
                 </button>
                 { spectra !== null && <>
-                    <div className={styles.mainPlot}>
-                        <SvgPlot
-                            elements={[
-                                {
-                                    data: spectra,
-                                    fillOpacity: '0.3',
-                                    strokeWidth: '2'
-                                }
-                            ]}
-                        />
-                    </div>
+                    <SvgPlot
+                        customClass={styles.mainPlot}
+                        elements={[
+                            {
+                                data: spectra,
+                                fillOpacity: '0.3',
+                                strokeWidth: '2'
+                            }
+                        ]}
+                        labelX={'wavelength'}
+                        labelY={'reflectance'}
+                    />
 
                 </>}
             </div>

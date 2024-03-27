@@ -29,8 +29,6 @@
     position: relative;
     width: 700px;
     height: 250px;
-    border: solid #fff;
-    border-width: 0 0 1px 1px;
 }
 
 .collapse-button {

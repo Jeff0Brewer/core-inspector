@@ -1,13 +1,52 @@
 .svg-plot {
+    --axis-size: 20px;
+    position: relative;
+}
+
+.plot-wrap {
     position: relative;
     width: 100%;
     height: 100%;
 }
 
-.svg-plot > svg {
+.plot-wrap > svg {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+.axis-x, .axis-y {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.axis-x {
+    left: 0;
+    right: 0;
+    height: var(--axis-size);
+}
+
+.axis-y {
+    flex-direction: column;
+    left: calc(-1 * var(--axis-size));
+    top: 0;
+    bottom: 0;
+    width: var(--axis-size);
+}
+
+.label-x, .label-y {
+    position: relative;
+    display: grid;
+    place-content: center;
+    width: 0;
+    height: 0;
+    overflow: visible;
+}
+
+.label-y {
+    transform: rotate(-90deg);
 }
