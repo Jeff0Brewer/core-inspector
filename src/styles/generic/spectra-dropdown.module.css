@@ -1,0 +1,37 @@
+.dropdown {
+    width: 150px;
+    white-space: nowrap;
+}
+
+.dropdown-selected {
+    background-color: transparent;
+    border: none;
+    text-transform: uppercase;
+    color: #ccc;
+}
+
+.dropdown[data-selected] button {
+    background-color: transparent;
+    border: none;
+    font-size: 10px;
+}
+
+.dropdown-label:hover button {
+    background-color: transparent;
+    color: var(--color4);
+}
+
+.dropdown-items {
+    background-color: var(--color2);
+    border-radius: var(--radius);
+    border: none;
+    text-transform: uppercase;
+}
+
+.dropdown-items a:not(:last-of-type) {
+    border-bottom: 1px solid var(--color3);
+}
+
+.dropdown-items a:hover {
+    background-color: var(--color3);
+}

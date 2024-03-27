@@ -1,7 +1,10 @@
 import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
+import Dropdown from '../../components/generic/dropdown'
 import SvgPlot from '../../components/generic/svg-plot'
+import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/spectra-panel.module.css'
+import spectraDropdownStyles from '../../styles/generic/spectra-dropdown.module.css'
 
 type SpectraPanelProps = {
     spectra: Array<number>
@@ -11,6 +14,18 @@ function SpectraPanel (
     { spectra }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
+    const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<number>>>({})
+    const [libraryMineral, setLibraryMineral] = useState<string>('')
+
+    useEffect(() => {
+        const getLibrarySpectra = async (): Promise<void> => {
+            const res = await fetch('./data/library-spectra.json')
+            const data = await res.json()
+            setLibrarySpectra(data)
+            setLibraryMineral(Object.keys(data)[0])
+        }
+        getLibrarySpectra()
+    }, [])
 
     useEffect(() => {
         setOpen(spectra.length > 0)
@@ -34,6 +49,12 @@ function SpectraPanel (
                                     data: spectra,
                                     fillOpacity: '0.3',
                                     strokeWidth: '2'
+                                }, {
+                                    data: libraryMineral ? librarySpectra[libraryMineral].map(x => x * 255) : [],
+                                    fill: 'transparent',
+                                    stroke: '#B9E66C',
+                                    strokeWidth: '1',
+                                    strokeDash: '2'
                                 }
                             ]}
                             labelX={'wavelength'}
@@ -51,6 +72,17 @@ function SpectraPanel (
                         />
 
                     </>}
+                </div>
+                <div className={styles.mineralSelect}>
+                    <p className={styles.dropdownLabel}>
+                        mineral profile
+                    </p>
+                    <Dropdown
+                        items={Object.keys(librarySpectra)}
+                        selected={libraryMineral}
+                        setSelected={setLibraryMineral}
+                        customStyles={spectraDropdownStyles}
+                    />
                 </div>
             </div>
         </div>
