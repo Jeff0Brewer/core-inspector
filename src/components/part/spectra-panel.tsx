@@ -1,28 +1,43 @@
-import { ReactElement } from 'react'
+import { ReactElement, useState, useEffect } from 'react'
+import { PiCaretRightBold } from 'react-icons/pi'
 import SvgPlot from '../../components/generic/svg-plot'
 import styles from '../../styles/part/spectra-panel.module.css'
 
 type SpectraPanelProps = {
-    spectra: Array<number> | null
+    spectra: Array<number>
 }
 
 function SpectraPanel (
     { spectra }: SpectraPanelProps
 ): ReactElement {
-    return <>
-        <div className={styles.spectraLabel}></div>
-        <div className={styles.spectraPanel}>
-            { spectra !== null && <>
-                <div className={styles.mainPlot}>
-                    <SvgPlot
-                        data={spectra}
-                        fillOpacity={'0.3'}
-                    />
-                </div>
+    const [open, setOpen] = useState<boolean>(false)
 
-            </>}
+    useEffect(() => {
+        setOpen(spectra.length > 0)
+    }, [spectra])
+
+    return (
+        <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
+            <div className={styles.spectraPanel}>
+                <button
+                    className={styles.collapseButton}
+                    onClick={() => setOpen(false)}
+                >
+                    <PiCaretRightBold />
+                </button>
+                { spectra !== null && <>
+                    <div className={styles.mainPlot}>
+                        <SvgPlot
+                            data={spectra}
+                            fillOpacity={'0.3'}
+                            strokeWidth={'2'}
+                        />
+                    </div>
+
+                </>}
+            </div>
         </div>
-    </>
+    )
 }
 
 export default SpectraPanel

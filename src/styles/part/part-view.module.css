@@ -6,13 +6,13 @@
     background-color: #202020;
 
     display: grid;
-    grid-template-columns: 70px var(--core-panel-width, 0) 1fr var(--spectra-panel-width, 0);
+    grid-template-columns: 70px var(--core-panel-width, 0) 1fr;
     grid-template-rows: 40px 30px 1fr 32px;
     grid-template-areas:
-        "top-left top-left top-right top-right"
-        "label-punch label-punch label-main label-spectra"
-        "side punch main spectra"
-        "bottom-punch bottom-punch bottom-main bottom-main";
+        "top-left top-left top-right"
+        "label-punch label-punch label-main"
+        "side punch main"
+        "bottom-punch bottom-punch bottom-main";
     transition: grid-template-columns 0.5s ease;
 }
 
@@ -20,13 +20,9 @@
     position: absolute;
     top: 0;
     z-index: 10;
-    height: 100%;
-    width: 20px;
     display: grid;
     place-content: center;
     font-size: 12px;
-    background-color: #444;
-    border-radius: 50%;
 }
 
 .spectra-panel-hide:hover, .core-panel-toggle:hover, .close-button:hover {
@@ -34,11 +30,14 @@
 }
 
 .spectra-panel-hide {
-    grid-area: label-spectra;
+    grid-area: spectra;
     left: 0;
+    top: 0;
     transition:
         color var(--transition-param),
         opacity var(--transition-param);
+    height: 20px;
+    width: 20px;
 }
 
 .core-panel-toggle {
@@ -47,6 +46,8 @@
     transition:
         color var(--transition-param),
         transform var(--transition-param);
+    height: 100%;
+    width: 20px;
 }
 
 .close-button {

@@ -23,10 +23,11 @@ type PartMineralChannelsProps = {
     channels: StringMap<HTMLImageElement>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
+    setPanelSpectra: (s: Array<number>) => void
 }
 
 function PartMineralChannels (
-    { vis, core, part, channels, setDepthTop, setDepthBottom }: PartMineralChannelsProps
+    { vis, core, part, channels, setDepthTop, setDepthBottom, setPanelSpectra }: PartMineralChannelsProps
 ): ReactElement {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
@@ -89,6 +90,7 @@ function PartMineralChannels (
                 viewGap={viewGap}
                 setDepthTop={setDepthTop}
                 setDepthBottom={setDepthBottom}
+                setPanelSpectra={setPanelSpectra}
             />
             <div className={styles.bottomLabels} style={{ gap }}>
                 <div className={styles.bottomLabel} style={{ width }}>
@@ -141,10 +143,11 @@ type ChannelsViewProps = {
     viewGap: number,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
+    setPanelSpectra: (s: Array<number>) => void
 }
 
 function ChannelsView (
-    { core, part, vis, channels, imgDims, viewDims, viewGap, setDepthTop, setDepthBottom }: ChannelsViewProps
+    { core, part, vis, channels, imgDims, viewDims, viewGap, setDepthTop, setDepthBottom, setPanelSpectra }: ChannelsViewProps
 ): ReactElement {
     const [rgbPath, setRGBPath] = useState<string>('')
     const channelsRef = useRef<HTMLDivElement>(null)
@@ -237,7 +240,11 @@ function ChannelsView (
     const height = `${viewDims[1]}px`
     const gap = `${viewGap}px`
     return (
-        <div className={styles.channelsWrap} ref={channelsRef}>
+        <div
+            className={styles.channelsWrap}
+            ref={channelsRef}
+            onClick={() => setPanelSpectra(spectrum)}
+        >
             <div className={styles.channels} style={{ gap }}>
                 <MineralChannel
                     source={rgbPath}

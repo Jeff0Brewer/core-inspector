@@ -5,10 +5,12 @@ type SvgPlotProps = {
     data: Array<number>,
     fill?: string,
     fillOpacity?: string
+    stroke?: string,
+    strokeWidth?: string
 }
 
 function SvgPlot (
-    { data, fill = '#fff', fillOpacity = '1' }: SvgPlotProps
+    { data, fill = '#fff', fillOpacity = '1', stroke = '#fff', strokeWidth = '1' }: SvgPlotProps
 ): ReactElement {
     const [points, setPoints] = useState<string>('')
 
@@ -25,12 +27,13 @@ function SvgPlot (
     return (
         <div className={styles.svgPlot}>
             <svg
-                stroke={'#fff'}
+                stroke={stroke}
+                strokeWidth={strokeWidth}
                 fill={'transparent'}
                 viewBox={'0 0 100 100'}
                 preserveAspectRatio={'none'}
             >
-                <polyline points={points} />
+                <polyline points={points} vectorEffect={'non-scaling-stroke'} />
             </svg>
             <svg
                 fill={fill}

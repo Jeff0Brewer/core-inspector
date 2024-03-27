@@ -26,7 +26,6 @@ function PartView (
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
     const [corePanelVisible, setCorePanelVisible] = useState<boolean>(true)
-    const [panelSpectra, setPanelSpectra] = useState<Array<number> | null>(null)
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -73,8 +72,7 @@ function PartView (
     }, [vis, core, part, minerals])
 
     const gridParams = {
-        '--core-panel-width': corePanelVisible ? '390px' : '0',
-        '--spectra-panel-width': panelSpectra === null ? '0' : '300px'
+        '--core-panel-width': corePanelVisible ? '390px' : '0'
     } as React.CSSProperties
 
     return <div className={styles.partView} style={gridParams}>
@@ -90,13 +88,6 @@ function PartView (
             onClick={(): void => setCorePanelVisible(!corePanelVisible)}
         >
             <PiCaretLeftBold />
-        </button>
-        <button
-            className={styles.spectraPanelHide}
-            style={{ opacity: panelSpectra === null ? '0' : '1' }}
-            onClick={(): void => setPanelSpectra(null)}
-        >
-            <PiCaretRightBold />
         </button>
         <PartContent
             vis={vis}
