@@ -28,9 +28,13 @@ function SpectraPanel (
                 { spectra !== null && <>
                     <div className={styles.mainPlot}>
                         <SvgPlot
-                            data={spectra}
-                            fillOpacity={'0.3'}
-                            strokeWidth={'2'}
+                            elements={[
+                                {
+                                    data: spectra,
+                                    fillOpacity: '0.3',
+                                    strokeWidth: '2'
+                                }
+                            ]}
                         />
                     </div>
 

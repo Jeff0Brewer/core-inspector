@@ -22,7 +22,7 @@
     height: 100%;
     width: 100%;
     background-color: var(--menu-bg-color);
-    padding: 20px;
+    padding: 40px 80px;
 }
 
 .main-plot {

@@ -33,7 +33,7 @@ function PartHoverInfo (
                 )}
             </div>
             <div className={styles.spectrum}>
-                <SvgPlot data={spectrum} />
+                <SvgPlot elements={[{ data: spectrum }]} />
             </div>
         </div>
     )
