@@ -15,6 +15,7 @@ class PunchcardPartRenderer {
     setOffsetX: (o: number) => void
     setBinX: (b: number) => void
     setWidthScale: (s: number) => void
+    setPixelSize: (s: number) => void
 
     constructor (gl: GlContext) {
         this.program = new GlProgram(gl, vertSource, fragSource)
@@ -27,10 +28,12 @@ class PunchcardPartRenderer {
         const offsetXLoc = this.program.getUniformLocation(gl, 'offsetX')
         const binXLoc = this.program.getUniformLocation(gl, 'binX')
         const widthScaleLoc = this.program.getUniformLocation(gl, 'widthScale')
+        const pixelSizeLoc = this.program.getUniformLocation(gl, 'pixelSize')
         this.setPointSize = (s: number): void => { gl.uniform1f(pointSizeLoc, s) }
         this.setOffsetX = (o: number): void => { gl.uniform1f(offsetXLoc, o) }
         this.setBinX = (b: number): void => { gl.uniform1f(binXLoc, b) }
         this.setWidthScale = (s: number): void => { gl.uniform1f(widthScaleLoc, s) }
+        this.setPixelSize = (s: number): void => { gl.uniform1f(pixelSizeLoc, s) }
     }
 
     getChannelPunchcard (

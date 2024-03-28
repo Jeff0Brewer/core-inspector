@@ -57,6 +57,11 @@ function PartView (
 
     useEffect(() => {
         if (!vis) { return }
+        vis.punchcardPart.setPixelSize(1 / (window.innerHeight * window.devicePixelRatio))
+    }, [vis])
+
+    useEffect(() => {
+        if (!vis) { return }
         const getChannels = async (): Promise<void> => {
             const channelPaths = getAbundanceFilepaths(core, part, minerals)
             const channelMaps = await Promise.all(
