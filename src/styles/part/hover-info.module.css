@@ -43,6 +43,7 @@
 .abundance-bar > .abundance {
     position: relative;
     background-color: #fff;
+    transition: height 50ms ease;
 }
 
 .abundance-bar > p {
