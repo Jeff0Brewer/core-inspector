@@ -41,7 +41,7 @@ function getSpectraBasePath (core: string, part: string): string {
     const partPath = getPartPath(core, part)
     const [section, piece] = part.split('_').map(s => parseInt(s))
 
-    const dir = `${partPath}/spectra/${SPECTRA_TYPE}`
+    const dir = `.${partPath}/spectra/${SPECTRA_TYPE}`
     const file = `${core.toUpperCase()}A_${section}Z-${piece}_${SPECTRA_TYPE}`
     return `${dir}/${file}`
 }
