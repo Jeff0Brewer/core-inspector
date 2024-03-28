@@ -4,6 +4,7 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { StringMap, getImageData, getCssColor } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
+import { getPartPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import PartHoverInfo from '../../components/part/hover-info'
@@ -162,7 +163,7 @@ function ChannelsView (
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
 
     useEffect(() => {
-        setRGBPath(`./data/${core}/rgb/${getCoreId(core)}_${getPartId(part)}_rgb.png`)
+        setRGBPath(`${getPartPath(core, part)}/rgb/${getCoreId(core)}_${getPartId(part)}_rgb.png`)
     }, [core, part])
 
     useEffect(() => {

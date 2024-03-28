@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
+import { getCorePath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
@@ -36,18 +37,20 @@ function CoreView (
         }
 
         const initCoreRenderer = async (canvas: HTMLCanvasElement): Promise<void> => {
+            const corePath = getCorePath(core)
+
             const mineralPaths = []
             const punchcardPaths = []
             for (let i = 0; i < minerals.length; i++) {
-                mineralPaths.push(`./data/${core}/downscaled/${i}.png`)
-                punchcardPaths.push(`./data/${core}/punchcard/${i}.png`)
+                mineralPaths.push(`${corePath}/downscaled/${i}.png`)
+                punchcardPaths.push(`${corePath}/punchcard/${i}.png`)
             }
 
             const [mineralImgs, punchcardImgs, tileMetadata, ids] = await Promise.all([
                 Promise.all(mineralPaths.map(path => loadImageAsync(path))),
                 Promise.all(punchcardPaths.map(path => loadImageAsync(path))),
-                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
+                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
+                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
             ])
 
             setVis(

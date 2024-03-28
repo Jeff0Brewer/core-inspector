@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactElement, ReactNode } from 'react'
 import { DepthMetadata, HydrationMetadata } from '../lib/metadata'
+import { getCorePath } from '../lib/path'
 import CoreMetadataContext from '../hooks/core-metadata-context'
 
 type CoreMetadataProviderProps = {
@@ -19,16 +20,18 @@ function CoreMetadataProvider (
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
+            const corePath = getCorePath(core)
+
             const [
                 { numSection, topDepth, bottomDepth },
                 { depth },
                 { hydration },
                 { ids }
             ] = await Promise.all([
-                fetch(`./data/${core}/core-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/depth-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/hydration-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
+                fetch(`${corePath}/core-metadata.json`).then(res => res.json()),
+                fetch(`${corePath}/depth-metadata.json`).then(res => res.json()),
+                fetch(`${corePath}/hydration-metadata.json`).then(res => res.json()),
+                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
             ])
             setNumSection(numSection)
             setTopDepth(topDepth)

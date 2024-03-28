@@ -5,6 +5,7 @@ import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { padZeros, StringMap } from '../../lib/util'
 import { getCoreId, getPartId } from '../../lib/ids'
+import { getCorePath, getPartPath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
@@ -35,15 +36,17 @@ function PartView (
 
     useEffect(() => {
         const initVis = async (): Promise<void> => {
-            const corePaths: StringMap<string> = {}
+            const corePath = getCorePath(core)
+
+            const punchcardPaths: StringMap<string> = {}
             minerals.forEach((mineral, i) => {
-                corePaths[mineral] = `./data/${core}/punchcard/${i}.png`
+                punchcardPaths[mineral] = `${corePath}/punchcard/${i}.png`
             })
 
             const [coreMaps, tileMetadata, idMetadata] = await Promise.all([
-                Promise.all(minerals.map(mineral => loadImageAsync(corePaths[mineral]))),
-                fetch(`./data/${core}/tile-metadata.json`).then(res => res.json()),
-                fetch(`./data/${core}/id-metadata.json`).then(res => res.json())
+                Promise.all(minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))),
+                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
+                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
             ])
 
             setVis(new PartRenderer(minerals, coreMaps, tileMetadata, idMetadata.ids))
@@ -108,6 +111,8 @@ function getAbundanceFilepaths (
     part: string,
     minerals: Array<string>
 ): StringMap<string> {
+    const partPath = getPartPath(core, part)
+
     const coreId = getCoreId(core)
     const partId = getPartId(part)
     const fullId = `${coreId}_${partId}`
@@ -117,7 +122,7 @@ function getAbundanceFilepaths (
 
     minerals.forEach((mineral, index) => {
         const mineralId = padZeros(index, 2)
-        const path = `./data/${core}/parts/${fullId}_${mineralId}.${extension}`
+        const path = `${partPath}/${mineralId}/${fullId}_${mineralId}.${extension}`
         paths[mineral] = path
     })
 

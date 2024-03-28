@@ -19,7 +19,8 @@ function SpectraPanel (
 
     useEffect(() => {
         const getLibrarySpectra = async (): Promise<void> => {
-            const res = await fetch('./data/library-spectra.json')
+            // TODO: remove static path
+            const res = await fetch('./data-processed/temp/library-spectra.json')
             const data = await res.json()
             setLibrarySpectra(data)
             setLibraryMineral(Object.keys(data)[0])

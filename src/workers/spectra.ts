@@ -1,5 +1,6 @@
 import { TextWriter, BlobReader, ZipReader } from '@zip.js/zip.js'
 import { padZeros, clamp, StringMap } from '../lib/util'
+import { getPartPath } from '../lib/path'
 
 type SpectraData = {
     width: number,
@@ -37,9 +38,10 @@ let imgHeight = 0
 let sliceCache: StringMap<SpectraChunk> = {}
 
 function getSpectraBasePath (core: string, part: string): string {
+    const partPath = getPartPath(core, part)
     const [section, piece] = part.split('_').map(s => parseInt(s))
 
-    const dir = `/data/${core}/spectra/${SPECTRA_TYPE}`
+    const dir = `${partPath}/spectra/${SPECTRA_TYPE}`
     const file = `${core.toUpperCase()}A_${section}Z-${piece}_${SPECTRA_TYPE}`
     return `${dir}/${file}`
 }
