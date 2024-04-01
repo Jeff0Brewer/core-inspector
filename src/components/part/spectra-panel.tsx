@@ -4,7 +4,7 @@ import Dropdown from '../../components/generic/dropdown'
 import SvgPlot from '../../components/generic/svg-plot'
 import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/spectra-panel.module.css'
-import spectraDropdownStyles from '../../styles/generic/spectra-dropdown.module.css'
+import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
 type SpectraPanelProps = {
     spectra: Array<number>
