@@ -1,6 +1,6 @@
 import { TextWriter, BlobReader, ZipReader } from '@zip.js/zip.js'
 import { padZeros, clamp, StringMap } from '../lib/util'
-import { getPartPath } from '../lib/path'
+import { getSpectraPath } from '../lib/path'
 
 type SpectraData = {
     width: number,
@@ -38,11 +38,12 @@ let imgHeight = 0
 let sliceCache: StringMap<SpectraChunk> = {}
 
 function getSpectraBasePath (core: string, part: string): string {
-    const partPath = getPartPath(core, part)
-    const [section, piece] = part.split('_').map(s => parseInt(s))
+    // TODO: add prod / dev flag to change path root
+    const dir = getSpectraPath(core, part, SPECTRA_TYPE, '../..')
 
-    const dir = `.${partPath}/spectra/${SPECTRA_TYPE}`
+    const [section, piece] = part.split('_').map(s => parseInt(s))
     const file = `${core.toUpperCase()}A_${section}Z-${piece}_${SPECTRA_TYPE}`
+
     return `${dir}/${file}`
 }
 
@@ -65,8 +66,11 @@ async function getZipText (path: string): Promise<string> {
     const res = await fetch(path)
     const blob = await res.blob()
 
-    const zipReader = new ZipReader(new BlobReader(blob))
-    const firstEntry = (await zipReader.getEntries())[0]
+    const blobReader = new BlobReader(blob)
+    const zipReader = new ZipReader(blobReader)
+    const entries = await zipReader.getEntries()
+    const firstEntry = entries.shift()
+
     if (!firstEntry || !firstEntry.getData) {
         throw new Error('No data in zip file')
     }
