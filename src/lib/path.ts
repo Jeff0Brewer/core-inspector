@@ -1,4 +1,4 @@
-import { padZeros } from '../lib/util'
+import { getCoreId, getPartId } from '../lib/ids'
 
 const DATA_DIR = 'data-processed'
 
@@ -7,10 +7,8 @@ function getCorePath (core: string, root: string = '.'): string {
 }
 
 function getPartPath (core: string, part: string, root: string = '.'): string {
-    const [section, piece] = part.split('_').map(s => parseInt(s))
-    const sectionId = padZeros(section, 4) + 'Z'
-    const pieceId = padZeros(piece, 3)
-    const coreId = core.toUpperCase() + 'A'
+    const coreId = getCoreId(core)
+    const [sectionId, pieceId] = getPartId(part).split('_')
     return `${root}/${DATA_DIR}/${coreId}/${sectionId}/${pieceId}`
 }
 
@@ -23,8 +21,16 @@ function getSpectraPath (
     return `${getPartPath(core, part, root)}/spectra/${spectraType}`
 }
 
+function getRgbPath (core: string, part: string, root: string = '.'): string {
+    const partPath = getPartPath(core, part, root)
+    const coreId = getCoreId(core)
+    const partId = getPartId(part)
+    return `${partPath}/rgb/${coreId}_${partId}_rgb.png`
+}
+
 export {
     getCorePath,
     getPartPath,
-    getSpectraPath
+    getSpectraPath,
+    getRgbPath
 }
