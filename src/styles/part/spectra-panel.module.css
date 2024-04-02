@@ -19,7 +19,7 @@
 
 .spectra-panel {
     position: relative;
-    z-index: 100;
+    z-index: 200;
     height: 100%;
     width: 100%;
     background-color: var(--menu-bg-color);
