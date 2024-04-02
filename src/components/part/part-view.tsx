@@ -3,9 +3,8 @@ import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
-import { padZeros, StringMap } from '../../lib/util'
-import { getCoreId, getPartId } from '../../lib/ids'
-import { getCorePath, getPartPath } from '../../lib/path'
+import { StringMap } from '../../lib/util'
+import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
@@ -63,7 +62,7 @@ function PartView (
     useEffect(() => {
         if (!vis) { return }
         const getChannels = async (): Promise<void> => {
-            const channelPaths = getAbundanceFilepaths(core, part, minerals)
+            const channelPaths = getAbundancePaths(core, part, minerals)
             const channelMaps = await Promise.all(
                 minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
             )
@@ -109,29 +108,6 @@ function PartView (
             palettes={palettes}
         />
     </div>
-}
-
-function getAbundanceFilepaths (
-    core: string,
-    part: string,
-    minerals: Array<string>
-): StringMap<string> {
-    const partPath = getPartPath(core, part)
-
-    const coreId = getCoreId(core)
-    const partId = getPartId(part)
-    const fullId = `${coreId}_${partId}`
-    const extension = 'factor_1to001.abundance.global.png'
-
-    const paths: StringMap<string> = {}
-
-    minerals.forEach((mineral, index) => {
-        const mineralId = padZeros(index, 2)
-        const path = `${partPath}/${mineralId}/${fullId}_${mineralId}.${extension}`
-        paths[mineral] = path
-    })
-
-    return paths
 }
 
 export default PartView
