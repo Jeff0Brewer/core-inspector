@@ -1,9 +1,19 @@
-import { getCoreId, getPartId } from '../lib/ids'
 import { StringMap, padZeros } from '../lib/util'
 
 const DATA_DIR = 'data-processed'
 
 const ABUNDANCE_EXTENSION = 'factor_1to001.abundance.global.png'
+
+function getCoreId (core: string): string {
+    return core.toUpperCase() + 'A'
+}
+
+function getPartId (part: string): string {
+    const [section, piece] = part.split('_').map(s => parseInt(s))
+    const sectionId = padZeros(section, 4) + 'Z'
+    const pieceId = padZeros(piece, 3)
+    return `${sectionId}_${pieceId}`
+}
 
 function getCorePath (core: string, root: string = '.'): string {
     return `${root}/${DATA_DIR}/temp/${core}`
@@ -50,6 +60,8 @@ function getAbundancePaths (
 }
 
 export {
+    getCoreId,
+    getPartId,
     getCorePath,
     getPartPath,
     getSpectraPath,

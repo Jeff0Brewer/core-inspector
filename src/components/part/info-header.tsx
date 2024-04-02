@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { getCoreId, getPartId } from '../../lib/ids'
+import { getCoreId, getPartId } from '../../lib/path'
 import styles from '../../styles/part/info-header.module.css'
 
 type PartInfoHeaderProps = {

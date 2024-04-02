@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { formatFloat } from '../../lib/util'
-import { getPartId } from '../../lib/ids'
+import { getPartId } from '../../lib/path'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/metadata-hover.module.css'
 
