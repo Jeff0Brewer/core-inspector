@@ -39,7 +39,7 @@ function PartHoverInfo (
                         y: spectrum
                     }]}
                     axisX={{ bounds: [0, spectrum.length - 1] }}
-                    axisY={{ bounds: [0, 255] }}
+                    axisY={{ bounds: [0, 1] }}
                     customClass={styles.spectrumPlot}
                 />
             </div>
