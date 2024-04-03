@@ -116,7 +116,9 @@ onmessage = ({ data }): void => {
             const colIndex = clamp(Math.round((y - startSlice) / reduceFactor), 0, height - 1)
             const startIndex = (colIndex * width + rowIndex) * samples
             const spectrum = data.slice(startIndex, startIndex + samples)
-            postMessage({ spectrum })
+            postMessage({
+                spectrum: [...spectrum]
+            })
         } else {
             getSlices(path)
             postMessage({ spectrum: [] })

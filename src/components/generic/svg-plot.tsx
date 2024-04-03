@@ -1,29 +1,51 @@
 import { ReactElement, useState, useEffect } from 'react'
+import { clamp } from '../../lib/util'
 import styles from '../../styles/generic/svg-plot.module.css'
 
-type SvgPlotElementProps = {
-    data: Array<number>,
+type SvgPlotElementSettings = {
+    x: Array<number>,
+    y: Array<number>,
     fill?: string,
     fillOpacity?: string,
     stroke?: string,
-    strokeWidth?: string
-    strokeDash?: string
+    strokeWidth?: string,
+    strokeDash?: string,
 }
 
-function SvgPlotElement (
-    { data, fill = '#fff', fillOpacity = '1', stroke = '#fff', strokeWidth = '1', strokeDash = '0' }: SvgPlotElementProps
-): ReactElement {
+type SvgPlotElementProps = SvgPlotElementSettings & {
+    xBounds: [number, number],
+    yBounds: [number, number],
+}
+
+function SvgPlotElement ({
+    x, y, xBounds, yBounds,
+    fill = '#fff',
+    fillOpacity = '1',
+    stroke = '#fff',
+    strokeWidth = '1',
+    strokeDash = '0'
+}: SvgPlotElementProps): ReactElement {
     const [points, setPoints] = useState<string>('')
 
     useEffect(() => {
+        if (x.length !== y.length) {
+            throw new Error('X and Y plot values must have same length')
+        }
+        const [xMin, xMax] = xBounds
+        const [yMin, yMax] = yBounds
+
         const points = []
-        const xInc = 100 / (data.length - 1)
-        for (let i = 0; i < data.length; i++) {
-            points.push(`${i * xInc},${(1 - (data[i] / 255)) * 100}`)
+        for (let i = 0; i < x.length; i++) {
+            const normX = (x[i] - xMin) / (xMax - xMin)
+            const normY = (y[i] - yMin) / (yMax - yMin)
+
+            if (normX >= 0 && normX <= 1) {
+                points.push(`${normX * 100},${(1 - normY) * 100}`)
+            }
         }
 
         setPoints(points.join(' '))
-    }, [data])
+    }, [x, y, xBounds, yBounds])
 
     return <>
         <svg
@@ -47,82 +69,70 @@ function SvgPlotElement (
     </>
 }
 
-type SvgPlotTicks = {
-    min: number,
-    max: number,
-    step: number
+type SvgPlotAxisSettings = {
+    bounds: [number, number],
+    tickStep?: number,
+    label?: string,
+}
+
+type SvgPlotAxisProps = SvgPlotAxisSettings & {
+    direction: 'x' | 'y'
+}
+
+function SvgPlotAxis (
+    { direction, bounds, tickStep, label }: SvgPlotAxisProps
+): ReactElement {
+    const [tickValues, setTickValues] = useState<Array<number>>([])
+
+    useEffect(() => {
+        if (tickStep) {
+            const tickValues = []
+            for (let i = bounds[0]; i <= bounds[1]; i += tickStep) {
+                tickValues.push(i)
+            }
+            setTickValues(tickValues)
+        }
+    }, [bounds, tickStep])
+
+    return (
+        <div className={direction === 'x' ? styles.axisX : styles.axisY}>
+            { tickValues.length !== 0 &&
+                <div className={styles.ticks}>
+                    { tickValues.map((value, i) =>
+                        <div className={styles.tick} key={i}>
+                            <p>{value}</p>
+                        </div>
+                    ) }
+                </div> }
+            { label && <p className={styles.label}>{label}</p> }
+        </div>
+    )
 }
 
 type SvgPlotProps = {
-    elements: Array<SvgPlotElementProps>,
+    elements: Array<SvgPlotElementSettings>,
+    axisX: SvgPlotAxisSettings,
+    axisY: SvgPlotAxisSettings,
     customClass?: string,
-    labelX?: string,
-    labelY?: string,
-    ticksX?: SvgPlotTicks
-    ticksY?: SvgPlotTicks
 }
 
 function SvgPlot (
-    { elements, customClass, labelX, labelY, ticksX, ticksY }: SvgPlotProps
+    { elements, axisX, axisY, customClass }: SvgPlotProps
 ): ReactElement {
-    const [tickValuesX, setTickValuesX] = useState<Array<number>>([])
-    const [tickValuesY, setTickValuesY] = useState<Array<number>>([])
-
-    useEffect(() => {
-        if (!ticksX) { return }
-
-        const tickValuesX = []
-        const { min, max, step } = ticksX
-        for (let i = min; i <= max; i += step) {
-            tickValuesX.push(i)
-        }
-
-        setTickValuesX(tickValuesX)
-    }, [ticksX])
-
-    useEffect(() => {
-        if (!ticksY) { return }
-
-        const tickValuesY = []
-        const { min, max, step } = ticksY
-        for (let i = max; i >= min; i -= step) {
-            tickValuesY.push(i)
-        }
-
-        setTickValuesY(tickValuesY)
-    }, [ticksY])
-
     return (
         <div className={`${styles.svgPlot} ${customClass}`}>
-            <div className={styles.axisY}>
-                { ticksY && <div className={styles.ticksY}>
-                    { tickValuesY.map((value, i) =>
-                        <div className={styles.tickY} key={i}>
-                            <p>{value}</p>
-                        </div>
-                    ) }
-                </div> }
-                { labelY && <p className={styles.labelY}>
-                    {labelY}
-                </p> }
-            </div>
+            <SvgPlotAxis direction={'y'} {...axisY} />
             <div className={styles.plotWrap}>
-                { elements.map((props, i) =>
-                    <SvgPlotElement {...props} key={i} />
+                { elements.map((element, i) =>
+                    <SvgPlotElement
+                        {...element}
+                        xBounds={axisX.bounds}
+                        yBounds={axisY.bounds}
+                        key={i}
+                    />
                 ) }
             </div>
-            <div className={styles.axisX}>
-                { ticksX && <div className={styles.ticksX}>
-                    { tickValuesX.map((value, i) =>
-                        <div className={styles.tickX} key={i}>
-                            <p>{value}</p>
-                        </div>
-                    ) }
-                </div> }
-                { labelX && <p className={styles.labelX}>
-                    {labelX}
-                </p> }
-            </div>
+            <SvgPlotAxis direction={'x'} {...axisX} />
         </div>
     )
 }

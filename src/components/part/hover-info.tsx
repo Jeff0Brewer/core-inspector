@@ -34,7 +34,12 @@ function PartHoverInfo (
             </div>
             <div className={styles.spectrum}>
                 <SvgPlot
-                    elements={[{ data: spectrum }]}
+                    elements={[{
+                        x: spectrum.map((_, i) => i),
+                        y: spectrum
+                    }]}
+                    axisX={{ bounds: [0, spectrum.length - 1] }}
+                    axisY={{ bounds: [0, 255] }}
                     customClass={styles.spectrumPlot}
                 />
             </div>

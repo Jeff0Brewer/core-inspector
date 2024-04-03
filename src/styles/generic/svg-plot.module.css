@@ -36,7 +36,7 @@
     width: var(--tick-size);
 }
 
-.label-x, .label-y {
+.label {
     position: relative;
     display: grid;
     place-content: center;
@@ -47,15 +47,15 @@
     font-size: 0.7rem;
 }
 
-.label-x {
+.axis-x .label {
     transform: translateY(35px);
 }
 
-.label-y {
+.axis-y .label {
     transform: rotate(-90deg) translateY(-55px);
 }
 
-.ticks-x, .ticks-y {
+.ticks, .ticks {
     position: absolute;
     display: flex;
     width: 100%;
@@ -64,30 +64,30 @@
     font-size: 0.5rem;
 }
 
-.ticks-y {
+.axis-y .ticks {
     flex-direction: column;
     border-right: 1px solid #fff;
 }
 
-.ticks-x {
+.axis-y .ticks {
     border-top: 1px solid #fff;
 }
 
-.tick-y {
+.axis-y .tick {
     position: relative;
     width: var(--tick-size);
     height: 1px;
     background-color: #fff;
 }
 
-.tick-y > * {
+.axis-y .tick > * {
     position: absolute;
     margin-right: 3px;
     right: var(--tick-size);
     transform: translateY(-50%);
 }
 
-.tick-x {
+.axis-x .tick {
     position: relative;
     height: var(--tick-size);
     width: 1px;
@@ -95,7 +95,7 @@
     transform: translateY(calc(-1 * var(--tick-size)));
 }
 
-.tick-x > * {
+.axis-x .tick > * {
     position: absolute;
     top: var(--tick-size);
     transform-origin: left center;
