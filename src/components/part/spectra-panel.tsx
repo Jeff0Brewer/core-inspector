@@ -6,6 +6,11 @@ import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
+type LibrarySpectra = StringMap<{
+    wavelength: Array<number>,
+    reflectance: Array<number>
+}>
+
 type SpectraPanelProps = {
     spectra: Array<number>
 }
@@ -14,18 +19,23 @@ function SpectraPanel (
     { spectra }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-    const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<number>>>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
 
+    const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra>({})
+    const [coreWavelengths, setCoreWavelengths] = useState<Array<number>>([])
+
     useEffect(() => {
-        const getLibrarySpectra = async (): Promise<void> => {
-            // TODO: remove static path
-            const res = await fetch('./data-processed/temp/library-spectra.json')
-            const data = await res.json()
-            setLibrarySpectra(data)
-            setLibraryMineral(Object.keys(data)[0])
+        const getSpectraMetadata = async (): Promise<void> => {
+            // TODO: remove static paths
+            const [librarySpectra, coreWavelengths] = await Promise.all([
+                fetch('./data-processed/temp/library-spectra.json').then(res => res.json()),
+                fetch('./data-processed/temp/core-spectra-wavelengths.json').then(res => res.json())
+            ])
+            setLibrarySpectra(librarySpectra)
+            setLibraryMineral(Object.keys(librarySpectra)[0])
+            setCoreWavelengths(coreWavelengths)
         }
-        getLibrarySpectra()
+        getSpectraMetadata()
     }, [])
 
     useEffect(() => {
@@ -47,28 +57,28 @@ function SpectraPanel (
                             customClass={styles.mainPlot}
                             elements={[
                                 {
-                                    data: spectra,
+                                    x: coreWavelengths,
+                                    y: spectra,
                                     fillOpacity: '0.3',
                                     strokeWidth: '2'
                                 }, {
-                                    data: libraryMineral ? librarySpectra[libraryMineral].map(x => x * 255) : [],
+                                    x: librarySpectra[libraryMineral]?.wavelength || [],
+                                    y: librarySpectra[libraryMineral]?.reflectance || [],
                                     fill: 'transparent',
                                     stroke: '#B9E66C',
                                     strokeWidth: '1',
                                     strokeDash: '2'
                                 }
                             ]}
-                            labelX={'wavelength'}
-                            labelY={'reflectance'}
-                            ticksX={{
-                                min: 1000,
-                                max: 2500,
-                                step: 100
+                            axisX={{
+                                bounds: [1, 2.5],
+                                label: 'wavelength',
+                                tickStep: 0.1
                             }}
-                            ticksY={{
-                                min: 0.125,
-                                max: 0.875,
-                                step: 0.125
+                            axisY={{
+                                bounds: [0, 1],
+                                label: 'reflectance',
+                                tickStep: 0.125
                             }}
                         />
 

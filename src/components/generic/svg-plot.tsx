@@ -28,9 +28,9 @@ function SvgPlotElement ({
     const [points, setPoints] = useState<string>('')
 
     useEffect(() => {
-        if (x.length !== y.length) {
-            throw new Error('X and Y plot values must have same length')
-        }
+        // TODO: add error message if x / y not same length
+        if (x.length !== y.length) { return }
+
         const [xMin, xMax] = xBounds
         const [yMin, yMax] = yBounds
 
