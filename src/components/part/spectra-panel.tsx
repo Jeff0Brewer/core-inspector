@@ -50,6 +50,7 @@ const CHART_OPTIONS: ChartOptions<'line'> = {
         },
         y: {
             type: 'linear',
+            beginAtZero: true,
             title: {
                 display: true,
                 text: 'REFLECTANCE',
