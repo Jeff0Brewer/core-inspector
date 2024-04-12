@@ -23,7 +23,7 @@
     height: 100%;
     width: 100%;
     background-color: var(--menu-bg-color);
-    padding: 0 50px;
+    padding: 40px;
 }
 
 .plots {
@@ -34,9 +34,8 @@
 .main-plot {
     position: relative;
     width: 800px;
-    height: 250px;
+    height: 300px;
     color: #ccc;
-    background-color: rgba(120, 120, 120, 0.5);
 }
 
 .collapse-button {
