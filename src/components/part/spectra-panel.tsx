@@ -1,6 +1,9 @@
 import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
+import { StringMap } from '../../lib/util'
+import Dropdown from '../../components/generic/dropdown'
 import styles from '../../styles/part/spectra-panel.module.css'
+import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
 import { Line } from 'react-chartjs-2'
 import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions } from 'chart.js'
@@ -139,6 +142,8 @@ const CORE_WAVELENGTHS = [
     2592.750000, 2598.760010, 2604.770020
 ]
 
+type LibrarySpectra = StringMap<Array<{ x: number, y: number }>>
+
 type SpectraPanelProps = {
     spectra: Array<number>
 }
@@ -147,10 +152,23 @@ function SpectraPanel (
     { spectra }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
+    const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra>({})
+    const [libraryMineral, setLibraryMineral] = useState<string>('')
 
     useEffect(() => {
         setOpen(spectra.length > 0)
     }, [spectra])
+
+    useEffect(() => {
+        const getLibrarySpectra = async (): Promise<void> => {
+            const res = await fetch('./data-processed/temp/library-spectra.json')
+            const librarySpectra = await res.json()
+            setLibrarySpectra(librarySpectra)
+            // TODO: add error handling if library spectra empty
+            setLibraryMineral(Object.keys(librarySpectra)[0])
+        }
+        getLibrarySpectra()
+    }, [])
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
@@ -173,11 +191,22 @@ function SpectraPanel (
                                 borderWidth: 2,
                                 backgroundColor: 'rgba(255, 255, 255, 0.35)',
                                 fill: 'stack'
+                            }, {
+                                data: librarySpectra[libraryMineral] || [],
+                                borderColor: '#ff0',
+                                borderWidth: 1,
+                                borderDash: [2, 2]
                             }]
                         }}
                         options={CHART_OPTIONS}
                     />
                 </div>
+                <Dropdown
+                    items={Object.keys(librarySpectra)}
+                    selected={libraryMineral}
+                    setSelected={setLibraryMineral}
+                    customStyles={spectraDropdownStyles}
+                />
             </div>
         </div>
     )
