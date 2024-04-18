@@ -33,7 +33,7 @@ function PartContent (
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-    const [panelSpectra, setPanelSpectra] = useState<Array<number>>([])
+    const [panelSpectrum, setPanelSpectrum] = useState<Array<number>>([])
     const { ids } = useCoreMetadata()
 
     return (
@@ -54,10 +54,10 @@ function PartContent (
                 channels={channels}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
-                setPanelSpectra={setPanelSpectra}
+                setPanelSpectra={setPanelSpectrum}
             />
             <SpectraPanel
-                spectra={panelSpectra}
+                spectrum={panelSpectrum}
             />
         </>
     )

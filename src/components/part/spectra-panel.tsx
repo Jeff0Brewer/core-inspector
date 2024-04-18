@@ -142,22 +142,36 @@ const CORE_WAVELENGTHS = [
     2592.750000, 2598.760010, 2604.770020
 ]
 
-type LibrarySpectra = StringMap<Array<{ x: number, y: number }>>
+type Point = { x: number, y: number }
+type LibrarySpectra = StringMap<Array<Point>>
 
 type SpectraPanelProps = {
-    spectra: Array<number>
+    spectrum: Array<number>
 }
 
 function SpectraPanel (
-    { spectra }: SpectraPanelProps
+    { spectrum }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
+    const [spectrumData, setSpectrumData] = useState<Array<Point>>([])
+    const [libraryData, setLibraryData] = useState<Array<Point>>([])
+
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
 
     useEffect(() => {
-        setOpen(spectra.length > 0)
-    }, [spectra])
+        setOpen(spectrum.length > 0)
+        setSpectrumData(xyToPoints(CORE_WAVELENGTHS, spectrum))
+    }, [spectrum])
+
+    useEffect(() => {
+        const libraryData = librarySpectra[libraryMineral]
+        if (!libraryData) {
+            setLibraryData([])
+            return
+        }
+        setLibraryData(normalizeLibrarySpectrum(spectrum, libraryData))
+    }, [librarySpectra, libraryMineral, spectrum])
 
     useEffect(() => {
         const getLibrarySpectra = async (): Promise<void> => {
@@ -183,16 +197,13 @@ function SpectraPanel (
                     <Line
                         data={{
                             datasets: [{
-                                data: convData(
-                                    CORE_WAVELENGTHS,
-                                    spectra
-                                ),
+                                data: spectrumData,
                                 borderColor: '#fff',
                                 borderWidth: 2,
                                 backgroundColor: 'rgba(255, 255, 255, 0.35)',
                                 fill: 'stack'
                             }, {
-                                data: librarySpectra[libraryMineral] || [],
+                                data: libraryData,
                                 borderColor: '#ff0',
                                 borderWidth: 1,
                                 borderDash: [2, 2]
@@ -212,17 +223,33 @@ function SpectraPanel (
     )
 }
 
-function convData (x: Array<number>, y: Array<number>): Array<{x: number, y: number}> {
+function xyToPoints (x: Array<number>, y: Array<number>): Array<Point> {
     if (x.length !== y.length) { return [] }
-    const data: Array<{x: number, y: number}> = []
+
+    const data: Array<Point> = []
     for (let i = 0; i < x.length; i++) {
-        data.push({
-            x: x[i],
-            y: y[i]
-        })
+        data.push({ x: x[i], y: y[i] })
+    }
+    return data
+}
+
+function normalizeLibrarySpectrum (spectrum: Array<number>, librarySpectrum: Array<Point>): Array<Point> {
+    let spectrumMax = 0
+    for (let i = 0; i < spectrum.length; i++) {
+        spectrumMax = Math.max(spectrumMax, spectrum[i])
     }
 
-    return data
+    let libraryMax = 0
+    for (let i = 0; i < librarySpectrum.length; i++) {
+        libraryMax = Math.max(libraryMax, librarySpectrum[i].y)
+    }
+
+    const libraryScale = spectrumMax / libraryMax
+
+    return librarySpectrum.map(point => {
+        point.y *= libraryScale
+        return point
+    })
 }
 
 export default SpectraPanel
