@@ -4,6 +4,7 @@ import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent, StringMap } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
+import { useCollapseRender } from '../hooks/collapse-render'
 import { GenericPalette } from '../lib/palettes'
 import { BlendMode, getBlendColor, isToggleable } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
@@ -23,6 +24,7 @@ type BlendMenuProps = {
 function BlendMenu (
     { open, minerals, palettes }: BlendMenuProps
 ): ReactElement {
+    const render = useCollapseRender(open)
     const {
         palette, setPalette,
         magnitudes, setMagnitudes,
@@ -87,73 +89,75 @@ function BlendMenu (
     }
 
     return (
-        <section className={`${styles.blendMenu} ${!open && styles.visible}`}>
-            <MonochromeToggle
-                palette={palette}
-                monochrome={monochrome}
-                setMonochrome={setMonochrome}
-            />
-            <p>color+mineral presets</p>
-            <div>
-                <Dropdown
-                    items={palettes.filter(p => p.type === 'labelled')}
-                    selected={palette.type === 'labelled' ? palette : null}
-                    setSelected={setPalette}
-                    Element={ColorPalette}
-                    customStyles={paletteDropdownStyles}
+        <section className={`${styles.blendMenu} ${open && styles.visible}`}>
+            { render && <>
+                <MonochromeToggle
+                    palette={palette}
+                    monochrome={monochrome}
+                    setMonochrome={setMonochrome}
                 />
-            </div>
-            <p>color presets</p>
-            <div>
-                <Dropdown
-                    items={palettes.filter(p => p.type === 'unlabelled')}
-                    selected={palette.type === 'unlabelled' ? palette : null}
-                    setSelected={setPalette}
-                    Element={ColorPalette}
-                    customStyles={paletteDropdownStyles}
-                />
-            </div>
-            <p>mineral color mixer</p>
-            <div className={styles.mineralMixer}>
-                { minerals.map((mineral, i) =>
-                    <MineralSlider
-                        mineral={mineral}
-                        color={getBlendColor(palette, visibilities, monochrome, mineral)}
-                        magnitude={magnitudes[mineral]}
-                        setMagnitude={getMagnitudeSetter(mineral)}
-                        visible={visibilities[mineral]}
-                        setVisible={getVisibilitySetter(mineral)}
-                        disabled={!isToggleable(mineral, palette, visibilities)}
-                        index={i}
-                        key={i}
+                <p>color+mineral presets</p>
+                <div>
+                    <Dropdown
+                        items={palettes.filter(p => p.type === 'labelled')}
+                        selected={palette.type === 'labelled' ? palette : null}
+                        setSelected={setPalette}
+                        Element={ColorPalette}
+                        customStyles={paletteDropdownStyles}
                     />
-                ) }
-            </div>
-            <p>composite mode</p>
-            <Dropdown<BlendMode>
-                items={['additive', 'maximum']}
-                selected={mode}
-                setSelected={setMode}
-                customStyles={blendModeDropdownStyles}
-            />
-            <div className={styles.params}>
-                <p>saturation</p>
-                <ParamSlider
-                    value={saturation}
-                    setValue={setSaturation}
-                    min={0.1}
-                    max={2}
-                    defaultValue={1}
+                </div>
+                <p>color presets</p>
+                <div>
+                    <Dropdown
+                        items={palettes.filter(p => p.type === 'unlabelled')}
+                        selected={palette.type === 'unlabelled' ? palette : null}
+                        setSelected={setPalette}
+                        Element={ColorPalette}
+                        customStyles={paletteDropdownStyles}
+                    />
+                </div>
+                <p>mineral color mixer</p>
+                <div className={styles.mineralMixer}>
+                    { minerals.map((mineral, i) =>
+                        <MineralSlider
+                            mineral={mineral}
+                            color={getBlendColor(palette, visibilities, monochrome, mineral)}
+                            magnitude={magnitudes[mineral]}
+                            setMagnitude={getMagnitudeSetter(mineral)}
+                            visible={visibilities[mineral]}
+                            setVisible={getVisibilitySetter(mineral)}
+                            disabled={!isToggleable(mineral, palette, visibilities)}
+                            index={i}
+                            key={i}
+                        />
+                    ) }
+                </div>
+                <p>composite mode</p>
+                <Dropdown<BlendMode>
+                    items={['additive', 'maximum']}
+                    selected={mode}
+                    setSelected={setMode}
+                    customStyles={blendModeDropdownStyles}
                 />
-                <p>threshold</p>
-                <ParamSlider
-                    value={threshold}
-                    setValue={setThreshold}
-                    min={0}
-                    max={0.99}
-                    defaultValue={0}
-                />
-            </div>
+                <div className={styles.params}>
+                    <p>saturation</p>
+                    <ParamSlider
+                        value={saturation}
+                        setValue={setSaturation}
+                        min={0.1}
+                        max={2}
+                        defaultValue={1}
+                    />
+                    <p>threshold</p>
+                    <ParamSlider
+                        value={threshold}
+                        setValue={setThreshold}
+                        min={0}
+                        max={0.99}
+                        defaultValue={0}
+                    />
+                </div>
+            </> }
         </section>
     )
 }
