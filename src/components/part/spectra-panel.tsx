@@ -6,13 +6,40 @@ import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
 import { Line } from 'react-chartjs-2'
-import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions } from 'chart.js'
+import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions, Plugin, Tick } from 'chart.js'
 Chart.register(LinearScale, LineElement, PointElement, Filler, Tooltip)
 Chart.defaults.color = '#ccc'
 Chart.defaults.font.family = 'system-ui'
-const CHART_OPTIONS: ChartOptions<'line'> = {
+
+const CHART_BG_COLOR = 'rgba(125, 125, 125, 0.35)'
+const TITLE_FONT = { size: 12, weight: 200 } as const
+const TICK_FONT = { size: 8, weight: 100 } as const
+const EXCLUDE_BOUNDS = (
+    value: string | number, index: number, values: Array<Tick>
+): string | number | undefined => {
+    return (index === 0 || index === values.length - 1) ? undefined : value
+}
+
+const PLOT_OPTIONS: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    elements: {
+        point: {
+            radius: 0,
+            hoverRadius: 0
+        }
+    }
+}
+
+const MAIN_PLOT_AXIS_OPTIONS = {
+    type: 'linear',
+    bounds: 'data',
+    border: { color: '#fff' },
+    grid: { tickColor: '#ccc', color: 'transparent' }
+} as const
+
+const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
+    ...PLOT_OPTIONS,
     plugins: {
         tooltip: {
             mode: 'x',
@@ -20,73 +47,129 @@ const CHART_OPTIONS: ChartOptions<'line'> = {
             intersect: false
         }
     },
-    elements: {
-        point: {
-            radius: 0,
-            hoverRadius: 0
-        }
-    },
     scales: {
         x: {
-            type: 'linear',
-            min: 1000,
-            max: 2600,
+            ...MAIN_PLOT_AXIS_OPTIONS,
             title: {
                 display: true,
                 text: 'WAVELENGTH',
                 font: {
                     size: 14,
                     weight: 200
-                }
-            },
-            border: {
-                color: '#fff'
-            },
-            grid: {
-                tickColor: '#ccc',
-                color: 'transparent'
+                },
+                align: 'start'
             },
             ticks: {
-                font: {
-                    size: 10
-                },
+                font: TICK_FONT,
+                callback: EXCLUDE_BOUNDS,
                 stepSize: 100,
                 minRotation: 90,
-                maxRotation: 90,
-                callback: (value, index, values) => {
-                    return (index === 0 || index === values.length - 1) ? undefined : value
-                }
+                maxRotation: 90
             },
-            bounds: 'data'
+            min: 1000,
+            max: 2600
         },
         y: {
-            type: 'linear',
-            beginAtZero: true,
+            ...MAIN_PLOT_AXIS_OPTIONS,
             title: {
                 display: true,
                 text: 'REFLECTANCE',
-                font: {
-                    size: 14,
-                    weight: 200
+                font: TITLE_FONT
+            },
+            ticks: {
+                font: TICK_FONT,
+                callback: (value, index, values) => {
+                    const numberValue = typeof value === 'number'
+                        ? value
+                        : parseFloat(value)
+                    const fixed = numberValue.toFixed(3)
+                    // TODO: fix this
+                    return EXCLUDE_BOUNDS(fixed, index, values)
                 }
             },
+            beginAtZero: true
+        }
+    }
+}
+
+const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
+    ...PLOT_OPTIONS,
+    layout: {
+        padding: {
+            left: 10
+        }
+    },
+    scales: {
+        x: {
+            type: 'linear',
+            bounds: 'data',
             border: {
-                color: '#fff'
+                display: false
+            },
+            position: {
+                y: 0
             },
             grid: {
                 tickColor: '#ccc',
+                tickLength: 20,
                 color: 'transparent'
             },
             ticks: {
+                font: TICK_FONT,
+                callback: EXCLUDE_BOUNDS,
+                stepSize: 100,
+                minRotation: 90,
+                maxRotation: 90,
+                z: -1
+            },
+            min: 1000,
+            max: 2600
+        },
+        y: {
+            type: 'linear',
+            bounds: 'data',
+            min: -2,
+            max: 2,
+            title: {
+                display: true,
+                text: '∆ REFLECTANCE',
+                font: TITLE_FONT
+            },
+            ticks: {
+                display: true,
                 font: {
-                    size: 10
+                    size: 10,
+                    weight: 100
                 },
-                callback: (value, index, values) => {
-                    return (index === 0 || index === values.length - 1) ? undefined : value
+                minRotation: 90,
+                maxRotation: 90,
+                callback: (value, _index, _values) => {
+                    if (value === '0' || value === 0) {
+                        return '∆'
+                    }
+                    return undefined
                 }
             },
-            bounds: 'data'
+            border: {
+                display: false
+            },
+            grid: {
+                display: false
+            }
         }
+    }
+}
+
+const chartBgColorPlugin: Plugin = {
+    id: 'chartBgColor',
+    beforeDraw: (chart, _args, _options) => {
+        const { ctx, chartArea } = chart
+        const { left, top, width, height } = chartArea
+
+        ctx.save()
+        ctx.fillStyle = CHART_BG_COLOR
+        ctx.fillRect(left, top, width, height)
+        ctx.restore()
     }
 }
 
@@ -174,36 +257,22 @@ function SpectraPanel (
 
     useEffect(() => {
         setOpen(spectrum.length > 0)
-        setSpectrumData(xyToPoints(CORE_WAVELENGTHS, spectrum))
+
+        setSpectrumData(
+            getSpectrumData(CORE_WAVELENGTHS, spectrum)
+        )
     }, [spectrum])
 
     useEffect(() => {
-        const libraryData = librarySpectra[libraryMineral]
-        if (!libraryData) {
-            setLibraryData([])
-            return
-        }
         setLibraryData(
-            normalizeLibrarySpectrum(spectrumData, libraryData)
+            getLibraryData(spectrumData, librarySpectra[libraryMineral])
         )
-    }, [librarySpectra, libraryMineral, spectrumData])
+    }, [spectrumData, librarySpectra, libraryMineral])
 
     useEffect(() => {
-        if (spectrumData.length !== libraryData.length) {
-            setDeltaData([])
-            return
-        }
-        const deltaData: Array<Point> = []
-        for (let i = 0; i < spectrumData.length; i++) {
-            if (libraryData[i].x !== spectrumData[i].x) {
-                throw new Error('Library and selected spectra wavelengths misaligned')
-            }
-            deltaData.push({
-                x: spectrumData[i].x,
-                y: spectrumData[i].y / libraryData[i].y
-            })
-        }
-        setDeltaData(deltaData)
+        setDeltaData(
+            getDeltaData(spectrumData, libraryData)
+        )
     }, [spectrumData, libraryData])
 
     return (
@@ -222,7 +291,7 @@ function SpectraPanel (
                                 data: spectrumData,
                                 borderColor: '#fff',
                                 borderWidth: 2,
-                                backgroundColor: 'rgba(255, 255, 255, 0.35)',
+                                backgroundColor: 'rgba(255, 255, 255, 0.25)',
                                 fill: 'stack'
                             }, {
                                 data: libraryData,
@@ -231,7 +300,8 @@ function SpectraPanel (
                                 borderDash: [2, 2]
                             }]
                         }}
-                        options={CHART_OPTIONS}
+                        options={MAIN_PLOT_OPTIONS}
+                        plugins={[chartBgColorPlugin]}
                     />
                 </div>
                 <Dropdown
@@ -240,16 +310,22 @@ function SpectraPanel (
                     setSelected={setLibraryMineral}
                     customStyles={spectraDropdownStyles}
                 />
-                <div>
+                <div className={styles.deltaPlot}>
                     <Line
                         data={{
                             datasets: [{
                                 data: deltaData,
                                 borderColor: '#fff',
                                 borderWidth: 2
+                            }, {
+                                data: deltaData.map(({ x }) => ({ x, y: 0 })),
+                                borderColor: '#ff0',
+                                borderWidth: 1,
+                                borderDash: [2, 2]
                             }]
                         }}
-                        options={CHART_OPTIONS}
+                        options={DELTA_PLOT_OPTIONS}
+                        plugins={[chartBgColorPlugin]}
                     />
                 </div>
             </div>
@@ -257,17 +333,26 @@ function SpectraPanel (
     )
 }
 
-function xyToPoints (x: Array<number>, y: Array<number>): Array<Point> {
-    if (x.length !== y.length) { return [] }
+function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
+    // TODO: error handling
+    if (wavelengths.length !== reflectances.length) {
+        return []
+    }
 
     const data: Array<Point> = []
-    for (let i = 0; i < x.length; i++) {
-        data.push({ x: x[i], y: y[i] })
+    for (let i = 0; i < wavelengths.length; i++) {
+        data.push({
+            x: wavelengths[i],
+            y: reflectances[i]
+        })
     }
+
     return data
 }
 
-function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    if (!library) { return [] }
+
     // interpolate library spectra values share same wavelength (x) as selected spectrum
     const interpolated: Array<Point> = []
     let libInd = 1
@@ -312,6 +397,22 @@ function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>
     })
 
     return normalized
+}
+
+function getDeltaData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    if (spectrum.length !== library.length) { return [] }
+
+    const delta: Array<Point> = []
+    for (let i = 0; i < spectrum.length; i++) {
+        if (library[i].x !== spectrum[i].x) {
+            throw new Error('Library and selected spectra wavelengths misaligned')
+        }
+        delta.push({
+            x: spectrum[i].x,
+            y: spectrum[i].y / library[i].y - 1.0
+        })
+    }
+    return delta
 }
 
 export default SpectraPanel

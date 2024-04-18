@@ -31,18 +31,17 @@
     margin: 50px;
 }
 
-.main-plot {
+.main-plot, .delta-plot {
     position: relative;
-    width: 800px;
+    width: 850px;
+}
+
+.main-plot {
     height: 300px;
-    color: #ccc;
 }
 
 .delta-plot {
-    position: relative;
-    width: 800px;
-    height: 200px;
-    color: #ccc;
+    height: 150px;
 }
 
 .collapse-button {
