@@ -1,26 +1,256 @@
 import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
+import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions, Plugin, Tick } from 'chart.js'
+import { Line } from 'react-chartjs-2'
 import { StringMap, lerp } from '../../lib/util'
 import Dropdown from '../../components/generic/dropdown'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
-import { Line } from 'react-chartjs-2'
-import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions, Plugin, Tick } from 'chart.js'
 Chart.register(LinearScale, LineElement, PointElement, Filler, Tooltip)
+
 Chart.defaults.color = '#ccc'
 Chart.defaults.font.family = 'system-ui'
-
 const CHART_BG_COLOR = 'rgba(125, 125, 125, 0.35)'
-const TITLE_FONT = { size: 12, weight: 200 } as const
-const TICK_FONT = { size: 8, weight: 100 } as const
-const EXCLUDE_BOUNDS = (
-    value: string | number, index: number, values: Array<Tick>
-): string | number | undefined => {
-    return (index === 0 || index === values.length - 1) ? undefined : value
+
+type Point = { x: number, y: number }
+
+type SpectraPanelProps = {
+    spectrum: Array<number>
 }
 
-const PLOT_OPTIONS: ChartOptions<'line'> = {
+function SpectraPanel (
+    { spectrum }: SpectraPanelProps
+): ReactElement {
+    const [open, setOpen] = useState<boolean>(false)
+    const [spectrumData, setSpectrumData] = useState<Array<Point>>([])
+    const [libraryData, setLibraryData] = useState<Array<Point>>([])
+    const [deltaData, setDeltaData] = useState<Array<Point>>([])
+
+    const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
+    const [libraryMineral, setLibraryMineral] = useState<string>('')
+
+    useEffect(() => {
+        const getLibrarySpectra = async (): Promise<void> => {
+            const res = await fetch('./data-processed/temp/library-spectra.json')
+            const librarySpectra = await res.json()
+            setLibrarySpectra(librarySpectra)
+
+            const firstMineral = Object.keys(librarySpectra)[0]
+            if (firstMineral) {
+                setLibraryMineral(firstMineral)
+            }
+        }
+        getLibrarySpectra()
+    }, [])
+
+    useEffect(() => {
+        const spectrumData = getSpectrumData(CORE_WAVELENGTHS, spectrum)
+        setSpectrumData(spectrumData)
+
+        setOpen(spectrum.length > 0)
+    }, [spectrum])
+
+    useEffect(() => {
+        if (!librarySpectra[libraryMineral]) { return }
+
+        const libraryData = getLibraryData(spectrumData, librarySpectra[libraryMineral])
+        setLibraryData(libraryData)
+    }, [spectrumData, librarySpectra, libraryMineral])
+
+    useEffect(() => {
+        const deltaData = getDeltaData(spectrumData, libraryData)
+        setDeltaData(deltaData)
+    }, [spectrumData, libraryData])
+
+    return (
+        <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
+            <div className={styles.spectraPanel}>
+                <button
+                    className={styles.collapseButton}
+                    onClick={() => setOpen(false)}
+                >
+                    <PiCaretRightBold />
+                </button>
+                <div className={styles.mainPlot}>
+                    <Line
+                        data={{
+                            datasets: [{
+                                data: spectrumData,
+                                ...DATASET_OPTIONS.selected
+                            }, {
+                                data: libraryData,
+                                ...DATASET_OPTIONS.library
+                            }]
+                        }}
+                        options={MAIN_PLOT_OPTIONS}
+                        plugins={[chartBgColorPlugin]}
+                    />
+                </div>
+                <div className={styles.librarySelect}>
+                    <p className={styles.dropdownLabel}>
+                        mineral profile
+                    </p>
+                    <Dropdown
+                        items={Object.keys(librarySpectra)}
+                        selected={`∆ ${libraryMineral}`}
+                        setSelected={setLibraryMineral}
+                        customStyles={spectraDropdownStyles}
+                    />
+                </div>
+                <div className={styles.deltaPlot}>
+                    <Line
+                        data={{
+                            datasets: [{
+                                data: deltaData,
+                                ...DATASET_OPTIONS.delta
+                            }, {
+                                /* TODO: find a better way to plot dashed axis */
+                                data: deltaData.map(({ x }) => ({ x, y: 0 })),
+                                ...DATASET_OPTIONS.deltaAxis
+                            }]
+                        }}
+                        options={DELTA_PLOT_OPTIONS}
+                        plugins={[chartBgColorPlugin]}
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
+    if (!wavelengths.length || !reflectances.length) {
+        return []
+    }
+
+    const data: Array<Point> = []
+    for (let i = 0; i < wavelengths.length; i++) {
+        data.push({
+            x: wavelengths[i],
+            y: reflectances[i]
+        })
+    }
+
+    return data
+}
+
+function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    if (!spectrum.length || !library.length) {
+        return []
+    }
+
+    // interpolate library spectra values share same wavelength (x) as selected spectrum
+    const interpolated: Array<Point> = []
+    let libInd = 1
+    for (let i = 0; i < spectrum.length; i++) {
+        // get curr wavelength to align to from selected spectra
+        const wavelength = spectrum[i].x
+
+        // increment index in original library data until
+        // curr wavelength is between index and index - 1
+        while (libInd + 1 < library.length && library[libInd].x < wavelength) {
+            libInd++
+        }
+
+        // calculate how far curr wavelength is between library wavelengths
+        const t = (wavelength - library[libInd - 1].x) / (library[libInd].x - library[libInd - 1].x)
+
+        // interpolate library data to align with selected spectrum
+        interpolated.push({
+            x: wavelength,
+            y: lerp(library[libInd - 1].y, library[libInd].y, t)
+        })
+    }
+
+    // normalize reflectance values to align with selected spectra
+    let spectrumAvg = 0
+    for (let i = 0; i < spectrum.length; i++) {
+        spectrumAvg += spectrum[i].y
+    }
+    spectrumAvg /= spectrum.length
+
+    let libraryAvg = 0
+    for (let i = 0; i < interpolated.length; i++) {
+        libraryAvg += interpolated[i].y
+    }
+    libraryAvg /= interpolated.length
+
+    const libraryScale = spectrumAvg / libraryAvg
+
+    const normalized = interpolated.map(point => {
+        point.y *= libraryScale
+        return point
+    })
+
+    return normalized
+}
+
+function getDeltaData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    if (!spectrum.length || !library.length) {
+        return []
+    }
+
+    const delta: Array<Point> = []
+    for (let i = 0; i < spectrum.length; i++) {
+        if (library[i].x !== spectrum[i].x) {
+            throw new Error('Library and selected spectra wavelengths misaligned')
+        }
+        delta.push({
+            x: spectrum[i].x,
+            y: spectrum[i].y / library[i].y - 1.0
+        })
+    }
+    return delta
+}
+
+// style for data represented in plots
+const DATASET_OPTIONS = {
+    selected: {
+        borderColor: '#fff',
+        borderWidth: 2,
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        fill: 'stack'
+    },
+    library: {
+        borderColor: '#c4f571',
+        borderWidth: 1,
+        borderDash: [2, 2]
+    },
+    delta: {
+        borderColor: '#fff',
+        borderWidth: 2
+    },
+    deltaAxis: {
+        borderColor: '#c4f571',
+        borderWidth: 1,
+        borderDash: [2, 2]
+    }
+}
+
+// custom plugin to fill chart background
+const chartBgColorPlugin: Plugin = {
+    id: 'chartBgColor',
+    beforeDraw: (chart, _args, _options) => {
+        const { ctx, chartArea } = chart
+        const { left, top, width, height } = chartArea
+
+        ctx.save()
+        ctx.fillStyle = CHART_BG_COLOR
+        ctx.fillRect(left, top, width, height)
+        ctx.restore()
+    }
+}
+
+function excludeFirstLastTick (
+    value: string | number, index: number, values: Array<Tick>
+): string | number | undefined {
+    return (index === 0 || index === values.length - 1)
+        ? undefined
+        : value
+}
+
+const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     elements: {
@@ -28,18 +258,7 @@ const PLOT_OPTIONS: ChartOptions<'line'> = {
             radius: 0,
             hoverRadius: 0
         }
-    }
-}
-
-const MAIN_PLOT_AXIS_OPTIONS = {
-    type: 'linear',
-    bounds: 'data',
-    border: { color: '#fff' },
-    grid: { tickColor: '#ccc', color: 'transparent' }
-} as const
-
-const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
-    ...PLOT_OPTIONS,
+    },
     plugins: {
         tooltip: {
             mode: 'x',
@@ -49,7 +268,15 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
     },
     scales: {
         x: {
-            ...MAIN_PLOT_AXIS_OPTIONS,
+            type: 'linear',
+            bounds: 'data',
+            border: {
+                color: '#fff'
+            },
+            grid: {
+                tickColor: '#ccc',
+                drawOnChartArea: false
+            },
             title: {
                 display: true,
                 text: 'WAVELENGTH',
@@ -60,8 +287,11 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
                 align: 'start'
             },
             ticks: {
-                font: TICK_FONT,
-                callback: EXCLUDE_BOUNDS,
+                font: {
+                    size: 8,
+                    weight: 100
+                },
+                callback: excludeFirstLastTick,
                 stepSize: 100,
                 minRotation: 90,
                 maxRotation: 90
@@ -70,21 +300,32 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             max: 2600
         },
         y: {
-            ...MAIN_PLOT_AXIS_OPTIONS,
+            type: 'linear',
+            bounds: 'data',
+            border: {
+                color: '#fff'
+            },
+            grid: {
+                tickColor: '#ccc',
+                drawOnChartArea: false
+            },
             title: {
                 display: true,
                 text: 'REFLECTANCE',
-                font: TITLE_FONT
+                font: {
+                    size: 12,
+                    weight: 200
+                }
             },
             ticks: {
-                font: TICK_FONT,
+                font: {
+                    size: 8,
+                    weight: 100
+                },
                 callback: (value, index, values) => {
-                    const numberValue = typeof value === 'number'
-                        ? value
-                        : parseFloat(value)
-                    const fixed = numberValue.toFixed(3)
-                    // TODO: fix this
-                    return EXCLUDE_BOUNDS(fixed, index, values)
+                    const numberValue = typeof value === 'number' ? value : parseFloat(value)
+                    const formatted = numberValue.toFixed(3)
+                    return excludeFirstLastTick(formatted, index, values)
                 }
             },
             beginAtZero: true
@@ -93,7 +334,14 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
 }
 
 const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
-    ...PLOT_OPTIONS,
+    responsive: true,
+    maintainAspectRatio: false,
+    elements: {
+        point: {
+            radius: 0,
+            hoverRadius: 0
+        }
+    },
     layout: {
         padding: {
             left: 10
@@ -115,8 +363,11 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
                 color: 'transparent'
             },
             ticks: {
-                font: TICK_FONT,
-                callback: EXCLUDE_BOUNDS,
+                font: {
+                    size: 8,
+                    weight: 100
+                },
+                callback: excludeFirstLastTick,
                 stepSize: 100,
                 minRotation: 90,
                 maxRotation: 90,
@@ -133,7 +384,10 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
             title: {
                 display: true,
                 text: '∆ REFLECTANCE',
-                font: TITLE_FONT
+                font: {
+                    size: 12,
+                    weight: 200
+                }
             },
             ticks: {
                 display: true,
@@ -157,19 +411,6 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
                 display: false
             }
         }
-    }
-}
-
-const chartBgColorPlugin: Plugin = {
-    id: 'chartBgColor',
-    beforeDraw: (chart, _args, _options) => {
-        const { ctx, chartArea } = chart
-        const { left, top, width, height } = chartArea
-
-        ctx.save()
-        ctx.fillStyle = CHART_BG_COLOR
-        ctx.fillRect(left, top, width, height)
-        ctx.restore()
     }
 }
 
@@ -224,195 +465,5 @@ const CORE_WAVELENGTHS = [
     2556.699951, 2562.699951, 2568.709961, 2574.719971, 2580.729980, 2586.739990,
     2592.750000, 2598.760010, 2604.770020
 ]
-
-type Point = { x: number, y: number }
-type LibrarySpectra = StringMap<Array<Point>>
-
-type SpectraPanelProps = {
-    spectrum: Array<number>
-}
-
-function SpectraPanel (
-    { spectrum }: SpectraPanelProps
-): ReactElement {
-    const [open, setOpen] = useState<boolean>(false)
-    const [spectrumData, setSpectrumData] = useState<Array<Point>>([])
-    const [libraryData, setLibraryData] = useState<Array<Point>>([])
-    const [deltaData, setDeltaData] = useState<Array<Point>>([])
-
-    const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra>({})
-    const [libraryMineral, setLibraryMineral] = useState<string>('')
-
-    useEffect(() => {
-        const getLibrarySpectra = async (): Promise<void> => {
-            const res = await fetch('./data-processed/temp/library-spectra.json')
-            const librarySpectra = await res.json()
-            setLibrarySpectra(librarySpectra)
-
-            // TODO: add error handling if library spectra empty
-            setLibraryMineral(Object.keys(librarySpectra)[0])
-        }
-        getLibrarySpectra()
-    }, [])
-
-    useEffect(() => {
-        setOpen(spectrum.length > 0)
-
-        setSpectrumData(
-            getSpectrumData(CORE_WAVELENGTHS, spectrum)
-        )
-    }, [spectrum])
-
-    useEffect(() => {
-        setLibraryData(
-            getLibraryData(spectrumData, librarySpectra[libraryMineral])
-        )
-    }, [spectrumData, librarySpectra, libraryMineral])
-
-    useEffect(() => {
-        setDeltaData(
-            getDeltaData(spectrumData, libraryData)
-        )
-    }, [spectrumData, libraryData])
-
-    return (
-        <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
-            <div className={styles.spectraPanel}>
-                <button
-                    className={styles.collapseButton}
-                    onClick={() => setOpen(false)}
-                >
-                    <PiCaretRightBold />
-                </button>
-                <div className={styles.mainPlot}>
-                    <Line
-                        data={{
-                            datasets: [{
-                                data: spectrumData,
-                                borderColor: '#fff',
-                                borderWidth: 2,
-                                backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                                fill: 'stack'
-                            }, {
-                                data: libraryData,
-                                borderColor: '#ff0',
-                                borderWidth: 1,
-                                borderDash: [2, 2]
-                            }]
-                        }}
-                        options={MAIN_PLOT_OPTIONS}
-                        plugins={[chartBgColorPlugin]}
-                    />
-                </div>
-                <Dropdown
-                    items={Object.keys(librarySpectra)}
-                    selected={libraryMineral}
-                    setSelected={setLibraryMineral}
-                    customStyles={spectraDropdownStyles}
-                />
-                <div className={styles.deltaPlot}>
-                    <Line
-                        data={{
-                            datasets: [{
-                                data: deltaData,
-                                borderColor: '#fff',
-                                borderWidth: 2
-                            }, {
-                                data: deltaData.map(({ x }) => ({ x, y: 0 })),
-                                borderColor: '#ff0',
-                                borderWidth: 1,
-                                borderDash: [2, 2]
-                            }]
-                        }}
-                        options={DELTA_PLOT_OPTIONS}
-                        plugins={[chartBgColorPlugin]}
-                    />
-                </div>
-            </div>
-        </div>
-    )
-}
-
-function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
-    // TODO: error handling
-    if (wavelengths.length !== reflectances.length) {
-        return []
-    }
-
-    const data: Array<Point> = []
-    for (let i = 0; i < wavelengths.length; i++) {
-        data.push({
-            x: wavelengths[i],
-            y: reflectances[i]
-        })
-    }
-
-    return data
-}
-
-function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
-    if (!library) { return [] }
-
-    // interpolate library spectra values share same wavelength (x) as selected spectrum
-    const interpolated: Array<Point> = []
-    let libInd = 1
-    for (let i = 0; i < spectrum.length; i++) {
-        // get curr wavelength to align to from selected spectra
-        const wavelength = spectrum[i].x
-
-        // increment index in original library data until
-        // curr wavelength is between index and index - 1
-        while (libInd + 1 < library.length && library[libInd].x < wavelength) {
-            libInd++
-        }
-
-        // calculate how far curr wavelength is between library wavelengths
-        const t = (wavelength - library[libInd - 1].x) / (library[libInd].x - library[libInd - 1].x)
-
-        // interpolate library data to align with selected spectrum
-        interpolated.push({
-            x: wavelength,
-            y: lerp(library[libInd - 1].y, library[libInd].y, t)
-        })
-    }
-
-    let spectrumAvg = 0
-    for (let i = 0; i < spectrum.length; i++) {
-        spectrumAvg += spectrum[i].y
-    }
-    spectrumAvg /= spectrum.length
-
-    let libraryAvg = 0
-    for (let i = 0; i < interpolated.length; i++) {
-        libraryAvg += interpolated[i].y
-    }
-    libraryAvg /= interpolated.length
-
-    const libraryScale = spectrumAvg / libraryAvg
-
-    // scale library spectra to align with selected spectra
-    const normalized = interpolated.map(point => {
-        point.y *= libraryScale
-        return point
-    })
-
-    return normalized
-}
-
-function getDeltaData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
-    if (spectrum.length !== library.length) { return [] }
-
-    const delta: Array<Point> = []
-    for (let i = 0; i < spectrum.length; i++) {
-        if (library[i].x !== spectrum[i].x) {
-            throw new Error('Library and selected spectra wavelengths misaligned')
-        }
-        delta.push({
-            x: spectrum[i].x,
-            y: spectrum[i].y / library[i].y - 1.0
-        })
-    }
-    return delta
-}
 
 export default SpectraPanel

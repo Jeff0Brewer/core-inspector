@@ -26,11 +26,6 @@
     padding: 40px;
 }
 
-.plots {
-    position: relative;
-    margin: 50px;
-}
-
 .main-plot, .delta-plot {
     position: relative;
     width: 850px;
@@ -60,29 +55,31 @@
     color: var(--color4);
 }
 
-.mineral-select {
+.library-select {
     display: flex;
     align-items: center;
-    margin-left: 50px;
-    gap: 10px;
+    text-transform: uppercase;
+    padding-top: 35px;
+    font-size: 0.7rem;
 }
 
 .dropdown-label {
     position: relative;
-    text-transform: uppercase;
-    color: #9F9F9F;
-    font-size: 0.6rem;
-    display: flex;
-    align-items: center;
+    color: #9f9f9f;
+    margin-left: 60px;
+    margin-right: 5px;
 }
 
-.dropdown-label:before {
+.dropdown-label:after {
     content: '';
     display: block;
+    position: absolute;
+    left: -10px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: #B9E66C;
-    position: absolute;
-    left: -15px;
+    background-color: #c4f571;
 }
