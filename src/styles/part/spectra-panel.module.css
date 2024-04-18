@@ -3,9 +3,9 @@
     grid-column: punch / main;
     grid-row: main / bottom-main;
     position: absolute;
-    right: 0;
     top: 0;
     bottom: 0;
+    right: 0;
     width: 0;
     transition: width 0.5s ease;
     overflow: hidden;
@@ -19,24 +19,24 @@
 
 .spectra-panel {
     position: relative;
-    z-index: 100;
+    z-index: 200;
     height: 100%;
     width: 100%;
-    background-color: var(--menu-bg-color);
-    padding: 0 50px;
+    background-color: rgba(50, 50, 50, 0.9);
+    padding: 40px;
 }
 
-.plots {
+.main-plot, .delta-plot {
     position: relative;
-    margin: 50px;
+    width: 850px;
 }
 
 .main-plot {
-    position: relative;
-    width: 800px;
-    height: 250px;
-    color: #ccc;
-    background-color: rgba(120, 120, 120, 0.5);
+    height: 300px;
+}
+
+.delta-plot {
+    height: 150px;
 }
 
 .collapse-button {
@@ -55,29 +55,31 @@
     color: var(--color4);
 }
 
-.mineral-select {
+.library-select {
     display: flex;
     align-items: center;
-    margin-left: 50px;
-    gap: 10px;
+    text-transform: uppercase;
+    padding-top: 35px;
+    font-size: 0.7rem;
 }
 
 .dropdown-label {
     position: relative;
-    text-transform: uppercase;
-    color: #9F9F9F;
-    font-size: 0.6rem;
-    display: flex;
-    align-items: center;
+    color: #9f9f9f;
+    margin-left: 60px;
+    margin-right: 8px;
 }
 
-.dropdown-label:before {
+.dropdown-label:after {
     content: '';
     display: block;
+    position: absolute;
+    left: -10px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: #B9E66C;
-    position: absolute;
-    left: -15px;
+    background-color: #c4f571;
 }

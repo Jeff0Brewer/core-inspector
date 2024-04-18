@@ -1,5 +1,6 @@
 .blend-menu {
     position: absolute;
+    z-index: 100;
     right: 0;
     bottom: 100%;
     display: flex;

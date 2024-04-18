@@ -1,5 +1,5 @@
 .dropdown {
-    width: 150px;
+    width: 140px;
     white-space: nowrap;
 }
 
@@ -26,6 +26,7 @@
     border-radius: var(--radius);
     border: none;
     text-transform: uppercase;
+    font-size: 0.6rem;
 }
 
 .dropdown-items a:not(:last-of-type) {
