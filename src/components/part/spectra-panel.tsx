@@ -1,6 +1,6 @@
 import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
-import { StringMap } from '../../lib/util'
+import { StringMap, lerp } from '../../lib/util'
 import Dropdown from '../../components/generic/dropdown'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
@@ -16,8 +16,8 @@ const CHART_OPTIONS: ChartOptions<'line'> = {
     plugins: {
         tooltip: {
             mode: 'x',
-            intersect: false,
-            displayColors: false
+            position: 'nearest',
+            intersect: false
         }
     },
     elements: {
@@ -170,8 +170,10 @@ function SpectraPanel (
             setLibraryData([])
             return
         }
-        setLibraryData(normalizeLibrarySpectrum(spectrum, libraryData))
-    }, [librarySpectra, libraryMineral, spectrum])
+        setLibraryData(
+            normalizeLibrarySpectrum(spectrumData, libraryData)
+        )
+    }, [librarySpectra, libraryMineral, spectrumData])
 
     useEffect(() => {
         const getLibrarySpectra = async (): Promise<void> => {
@@ -233,23 +235,40 @@ function xyToPoints (x: Array<number>, y: Array<number>): Array<Point> {
     return data
 }
 
-function normalizeLibrarySpectrum (spectrum: Array<number>, librarySpectrum: Array<Point>): Array<Point> {
+function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    const interpolated: Array<Point> = []
+    let j = 1
+    for (let i = 0; i < spectrum.length; i++) {
+        const wavelength = spectrum[i].x
+        while (j + 1 < library.length && library[j].x < wavelength) {
+            j++
+        }
+        console.log(j, library.length)
+        const t = (wavelength - library[j - 1].x) / (library[j].x - library[j - 1].x)
+        interpolated.push({
+            x: wavelength,
+            y: lerp(library[j - 1].y, library[j].y, t)
+        })
+    }
+
     let spectrumMax = 0
     for (let i = 0; i < spectrum.length; i++) {
-        spectrumMax = Math.max(spectrumMax, spectrum[i])
+        spectrumMax = Math.max(spectrumMax, spectrum[i].y)
     }
 
     let libraryMax = 0
-    for (let i = 0; i < librarySpectrum.length; i++) {
-        libraryMax = Math.max(libraryMax, librarySpectrum[i].y)
+    for (let i = 0; i < interpolated.length; i++) {
+        libraryMax = Math.max(libraryMax, interpolated[i].y)
     }
 
     const libraryScale = spectrumMax / libraryMax
 
-    return librarySpectrum.map(point => {
+    const normalized = interpolated.map(point => {
         point.y *= libraryScale
         return point
     })
+
+    return normalized
 }
 
 export default SpectraPanel

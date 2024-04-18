@@ -1,5 +1,9 @@
 import { vec3 } from 'gl-matrix'
 
+function lerp (a: number, b: number, t: number): number {
+    return a + (b - a) * t
+}
+
 function ease (t: number): number {
     const t2 = t * t
     return t2 / (2 * (t2 - t) + 1)
@@ -109,6 +113,7 @@ type BoundRect = {
 type StringMap<T> = { [key: string]: T }
 
 export {
+    lerp,
     ease,
     clamp,
     roundTo,
