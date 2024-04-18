@@ -24,6 +24,7 @@ function SpectraPanel (
     { spectrum }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
+    const [render, setRender] = useState<boolean>(false)
 
     const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
@@ -31,10 +32,22 @@ function SpectraPanel (
     const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
     const [deltaPlotData, setDeltaPlotData] = useState<ChartData<'line'> | null>(null)
 
+    // open spectra panel on spectrum change
     useEffect(() => {
         setOpen(spectrum.length > 0)
     }, [spectrum])
 
+    // toggle flag to render spectra panel, delay removal from
+    // dom to allow collapse animation to finish
+    useEffect(() => {
+        if (open) {
+            setRender(true)
+        } else {
+            setTimeout(() => { setRender(false) }, 1000)
+        }
+    }, [open])
+
+    // get library spectra data from file
     useEffect(() => {
         const getLibrarySpectra = async (): Promise<void> => {
             const res = await fetch('./data-processed/temp/library-spectra.json')
@@ -49,6 +62,7 @@ function SpectraPanel (
         getLibrarySpectra()
     }, [])
 
+    // calculate chart data
     useEffect(() => {
         const library = librarySpectra[libraryMineral]
         if (!spectrum.length || !library?.length) {
@@ -80,7 +94,7 @@ function SpectraPanel (
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
-            <div className={styles.spectraPanel}>
+            { render && <div className={styles.spectraPanel}>
                 <button
                     className={styles.collapseButton}
                     onClick={() => setOpen(false)}
@@ -112,7 +126,7 @@ function SpectraPanel (
                         plugins={[chartBgColorPlugin]}
                     /> }
                 </div>
-            </div>
+            </div> }
         </div>
     )
 }
