@@ -214,6 +214,7 @@ const DATASET_OPTIONS = {
     },
     library: {
         borderColor: '#c4f571',
+        backgroundColor: '#c4f571',
         borderWidth: 1,
         borderDash: [2, 2]
     },
@@ -256,14 +257,36 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
     elements: {
         point: {
             radius: 0,
-            hoverRadius: 0
+            hoverRadius: 0,
+            hitRadius: 30
         }
     },
     plugins: {
         tooltip: {
-            mode: 'x',
+            mode: 'nearest',
             position: 'nearest',
-            intersect: false
+            intersect: true,
+            usePointStyle: true,
+            cornerRadius: 3,
+            boxPadding: 5,
+            backgroundColor: 'rgba(50, 50, 50, 0.8)',
+            bodySpacing: 0,
+            padding: 5,
+            titleFont: {
+                size: 10,
+                weight: 'normal'
+            },
+            bodyFont: {
+                size: 10,
+                weight: 'normal'
+            },
+            callbacks: {
+                title: (items) => {
+                    const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
+                    return `${wavelength} nm`
+                }
+            }
+
         }
     },
     scales: {
@@ -336,6 +359,11 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
 const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+        tooltip: {
+            enabled: false
+        }
+    },
     elements: {
         point: {
             radius: 0,
