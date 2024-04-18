@@ -34,7 +34,9 @@ const REDUCE_FACTOR = 4
 const SLICE_COUNT = 16
 const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
 const LOW_RES_EXTENSION = 'HWS.byte-b64.json.zip'
-const HIGH_RES_EXTENSION = 'HWS.short-b64.json.zip'
+// TODO: add prod / dev flag to toggle resolution extension
+const HIGH_RES_EXTENSION = 'HWS.byte-b64.json.zip'
+// const HIGH_RES_EXTENSION = 'HWS.short-b64.json.zip'
 
 function getSpectraBasePath (core: string, part: string, root: string): string {
     const dir = getSpectraPath(core, part, SPECTRA_TYPE, root)
@@ -100,14 +102,19 @@ async function getChunk (path: string, parse: (b64: string) => TypedArray): Prom
 
 async function getClickedSpectrum (x: number, y: number, slicePath: string): Promise<void> {
     const path = `${slicePath}.${HIGH_RES_EXTENSION}`
-    const chunk = await getChunk(path, base64ToU16)
+
+    // TODO: add prod / dev flag to toggle b64 parser
+    const chunk = await getChunk(path, base64ToU8)
+    // const chunk = await getChunk(path, base64ToU16)
     const { startSlice, data, width, height, samples } = chunk
 
     const rowIndex = clamp(Math.round(x / REDUCE_FACTOR), 0, width - 1)
     const colIndex = clamp(Math.round((y - startSlice) / REDUCE_FACTOR), 0, height - 1)
     const startIndex = (colIndex * width + rowIndex) * samples
     const spectrumU16 = data.slice(startIndex, startIndex + samples)
-    const spectrum = [...spectrumU16].map(v => v / 65535)
+    // TODO: add prod / dev flag to toggle b64 parser
+    const spectrum = [...spectrumU16].map(v => v / 255)
+    // const spectrum = [...spectrumU16].map(v => v / 65535)
     postMessage({ type: 'clicked', spectrum })
 }
 
