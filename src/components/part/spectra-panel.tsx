@@ -8,6 +8,7 @@ import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
 import { StringMap, lerp } from '../../lib/util'
 import Dropdown from '../../components/generic/dropdown'
+import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
 
@@ -26,7 +27,7 @@ function SpectraPanel (
     { selectedSpectrum }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-    const [render, setRender] = useState<boolean>(false)
+    const render = useCollapseRender(open)
 
     const [coreWavelengths, setCoreWavelengths] = useState<Array<number>>([])
     const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
@@ -39,17 +40,6 @@ function SpectraPanel (
     useEffect(() => {
         setOpen(selectedSpectrum.length > 0)
     }, [selectedSpectrum])
-
-    // toggle flag to render spectra panel, delay removal from
-    // dom to allow collapse animation to finish
-    useEffect(() => {
-        if (open) {
-            setRender(true)
-        } else {
-            // ensure timeout is longer than animation duration
-            setTimeout(() => { setRender(false) }, 1000)
-        }
-    }, [open])
 
     // get library spectra and wavelength values for selected spectra
     useEffect(() => {
