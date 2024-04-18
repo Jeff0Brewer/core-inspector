@@ -7,10 +7,16 @@
     flex-direction: column;
     padding: 10px;
     background-color: var(--menu-bg-color);
+    transition:
+        transform var(--transition-param),
+        opacity var(--transition-param);
+    transform: translateY(3px);
+    opacity: 0;
 }
 
-.hidden {
-    display: none;
+.visible {
+    transform: none;
+    opacity: 1;
 }
 
 .blend-menu > div {

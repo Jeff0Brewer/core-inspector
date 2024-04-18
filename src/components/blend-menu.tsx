@@ -87,7 +87,7 @@ function BlendMenu (
     }
 
     return (
-        <section className={`${styles.blendMenu} ${!open && styles.hidden}`}>
+        <section className={`${styles.blendMenu} ${!open && styles.visible}`}>
             <MonochromeToggle
                 palette={palette}
                 monochrome={monochrome}
