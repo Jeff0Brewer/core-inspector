@@ -3,9 +3,9 @@
     grid-column: punch / main;
     grid-row: main / bottom-main;
     position: absolute;
-    right: 0;
     top: 0;
     bottom: 0;
+    right: 0;
     width: 0;
     transition: width 0.5s ease;
     overflow: hidden;
@@ -22,7 +22,7 @@
     z-index: 200;
     height: 100%;
     width: 100%;
-    background-color: var(--menu-bg-color);
+    background-color: rgba(50, 50, 50, 0.9);
     padding: 40px;
 }
 
@@ -67,7 +67,7 @@
     position: relative;
     color: #9f9f9f;
     margin-left: 60px;
-    margin-right: 5px;
+    margin-right: 8px;
 }
 
 .dropdown-label:after {

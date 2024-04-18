@@ -279,7 +279,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             },
             title: {
                 display: true,
-                text: 'WAVELENGTH',
+                text: 'WAVELENGTH (nm)',
                 font: {
                     size: 14,
                     weight: 200
@@ -289,7 +289,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             ticks: {
                 font: {
                     size: 8,
-                    weight: 100
+                    weight: 150
                 },
                 callback: excludeFirstLastTick,
                 stepSize: 100,
@@ -301,7 +301,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
         },
         y: {
             type: 'linear',
-            bounds: 'data',
+            bounds: 'ticks',
             border: {
                 color: '#fff'
             },
@@ -320,7 +320,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             ticks: {
                 font: {
                     size: 8,
-                    weight: 100
+                    weight: 150
                 },
                 callback: (value, index, values) => {
                     const numberValue = typeof value === 'number' ? value : parseFloat(value)
@@ -342,11 +342,6 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
             hoverRadius: 0
         }
     },
-    layout: {
-        padding: {
-            left: 10
-        }
-    },
     scales: {
         x: {
             type: 'linear',
@@ -365,7 +360,7 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
             ticks: {
                 font: {
                     size: 8,
-                    weight: 100
+                    weight: 150
                 },
                 callback: excludeFirstLastTick,
                 stepSize: 100,
@@ -378,12 +373,15 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
         },
         y: {
             type: 'linear',
-            bounds: 'data',
+            bounds: 'ticks',
             min: -2,
             max: 2,
             title: {
                 display: true,
                 text: '∆ REFLECTANCE',
+                padding: {
+                    bottom: 6
+                },
                 font: {
                     size: 12,
                     weight: 200
@@ -393,7 +391,7 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
                 display: true,
                 font: {
                     size: 10,
-                    weight: 100
+                    weight: 150
                 },
                 minRotation: 90,
                 maxRotation: 90,
