@@ -155,9 +155,22 @@ function SpectraPanel (
     const [open, setOpen] = useState<boolean>(false)
     const [spectrumData, setSpectrumData] = useState<Array<Point>>([])
     const [libraryData, setLibraryData] = useState<Array<Point>>([])
+    const [deltaData, setDeltaData] = useState<Array<Point>>([])
 
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
+
+    useEffect(() => {
+        const getLibrarySpectra = async (): Promise<void> => {
+            const res = await fetch('./data-processed/temp/library-spectra.json')
+            const librarySpectra = await res.json()
+            setLibrarySpectra(librarySpectra)
+
+            // TODO: add error handling if library spectra empty
+            setLibraryMineral(Object.keys(librarySpectra)[0])
+        }
+        getLibrarySpectra()
+    }, [])
 
     useEffect(() => {
         setOpen(spectrum.length > 0)
@@ -176,15 +189,22 @@ function SpectraPanel (
     }, [librarySpectra, libraryMineral, spectrumData])
 
     useEffect(() => {
-        const getLibrarySpectra = async (): Promise<void> => {
-            const res = await fetch('./data-processed/temp/library-spectra.json')
-            const librarySpectra = await res.json()
-            setLibrarySpectra(librarySpectra)
-            // TODO: add error handling if library spectra empty
-            setLibraryMineral(Object.keys(librarySpectra)[0])
+        if (spectrumData.length !== libraryData.length) {
+            setDeltaData([])
+            return
         }
-        getLibrarySpectra()
-    }, [])
+        const deltaData: Array<Point> = []
+        for (let i = 0; i < spectrumData.length; i++) {
+            if (libraryData[i].x !== spectrumData[i].x) {
+                throw new Error('Library and selected spectra wavelengths misaligned')
+            }
+            deltaData.push({
+                x: spectrumData[i].x,
+                y: spectrumData[i].y / libraryData[i].y
+            })
+        }
+        setDeltaData(deltaData)
+    }, [spectrumData, libraryData])
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
@@ -220,6 +240,18 @@ function SpectraPanel (
                     setSelected={setLibraryMineral}
                     customStyles={spectraDropdownStyles}
                 />
+                <div>
+                    <Line
+                        data={{
+                            datasets: [{
+                                data: deltaData,
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            }]
+                        }}
+                        options={CHART_OPTIONS}
+                    />
+                </div>
             </div>
         </div>
     )
@@ -259,19 +291,21 @@ function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>
         })
     }
 
-    let spectrumMax = 0
+    let spectrumAvg = 0
     for (let i = 0; i < spectrum.length; i++) {
-        spectrumMax = Math.max(spectrumMax, spectrum[i].y)
+        spectrumAvg += spectrum[i].y
     }
+    spectrumAvg /= spectrum.length
 
-    let libraryMax = 0
+    let libraryAvg = 0
     for (let i = 0; i < interpolated.length; i++) {
-        libraryMax = Math.max(libraryMax, interpolated[i].y)
+        libraryAvg += interpolated[i].y
     }
+    libraryAvg /= interpolated.length
 
-    const libraryScale = spectrumMax / libraryMax
+    const libraryScale = spectrumAvg / libraryAvg
 
-    // scale library spectra so that selected and library share same maximum value
+    // scale library spectra to align with selected spectra
     const normalized = interpolated.map(point => {
         point.y *= libraryScale
         return point

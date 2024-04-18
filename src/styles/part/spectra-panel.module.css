@@ -38,6 +38,13 @@
     color: #ccc;
 }
 
+.delta-plot {
+    position: relative;
+    width: 800px;
+    height: 200px;
+    color: #ccc;
+}
+
 .collapse-button {
     position: absolute;
     display: grid;
