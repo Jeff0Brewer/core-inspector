@@ -236,18 +236,26 @@ function xyToPoints (x: Array<number>, y: Array<number>): Array<Point> {
 }
 
 function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
+    // interpolate library spectra values share same wavelength (x) as selected spectrum
     const interpolated: Array<Point> = []
-    let j = 1
+    let libInd = 1
     for (let i = 0; i < spectrum.length; i++) {
+        // get curr wavelength to align to from selected spectra
         const wavelength = spectrum[i].x
-        while (j + 1 < library.length && library[j].x < wavelength) {
-            j++
+
+        // increment index in original library data until
+        // curr wavelength is between index and index - 1
+        while (libInd + 1 < library.length && library[libInd].x < wavelength) {
+            libInd++
         }
-        console.log(j, library.length)
-        const t = (wavelength - library[j - 1].x) / (library[j].x - library[j - 1].x)
+
+        // calculate how far curr wavelength is between library wavelengths
+        const t = (wavelength - library[libInd - 1].x) / (library[libInd].x - library[libInd - 1].x)
+
+        // interpolate library data to align with selected spectrum
         interpolated.push({
             x: wavelength,
-            y: lerp(library[j - 1].y, library[j].y, t)
+            y: lerp(library[libInd - 1].y, library[libInd].y, t)
         })
     }
 
@@ -263,6 +271,7 @@ function normalizeLibrarySpectrum (spectrum: Array<Point>, library: Array<Point>
 
     const libraryScale = spectrumMax / libraryMax
 
+    // scale library spectra so that selected and library share same maximum value
     const normalized = interpolated.map(point => {
         point.y *= libraryScale
         return point
