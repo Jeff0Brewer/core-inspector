@@ -1,6 +1,7 @@
 import { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
-import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions, Plugin, Tick } from 'chart.js'
+// TODO: format chart imports
+import { Chart, LinearScale, LineElement, PointElement, Filler, Tooltip, ChartOptions, Plugin, Tick, ChartData } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import { StringMap, lerp } from '../../lib/util'
 import Dropdown from '../../components/generic/dropdown'
@@ -23,12 +24,16 @@ function SpectraPanel (
     { spectrum }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
-    const [spectrumData, setSpectrumData] = useState<Array<Point>>([])
-    const [libraryData, setLibraryData] = useState<Array<Point>>([])
-    const [deltaData, setDeltaData] = useState<Array<Point>>([])
 
     const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
+
+    const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
+    const [deltaPlotData, setDeltaPlotData] = useState<ChartData<'line'> | null>(null)
+
+    useEffect(() => {
+        setOpen(spectrum.length > 0)
+    }, [spectrum])
 
     useEffect(() => {
         const getLibrarySpectra = async (): Promise<void> => {
@@ -45,23 +50,33 @@ function SpectraPanel (
     }, [])
 
     useEffect(() => {
+        const library = librarySpectra[libraryMineral]
+        if (!spectrum.length || !library?.length) {
+            return
+        }
+
         const spectrumData = getSpectrumData(CORE_WAVELENGTHS, spectrum)
-        setSpectrumData(spectrumData)
+        const libraryData = getLibraryData(spectrumData, library)
+        setMainPlotData({
+            datasets: [
+                { data: spectrumData, ...DATASET_OPTIONS.selected },
+                { data: libraryData, ...DATASET_OPTIONS.library }
+            ]
+        })
 
-        setOpen(spectrum.length > 0)
-    }, [spectrum])
-
-    useEffect(() => {
-        if (!librarySpectra[libraryMineral]) { return }
-
-        const libraryData = getLibraryData(spectrumData, librarySpectra[libraryMineral])
-        setLibraryData(libraryData)
-    }, [spectrumData, librarySpectra, libraryMineral])
-
-    useEffect(() => {
         const deltaData = getDeltaData(spectrumData, libraryData)
-        setDeltaData(deltaData)
-    }, [spectrumData, libraryData])
+        // TODO: find a better way to plot dashed axis
+        const deltaAxis: Array<Point> = [
+            { x: deltaData[0].x, y: 0 },
+            { x: deltaData[deltaData.length - 1].x, y: 0 }
+        ]
+        setDeltaPlotData({
+            datasets: [
+                { data: deltaData, ...DATASET_OPTIONS.delta },
+                { data: deltaAxis, ...DATASET_OPTIONS.deltaAxis }
+            ]
+        })
+    }, [spectrum, librarySpectra, libraryMineral])
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
@@ -73,19 +88,11 @@ function SpectraPanel (
                     <PiCaretRightBold />
                 </button>
                 <div className={styles.mainPlot}>
-                    <Line
-                        data={{
-                            datasets: [{
-                                data: spectrumData,
-                                ...DATASET_OPTIONS.selected
-                            }, {
-                                data: libraryData,
-                                ...DATASET_OPTIONS.library
-                            }]
-                        }}
+                    { mainPlotData && <Line
+                        data={mainPlotData}
                         options={MAIN_PLOT_OPTIONS}
                         plugins={[chartBgColorPlugin]}
-                    />
+                    /> }
                 </div>
                 <div className={styles.librarySelect}>
                     <p className={styles.dropdownLabel}>
@@ -99,20 +106,11 @@ function SpectraPanel (
                     />
                 </div>
                 <div className={styles.deltaPlot}>
-                    <Line
-                        data={{
-                            datasets: [{
-                                data: deltaData,
-                                ...DATASET_OPTIONS.delta
-                            }, {
-                                /* TODO: find a better way to plot dashed axis */
-                                data: deltaData.map(({ x }) => ({ x, y: 0 })),
-                                ...DATASET_OPTIONS.deltaAxis
-                            }]
-                        }}
+                    { deltaPlotData && <Line
+                        data={deltaPlotData}
                         options={DELTA_PLOT_OPTIONS}
                         plugins={[chartBgColorPlugin]}
-                    />
+                    /> }
                 </div>
             </div>
         </div>
