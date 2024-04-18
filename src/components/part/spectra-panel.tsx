@@ -19,11 +19,11 @@ const CHART_BG_COLOR = 'rgba(125, 125, 125, 0.35)'
 type Point = { x: number, y: number }
 
 type SpectraPanelProps = {
-    spectrum: Array<number>
+    selectedSpectrum: Array<number>
 }
 
 function SpectraPanel (
-    { spectrum }: SpectraPanelProps
+    { selectedSpectrum }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
     const [render, setRender] = useState<boolean>(false)
@@ -37,8 +37,8 @@ function SpectraPanel (
 
     // open spectra panel on spectrum change
     useEffect(() => {
-        setOpen(spectrum.length > 0)
-    }, [spectrum])
+        setOpen(selectedSpectrum.length > 0)
+    }, [selectedSpectrum])
 
     // toggle flag to render spectra panel, delay removal from
     // dom to allow collapse animation to finish
@@ -51,7 +51,7 @@ function SpectraPanel (
         }
     }, [open])
 
-    // get library spectra data from file
+    // get library spectra and wavelength values for selected spectra
     useEffect(() => {
         const getSpectraMetadata = async (): Promise<void> => {
             const [coreWavelengths, librarySpectra] = await Promise.all([
@@ -71,21 +71,21 @@ function SpectraPanel (
 
     // calculate chart data
     useEffect(() => {
-        const library = librarySpectra[libraryMineral]
-        if (!spectrum.length || !library?.length) {
+        const librarySpectrum = librarySpectra[libraryMineral]
+        if (!selectedSpectrum.length || !librarySpectrum?.length) {
             return
         }
 
-        const spectrumData = getSpectrumData(coreWavelengths, spectrum)
-        const libraryData = getLibraryData(spectrumData, library)
+        const selectedData = getSpectrumData(coreWavelengths, selectedSpectrum)
+        const libraryData = getLibraryData(selectedData, librarySpectrum)
         setMainPlotData({
             datasets: [
-                { data: spectrumData, ...DATASET_OPTIONS.selected },
+                { data: selectedData, ...DATASET_OPTIONS.selected },
                 { data: libraryData, ...DATASET_OPTIONS.library }
             ]
         })
 
-        const deltaData = getDeltaData(spectrumData, libraryData)
+        const deltaData = getDeltaData(selectedData, libraryData)
         // TODO: find a better way to plot dashed axis
         const deltaAxis: Array<Point> = [
             { x: deltaData[0].x, y: 0 },
@@ -97,7 +97,7 @@ function SpectraPanel (
                 { data: deltaAxis, ...DATASET_OPTIONS.deltaAxis }
             ]
         })
-    }, [spectrum, coreWavelengths, librarySpectra, libraryMineral])
+    }, [selectedSpectrum, coreWavelengths, librarySpectra, libraryMineral])
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
@@ -154,17 +154,17 @@ function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number
     return data
 }
 
-function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
-    if (!spectrum.length || !library.length) {
+function getLibraryData (selected: Array<Point>, library: Array<Point>): Array<Point> {
+    if (!selected.length || !library.length) {
         return []
     }
 
     // interpolate library spectra values share same wavelength (x) as selected spectrum
     const interpolated: Array<Point> = []
     let libInd = 1
-    for (let i = 0; i < spectrum.length; i++) {
+    for (let i = 0; i < selected.length; i++) {
         // get curr wavelength to align to from selected spectra
-        const wavelength = spectrum[i].x
+        const wavelength = selected[i].x
 
         // increment index in original library data until
         // curr wavelength is between index and index - 1
@@ -183,11 +183,11 @@ function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<P
     }
 
     // normalize reflectance values to align with selected spectra
-    let spectrumAvg = 0
-    for (let i = 0; i < spectrum.length; i++) {
-        spectrumAvg += spectrum[i].y
+    let selectedAvg = 0
+    for (let i = 0; i < selected.length; i++) {
+        selectedAvg += selected[i].y
     }
-    spectrumAvg /= spectrum.length
+    selectedAvg /= selected.length
 
     let libraryAvg = 0
     for (let i = 0; i < interpolated.length; i++) {
@@ -195,7 +195,7 @@ function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<P
     }
     libraryAvg /= interpolated.length
 
-    const libraryScale = spectrumAvg / libraryAvg
+    const libraryScale = selectedAvg / libraryAvg
 
     const normalized = interpolated.map(point => {
         point.y *= libraryScale
@@ -205,19 +205,19 @@ function getLibraryData (spectrum: Array<Point>, library: Array<Point>): Array<P
     return normalized
 }
 
-function getDeltaData (spectrum: Array<Point>, library: Array<Point>): Array<Point> {
-    if (!spectrum.length || !library.length) {
+function getDeltaData (selected: Array<Point>, library: Array<Point>): Array<Point> {
+    if (!selected.length || !library.length) {
         return []
     }
 
     const delta: Array<Point> = []
-    for (let i = 0; i < spectrum.length; i++) {
-        if (library[i].x !== spectrum[i].x) {
+    for (let i = 0; i < selected.length; i++) {
+        if (library[i].x !== selected[i].x) {
             throw new Error('Library and selected spectra wavelengths misaligned')
         }
         delta.push({
-            x: spectrum[i].x,
-            y: spectrum[i].y / library[i].y - 1.0
+            x: selected[i].x,
+            y: selected[i].y / library[i].y - 1.0
         })
     }
     return delta
