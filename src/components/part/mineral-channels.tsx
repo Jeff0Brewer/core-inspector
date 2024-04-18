@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ReactElement } from 'react'
+import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -198,7 +198,11 @@ function ChannelsView (
 
         const spectraWorker = new SpectraWorker()
         spectraWorker.addEventListener('message', ({ data }) => {
-            setSpectrum(data.spectrum)
+            if (data.type === 'hovered') {
+                setSpectrum(data.spectrum)
+            } else if (data.type === 'clicked') {
+                setSelectedSpectra(data.spectrum)
+            }
         })
         setSpectraWorker(spectraWorker)
 
@@ -206,7 +210,7 @@ function ChannelsView (
             abundanceWorker.terminate()
             spectraWorker.terminate()
         }
-    }, [])
+    }, [setSelectedSpectra])
 
     useEffect(() => {
         const numChannels = Object.keys(channels).length
@@ -236,15 +240,16 @@ function ChannelsView (
         spectraWorker.postMessage({ type: 'mousePosition', x, y })
     }, [abundanceWorker, spectraWorker, mousePos, viewDims, imgDims])
 
+    const selectSpectrum = useCallback(() => {
+        if (!spectraWorker) { return }
+        spectraWorker.postMessage({ type: 'mouseClick' })
+    }, [spectraWorker])
+
     const width = `${viewDims[0]}px`
     const height = `${viewDims[1]}px`
     const gap = `${viewGap}px`
     return (
-        <div
-            className={styles.channelsWrap}
-            ref={channelsRef}
-            onClick={() => setSelectedSpectra(spectrum)}
-        >
+        <div className={styles.channelsWrap} ref={channelsRef}>
             <div className={styles.channels} style={{ gap }}>
                 <MineralChannel
                     source={rgbPath}
@@ -252,6 +257,7 @@ function ChannelsView (
                     height={height}
                     mousePos={mousePos}
                     setMousePos={setMousePos}
+                    onClick={selectSpectrum}
                 />
                 { vis &&
                     <MineralChannel
@@ -260,6 +266,7 @@ function ChannelsView (
                         height={height}
                         mousePos={mousePos}
                         setMousePos={setMousePos}
+                        onClick={selectSpectrum}
                     /> }
                 { Object.entries(channels)
                     .map(([_, img], i) =>
@@ -269,6 +276,7 @@ function ChannelsView (
                             height={height}
                             mousePos={mousePos}
                             setMousePos={setMousePos}
+                            onClick={selectSpectrum}
                             key={i}
                         />
                     ) }
@@ -287,11 +295,12 @@ type MineralChannelProps = {
     width: string,
     height: string,
     mousePos: [number, number] | null,
-    setMousePos: (p: [number, number] | null) => void
+    setMousePos: (p: [number, number] | null) => void,
+    onClick: () => void
 }
 
 function MineralChannel (
-    { source, width, height, mousePos, setMousePos }: MineralChannelProps
+    { source, width, height, mousePos, setMousePos, onClick }: MineralChannelProps
 ): ReactElement {
     const channelRef = useRef<HTMLDivElement>(null)
 
@@ -324,7 +333,7 @@ function MineralChannel (
     }, [setMousePos])
 
     return (
-        <div className={styles.channel}>
+        <div className={styles.channel} onClick={onClick}>
             <div ref={channelRef}>
                 { typeof source === 'string'
                     ? <img src={source} style={{ width, height }} draggable={false} />
