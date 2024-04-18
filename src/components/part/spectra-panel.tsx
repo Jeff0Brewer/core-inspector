@@ -406,7 +406,7 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
                 display: true,
                 text: '∆ REFLECTANCE',
                 padding: {
-                    bottom: 6
+                    bottom: 15
                 },
                 font: {
                     size: 12,
