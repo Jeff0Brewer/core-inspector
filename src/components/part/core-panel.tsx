@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
+import { useCollapseRender } from '../../hooks/collapse-render'
 import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { CoreRepresentation } from '../../components/part/core-representations'
@@ -23,17 +24,19 @@ type CorePanelProps = {
     parts: Array<string>,
     representations: Array<CoreRepresentation>,
     setPart: (p: string | null) => void,
+    visible: boolean,
     finalTopDepth?: number,
     finalBottomDepth?: number,
 }
 
 function CorePanel ({
-    vis, part, parts, representations, setPart,
+    vis, part, parts, representations, setPart, visible,
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement {
-    const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const columnsRef = useRef<HTMLDivElement>(null)
+    const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
+    const render = useCollapseRender(visible)
 
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
@@ -101,7 +104,7 @@ function CorePanel ({
 
     return <>
         <div className={styles.topLabels}>
-            { columns.map((column, i) =>
+            { render && columns.map((column, i) =>
                 <ScaleColumnLabel
                     topDepth={column.topDepth}
                     bottomDepth={column.bottomDepth}
@@ -111,7 +114,7 @@ function CorePanel ({
             ) }
         </div>
         <div className={styles.columns} ref={columnsRef}>
-            { columns.map((column, i) => {
+            { render && columns.map((column, i) => {
                 const isLast = i === columns.length - 1
                 return <ScaleColumn
                     vis={vis}
@@ -129,8 +132,8 @@ function CorePanel ({
                 />
             }) }
         </div>
-        <div className={styles.bottomLabels}>
-            { columns.map((column, i) =>
+        <div className={`${styles.bottomLabels} ${!visible && styles.hidden}`}>
+            { render && columns.map((column, i) =>
                 <div className={styles.bottomLabel} key={i}>
                     <p className={`${column.representation.largeWidth && styles.largeWidth}`}>
                         { getScale(column.mToPx * PART_WIDTH_M) }

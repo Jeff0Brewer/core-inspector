@@ -102,6 +102,7 @@ function PartView (
             part={part}
             setPart={setPart}
             channels={channels}
+            corePanelVisible={corePanelVisible}
         />
         <BlendMenuToggle
             minerals={minerals}
