@@ -245,8 +245,10 @@ const DATASET_OPTIONS = {
     },
     deltaAxis: {
         borderColor: '#c4f571',
+        backgroundColor: '#c4f571',
         borderWidth: 1,
-        borderDash: [2, 2]
+        borderDash: [2, 2],
+        pointHitRadius: 0
     }
 }
 
@@ -291,7 +293,6 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             cornerRadius: 3,
             boxPadding: 5,
             backgroundColor: 'rgba(50, 50, 50, 0.8)',
-            bodySpacing: 0,
             padding: 5,
             titleFont: {
                 size: 10,
@@ -382,13 +383,38 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
     maintainAspectRatio: false,
     plugins: {
         tooltip: {
-            enabled: false
+            mode: 'nearest',
+            position: 'nearest',
+            intersect: true,
+            backgroundColor: 'rgba(50, 50, 50, 0.8)',
+            displayColors: false,
+            padding: 5,
+            titleFont: {
+                size: 10,
+                weight: 'normal'
+            },
+            bodyFont: {
+                size: 10,
+                weight: 'normal'
+            },
+            callbacks: {
+                title: (items) => {
+                    const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
+                    return `${wavelength} nm`
+                },
+                label: (item) => {
+                    const deltaValue = parseFloat(item.formattedValue).toFixed(3)
+                    return `${deltaValue} ∆`
+                }
+            }
+
         }
     },
     elements: {
         point: {
             radius: 0,
-            hoverRadius: 0
+            hoverRadius: 0,
+            hitRadius: 20
         }
     },
     scales: {
