@@ -38,6 +38,7 @@
     margin-right: 20px;
     margin-bottom: 20px;
     text-transform: uppercase;
+    min-width: 300px;
 }
 
 .position-label span {
