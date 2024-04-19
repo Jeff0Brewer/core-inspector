@@ -27,15 +27,15 @@ type SpectraPanelProps = {
 function SpectraPanel (
     { selectedSpectrum, spectrumPosition }: SpectraPanelProps
 ): ReactElement {
-    const [open, setOpen] = useState<boolean>(false)
-    const render = useCollapseRender(open)
-
     const [coreWavelengths, setCoreWavelengths] = useState<Array<number>>([])
     const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
 
     const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
     const [deltaPlotData, setDeltaPlotData] = useState<ChartData<'line'> | null>(null)
+
+    const [open, setOpen] = useState<boolean>(false)
+    const render = useCollapseRender(open)
 
     // open spectra panel on spectrum change
     useEffect(() => {
@@ -165,11 +165,11 @@ function getLibraryData (selected: Array<Point>, library: Array<Point>): Array<P
     const interpolated: Array<Point> = []
     let libInd = 1
     for (let i = 0; i < selected.length; i++) {
-        // get curr wavelength to align to from selected spectra
+        // get wavelength to align to from selected spectra
         const wavelength = selected[i].x
 
         // increment index in original library data until
-        // curr wavelength is between index and index - 1
+        // wavelength is between index and index - 1
         while (libInd + 1 < library.length && library[libInd].x < wavelength) {
             libInd++
         }
@@ -177,14 +177,14 @@ function getLibraryData (selected: Array<Point>, library: Array<Point>): Array<P
         // calculate how far curr wavelength is between library wavelengths
         const t = (wavelength - library[libInd - 1].x) / (library[libInd].x - library[libInd - 1].x)
 
-        // interpolate library data to align with selected spectrum
+        // interpolate library data to align with selected wavelength
         interpolated.push({
             x: wavelength,
             y: lerp(library[libInd - 1].y, library[libInd].y, t)
         })
     }
 
-    // normalize reflectance values to align with selected spectra
+    // normalize reflectance values to align with selected spectrum
     let selectedAvg = 0
     for (let i = 0; i < selected.length; i++) {
         selectedAvg += selected[i].y
@@ -225,7 +225,6 @@ function getDeltaData (selected: Array<Point>, library: Array<Point>): Array<Poi
     return delta
 }
 
-// style for data represented in plots
 const DATASET_OPTIONS = {
     selected: {
         borderColor: '#fff',
@@ -250,28 +249,6 @@ const DATASET_OPTIONS = {
         borderDash: [2, 2],
         pointHitRadius: 0
     }
-}
-
-// custom plugin to fill chart background
-const chartBgColorPlugin: Plugin = {
-    id: 'chartBgColor',
-    beforeDraw: (chart, _args, _options) => {
-        const { ctx, chartArea } = chart
-        const { left, top, width, height } = chartArea
-
-        ctx.save()
-        ctx.fillStyle = CHART_BG_COLOR
-        ctx.fillRect(left, top, width, height)
-        ctx.restore()
-    }
-}
-
-function excludeFirstLastTick (
-    value: string | number, index: number, values: Array<Tick>
-): string | number | undefined {
-    return (index === 0 || index === values.length - 1)
-        ? undefined
-        : value
 }
 
 const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
@@ -485,6 +462,29 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
             }
         }
     }
+}
+
+// custom plugin to fill chart background
+const chartBgColorPlugin: Plugin = {
+    id: 'chartBgColor',
+    beforeDraw: function (chart, _args, _options) {
+        const { ctx, chartArea } = chart
+        const { left, top, width, height } = chartArea
+
+        ctx.save()
+        ctx.fillStyle = CHART_BG_COLOR
+        ctx.fillRect(left, top, width, height)
+        ctx.restore()
+    }
+}
+
+// callback to exclude ticks at bounds of chart axis
+function excludeFirstLastTick (
+    value: string | number, index: number, values: Array<Tick>
+): string | number | undefined {
+    return (index === 0 || index === values.length - 1)
+        ? undefined
+        : value
 }
 
 export default SpectraPanel
