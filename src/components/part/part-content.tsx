@@ -35,6 +35,7 @@ function PartContent (
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number>>([])
+    const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
     const { ids } = useCoreMetadata()
 
     return (
@@ -56,9 +57,13 @@ function PartContent (
                 channels={channels}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
-                setSelectedSpectra={setSelectedSpectrum}
+                setSelectedSpectrum={setSelectedSpectrum}
+                setSpectrumPosition={setSpectrumPosition}
             />
-            <SpectraPanel selectedSpectrum={selectedSpectrum} />
+            <SpectraPanel
+                selectedSpectrum={selectedSpectrum}
+                spectrumPosition={spectrumPosition}
+            />
         </>
     )
 }

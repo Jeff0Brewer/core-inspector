@@ -106,16 +106,23 @@ async function getClickedSpectrum (x: number, y: number, slicePath: string): Pro
     // TODO: add prod / dev flag to toggle b64 parser
     const chunk = await getChunk(path, base64ToU8)
     // const chunk = await getChunk(path, base64ToU16)
-    const { startSlice, data, width, height, samples } = chunk
 
+    const { startSlice, data, width, height, samples } = chunk
     const rowIndex = clamp(Math.round(x / REDUCE_FACTOR), 0, width - 1)
     const colIndex = clamp(Math.round((y - startSlice) / REDUCE_FACTOR), 0, height - 1)
     const startIndex = (colIndex * width + rowIndex) * samples
     const spectrumU16 = data.slice(startIndex, startIndex + samples)
+
     // TODO: add prod / dev flag to toggle b64 parser
     const spectrum = [...spectrumU16].map(v => v / 255)
     // const spectrum = [...spectrumU16].map(v => v / 65535)
-    postMessage({ type: 'clicked', spectrum })
+
+    postMessage({
+        type: 'clicked',
+        spectrum,
+        x: Math.round(x),
+        y: Math.round(y)
+    })
 }
 
 function getHoveredSpectrum (x: number, y: number, slicePath: string): void {
@@ -129,10 +136,16 @@ function getHoveredSpectrum (x: number, y: number, slicePath: string): void {
         const startIndex = (colIndex * width + rowIndex) * samples
         const spectrumU8 = data.slice(startIndex, startIndex + samples)
         const spectrum = [...spectrumU8].map(v => v / 255)
-        postMessage({ type: 'hovered', spectrum })
+        postMessage({
+            type: 'hovered',
+            spectrum
+        })
     } else {
         cacheSlices(path)
-        postMessage({ type: 'hovered', spectrum: [] })
+        postMessage({
+            type: 'hovered',
+            spectrum: []
+        })
     }
 }
 

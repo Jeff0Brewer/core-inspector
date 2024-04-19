@@ -21,10 +21,11 @@ type Point = { x: number, y: number }
 
 type SpectraPanelProps = {
     selectedSpectrum: Array<number>
+    spectrumPosition: [number, number]
 }
 
 function SpectraPanel (
-    { selectedSpectrum }: SpectraPanelProps
+    { selectedSpectrum, spectrumPosition }: SpectraPanelProps
 ): ReactElement {
     const [open, setOpen] = useState<boolean>(false)
     const render = useCollapseRender(open)
@@ -98,6 +99,17 @@ function SpectraPanel (
                 >
                     <PiCaretRightBold />
                 </button>
+                <div className={styles.positionLabel}>
+                    <p className={styles.positionHeader}>
+                        position
+                    </p>
+                    <p>
+                        X <span>{spectrumPosition[0]}px</span>
+                    </p>
+                    <p>
+                        Y <span>{spectrumPosition[1]}px</span>
+                    </p>
+                </div>
                 <div className={styles.mainPlot}>
                     { mainPlotData && <Line
                         data={mainPlotData}

@@ -23,12 +23,14 @@ type PartMineralChannelsProps = {
     channels: StringMap<HTMLImageElement>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectra: (s: Array<number>) => void
+    setSelectedSpectrum: (s: Array<number>) => void,
+    setSpectrumPosition: (p: [number, number]) => void
 }
 
-function PartMineralChannels (
-    { vis, core, part, channels, setDepthTop, setDepthBottom, setSelectedSpectra }: PartMineralChannelsProps
-): ReactElement {
+function PartMineralChannels ({
+    vis, core, part, channels,
+    setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
+}: PartMineralChannelsProps): ReactElement {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
@@ -90,7 +92,8 @@ function PartMineralChannels (
                 viewGap={viewGap}
                 setDepthTop={setDepthTop}
                 setDepthBottom={setDepthBottom}
-                setSelectedSpectra={setSelectedSpectra}
+                setSelectedSpectrum={setSelectedSpectrum}
+                setSpectrumPosition={setSpectrumPosition}
             />
             <div className={styles.bottomLabels} style={{ gap }}>
                 <div className={styles.bottomLabel} style={{ width }}>
@@ -143,12 +146,14 @@ type ChannelsViewProps = {
     viewGap: number,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectra: (s: Array<number>) => void
+    setSelectedSpectrum: (s: Array<number>) => void,
+    setSpectrumPosition: (p: [number, number]) => void
 }
 
-function ChannelsView (
-    { core, part, vis, channels, imgDims, viewDims, viewGap, setDepthTop, setDepthBottom, setSelectedSpectra }: ChannelsViewProps
-): ReactElement {
+function ChannelsView ({
+    core, part, vis, channels, imgDims, viewDims, viewGap,
+    setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
+}: ChannelsViewProps): ReactElement {
     const [rgbPath, setRGBPath] = useState<string>('')
     const channelsRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
@@ -201,7 +206,8 @@ function ChannelsView (
             if (data.type === 'hovered') {
                 setSpectrum(data.spectrum)
             } else if (data.type === 'clicked') {
-                setSelectedSpectra(data.spectrum)
+                setSelectedSpectrum(data.spectrum)
+                setSpectrumPosition([data.x, data.y])
             }
         })
         setSpectraWorker(spectraWorker)
@@ -210,7 +216,7 @@ function ChannelsView (
             abundanceWorker.terminate()
             spectraWorker.terminate()
         }
-    }, [setSelectedSpectra])
+    }, [setSelectedSpectrum, setSpectrumPosition])
 
     useEffect(() => {
         const numChannels = Object.keys(channels).length
