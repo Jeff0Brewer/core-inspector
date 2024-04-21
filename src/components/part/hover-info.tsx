@@ -3,14 +3,14 @@ import { usePopupPosition } from '../../hooks/popup-position'
 import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
 
-type PartHoverInfoProps = {
+type HoverInfoProps = {
     abundances: StringMap<number>,
     spectrum: Array<number>,
     visible: boolean
 }
 
-function PartHoverInfo (
-    { abundances, spectrum, visible }: PartHoverInfoProps
+function HoverInfo (
+    { abundances, spectrum, visible }: HoverInfoProps
 ): ReactElement {
     const popupRef = useRef<HTMLDivElement>(null)
     usePopupPosition(popupRef)
@@ -68,4 +68,4 @@ function SvgPlot (
     )
 }
 
-export default PartHoverInfo
+export default HoverInfo

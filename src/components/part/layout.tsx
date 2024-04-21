@@ -7,9 +7,9 @@ import { StringMap } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
-import PartInfoHeader from '../../components/part/info-header'
+import InfoHeader from '../../components/part/info-header'
+import Content from '../../components/part/content'
 import BlendMenuToggle from '../../components/part/blend-menu-toggle'
-import PartContent from '../../components/part/content'
 import styles from '../../styles/part/layout.module.css'
 
 type PartViewProps = {
@@ -88,7 +88,7 @@ function PartView (
                 <PiCaretLeftBold />
             </button>
         </div>
-        <PartInfoHeader core={core} part={part} />
+        <InfoHeader core={core} part={part} />
         <button
             className={styles.corePanelToggle}
             style={{ transform: `rotate(${corePanelVisible ? '0' : '180deg'})` }}
@@ -96,7 +96,7 @@ function PartView (
         >
             <PiCaretLeftBold />
         </button>
-        <PartContent
+        <Content
             vis={vis}
             core={core}
             part={part}

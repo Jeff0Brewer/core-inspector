@@ -5,7 +5,7 @@ import { getScale } from '../../lib/util'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import styles from '../../styles/part/view-controls.module.css'
 
-type PartViewControlsProps = {
+type ViewControlsProps = {
     zoom: number,
     spacing: number,
     setZoom: (z: number) => void,
@@ -13,8 +13,8 @@ type PartViewControlsProps = {
     channelWidth: number
 }
 
-function PartViewControls (
-    { zoom, spacing, setZoom, setSpacing, channelWidth }: PartViewControlsProps
+function ViewControls (
+    { zoom, spacing, setZoom, setSpacing, channelWidth }: ViewControlsProps
 ): ReactElement {
     return (
         <div className={styles.viewControls}>
@@ -57,4 +57,4 @@ const ICONS = {
     horizontalDist: <div className={styles.distanceIcon}><PiArrowsHorizontalBold /></div>
 }
 
-export default PartViewControls
+export default ViewControls

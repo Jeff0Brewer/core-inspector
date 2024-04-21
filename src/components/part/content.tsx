@@ -2,7 +2,7 @@ import { useState, ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { StringMap } from '../../lib/util'
 import PartRenderer from '../../vis/part'
-import PartMineralChannels from '../../components/part/mineral-channels'
+import MineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
 import SpectraPanel from '../../components/part/spectra-panel'
 import {
@@ -13,7 +13,7 @@ import {
     ChannelPunchcardRepresentation
 } from '../../components/part/scale-representations'
 
-type PartContentProps = {
+type ContentProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
@@ -29,8 +29,8 @@ const CORE_PANEL_REPRESENTATIONS: Array<ScaleRepresentation> = [
     { element: ChannelPunchcardRepresentation, largeWidth: true }
 ]
 
-function PartContent (
-    { vis, core, part, channels, setPart, corePanelVisible }: PartContentProps
+function Content (
+    { vis, core, part, channels, setPart, corePanelVisible }: ContentProps
 ): ReactElement {
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
@@ -50,7 +50,7 @@ function PartContent (
                 finalBottomDepth={scrollDepthBottom}
                 visible={corePanelVisible}
             />
-            <PartMineralChannels
+            <MineralChannels
                 vis={vis}
                 core={core}
                 part={part}
@@ -68,4 +68,4 @@ function PartContent (
     )
 }
 
-export default PartContent
+export default Content

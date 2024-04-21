@@ -6,8 +6,8 @@ import { StringMap, getImageData, getCssColor } from '../../lib/util'
 import { getRgbPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
-import PartHoverInfo from '../../components/part/hover-info'
-import PartViewControls from '../../components/part/view-controls'
+import HoverInfo from '../../components/part/hover-info'
+import ViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
@@ -16,7 +16,7 @@ import styles from '../../styles/part/mineral-channels.module.css'
 const MIN_WIDTH_PX = 50
 
 // TODO: simplify
-type PartMineralChannelsProps = {
+type MineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
@@ -27,10 +27,10 @@ type PartMineralChannelsProps = {
     setSpectrumPosition: (p: [number, number]) => void
 }
 
-function PartMineralChannels ({
+function MineralChannels ({
     vis, core, part, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
-}: PartMineralChannelsProps): ReactElement {
+}: MineralChannelsProps): ReactElement {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
@@ -60,7 +60,7 @@ function PartMineralChannels ({
     const width = `${viewDims[0]}px`
     const gap = `${viewGap}px`
     return <>
-        <PartViewControls
+        <ViewControls
             zoom={zoom}
             spacing={spacing}
             setZoom={setZoom}
@@ -286,7 +286,7 @@ function ChannelsView ({
                             key={i}
                         />
                     ) }
-                <PartHoverInfo
+                <HoverInfo
                     abundances={abundances}
                     spectrum={spectrum}
                     visible={!!mousePos}
@@ -359,4 +359,4 @@ const ICONS = {
     cursor: <BiCross style={{ fontSize: '16px' }} />
 }
 
-export default PartMineralChannels
+export default MineralChannels
