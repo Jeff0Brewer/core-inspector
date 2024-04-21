@@ -11,15 +11,15 @@ import Dropdown from '../../components/generic/dropdown'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
-type CoreVisSettingsProps = {
+type VisSettingsProps = {
     vis: CoreRenderer | null,
     cores: Array<string>,
     core: string,
     setCore: (c: string) => void,
 }
 
-function CoreVisSettings (
-    { vis, cores, core, setCore }: CoreVisSettingsProps
+function VisSettings (
+    { vis, cores, core, setCore }: VisSettingsProps
 ): ReactElement {
     const [calibration, setCalibration] = useState<CalibrationOption>('show')
     const [shape, setShape] = useState<CoreShape>('column')
@@ -100,4 +100,4 @@ const ICONS = {
     punchcard: <RxDragHandleDots1 style={{ fontSize: '25px' }} />
 }
 
-export default CoreVisSettings
+export default VisSettings

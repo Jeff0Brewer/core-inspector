@@ -7,14 +7,14 @@ import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/mineral-controls.module.css'
 
-type CoreMineralControlsProps = {
+type MineralControlsProps = {
     vis: CoreRenderer | null,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
 }
 
-function CoreMineralControls (
-    { vis, minerals, palettes }: CoreMineralControlsProps
+function MineralControls (
+    { vis, minerals, palettes }: MineralControlsProps
 ): ReactElement {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const {
@@ -71,4 +71,4 @@ function CoreMineralControls (
     )
 }
 
-export default CoreMineralControls
+export default MineralControls

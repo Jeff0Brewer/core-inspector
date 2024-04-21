@@ -5,10 +5,10 @@ import { getCorePath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
-import CoreVisSettings from '../../components/core/vis-settings'
-import CoreViewControls from '../../components/core/view-controls'
-import CoreMineralControls from '../../components/core/mineral-controls'
-import CoreHoverInfo from '../../components/core/hover-info'
+import VisSettings from '../../components/core/vis-settings'
+import ViewControls from '../../components/core/view-controls'
+import MineralControls from '../../components/core/mineral-controls'
+import HoverInfo from '../../components/core/hover-info'
 import PanScrollbar from '../../components/core/pan-scrollbar'
 import styles from '../../styles/core/layout.module.css'
 
@@ -96,23 +96,23 @@ function CoreView (
 
     return <>
         <LoadIcon loading={!vis} showDelayMs={0} />
-        <CoreVisSettings
+        <VisSettings
             vis={vis}
             cores={cores}
             core={core}
             setCore={setCore}
         />
-        <CoreViewControls vis={vis} />
+        <ViewControls vis={vis} />
         <canvas
             ref={canvasRef}
             className={`${styles.visCanvas} ${!!vis && styles.visible}`}
         ></canvas>
-        <CoreMineralControls
+        <MineralControls
             vis={vis}
             minerals={minerals}
             palettes={palettes}
         />
-        <CoreHoverInfo vis={vis} />
+        <HoverInfo vis={vis} />
         <PanScrollbar vis={vis} />
     </>
 }

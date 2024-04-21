@@ -6,11 +6,11 @@ import { getPartId } from '../../lib/path'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/metadata-hover.module.css'
 
-type CoreHoverInfoProps = {
+type HoverInfoProps = {
     vis: CoreRenderer | null
 }
 
-function CoreHoverInfo ({ vis }: CoreHoverInfoProps): ReactElement {
+function HoverInfo ({ vis }: HoverInfoProps): ReactElement {
     const { depths, hydrations } = useCoreMetadata()
     const [hovered, setHovered] = useState<string | null>(null)
     const popupRef = useRef<HTMLDivElement>(null)
@@ -51,4 +51,4 @@ function CoreHoverInfo ({ vis }: CoreHoverInfoProps): ReactElement {
     )
 }
 
-export default CoreHoverInfo
+export default HoverInfo
