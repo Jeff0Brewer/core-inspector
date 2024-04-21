@@ -9,8 +9,8 @@ import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import PartInfoHeader from '../../components/part/info-header'
 import BlendMenuToggle from '../../components/part/blend-menu-toggle'
-import PartContent from '../../components/part/part-content'
-import styles from '../../styles/part/part-view.module.css'
+import PartContent from '../../components/part/content'
+import styles from '../../styles/part/layout.module.css'
 
 type PartViewProps = {
     part: string,

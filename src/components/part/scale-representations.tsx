@@ -4,7 +4,7 @@ import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, StringMap } from '../../lib/util'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
-import styles from '../../styles/part/core-representations.module.css'
+import styles from '../../styles/part/scale-representations.module.css'
 
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,

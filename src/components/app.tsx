@@ -2,8 +2,8 @@ import { useState, ReactElement } from 'react'
 import { COLOR_PRESETS } from '../lib/palettes'
 import BlendProvider from '../components/blend-provider'
 import CoreMetadataProvider from '../components/core-metadata-provider'
-import CoreView from '../components/core/core-view'
-import PartView from '../components/part/part-view'
+import CoreView from '../components/core/layout'
+import PartView from '../components/part/layout'
 import styles from '../styles/app.module.css'
 
 const CORES = ['gt1', 'gt2', 'gt3']

@@ -10,7 +10,7 @@ import CoreViewControls from '../../components/core/view-controls'
 import CoreMineralControls from '../../components/core/mineral-controls'
 import CoreHoverInfo from '../../components/core/hover-info'
 import PanScrollbar from '../../components/core/pan-scrollbar'
-import styles from '../../styles/core/core-view.module.css'
+import styles from '../../styles/core/layout.module.css'
 
 type CoreViewProps = {
     cores: Array<string>,
