@@ -6,7 +6,7 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/core-representations.module.css'
 
-type CoreRepresentationProps = {
+type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
@@ -17,14 +17,14 @@ type CoreRepresentationProps = {
     gap: number
 }
 
-type CoreRepresentation = {
-    element: (p: CoreRepresentationProps) => ReactElement,
+type ScaleRepresentation = {
+    element: (p: ScaleRepresentationProps) => ReactElement,
     fullScale?: boolean,
     largeWidth?: boolean
 }
 
-function CoreLineRepresentation (
-    { part, setCenter }: CoreRepresentationProps
+function LineRepresentation (
+    { part, setCenter }: ScaleRepresentationProps
 ): ReactElement {
     const { topDepth, bottomDepth, depths } = useCoreMetadata()
 
@@ -39,8 +39,8 @@ function CoreLineRepresentation (
     </>
 }
 
-function CoreRectRepresentation (
-    { part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
+function RectRepresentation (
+    { part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
 ): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
@@ -83,7 +83,88 @@ function CoreRectRepresentation (
     )
 }
 
-type CoreCanvasRepresentationProps = {
+function PunchcardRepresentation (
+    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
+): ReactElement {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const blending = useBlendState()
+
+    useEffect(() => {
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            canvasCtxs[part] = getCanvasCtx()
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    useEffect(() => {
+        if (!vis) { return }
+        const canvasWidth = widthM * mToPx * window.devicePixelRatio
+        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
+            vis.getPunchcard(part, canvasCtx, canvasWidth)
+        }
+    }, [parts, vis, mToPx, widthM, canvasCtxs, blending])
+
+    return (
+        <CanvasRepresentation
+            part={part}
+            parts={parts}
+            canvasCtxs={canvasCtxs}
+            mToPx={mToPx}
+            widthM={widthM}
+            gap={gap}
+            setCenter={setCenter}
+            setPart={setPart}
+        />
+    )
+}
+
+function ChannelPunchcardRepresentation (
+    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
+): ReactElement {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const WIDTH_SCALE = 2
+
+    useEffect(() => {
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            canvasCtxs[part] = getCanvasCtx()
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    useEffect(() => {
+        if (!vis) { return }
+        const canvasWidth = widthM * mToPx * window.devicePixelRatio
+        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
+            vis.getChannelPunchcard(part, canvasCtx, canvasWidth, WIDTH_SCALE)
+        }
+    }, [parts, vis, mToPx, widthM, canvasCtxs])
+
+    return (
+        <CanvasRepresentation
+            part={part}
+            parts={parts}
+            canvasCtxs={canvasCtxs}
+            mToPx={mToPx}
+            widthM={widthM}
+            gap={gap}
+            setCenter={setCenter}
+            setPart={setPart}
+            widthScale={WIDTH_SCALE}
+            canvasSpacer={
+                <div className={styles.channelPunchSpacer}></div>
+            }
+            customRender={canvas => <>
+                <div className={styles.channelTicksTop}></div>
+                {canvas}
+                <div className={styles.channelTicksBottom}></div>
+            </>}
+        />
+    )
+}
+
+type CanvasRepresentationProps = {
     part: string,
     parts: Array<string>,
     canvasCtxs: StringMap<CanvasCtx>,
@@ -103,10 +184,10 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
-function CoreCanvasRepresentation ({
+function CanvasRepresentation ({
     part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
-}: CoreCanvasRepresentationProps): ReactElement {
+}: CanvasRepresentationProps): ReactElement {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
@@ -153,87 +234,6 @@ function CoreCanvasRepresentation ({
     </>
 }
 
-function CorePunchcardRepresentation (
-    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
-): ReactElement {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
-    const blending = useBlendState()
-
-    useEffect(() => {
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
-
-    useEffect(() => {
-        if (!vis) { return }
-        const canvasWidth = widthM * mToPx * window.devicePixelRatio
-        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
-            vis.getPunchcard(part, canvasCtx, canvasWidth)
-        }
-    }, [parts, vis, mToPx, widthM, canvasCtxs, blending])
-
-    return (
-        <CoreCanvasRepresentation
-            part={part}
-            parts={parts}
-            canvasCtxs={canvasCtxs}
-            mToPx={mToPx}
-            widthM={widthM}
-            gap={gap}
-            setCenter={setCenter}
-            setPart={setPart}
-        />
-    )
-}
-
-function CoreChannelPunchcardRepresentation (
-    { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: CoreRepresentationProps
-): ReactElement {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
-    const WIDTH_SCALE = 2
-
-    useEffect(() => {
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
-
-    useEffect(() => {
-        if (!vis) { return }
-        const canvasWidth = widthM * mToPx * window.devicePixelRatio
-        for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
-            vis.getChannelPunchcard(part, canvasCtx, canvasWidth, WIDTH_SCALE)
-        }
-    }, [parts, vis, mToPx, widthM, canvasCtxs])
-
-    return (
-        <CoreCanvasRepresentation
-            part={part}
-            parts={parts}
-            canvasCtxs={canvasCtxs}
-            mToPx={mToPx}
-            widthM={widthM}
-            gap={gap}
-            setCenter={setCenter}
-            setPart={setPart}
-            widthScale={WIDTH_SCALE}
-            canvasSpacer={
-                <div className={styles.channelPunchSpacer}></div>
-            }
-            customRender={canvas => <>
-                <div className={styles.channelTicksTop}></div>
-                {canvas}
-                <div className={styles.channelTicksBottom}></div>
-            </>}
-        />
-    )
-}
-
 function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     const canvas = document.createElement('canvas')
     const ctx = get2dContext(canvas)
@@ -244,10 +244,10 @@ function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     return { canvas, ctx }
 }
 
-export type { CoreRepresentation }
+export type { ScaleRepresentation }
 export {
-    CoreLineRepresentation,
-    CoreRectRepresentation,
-    CorePunchcardRepresentation,
-    CoreChannelPunchcardRepresentation
+    LineRepresentation,
+    RectRepresentation,
+    PunchcardRepresentation,
+    ChannelPunchcardRepresentation
 }

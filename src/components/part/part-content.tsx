@@ -6,12 +6,12 @@ import PartMineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
 import SpectraPanel from '../../components/part/spectra-panel'
 import {
-    CoreRepresentation,
-    CoreLineRepresentation,
-    CoreRectRepresentation,
-    CorePunchcardRepresentation,
-    CoreChannelPunchcardRepresentation
-} from '../../components/part/core-representations'
+    ScaleRepresentation,
+    LineRepresentation,
+    RectRepresentation,
+    PunchcardRepresentation,
+    ChannelPunchcardRepresentation
+} from '../../components/part/scale-representations'
 
 type PartContentProps = {
     vis: PartRenderer | null,
@@ -22,11 +22,11 @@ type PartContentProps = {
     corePanelVisible: boolean
 }
 
-const CORE_PANEL_REPRESENTATIONS: Array<CoreRepresentation> = [
-    { element: CoreLineRepresentation, fullScale: true },
-    { element: CoreRectRepresentation },
-    { element: CorePunchcardRepresentation },
-    { element: CoreChannelPunchcardRepresentation, largeWidth: true }
+const CORE_PANEL_REPRESENTATIONS: Array<ScaleRepresentation> = [
+    { element: LineRepresentation, fullScale: true },
+    { element: RectRepresentation },
+    { element: PunchcardRepresentation },
+    { element: ChannelPunchcardRepresentation, largeWidth: true }
 ]
 
 function PartContent (

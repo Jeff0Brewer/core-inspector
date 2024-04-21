@@ -4,13 +4,13 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
-import { CoreRepresentation } from '../../components/part/core-representations'
+import { ScaleRepresentation } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
 
 const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
-    representation: CoreRepresentation,
+    representation: ScaleRepresentation,
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
@@ -22,7 +22,7 @@ type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    representations: Array<CoreRepresentation>,
+    representations: Array<ScaleRepresentation>,
     setPart: (p: string | null) => void,
     visible: boolean,
     finalTopDepth?: number,
@@ -149,7 +149,7 @@ type ScaleColumnProps = {
     parts: Array<string>,
     part: string,
     setPart: (p: string | null) => void,
-    representation: CoreRepresentation,
+    representation: ScaleRepresentation,
     gap: number,
     topDepth: number,
     bottomDepth: number,
