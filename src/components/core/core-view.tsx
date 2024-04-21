@@ -8,7 +8,7 @@ import CoreRenderer from '../../vis/core'
 import CoreVisSettings from '../../components/core/vis-settings'
 import CoreViewControls from '../../components/core/view-controls'
 import CoreMineralControls from '../../components/core/mineral-controls'
-import MetadataHover from '../../components/core/metadata-hover'
+import CoreHoverInfo from '../../components/core/hover-info'
 import PanScrollbar from '../../components/core/pan-scrollbar'
 import styles from '../../styles/core/core-view.module.css'
 
@@ -112,7 +112,7 @@ function CoreView (
             minerals={minerals}
             palettes={palettes}
         />
-        <MetadataHover vis={vis} />
+        <CoreHoverInfo vis={vis} />
         <PanScrollbar vis={vis} />
     </>
 }
