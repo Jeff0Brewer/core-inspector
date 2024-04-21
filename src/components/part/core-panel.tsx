@@ -105,7 +105,7 @@ function CorePanel ({
     return <>
         <div className={styles.topLabels}>
             { render && columns.map((column, i) =>
-                <ScaleColumnLabel
+                <ScaleColumnTopLabel
                     topDepth={column.topDepth}
                     bottomDepth={column.bottomDepth}
                     largeWidth={!!column.representation.largeWidth}
@@ -134,11 +134,11 @@ function CorePanel ({
         </div>
         <div className={`${styles.bottomLabels} ${!visible && styles.hidden}`}>
             { render && columns.map((column, i) =>
-                <div className={styles.bottomLabel} key={i}>
-                    <p className={`${column.representation.largeWidth && styles.largeWidth}`}>
-                        { getScale(column.mToPx * PART_WIDTH_M) }
-                    </p>
-                </div>
+                <ScaleColumnBottomLabel
+                    pixelWidth={column.mToPx * PART_WIDTH_M}
+                    largeWidth={!!column.representation.largeWidth}
+                    key={i}
+                />
             ) }
         </div>
     </>
@@ -218,14 +218,14 @@ function ScaleColumn ({
     </>
 }
 
-type ScaleColumnLabelProps = {
+type ScaleColumnTopLabelProps = {
     topDepth: number,
     bottomDepth: number,
     largeWidth: boolean
 }
 
-function ScaleColumnLabel (
-    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
+function ScaleColumnTopLabel (
+    { topDepth, bottomDepth, largeWidth }: ScaleColumnTopLabelProps
 ): ReactElement {
     const range = bottomDepth - topDepth
     return (
@@ -246,6 +246,23 @@ function ScaleColumnLabel (
                     {range.toFixed(range >= 100 ? 0 : 1)}m
                 </p>
             </div>
+        </div>
+    )
+}
+
+type ScaleColumnBottomLabelProps = {
+    pixelWidth: number,
+    largeWidth: boolean
+}
+
+function ScaleColumnBottomLabel (
+    { pixelWidth, largeWidth }: ScaleColumnBottomLabelProps
+): ReactElement {
+    return (
+        <div className={styles.bottomLabel}>
+            <p className={`${largeWidth && styles.largeWidth}`}>
+                { getScale(pixelWidth) }
+            </p>
         </div>
     )
 }
