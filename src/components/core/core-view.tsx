@@ -6,7 +6,7 @@ import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
 import CoreVisSettings from '../../components/core/vis-settings'
-import CoreViewSliders from '../../components/core/view-sliders'
+import CoreViewControls from '../../components/core/view-controls'
 import CoreMineralControls from '../../components/core/mineral-controls'
 import MetadataHover from '../../components/core/metadata-hover'
 import PanScrollbar from '../../components/core/pan-scrollbar'
@@ -102,7 +102,7 @@ function CoreView (
             core={core}
             setCore={setCore}
         />
-        <CoreViewSliders vis={vis} />
+        <CoreViewControls vis={vis} />
         <canvas
             ref={canvasRef}
             className={`${styles.visCanvas} ${!!vis && styles.visible}`}

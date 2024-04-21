@@ -5,12 +5,12 @@ import VerticalSlider from '../../components/generic/vertical-slider'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/view-sliders.module.css'
 
-type CoreViewSlidersProps = {
+type CoreViewControlsProps = {
     vis: CoreRenderer | null
 }
 
-function CoreViewSliders (
-    { vis }: CoreViewSlidersProps
+function CoreViewControls (
+    { vis }: CoreViewControlsProps
 ): ReactElement {
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
@@ -68,4 +68,4 @@ const ICONS = {
     verticalDist: <div className={styles.distanceIcon} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
 
-export default CoreViewSliders
+export default CoreViewControls
