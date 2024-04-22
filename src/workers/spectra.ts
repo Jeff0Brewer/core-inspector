@@ -30,13 +30,31 @@ type SpectraChunk = {
     data: TypedArray
 }
 
+type Base64Parser = {
+    fileExtension: string,
+    convert: (b64: string) => TypedArray,
+    maxValue: number
+}
+
+const BYTE_PARSER: Base64Parser = {
+    fileExtension: 'HWS.byte-b64.json.zip',
+    convert: base64ToU8,
+    maxValue: 255
+}
+
+const SHORT_PARSER: Base64Parser = {
+    fileExtension: 'HWS.short-b64.json.zip',
+    convert: base64ToU16,
+    maxValue: 65535
+}
+
+const PATH_ROOT = import.meta.env.MODE === 'production' ? '..' : '../..'
+const CLICK_PARSER = import.meta.env.MODE === 'production' ? SHORT_PARSER : BYTE_PARSER
+const HOVER_PARSER = BYTE_PARSER
+
 const REDUCE_FACTOR = 4
 const SLICE_COUNT = 16
 const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
-const LOW_RES_EXTENSION = 'HWS.byte-b64.json.zip'
-// TODO: add prod / dev flag to toggle resolution extension
-const HIGH_RES_EXTENSION = 'HWS.byte-b64.json.zip'
-// const HIGH_RES_EXTENSION = 'HWS.short-b64.json.zip'
 
 function getSpectraBasePath (core: string, part: string, root: string): string {
     const dir = getSpectraPath(core, part, SPECTRA_TYPE, root)
@@ -100,22 +118,22 @@ async function getChunk (path: string, parse: (b64: string) => TypedArray): Prom
     }
 }
 
-async function getClickedSpectrum (x: number, y: number, slicePath: string): Promise<void> {
-    const path = `${slicePath}.${HIGH_RES_EXTENSION}`
-
-    // TODO: add prod / dev flag to toggle b64 parser
-    const chunk = await getChunk(path, base64ToU8)
-    // const chunk = await getChunk(path, base64ToU16)
-
+function getSpectrum (x: number, y: number, chunk: SpectraChunk, parser: Base64Parser): Array<number> {
     const { startSlice, data, width, height, samples } = chunk
     const rowIndex = clamp(Math.round(x / REDUCE_FACTOR), 0, width - 1)
     const colIndex = clamp(Math.round((y - startSlice) / REDUCE_FACTOR), 0, height - 1)
     const startIndex = (colIndex * width + rowIndex) * samples
-    const spectrumU16 = data.slice(startIndex, startIndex + samples)
+    const spectrumTyped = data.slice(startIndex, startIndex + samples)
 
-    // TODO: add prod / dev flag to toggle b64 parser
-    const spectrum = [...spectrumU16].map(v => v / 255)
-    // const spectrum = [...spectrumU16].map(v => v / 65535)
+    const spectrum = [...spectrumTyped].map(v => v / parser.maxValue)
+    return spectrum
+}
+
+async function getClickedSpectrum (x: number, y: number, slicePath: string, parser: Base64Parser): Promise<void> {
+    const path = `${slicePath}.${parser.fileExtension}`
+
+    const chunk = await getChunk(path, parser.convert)
+    const spectrum = getSpectrum(x, y, chunk, parser)
 
     postMessage({
         type: 'clicked',
@@ -125,17 +143,12 @@ async function getClickedSpectrum (x: number, y: number, slicePath: string): Pro
     })
 }
 
-function getHoveredSpectrum (x: number, y: number, slicePath: string): void {
-    const path = `${slicePath}.${LOW_RES_EXTENSION}`
+function getHoveredSpectrum (x: number, y: number, slicePath: string, parser: Base64Parser): void {
+    const path = `${slicePath}.${parser.fileExtension}`
 
-    const slices = sliceCache[path]
-    if (slices) {
-        const { startSlice, data, width, height, samples } = slices
-        const rowIndex = clamp(Math.round(x / REDUCE_FACTOR), 0, width - 1)
-        const colIndex = clamp(Math.round((y - startSlice) / REDUCE_FACTOR), 0, height - 1)
-        const startIndex = (colIndex * width + rowIndex) * samples
-        const spectrumU8 = data.slice(startIndex, startIndex + samples)
-        const spectrum = [...spectrumU8].map(v => v / 255)
+    const chunk = sliceCache[path]
+    if (chunk) {
+        const spectrum = getSpectrum(x, y, chunk, parser)
         postMessage({
             type: 'hovered',
             spectrum
@@ -168,15 +181,14 @@ onmessage = ({ data }): void => {
         x = data.x
         y = data.y
         slicePath = `${basePath}.${getSlicesPath(Math.round(y), imgHeight)}`
-        getHoveredSpectrum(x, y, slicePath)
+        getHoveredSpectrum(x, y, slicePath, HOVER_PARSER)
     } else if (data.type === 'mouseClick') {
-        getClickedSpectrum(x, y, slicePath)
+        getClickedSpectrum(x, y, slicePath, CLICK_PARSER)
     } else if (data.type === 'id') {
         core = data.core
         part = data.part
         imgHeight = data.imgHeight
-        // TODO: add prod / dev flag to change path root
-        basePath = getSpectraBasePath(core, part, '../..')
         sliceCache = {}
+        basePath = getSpectraBasePath(core, part, PATH_ROOT)
     }
 }
