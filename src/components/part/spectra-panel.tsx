@@ -4,7 +4,7 @@ import {
     LinearScale, LineElement, PointElement
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { ReactElement, useState, useEffect } from 'react'
+import React, { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
 import { StringMap, lerp } from '../../lib/util'
 import Dropdown from '../../components/generic/dropdown'
@@ -24,9 +24,9 @@ type SpectraPanelProps = {
     spectrumPosition: [number, number]
 }
 
-function SpectraPanel (
+const SpectraPanel = React.memo((
     { selectedSpectrum, spectrumPosition }: SpectraPanelProps
-): ReactElement {
+): ReactElement => {
     const [coreWavelengths, setCoreWavelengths] = useState<Array<number>>([])
     const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
     const [libraryMineral, setLibraryMineral] = useState<string>('')
@@ -138,7 +138,7 @@ function SpectraPanel (
             </div> }
         </div>
     )
-}
+})
 
 function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
     if (!wavelengths.length || !reflectances.length) {

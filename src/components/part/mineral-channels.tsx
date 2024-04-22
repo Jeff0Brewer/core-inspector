@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -27,10 +27,10 @@ type MineralChannelsProps = {
     setSpectrumPosition: (p: [number, number]) => void
 }
 
-function MineralChannels ({
+const MineralChannels = React.memo(({
     vis, core, part, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
-}: MineralChannelsProps): ReactElement {
+}: MineralChannelsProps): ReactElement => {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
@@ -134,7 +134,7 @@ function MineralChannels ({
             </div>
         </div>
     </>
-}
+})
 
 type ChannelsViewProps = {
     core: string,
@@ -150,10 +150,10 @@ type ChannelsViewProps = {
     setSpectrumPosition: (p: [number, number]) => void
 }
 
-function ChannelsView ({
+const ChannelsView = React.memo(({
     core, part, vis, channels, imgDims, viewDims, viewGap,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
-}: ChannelsViewProps): ReactElement {
+}: ChannelsViewProps): ReactElement => {
     const [rgbPath, setRGBPath] = useState<string>('')
     const channelsRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
@@ -294,7 +294,7 @@ function ChannelsView ({
             </div>
         </div>
     )
-}
+})
 
 type MineralChannelProps = {
     source: HTMLCanvasElement | string,
@@ -305,9 +305,9 @@ type MineralChannelProps = {
     onClick: () => void
 }
 
-function MineralChannel (
+const MineralChannel = React.memo((
     { source, width, height, mousePos, setMousePos, onClick }: MineralChannelProps
-): ReactElement {
+): ReactElement => {
     const channelRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -353,7 +353,7 @@ function MineralChannel (
             </div> }
         </div>
     )
-}
+})
 
 const ICONS = {
     cursor: <BiCross style={{ fontSize: '16px' }} />

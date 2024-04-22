@@ -1,4 +1,4 @@
-import { ReactElement, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
@@ -9,9 +9,7 @@ type BlendMenuToggleProps = {
     palettes: Array<GenericPalette>
 }
 
-function BlendMenuToggle (
-    { minerals, palettes }: BlendMenuToggleProps
-): ReactElement {
+const BlendMenuToggle = React.memo(({ minerals, palettes }: BlendMenuToggleProps): ReactElement => {
     const [open, setOpen] = useState<boolean>(false)
 
     return (
@@ -30,6 +28,6 @@ function BlendMenuToggle (
             />
         </div>
     )
-}
+})
 
 export default BlendMenuToggle

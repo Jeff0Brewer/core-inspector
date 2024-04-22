@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement, MemoExoticComponent } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, StringMap } from '../../lib/util'
@@ -18,14 +18,14 @@ type ScaleRepresentationProps = {
 }
 
 type ScaleRepresentation = {
-    element: (p: ScaleRepresentationProps) => ReactElement,
+    element: MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>,
     fullScale?: boolean,
     largeWidth?: boolean
 }
 
-function LineRepresentation (
+const LineRepresentation = React.memo((
     { part, setCenter }: ScaleRepresentationProps
-): ReactElement {
+): ReactElement => {
     const { topDepth, bottomDepth, depths } = useCoreMetadata()
 
     useEffect(() => {
@@ -37,11 +37,11 @@ function LineRepresentation (
     return <>
         <div className={styles.line}></div>
     </>
-}
+})
 
-function RectRepresentation (
+const RectRepresentation = React.memo((
     { part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
-): ReactElement {
+): ReactElement => {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
@@ -81,11 +81,11 @@ function RectRepresentation (
             ) }
         </div>
     )
-}
+})
 
-function PunchcardRepresentation (
+const PunchcardRepresentation = React.memo((
     { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
-): ReactElement {
+): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
 
@@ -117,11 +117,11 @@ function PunchcardRepresentation (
             setPart={setPart}
         />
     )
-}
+})
 
-function ChannelPunchcardRepresentation (
+const ChannelPunchcardRepresentation = React.memo((
     { vis, part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
-): ReactElement {
+): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
 
@@ -162,7 +162,7 @@ function ChannelPunchcardRepresentation (
             </>}
         />
     )
-}
+})
 
 type CanvasRepresentationProps = {
     part: string,
@@ -184,10 +184,10 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
-function CanvasRepresentation ({
+const CanvasRepresentation = React.memo(({
     part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
-}: CanvasRepresentationProps): ReactElement {
+}: CanvasRepresentationProps): ReactElement => {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
@@ -232,7 +232,7 @@ function CanvasRepresentation ({
             ) }
         </div>
     </>
-}
+})
 
 function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     const canvas = document.createElement('canvas')

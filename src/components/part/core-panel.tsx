@@ -29,10 +29,10 @@ type CorePanelProps = {
     finalBottomDepth?: number,
 }
 
-function CorePanel ({
+const CorePanel = React.memo(({
     vis, part, parts, representations, setPart, visible,
     finalTopDepth = 0, finalBottomDepth = 0
-}: CorePanelProps): ReactElement {
+}: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const columnsRef = useRef<HTMLDivElement>(null)
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -142,7 +142,7 @@ function CorePanel ({
             ) }
         </div>
     </>
-}
+})
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
@@ -158,10 +158,10 @@ type ScaleColumnProps = {
     nextBottomDepth: number,
 }
 
-function ScaleColumn ({
+const ScaleColumn = React.memo(({
     representation, vis, part, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
-}: ScaleColumnProps): ReactElement {
+}: ScaleColumnProps): ReactElement => {
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -216,7 +216,7 @@ function ScaleColumn ({
             { getZoomSvg(windowTop, windowBottom) }
         </div>
     </>
-}
+})
 
 type ScaleColumnTopLabelProps = {
     topDepth: number,
@@ -224,9 +224,9 @@ type ScaleColumnTopLabelProps = {
     largeWidth: boolean
 }
 
-function ScaleColumnTopLabel (
+const ScaleColumnTopLabel = React.memo((
     { topDepth, bottomDepth, largeWidth }: ScaleColumnTopLabelProps
-): ReactElement {
+): ReactElement => {
     const range = bottomDepth - topDepth
     return (
         <div className={styles.label}>
@@ -248,16 +248,16 @@ function ScaleColumnTopLabel (
             </div>
         </div>
     )
-}
+})
 
 type ScaleColumnBottomLabelProps = {
     pixelWidth: number,
     largeWidth: boolean
 }
 
-function ScaleColumnBottomLabel (
+const ScaleColumnBottomLabel = React.memo((
     { pixelWidth, largeWidth }: ScaleColumnBottomLabelProps
-): ReactElement {
+): ReactElement => {
     return (
         <div className={styles.bottomLabel}>
             <p className={`${largeWidth && styles.largeWidth}`}>
@@ -265,7 +265,7 @@ function ScaleColumnBottomLabel (
             </p>
         </div>
     )
-}
+})
 
 function getZoomSvg (
     windowTop: number,
