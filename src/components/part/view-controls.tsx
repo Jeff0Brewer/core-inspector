@@ -1,11 +1,11 @@
-import { ReactElement } from 'react'
+import React, { ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import { getScale } from '../../lib/util'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import styles from '../../styles/part/view-controls.module.css'
 
-type PartViewControlsProps = {
+type ViewControlsProps = {
     zoom: number,
     spacing: number,
     setZoom: (z: number) => void,
@@ -13,9 +13,9 @@ type PartViewControlsProps = {
     channelWidth: number
 }
 
-function PartViewControls (
-    { zoom, spacing, setZoom, setSpacing, channelWidth }: PartViewControlsProps
-): ReactElement {
+const ViewControls = React.memo((
+    { zoom, spacing, setZoom, setSpacing, channelWidth }: ViewControlsProps
+): ReactElement => {
     return (
         <div className={styles.viewControls}>
             <h2 className={styles.header}>
@@ -50,11 +50,11 @@ function PartViewControls (
             </div>
         </div>
     )
-}
+})
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
     horizontalDist: <div className={styles.distanceIcon}><PiArrowsHorizontalBold /></div>
 }
 
-export default PartViewControls
+export default ViewControls

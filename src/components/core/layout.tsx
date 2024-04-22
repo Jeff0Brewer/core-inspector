@@ -1,16 +1,16 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
-import CoreVisSettings from '../../components/core/vis-settings'
-import CoreViewSliders from '../../components/core/view-sliders'
-import CoreMineralControls from '../../components/core/mineral-controls'
-import MetadataHover from '../../components/core/metadata-hover'
+import VisSettings from '../../components/core/vis-settings'
+import ViewControls from '../../components/core/view-controls'
+import MineralControls from '../../components/core/mineral-controls'
+import HoverInfo from '../../components/core/hover-info'
 import PanScrollbar from '../../components/core/pan-scrollbar'
-import styles from '../../styles/core/core-view.module.css'
+import styles from '../../styles/core/layout.module.css'
 
 type CoreViewProps = {
     cores: Array<string>,
@@ -21,9 +21,9 @@ type CoreViewProps = {
     setPart: (p: string) => void
 }
 
-function CoreView (
+const CoreView = React.memo((
     { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
-): ReactElement {
+): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -96,25 +96,25 @@ function CoreView (
 
     return <>
         <LoadIcon loading={!vis} showDelayMs={0} />
-        <CoreVisSettings
+        <VisSettings
             vis={vis}
             cores={cores}
             core={core}
             setCore={setCore}
         />
-        <CoreViewSliders vis={vis} />
+        <ViewControls vis={vis} />
         <canvas
             ref={canvasRef}
             className={`${styles.visCanvas} ${!!vis && styles.visible}`}
         ></canvas>
-        <CoreMineralControls
+        <MineralControls
             vis={vis}
             minerals={minerals}
             palettes={palettes}
         />
-        <MetadataHover vis={vis} />
+        <HoverInfo vis={vis} />
         <PanScrollbar vis={vis} />
     </>
-}
+})
 
 export default CoreView

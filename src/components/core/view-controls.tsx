@@ -1,17 +1,17 @@
-import { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/view-sliders.module.css'
 
-type CoreViewSlidersProps = {
+type ViewControlsProps = {
     vis: CoreRenderer | null
 }
 
-function CoreViewSliders (
-    { vis }: CoreViewSlidersProps
-): ReactElement {
+const ViewControls = React.memo((
+    { vis }: ViewControlsProps
+): ReactElement => {
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
 
@@ -60,7 +60,7 @@ function CoreViewSliders (
             />
         </div>
     )
-}
+})
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
@@ -68,4 +68,4 @@ const ICONS = {
     verticalDist: <div className={styles.distanceIcon} style={{ transform: 'rotate(90deg)' }}><PiArrowsHorizontalBold /></div>
 }
 
-export default CoreViewSliders
+export default ViewControls

@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import React, { ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { getCoreId, getPartId } from '../../lib/path'
 import styles from '../../styles/part/info-header.module.css'
@@ -8,9 +8,7 @@ type PartInfoHeaderProps = {
     part: string
 }
 
-function PartInfoHeader (
-    { core, part }: PartInfoHeaderProps
-): ReactElement {
+const PartInfoHeader = React.memo(({ core, part }: PartInfoHeaderProps): ReactElement => {
     const { depths } = useCoreMetadata()
 
     return (
@@ -35,7 +33,7 @@ function PartInfoHeader (
             </p> }
         </div>
     )
-}
+})
 
 function formatDepthInfo (topDepth: number, length: number): string {
     const bottomDepth = topDepth + length

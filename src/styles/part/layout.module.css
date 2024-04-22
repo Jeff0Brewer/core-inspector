@@ -16,7 +16,7 @@
     transition: grid-template-columns 0.5s ease;
 }
 
-.spectra-panel-hide, .core-panel-toggle {
+.core-panel-toggle {
     position: absolute;
     top: 0;
     z-index: 10;
@@ -25,19 +25,8 @@
     font-size: 12px;
 }
 
-.spectra-panel-hide:hover, .core-panel-toggle:hover, .close-button:hover {
+.core-panel-toggle:hover, .close-button:hover {
     color: var(--color4);
-}
-
-.spectra-panel-hide {
-    grid-area: spectra;
-    left: 0;
-    top: 0;
-    transition:
-        color var(--transition-param),
-        opacity var(--transition-param);
-    height: 20px;
-    width: 20px;
 }
 
 .core-panel-toggle {
@@ -62,4 +51,22 @@
 .top-left {
     grid-area: top-left;
     background-color: #444;
+}
+
+.blend-wrap {
+    display: grid;
+    place-content: center;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 32px;
+}
+
+.blend-toggle {
+    display: grid;
+    place-content: center;
+    height: 20px;
+    width: 35px;
+    font-size: 14px;
+    border-radius: 5px 0 0 5px;
 }

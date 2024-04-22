@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -6,8 +6,8 @@ import { StringMap, getImageData, getCssColor } from '../../lib/util'
 import { getRgbPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
-import PartHoverInfo from '../../components/part/hover-info'
-import PartViewControls from '../../components/part/view-controls'
+import HoverInfo from '../../components/part/hover-info'
+import ViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
@@ -16,7 +16,7 @@ import styles from '../../styles/part/mineral-channels.module.css'
 const MIN_WIDTH_PX = 50
 
 // TODO: simplify
-type PartMineralChannelsProps = {
+type MineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
@@ -27,10 +27,10 @@ type PartMineralChannelsProps = {
     setSpectrumPosition: (p: [number, number]) => void
 }
 
-function PartMineralChannels ({
+const MineralChannels = React.memo(({
     vis, core, part, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
-}: PartMineralChannelsProps): ReactElement {
+}: MineralChannelsProps): ReactElement => {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
@@ -60,7 +60,7 @@ function PartMineralChannels ({
     const width = `${viewDims[0]}px`
     const gap = `${viewGap}px`
     return <>
-        <PartViewControls
+        <ViewControls
             zoom={zoom}
             spacing={spacing}
             setZoom={setZoom}
@@ -134,7 +134,7 @@ function PartMineralChannels ({
             </div>
         </div>
     </>
-}
+})
 
 type ChannelsViewProps = {
     core: string,
@@ -150,10 +150,10 @@ type ChannelsViewProps = {
     setSpectrumPosition: (p: [number, number]) => void
 }
 
-function ChannelsView ({
+const ChannelsView = React.memo(({
     core, part, vis, channels, imgDims, viewDims, viewGap,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
-}: ChannelsViewProps): ReactElement {
+}: ChannelsViewProps): ReactElement => {
     const [rgbPath, setRGBPath] = useState<string>('')
     const channelsRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
@@ -286,7 +286,7 @@ function ChannelsView ({
                             key={i}
                         />
                     ) }
-                <PartHoverInfo
+                <HoverInfo
                     abundances={abundances}
                     spectrum={spectrum}
                     visible={!!mousePos}
@@ -294,7 +294,7 @@ function ChannelsView ({
             </div>
         </div>
     )
-}
+})
 
 type MineralChannelProps = {
     source: HTMLCanvasElement | string,
@@ -305,9 +305,9 @@ type MineralChannelProps = {
     onClick: () => void
 }
 
-function MineralChannel (
+const MineralChannel = React.memo((
     { source, width, height, mousePos, setMousePos, onClick }: MineralChannelProps
-): ReactElement {
+): ReactElement => {
     const channelRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -353,10 +353,10 @@ function MineralChannel (
             </div> }
         </div>
     )
-}
+})
 
 const ICONS = {
     cursor: <BiCross style={{ fontSize: '16px' }} />
 }
 
-export default PartMineralChannels
+export default MineralChannels

@@ -4,13 +4,13 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
-import { CoreRepresentation } from '../../components/part/core-representations'
+import { ScaleRepresentation } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
 
 const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
-    representation: CoreRepresentation,
+    representation: ScaleRepresentation,
     parts: Array<string>,
     topDepth: number,
     bottomDepth: number,
@@ -22,21 +22,21 @@ type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    representations: Array<CoreRepresentation>,
+    representations: Array<ScaleRepresentation>,
     setPart: (p: string | null) => void,
-    visible: boolean,
     finalTopDepth?: number,
     finalBottomDepth?: number,
+    open: boolean,
 }
 
-function CorePanel ({
-    vis, part, parts, representations, setPart, visible,
+const CorePanel = React.memo(({
+    vis, part, parts, representations, setPart, open,
     finalTopDepth = 0, finalBottomDepth = 0
-}: CorePanelProps): ReactElement {
+}: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const columnsRef = useRef<HTMLDivElement>(null)
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
-    const render = useCollapseRender(visible)
+    const render = useCollapseRender(open)
 
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
@@ -105,7 +105,7 @@ function CorePanel ({
     return <>
         <div className={styles.topLabels}>
             { render && columns.map((column, i) =>
-                <ScaleColumnLabel
+                <ScaleColumnTopLabel
                     topDepth={column.topDepth}
                     bottomDepth={column.bottomDepth}
                     largeWidth={!!column.representation.largeWidth}
@@ -132,24 +132,24 @@ function CorePanel ({
                 />
             }) }
         </div>
-        <div className={`${styles.bottomLabels} ${!visible && styles.hidden}`}>
+        <div className={`${styles.bottomLabels} ${!open && styles.hidden}`}>
             { render && columns.map((column, i) =>
-                <div className={styles.bottomLabel} key={i}>
-                    <p className={`${column.representation.largeWidth && styles.largeWidth}`}>
-                        { getScale(column.mToPx * PART_WIDTH_M) }
-                    </p>
-                </div>
+                <ScaleColumnBottomLabel
+                    pixelWidth={column.mToPx * PART_WIDTH_M}
+                    largeWidth={!!column.representation.largeWidth}
+                    key={i}
+                />
             ) }
         </div>
     </>
-}
+})
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     parts: Array<string>,
     part: string,
     setPart: (p: string | null) => void,
-    representation: CoreRepresentation,
+    representation: ScaleRepresentation,
     gap: number,
     topDepth: number,
     bottomDepth: number,
@@ -158,10 +158,10 @@ type ScaleColumnProps = {
     nextBottomDepth: number,
 }
 
-function ScaleColumn ({
+const ScaleColumn = React.memo(({
     representation, vis, part, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
-}: ScaleColumnProps): ReactElement {
+}: ScaleColumnProps): ReactElement => {
     const [partCenter, setPartCenter] = useState<number>(0)
     const columnRef = useRef<HTMLDivElement>(null)
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
@@ -216,17 +216,17 @@ function ScaleColumn ({
             { getZoomSvg(windowTop, windowBottom) }
         </div>
     </>
-}
+})
 
-type ScaleColumnLabelProps = {
+type ScaleColumnTopLabelProps = {
     topDepth: number,
     bottomDepth: number,
     largeWidth: boolean
 }
 
-function ScaleColumnLabel (
-    { topDepth, bottomDepth, largeWidth }: ScaleColumnLabelProps
-): ReactElement {
+const ScaleColumnTopLabel = React.memo((
+    { topDepth, bottomDepth, largeWidth }: ScaleColumnTopLabelProps
+): ReactElement => {
     const range = bottomDepth - topDepth
     return (
         <div className={styles.label}>
@@ -248,7 +248,24 @@ function ScaleColumnLabel (
             </div>
         </div>
     )
+})
+
+type ScaleColumnBottomLabelProps = {
+    pixelWidth: number,
+    largeWidth: boolean
 }
+
+const ScaleColumnBottomLabel = React.memo((
+    { pixelWidth, largeWidth }: ScaleColumnBottomLabelProps
+): ReactElement => {
+    return (
+        <div className={styles.bottomLabel}>
+            <p className={`${largeWidth && styles.largeWidth}`}>
+                { getScale(pixelWidth) }
+            </p>
+        </div>
+    )
+})
 
 function getZoomSvg (
     windowTop: number,

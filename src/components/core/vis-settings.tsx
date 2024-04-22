@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoGridSharp } from 'react-icons/io5'
@@ -11,16 +11,16 @@ import Dropdown from '../../components/generic/dropdown'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
-type CoreVisSettingsProps = {
+type VisSettingsProps = {
     vis: CoreRenderer | null,
     cores: Array<string>,
     core: string,
     setCore: (c: string) => void,
 }
 
-function CoreVisSettings (
-    { vis, cores, core, setCore }: CoreVisSettingsProps
-): ReactElement {
+const VisSettings = React.memo((
+    { vis, cores, core, setCore }: VisSettingsProps
+): ReactElement => {
     const [calibration, setCalibration] = useState<CalibrationOption>('show')
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
@@ -90,7 +90,7 @@ function CoreVisSettings (
             </div>
         </div>
     )
-}
+})
 
 const ICONS = {
     calibration: <IoGridSharp style={{ fontSize: '16px' }} />,
@@ -100,4 +100,4 @@ const ICONS = {
     punchcard: <RxDragHandleDots1 style={{ fontSize: '25px' }} />
 }
 
-export default CoreVisSettings
+export default VisSettings

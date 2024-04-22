@@ -1,4 +1,4 @@
-import { useState, MouseEvent, ReactElement } from 'react'
+import React, { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable } from '../../vis/mineral-blend'
@@ -7,15 +7,15 @@ import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/mineral-controls.module.css'
 
-type CoreMineralControlsProps = {
+type MineralControlsProps = {
     vis: CoreRenderer | null,
     minerals: Array<string>,
     palettes: Array<GenericPalette>
 }
 
-function CoreMineralControls (
-    { vis, minerals, palettes }: CoreMineralControlsProps
-): ReactElement {
+const MineralControls = React.memo((
+    { vis, minerals, palettes }: MineralControlsProps
+): ReactElement => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const {
         palette,
@@ -69,6 +69,6 @@ function CoreMineralControls (
             />
         </div>
     )
-}
+})
 
-export default CoreMineralControls
+export default MineralControls
