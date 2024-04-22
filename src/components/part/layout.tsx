@@ -2,15 +2,32 @@ import React, { useState, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { StringMap } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
-import Content from '../../components/part/content'
 import BlendMenuToggle from '../../components/part/blend-menu-toggle'
+import MineralChannels from '../../components/part/mineral-channels'
+import CorePanel from '../../components/part/core-panel'
+import SpectraPanel from '../../components/part/spectra-panel'
+import {
+    ScaleRepresentation,
+    LineRepresentation,
+    RectRepresentation,
+    PunchcardRepresentation,
+    ChannelPunchcardRepresentation
+} from '../../components/part/scale-representations'
 import styles from '../../styles/part/layout.module.css'
+
+const CORE_PANEL_REPRESENTATIONS: Array<ScaleRepresentation> = [
+    { element: LineRepresentation, fullScale: true },
+    { element: RectRepresentation },
+    { element: PunchcardRepresentation },
+    { element: ChannelPunchcardRepresentation, largeWidth: true }
+]
 
 type PartViewProps = {
     part: string,
@@ -26,6 +43,11 @@ function PartView (
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
     const [corePanelVisible, setCorePanelVisible] = useState<boolean>(true)
+    const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
+    const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
+    const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number>>([])
+    const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
+    const { ids } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -96,13 +118,29 @@ function PartView (
         >
             <PiCaretLeftBold />
         </button>
-        <Content
+        <CorePanel
+            vis={vis}
+            part={part}
+            parts={ids}
+            representations={CORE_PANEL_REPRESENTATIONS}
+            setPart={setPart}
+            finalTopDepth={scrollDepthTop}
+            finalBottomDepth={scrollDepthBottom}
+            visible={corePanelVisible}
+        />
+        <MineralChannels
             vis={vis}
             core={core}
             part={part}
-            setPart={setPart}
             channels={channels}
-            corePanelVisible={corePanelVisible}
+            setDepthTop={setScrollDepthTop}
+            setDepthBottom={setScrollDepthBottom}
+            setSelectedSpectrum={setSelectedSpectrum}
+            setSpectrumPosition={setSpectrumPosition}
+        />
+        <SpectraPanel
+            selectedSpectrum={selectedSpectrum}
+            spectrumPosition={spectrumPosition}
         />
         <BlendMenuToggle
             minerals={minerals}
