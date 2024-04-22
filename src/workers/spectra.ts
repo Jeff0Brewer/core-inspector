@@ -32,20 +32,20 @@ type SpectraChunk = {
 
 type Base64Parser = {
     fileExtension: string,
-    convert: (b64: string) => TypedArray,
-    maxValue: number
+    fromBase64: (b64: string) => TypedArray,
+    toFloat: (v: number) => number
 }
 
 const BYTE_PARSER: Base64Parser = {
     fileExtension: 'HWS.byte-b64.json.zip',
-    convert: base64ToU8,
-    maxValue: 255
+    fromBase64: base64ToU8,
+    toFloat: v => v / 255
 }
 
 const SHORT_PARSER: Base64Parser = {
     fileExtension: 'HWS.short-b64.json.zip',
-    convert: base64ToU16,
-    maxValue: 65535
+    fromBase64: base64ToU16,
+    toFloat: v => v / 65535
 }
 
 const PATH_ROOT = import.meta.env.MODE === 'production' ? '..' : '../..'
@@ -125,14 +125,14 @@ function getSpectrum (x: number, y: number, chunk: SpectraChunk, parser: Base64P
     const startIndex = (colIndex * width + rowIndex) * samples
     const spectrumTyped = data.slice(startIndex, startIndex + samples)
 
-    const spectrum = [...spectrumTyped].map(v => v / parser.maxValue)
-    return spectrum
+    // convert to float array in range (0, 1)
+    return [...spectrumTyped].map(parser.toFloat)
 }
 
 async function getClickedSpectrum (x: number, y: number, slicePath: string, parser: Base64Parser): Promise<void> {
     const path = `${slicePath}.${parser.fileExtension}`
 
-    const chunk = await getChunk(path, parser.convert)
+    const chunk = await getChunk(path, parser.fromBase64)
     const spectrum = getSpectrum(x, y, chunk, parser)
 
     postMessage({
