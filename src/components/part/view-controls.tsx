@@ -1,4 +1,4 @@
-import { ReactElement } from 'react'
+import React, { ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import { getScale } from '../../lib/util'
@@ -13,9 +13,9 @@ type ViewControlsProps = {
     channelWidth: number
 }
 
-function ViewControls (
+const ViewControls = React.memo((
     { zoom, spacing, setZoom, setSpacing, channelWidth }: ViewControlsProps
-): ReactElement {
+): ReactElement => {
     return (
         <div className={styles.viewControls}>
             <h2 className={styles.header}>
@@ -50,7 +50,7 @@ function ViewControls (
             </div>
         </div>
     )
-}
+})
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,
