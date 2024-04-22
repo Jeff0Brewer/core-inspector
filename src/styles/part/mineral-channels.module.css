@@ -136,8 +136,6 @@
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
     background-color: #202020;
-    /* TODO: fix height */
-    min-height: 100vh;
 }
 
 .channel {
