@@ -1,4 +1,4 @@
-import { ReactElement, useEffect } from 'react'
+import React, { ReactElement, useEffect } from 'react'
 import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
@@ -21,9 +21,9 @@ type BlendMenuProps = {
     palettes: Array<GenericPalette>,
 }
 
-function BlendMenu (
+const BlendMenu = React.memo((
     { open, minerals, palettes }: BlendMenuProps
-): ReactElement {
+): ReactElement => {
     const render = useCollapseRender(open)
     const {
         palette, setPalette,
@@ -160,27 +160,7 @@ function BlendMenu (
             </> }
         </section>
     )
-}
-
-type ColorPaletteItemProps = {
-    item: GenericPalette
-}
-
-function ColorPaletteItem (
-    { item }: ColorPaletteItemProps
-): ReactElement {
-    return (
-        <div className={styles.palette}>
-            { Object.entries(item.colors).map(([mineral, color], i) =>
-                <ColorSwatch
-                    mineral={item.type === 'labelled' ? mineral : null}
-                    color={color}
-                    key={i}
-                />
-            ) }
-        </div>
-    )
-}
+})
 
 type MineralSliderProps = {
     mineral: string,
@@ -193,9 +173,9 @@ type MineralSliderProps = {
     disabled: boolean
 }
 
-function MineralSlider (
+const MineralSlider = React.memo((
     { mineral, index, color, magnitude, setMagnitude, visible, setVisible, disabled }: MineralSliderProps
-): ReactElement {
+): ReactElement => {
     return (
         <div
             className={`${
@@ -243,7 +223,7 @@ function MineralSlider (
             />
         </div>
     )
-}
+})
 
 type ParamSliderProps = {
     value: number,
@@ -253,9 +233,9 @@ type ParamSliderProps = {
     defaultValue?: number
 }
 
-function ParamSlider (
+const ParamSlider = React.memo((
     { value, setValue, defaultValue, min, max }: ParamSliderProps
-): ReactElement {
+): ReactElement => {
     const resetValue = (): void => {
         if (defaultValue !== undefined) {
             setValue(defaultValue)
@@ -280,7 +260,7 @@ function ParamSlider (
             </>}
         />
     )
-}
+})
 
 type ColorSwatchProps = {
     color: vec3 | null,
@@ -288,9 +268,9 @@ type ColorSwatchProps = {
     customClass?: string
 }
 
-function ColorSwatch (
+const ColorSwatch = React.memo((
     { color, mineral, customClass }: ColorSwatchProps
-): ReactElement {
+): ReactElement => {
     return (
         <div
             className={`${styles.swatch} ${!color && styles.emptySwatch} ${customClass}`}
@@ -299,7 +279,7 @@ function ColorSwatch (
             { mineral && <p>{ mineral.substring(0, 3) }</p> }
         </div>
     )
-}
+})
 
 type MonochromeToggleProps = {
     palette: GenericPalette,
@@ -307,9 +287,9 @@ type MonochromeToggleProps = {
     setMonochrome: (m: boolean) => void
 }
 
-function MonochromeToggle (
+const MonochromeToggle = React.memo((
     { palette, monochrome, setMonochrome }: MonochromeToggleProps
-): ReactElement {
+): ReactElement => {
     const color = !monochrome
         ? getCssColor(Object.values(palette.colors)[0])
         : '#fff'
@@ -320,6 +300,24 @@ function MonochromeToggle (
             style={{ backgroundColor: color }}
             onClick={() => setMonochrome(!monochrome)}
         ></button>
+    )
+})
+
+type ColorPaletteItemProps = {
+    item: GenericPalette
+}
+
+function ColorPaletteItem ({ item }: ColorPaletteItemProps): ReactElement {
+    return (
+        <div className={styles.palette}>
+            { Object.entries(item.colors).map(([mineral, color], i) =>
+                <ColorSwatch
+                    mineral={item.type === 'labelled' ? mineral : null}
+                    color={color}
+                    key={i}
+                />
+            ) }
+        </div>
     )
 }
 
