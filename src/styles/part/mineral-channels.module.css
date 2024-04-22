@@ -13,6 +13,16 @@
         "top-label"
         "channels"
         "bottom-label";
+
+    /* hide default scrollbars */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.content::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .top-labels, .bottom-labels, .channels {
@@ -128,6 +138,16 @@
     height: 100%;
     width: fit-content;
     overflow-y: scroll;
+
+    /* hide default scrollbars */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.channels-wrap::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 .channels {
