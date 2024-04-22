@@ -111,6 +111,7 @@ const PartView = React.memo((
         }
     }, [vis])
 
+    // to set css vars in tsx, must cast as React.CSSProperties
     const gridParams = {
         '--core-panel-width': corePanelOpen ? '390px' : '0'
     } as React.CSSProperties
@@ -118,15 +119,18 @@ const PartView = React.memo((
     return (
         <div className={styles.partView} style={gridParams}>
             <div className={styles.topLeft}>
-                <button className={styles.closeButton} onClick={() => setPart(null)}>
+                <button
+                    className={styles.closeButton}
+                    onClick={() => setPart(null)}
+                >
                     <PiCaretLeftBold />
                 </button>
             </div>
             <InfoHeader core={core} part={part} />
             <button
                 className={styles.corePanelToggle}
+                onClick={() => setCorePanelOpen(!corePanelOpen)}
                 style={{ transform: `rotate(${corePanelOpen ? '0' : '180deg'})` }}
-                onClick={(): void => setCorePanelOpen(!corePanelOpen)}
             >
                 <PiCaretLeftBold />
             </button>
