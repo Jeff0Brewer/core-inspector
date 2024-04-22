@@ -37,9 +37,9 @@ type PartViewProps = {
     setPart: (p: string | null) => void
 }
 
-function PartView (
+const PartView = React.memo((
     { part, core, minerals, palettes, setPart }: PartViewProps
-): ReactElement {
+): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
     const [corePanelVisible, setCorePanelVisible] = useState<boolean>(true)
@@ -147,6 +147,6 @@ function PartView (
             palettes={palettes}
         />
     </div>
-}
+})
 
 export default PartView
