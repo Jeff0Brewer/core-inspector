@@ -63,3 +63,21 @@
     grid-area: top-left;
     background-color: #444;
 }
+
+.blend-wrap {
+    display: grid;
+    place-content: center;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 32px;
+}
+
+.blend-toggle {
+    display: grid;
+    place-content: center;
+    height: 20px;
+    width: 35px;
+    font-size: 14px;
+    border-radius: 5px 0 0 5px;
+}

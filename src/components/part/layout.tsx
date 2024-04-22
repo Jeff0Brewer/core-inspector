@@ -1,5 +1,6 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
+import { MdColorLens } from 'react-icons/md'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -9,7 +10,7 @@ import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
-import BlendMenuToggle from '../../components/part/blend-menu-toggle'
+import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
 import SpectraPanel from '../../components/part/spectra-panel'
@@ -42,11 +43,12 @@ const PartView = React.memo((
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
-    const [corePanelVisible, setCorePanelVisible] = useState<boolean>(true)
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number>>([])
     const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
+    const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
+    const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const { ids } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
@@ -101,7 +103,7 @@ const PartView = React.memo((
     }, [vis, core, part, minerals])
 
     const gridParams = {
-        '--core-panel-width': corePanelVisible ? '390px' : '0'
+        '--core-panel-width': corePanelOpen ? '390px' : '0'
     } as React.CSSProperties
 
     return <div className={styles.partView} style={gridParams}>
@@ -113,8 +115,8 @@ const PartView = React.memo((
         <InfoHeader core={core} part={part} />
         <button
             className={styles.corePanelToggle}
-            style={{ transform: `rotate(${corePanelVisible ? '0' : '180deg'})` }}
-            onClick={(): void => setCorePanelVisible(!corePanelVisible)}
+            style={{ transform: `rotate(${corePanelOpen ? '0' : '180deg'})` }}
+            onClick={(): void => setCorePanelOpen(!corePanelOpen)}
         >
             <PiCaretLeftBold />
         </button>
@@ -126,7 +128,7 @@ const PartView = React.memo((
             setPart={setPart}
             finalTopDepth={scrollDepthTop}
             finalBottomDepth={scrollDepthBottom}
-            visible={corePanelVisible}
+            visible={corePanelOpen}
         />
         <MineralChannels
             vis={vis}
@@ -142,10 +144,20 @@ const PartView = React.memo((
             selectedSpectrum={selectedSpectrum}
             spectrumPosition={spectrumPosition}
         />
-        <BlendMenuToggle
-            minerals={minerals}
-            palettes={palettes}
-        />
+        <div className={styles.blendWrap}>
+            <button
+                className={styles.blendToggle}
+                onClick={() => setBlendMenuOpen(!blendMenuOpen)}
+                data-active={blendMenuOpen}
+            >
+                <MdColorLens />
+            </button>
+            <BlendMenu
+                open={blendMenuOpen}
+                minerals={minerals}
+                palettes={palettes}
+            />
+        </div>
     </div>
 })
 
