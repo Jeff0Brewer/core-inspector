@@ -24,19 +24,19 @@ type CorePanelProps = {
     parts: Array<string>,
     representations: Array<ScaleRepresentation>,
     setPart: (p: string | null) => void,
-    visible: boolean,
     finalTopDepth?: number,
     finalBottomDepth?: number,
+    open: boolean,
 }
 
 const CorePanel = React.memo(({
-    vis, part, parts, representations, setPart, visible,
+    vis, part, parts, representations, setPart, open,
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const columnsRef = useRef<HTMLDivElement>(null)
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
-    const render = useCollapseRender(visible)
+    const render = useCollapseRender(open)
 
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
@@ -132,7 +132,7 @@ const CorePanel = React.memo(({
                 />
             }) }
         </div>
-        <div className={`${styles.bottomLabels} ${!visible && styles.hidden}`}>
+        <div className={`${styles.bottomLabels} ${!open && styles.hidden}`}>
             { render && columns.map((column, i) =>
                 <ScaleColumnBottomLabel
                     pixelWidth={column.mToPx * PART_WIDTH_M}

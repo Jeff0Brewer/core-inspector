@@ -80,12 +80,7 @@ const PartView = React.memo((
 
     useEffect(() => {
         if (!vis) { return }
-        vis.punchcardPart.setPixelSize(1 / (window.innerHeight * window.devicePixelRatio))
-    }, [vis])
-
-    useEffect(() => {
-        if (!vis) { return }
-        const getChannels = async (): Promise<void> => {
+        const getMineralChannels = async (): Promise<void> => {
             const channelPaths = getAbundancePaths(core, part, minerals)
             const channelMaps = await Promise.all(
                 minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
@@ -99,66 +94,82 @@ const PartView = React.memo((
             setChannels(channels)
         }
 
-        getChannels()
+        getMineralChannels()
     }, [vis, core, part, minerals])
+
+    // update pixel size in visualization for anti-aliasing
+    useEffect(() => {
+        if (!vis) { return }
+        const updatePixelSize = (): void => {
+            vis.punchcardPart.setPixelSize(
+                1 / (window.innerHeight * window.devicePixelRatio)
+            )
+        }
+        window.addEventListener('resize', updatePixelSize)
+        return () => {
+            window.removeEventListener('resize', updatePixelSize)
+        }
+    }, [vis])
 
     const gridParams = {
         '--core-panel-width': corePanelOpen ? '390px' : '0'
     } as React.CSSProperties
 
-    return <div className={styles.partView} style={gridParams}>
-        <div className={styles.topLeft}>
-            <button className={styles.closeButton} onClick={() => setPart(null)}>
+    return (
+        <div className={styles.partView} style={gridParams}>
+            <div className={styles.topLeft}>
+                <button className={styles.closeButton} onClick={() => setPart(null)}>
+                    <PiCaretLeftBold />
+                </button>
+            </div>
+            <InfoHeader core={core} part={part} />
+            <button
+                className={styles.corePanelToggle}
+                style={{ transform: `rotate(${corePanelOpen ? '0' : '180deg'})` }}
+                onClick={(): void => setCorePanelOpen(!corePanelOpen)}
+            >
                 <PiCaretLeftBold />
             </button>
-        </div>
-        <InfoHeader core={core} part={part} />
-        <button
-            className={styles.corePanelToggle}
-            style={{ transform: `rotate(${corePanelOpen ? '0' : '180deg'})` }}
-            onClick={(): void => setCorePanelOpen(!corePanelOpen)}
-        >
-            <PiCaretLeftBold />
-        </button>
-        <CorePanel
-            vis={vis}
-            part={part}
-            parts={ids}
-            representations={CORE_PANEL_REPRESENTATIONS}
-            setPart={setPart}
-            finalTopDepth={scrollDepthTop}
-            finalBottomDepth={scrollDepthBottom}
-            visible={corePanelOpen}
-        />
-        <MineralChannels
-            vis={vis}
-            core={core}
-            part={part}
-            channels={channels}
-            setDepthTop={setScrollDepthTop}
-            setDepthBottom={setScrollDepthBottom}
-            setSelectedSpectrum={setSelectedSpectrum}
-            setSpectrumPosition={setSpectrumPosition}
-        />
-        <SpectraPanel
-            selectedSpectrum={selectedSpectrum}
-            spectrumPosition={spectrumPosition}
-        />
-        <div className={styles.blendWrap}>
-            <button
-                className={styles.blendToggle}
-                onClick={() => setBlendMenuOpen(!blendMenuOpen)}
-                data-active={blendMenuOpen}
-            >
-                <MdColorLens />
-            </button>
-            <BlendMenu
-                open={blendMenuOpen}
-                minerals={minerals}
-                palettes={palettes}
+            <CorePanel
+                open={corePanelOpen}
+                vis={vis}
+                part={part}
+                parts={ids}
+                representations={CORE_PANEL_REPRESENTATIONS}
+                setPart={setPart}
+                finalTopDepth={scrollDepthTop}
+                finalBottomDepth={scrollDepthBottom}
             />
+            <MineralChannels
+                vis={vis}
+                core={core}
+                part={part}
+                channels={channels}
+                setDepthTop={setScrollDepthTop}
+                setDepthBottom={setScrollDepthBottom}
+                setSelectedSpectrum={setSelectedSpectrum}
+                setSpectrumPosition={setSpectrumPosition}
+            />
+            <SpectraPanel
+                selectedSpectrum={selectedSpectrum}
+                spectrumPosition={spectrumPosition}
+            />
+            <div className={styles.blendWrap}>
+                <button
+                    className={styles.blendToggle}
+                    onClick={() => setBlendMenuOpen(!blendMenuOpen)}
+                    data-active={blendMenuOpen}
+                >
+                    <MdColorLens />
+                </button>
+                <BlendMenu
+                    open={blendMenuOpen}
+                    minerals={minerals}
+                    palettes={palettes}
+                />
+            </div>
         </div>
-    </div>
+    )
 })
 
 export default PartView
