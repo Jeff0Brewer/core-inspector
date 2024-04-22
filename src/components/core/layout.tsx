@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
@@ -21,9 +21,9 @@ type CoreViewProps = {
     setPart: (p: string) => void
 }
 
-function CoreView (
+const CoreView = React.memo((
     { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
-): ReactElement {
+): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -115,6 +115,6 @@ function CoreView (
         <HoverInfo vis={vis} />
         <PanScrollbar vis={vis} />
     </>
-}
+})
 
 export default CoreView

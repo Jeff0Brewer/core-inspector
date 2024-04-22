@@ -1,4 +1,4 @@
-import { useState, MouseEvent, ReactElement } from 'react'
+import React, { useState, MouseEvent, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable } from '../../vis/mineral-blend'
@@ -13,9 +13,9 @@ type MineralControlsProps = {
     palettes: Array<GenericPalette>
 }
 
-function MineralControls (
+const MineralControls = React.memo((
     { vis, minerals, palettes }: MineralControlsProps
-): ReactElement {
+): ReactElement => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const {
         palette,
@@ -69,6 +69,6 @@ function MineralControls (
             />
         </div>
     )
-}
+})
 
 export default MineralControls

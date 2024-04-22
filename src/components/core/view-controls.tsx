@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import VerticalSlider from '../../components/generic/vertical-slider'
@@ -9,9 +9,9 @@ type ViewControlsProps = {
     vis: CoreRenderer | null
 }
 
-function ViewControls (
+const ViewControls = React.memo((
     { vis }: ViewControlsProps
-): ReactElement {
+): ReactElement => {
     const [zoom, setZoom] = useState<number>(0.5)
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
 
@@ -60,7 +60,7 @@ function ViewControls (
             />
         </div>
     )
-}
+})
 
 const ICONS = {
     zoom: <IoSearch style={{ fontSize: '16px' }} />,

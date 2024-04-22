@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { IoGridSharp } from 'react-icons/io5'
@@ -18,9 +18,9 @@ type VisSettingsProps = {
     setCore: (c: string) => void,
 }
 
-function VisSettings (
+const VisSettings = React.memo((
     { vis, cores, core, setCore }: VisSettingsProps
-): ReactElement {
+): ReactElement => {
     const [calibration, setCalibration] = useState<CalibrationOption>('show')
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
@@ -90,7 +90,7 @@ function VisSettings (
             </div>
         </div>
     )
-}
+})
 
 const ICONS = {
     calibration: <IoGridSharp style={{ fontSize: '16px' }} />,
