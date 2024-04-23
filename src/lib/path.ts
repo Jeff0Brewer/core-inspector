@@ -25,13 +25,28 @@ function getPartPath (core: string, part: string, root: string = '.'): string {
     return `${root}/${DATA_DIR}/${coreId}/${sectionId}/${pieceId}`
 }
 
-function getSpectraPath (
+function getSpectraBasePath (
     core: string,
     part: string,
     spectraType: string,
     root: string = '.'
 ): string {
-    return `${getPartPath(core, part, root)}/spectra/${spectraType}`
+    const dir = `${getPartPath(core, part, root)}/spectra/${spectraType}`
+
+    const [section, piece] = part.split('_').map(s => parseInt(s))
+    const fileStart = `${core.toUpperCase()}A_${section}Z-${piece}_${spectraType}`
+
+    return `${dir}/${fileStart}`
+}
+
+function getSpectraSlicesId (
+    imgHeight: number,
+    sliceInd: number,
+    sliceCount: number
+): string {
+    const minSlice = sliceInd - (sliceInd % sliceCount)
+    const maxSlice = Math.min(minSlice + sliceCount, imgHeight) - 1
+    return `${padZeros(minSlice, 4)}-${padZeros(maxSlice, 4)}`
 }
 
 function getRgbPath (core: string, part: string, root: string = '.'): string {
@@ -64,7 +79,8 @@ export {
     getPartId,
     getCorePath,
     getPartPath,
-    getSpectraPath,
+    getSpectraBasePath,
+    getSpectraSlicesId,
     getRgbPath,
     getAbundancePaths
 }
