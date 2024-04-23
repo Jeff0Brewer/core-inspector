@@ -153,7 +153,7 @@ function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64F
             spectrum
         })
     } else {
-        cacheSlices(path, format)
+        cacheSlices(path, slicePath, format)
         postMessage({
             type: 'hovered',
             spectrum: []
@@ -162,44 +162,58 @@ function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64F
 }
 
 let sliceCache: StringMap<SpectraChunk> = {}
-const cacheSlices = async (path: string, format: Base64Format): Promise<void> => {
+const cacheSlices = async (
+    path: string,
+    slicePath: string,
+    format: Base64Format
+): Promise<void> => {
     const chunk = await getChunk(path, base64ToU8)
     sliceCache[path] = chunk
 
     // check current mousePos for hit in newly loaded chunk
-    getHoveredSpectrum(mousePos, path, format)
+    getHoveredSpectrum(mousePos, slicePath, format)
 }
 
+let basePath = ''
+let slicePath = ''
 let core = ''
 let part = ''
 let imgHeight = 0
-const mousePos = {
-    x: 0,
-    y: 0
-}
-let basePath = ''
-let slicePath = ''
+const mousePos = { x: 0, y: 0 }
 
 onmessage = ({ data }): void => {
     if (data.type === 'mousePosition') {
         mousePos.x = data.x
         mousePos.y = data.y
 
-        const slicesId = getSpectraSlicesId(
-            imgHeight,
-            Math.round(mousePos.y),
-            SLICE_COUNT
-        )
+        const sliceIndex = Math.round(mousePos.y)
+        const slicesId = getSpectraSlicesId(imgHeight, sliceIndex, SLICE_COUNT)
         slicePath = `${basePath}.${slicesId}`
 
-        getHoveredSpectrum(mousePos, slicePath, HOVER_PARSER)
+        getHoveredSpectrum(
+            mousePos,
+            slicePath,
+            HOVER_PARSER
+        )
     } else if (data.type === 'mouseClick') {
-        getClickedSpectrum(mousePos, slicePath, CLICK_PARSER)
+        getClickedSpectrum(
+            mousePos,
+            slicePath,
+            CLICK_PARSER
+        )
     } else if (data.type === 'id') {
+        // clear cached slices from prior part
+        sliceCache = {}
+
+        // load information about current section to construct file paths
         core = data.core
         part = data.part
         imgHeight = data.imgHeight
-        sliceCache = {}
-        basePath = getSpectraBasePath(core, part, SPECTRA_TYPE, PATH_ROOT)
+        basePath = getSpectraBasePath(
+            core,
+            part,
+            SPECTRA_TYPE,
+            PATH_ROOT
+        )
     }
 }
