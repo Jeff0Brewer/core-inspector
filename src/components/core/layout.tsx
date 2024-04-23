@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
-import { loadImageAsync } from '../../lib/load'
+import { nullResolve, loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
@@ -25,6 +25,7 @@ const CoreView = React.memo((
     { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
+    const [loading, setLoading] = useState<boolean>(true)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -51,21 +52,27 @@ const CoreView = React.memo((
                 Promise.all(punchcardPaths.map(path => loadImageAsync(path))),
                 fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
                 fetch(`${corePath}/id-metadata.json`).then(res => res.json())
-            ])
+            ]).catch(err => {
+                console.error(err)
+                return [null, null, null, null]
+            })
 
-            setVis(
-                new CoreRenderer(
-                    canvas,
-                    mineralImgs,
-                    punchcardImgs,
-                    tileMetadata,
-                    ids.ids,
-                    minerals
+            if (mineralImgs && punchcardImgs && tileMetadata && ids) {
+                setVis(
+                    new CoreRenderer(
+                        canvas,
+                        mineralImgs,
+                        punchcardImgs,
+                        tileMetadata,
+                        ids.ids,
+                        minerals
+                    )
                 )
-            )
+            }
+            setLoading(false)
         }
 
-        // immediately set to null for loading state
+        setLoading(true)
         setVis(null)
 
         initCoreRenderer(canvasRef.current)
@@ -95,7 +102,11 @@ const CoreView = React.memo((
     }, [vis, setPart])
 
     return <>
-        <LoadIcon loading={!vis} showDelayMs={0} />
+        <LoadIcon loading={loading} showDelayMs={0} />
+        { !loading && !vis &&
+            <p className={styles.dataMissing}>
+                data not found
+            </p> }
         <VisSettings
             vis={vis}
             cores={cores}
