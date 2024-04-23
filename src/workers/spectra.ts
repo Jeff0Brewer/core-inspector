@@ -3,6 +3,7 @@ import { clamp, StringMap } from '../lib/util'
 import { getSpectraBasePath, getSpectraSlicesId } from '../lib/path'
 
 type TypedArray = Uint8Array | Uint16Array
+type Point = { x: number, y: number }
 
 // fetched data format
 type SpectraData = {
@@ -106,12 +107,12 @@ async function getChunk (
 }
 
 function getSpectrum (
-    x: number,
-    y: number,
+    mousePos: Point,
     chunk: SpectraChunk,
     toFloat: (v: number) => number
 ): Array<number> {
     const { startSlice, data, width, height, samples } = chunk
+    const { x, y } = mousePos
 
     let colIndex = Math.round((y - startSlice) / REDUCE_FACTOR)
     colIndex = clamp(colIndex, 0, height - 1)
@@ -126,16 +127,12 @@ function getSpectrum (
     return [...spectrumTyped].map(toFloat)
 }
 
-async function getClickedSpectrum (
-    x: number,
-    y: number,
-    slicePath: string,
-    parser: Base64Format
-): Promise<void> {
-    const path = `${slicePath}.${parser.fileExtension}`
+async function getClickedSpectrum (mousePos: Point, slicePath: string, format: Base64Format): Promise<void> {
+    const path = `${slicePath}.${format.fileExtension}`
+    const { x, y } = mousePos
 
-    const chunk = await getChunk(path, parser.fromBase64)
-    const spectrum = getSpectrum(x, y, chunk, parser.toFloat)
+    const chunk = await getChunk(path, format.fromBase64)
+    const spectrum = getSpectrum(mousePos, chunk, format.toFloat)
 
     postMessage({
         type: 'clicked',
@@ -145,23 +142,18 @@ async function getClickedSpectrum (
     })
 }
 
-function getHoveredSpectrum (
-    x: number,
-    y: number,
-    slicePath: string,
-    parser: Base64Format
-): void {
-    const path = `${slicePath}.${parser.fileExtension}`
+function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64Format): void {
+    const path = `${slicePath}.${format.fileExtension}`
 
     const chunk = sliceCache[path]
     if (chunk) {
-        const spectrum = getSpectrum(x, y, chunk, parser.toFloat)
+        const spectrum = getSpectrum(mousePos, chunk, format.toFloat)
         postMessage({
             type: 'hovered',
             spectrum
         })
     } else {
-        cacheSlices(path)
+        cacheSlices(path, format)
         postMessage({
             type: 'hovered',
             spectrum: []
@@ -169,30 +161,40 @@ function getHoveredSpectrum (
     }
 }
 
-// TODO: send back spectrum of mouse position on chunk load
 let sliceCache: StringMap<SpectraChunk> = {}
-const cacheSlices = async (path: string): Promise<void> => {
+const cacheSlices = async (path: string, format: Base64Format): Promise<void> => {
     const chunk = await getChunk(path, base64ToU8)
     sliceCache[path] = chunk
+
+    // check current mousePos for hit in newly loaded chunk
+    getHoveredSpectrum(mousePos, path, format)
 }
 
 let core = ''
 let part = ''
 let imgHeight = 0
-let x = 0
-let y = 0
+const mousePos = {
+    x: 0,
+    y: 0
+}
 let basePath = ''
 let slicePath = ''
 
 onmessage = ({ data }): void => {
     if (data.type === 'mousePosition') {
-        x = data.x
-        y = data.y
-        const slicesId = getSpectraSlicesId(imgHeight, Math.round(y), SLICE_COUNT)
+        mousePos.x = data.x
+        mousePos.y = data.y
+
+        const slicesId = getSpectraSlicesId(
+            imgHeight,
+            Math.round(mousePos.y),
+            SLICE_COUNT
+        )
         slicePath = `${basePath}.${slicesId}`
-        getHoveredSpectrum(x, y, slicePath, HOVER_PARSER)
+
+        getHoveredSpectrum(mousePos, slicePath, HOVER_PARSER)
     } else if (data.type === 'mouseClick') {
-        getClickedSpectrum(x, y, slicePath, CLICK_PARSER)
+        getClickedSpectrum(mousePos, slicePath, CLICK_PARSER)
     } else if (data.type === 'id') {
         core = data.core
         part = data.part
