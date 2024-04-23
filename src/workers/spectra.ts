@@ -74,6 +74,7 @@ const REDUCE_FACTOR = 4
 const SLICE_COUNT = 16
 const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
 
+// fetch spectra file and convert to usable format
 async function getChunk (
     path: string,
     parse: (b64: string) => TypedArray
@@ -106,6 +107,7 @@ async function getChunk (
     }
 }
 
+// get single spectrum from slice of spectra chunk
 function getSpectrum (
     mousePos: Point,
     chunk: SpectraChunk,
@@ -127,7 +129,11 @@ function getSpectrum (
     return [...spectrumTyped].map(toFloat)
 }
 
-async function getClickedSpectrum (mousePos: Point, slicePath: string, format: Base64Format): Promise<void> {
+async function getClickedSpectrum (
+    mousePos: Point,
+    slicePath: string,
+    format: Base64Format
+): Promise<void> {
     const path = `${slicePath}.${format.fileExtension}`
     const { x, y } = mousePos
 
