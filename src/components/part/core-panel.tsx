@@ -134,6 +134,10 @@ const CorePanel = React.memo(({
                     key={i}
                 />
             }) }
+            { render && depths && !depths[part] &&
+                <p className={styles.dataMissing}>
+                    data missing
+                </p> }
         </div>
         <div className={`${styles.bottomLabels} ${!open && styles.hidden}`}>
             { render && columns.map((column, i) =>
