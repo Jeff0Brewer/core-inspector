@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactElement, ReactNode } from 'react'
-import { DepthMetadata, HydrationMetadata, TileTextureMetadata } from '../lib/metadata'
+import { CoreMetadata, DepthMetadata, HydrationMetadata, TileTextureMetadata } from '../lib/metadata'
 import { getCorePath } from '../lib/path'
+import { fetchJson } from '../lib/load'
 import CoreMetadataContext from '../hooks/core-metadata-context'
 
 type CoreMetadataProviderProps = {
@@ -23,25 +24,31 @@ function CoreMetadataProvider (
         const getData = async (): Promise<void> => {
             const corePath = getCorePath(core)
 
-            const [
-                { numSection, topDepth, bottomDepth, partIds },
-                { depth },
-                { hydration },
-                tiles
-            ] = await Promise.all([
-                fetch(`${corePath}/core-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/depth-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/hydration-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/tile-metadata.json`).then(res => res.json())
+            const [coreData, depths, hydrations, tiles] = await Promise.all([
+                fetchJson<CoreMetadata>(`${corePath}/core-metadata.json`),
+                fetchJson<DepthMetadata>(`${corePath}/depth-metadata.json`),
+                fetchJson<HydrationMetadata>(`${corePath}/hydration-metadata.json`),
+                fetchJson<TileTextureMetadata>(`${corePath}/tile-metadata.json`)
             ])
-            setNumSection(numSection)
-            setTopDepth(topDepth)
-            setBottomDepth(bottomDepth)
-            setDepths(depth)
-            setHydrations(hydration)
-            setPartIds(partIds)
+            if (coreData !== null) {
+                const { numSection, topDepth, bottomDepth, partIds } = coreData
+                setNumSection(numSection)
+                setTopDepth(topDepth)
+                setBottomDepth(bottomDepth)
+                setPartIds(partIds)
+            }
+            setDepths(depths)
+            setHydrations(hydrations)
             setTiles(tiles)
         }
+
+        setNumSection(null)
+        setTopDepth(null)
+        setBottomDepth(null)
+        setPartIds(null)
+        setDepths(null)
+        setHydrations(null)
+        setTiles(null)
 
         getData()
     }, [core])

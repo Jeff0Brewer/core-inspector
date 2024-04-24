@@ -23,7 +23,7 @@ type MineralChannelsProps = {
     channels: StringMap<HTMLImageElement>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectrum: (s: Array<number>) => void,
+    setSelectedSpectrum: (s: Array<number> | null) => void,
     setSpectrumPosition: (p: [number, number]) => void
 }
 
@@ -146,7 +146,7 @@ type ChannelsViewProps = {
     viewGap: number,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectrum: (s: Array<number>) => void,
+    setSelectedSpectrum: (s: Array<number> | null) => void,
     setSpectrumPosition: (p: [number, number]) => void
 }
 
@@ -163,7 +163,7 @@ const ChannelsView = React.memo(({
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
 
-    const [spectrum, setSpectrum] = useState<Array<number>>([])
+    const [spectrum, setSpectrum] = useState<Array<number> | null>([])
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
 
     useEffect(() => {

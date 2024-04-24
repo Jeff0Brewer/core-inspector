@@ -5,7 +5,7 @@ import styles from '../../styles/part/hover-info.module.css'
 
 type HoverInfoProps = {
     abundances: StringMap<number>,
-    spectrum: Array<number>,
+    spectrum: Array<number> | null,
     visible: boolean
 }
 
@@ -32,7 +32,12 @@ function HoverInfo (
                 )}
             </div>
             <div className={styles.spectrum}>
-                <SvgPlot data={spectrum} />
+                { Array.isArray(spectrum) &&
+                    <SvgPlot data={spectrum} /> }
+                { spectrum === null &&
+                    <p className={styles.dataMissing}>
+                        data missing
+                    </p> }
             </div>
         </div>
     )

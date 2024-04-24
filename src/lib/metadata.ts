@@ -1,12 +1,20 @@
 import { StringMap } from '../lib/util'
 
+type CoreMetadata = {
+    numSection: number,
+    topDepth: number,
+    bottomDepth: number,
+    partIds: Array<string>
+}
+
+type HydrationMetadata = StringMap<number>
+
 type DepthInfo = {
     topDepth: number,
     length: number
 }
 
 type DepthMetadata = StringMap<DepthInfo>
-type HydrationMetadata = StringMap<number>
 
 type TileRect = {
     left: number,
@@ -26,6 +34,7 @@ type TileTextureMetadata = {
 }
 
 export type {
+    CoreMetadata,
     DepthMetadata,
     HydrationMetadata,
     TileTextureMetadata,

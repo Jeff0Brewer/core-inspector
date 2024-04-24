@@ -34,6 +34,8 @@ const CoreView = React.memo((
     useRendererDrop(vis)
 
     useEffect(() => {
+        setVis(null)
+
         if (!partIds || !tiles) { return }
         if (!canvasRef.current) {
             throw new Error('No reference to full core canvas')
@@ -65,8 +67,6 @@ const CoreView = React.memo((
                 )
             )
         }
-
-        setVis(null)
 
         initCoreRenderer(canvasRef.current)
     }, [core, minerals, partIds, tiles])

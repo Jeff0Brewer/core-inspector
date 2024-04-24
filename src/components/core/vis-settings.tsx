@@ -81,7 +81,7 @@ const VisSettings = React.memo((
                     sections
                     <span>{padZeros(1)} - {padZeros(numSection)}</span>
                 </p> }
-                { topDepth && bottomDepth && <p>
+                { (topDepth !== null && bottomDepth !== null) && <p>
                     depth
                     <span>
                         {formatFloat(topDepth)}m - {formatFloat(bottomDepth)}m

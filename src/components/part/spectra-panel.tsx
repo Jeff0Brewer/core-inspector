@@ -7,6 +7,7 @@ import { Line } from 'react-chartjs-2'
 import React, { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
 import { StringMap, lerp } from '../../lib/util'
+import { fetchJson } from '../../lib/load'
 import Dropdown from '../../components/generic/dropdown'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
@@ -19,16 +20,19 @@ const CHART_BG_COLOR = 'rgba(125, 125, 125, 0.35)'
 
 type Point = { x: number, y: number }
 
+type CoreWavelengths = Array<number>
+type LibrarySpectra = StringMap<Array<Point>>
+
 type SpectraPanelProps = {
-    selectedSpectrum: Array<number>
+    selectedSpectrum: Array<number> | null,
     spectrumPosition: [number, number]
 }
 
 const SpectraPanel = React.memo((
     { selectedSpectrum, spectrumPosition }: SpectraPanelProps
 ): ReactElement => {
-    const [coreWavelengths, setCoreWavelengths] = useState<Array<number>>([])
-    const [librarySpectra, setLibrarySpectra] = useState<StringMap<Array<Point>>>({})
+    const [coreWavelengths, setCoreWavelengths] = useState<CoreWavelengths | null>(null)
+    const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra | null>(null)
     const [libraryMineral, setLibraryMineral] = useState<string>('')
 
     const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
@@ -39,20 +43,20 @@ const SpectraPanel = React.memo((
 
     // open spectra panel on spectrum change
     useEffect(() => {
-        setOpen(selectedSpectrum.length > 0)
+        setOpen(selectedSpectrum === null || selectedSpectrum.length > 0)
     }, [selectedSpectrum])
 
     // get library spectra and wavelength values for selected spectra
     useEffect(() => {
         const getSpectraMetadata = async (): Promise<void> => {
             const [coreWavelengths, librarySpectra] = await Promise.all([
-                fetch('./data-processed/temp/core-spectra-wavelengths.json').then(res => res.json()),
-                fetch('./data-processed/temp/library-spectra.json').then(res => res.json())
+                fetchJson<CoreWavelengths>('./data-processed/temp/core-spectra-wavelengths.json'),
+                fetchJson<LibrarySpectra>('./data-processed/temp/library-spectra.json')
             ])
             setCoreWavelengths(coreWavelengths)
             setLibrarySpectra(librarySpectra)
 
-            const firstMineral = Object.keys(librarySpectra)[0]
+            const firstMineral = librarySpectra && Object.keys(librarySpectra)[0]
             if (firstMineral) {
                 setLibraryMineral(firstMineral)
             }
@@ -62,8 +66,8 @@ const SpectraPanel = React.memo((
 
     // calculate chart data
     useEffect(() => {
-        const librarySpectrum = librarySpectra[libraryMineral]
-        if (!selectedSpectrum.length || !librarySpectrum?.length) {
+        const librarySpectrum = librarySpectra?.[libraryMineral]
+        if (!selectedSpectrum?.length || !librarySpectrum?.length || !coreWavelengths) {
             return
         }
 
@@ -110,31 +114,37 @@ const SpectraPanel = React.memo((
                         Y <span>{spectrumPosition[1]}px</span>
                     </p>
                 </div>
-                <div className={styles.mainPlot}>
-                    { mainPlotData && <Line
-                        data={mainPlotData}
-                        options={MAIN_PLOT_OPTIONS}
-                        plugins={[chartBgColorPlugin]}
-                    /> }
-                </div>
-                <div className={styles.librarySelect}>
-                    <p className={styles.dropdownLabel}>
-                        mineral profile
-                    </p>
-                    <Dropdown
-                        items={Object.keys(librarySpectra)}
-                        selected={`∆ ${libraryMineral}`}
-                        setSelected={setLibraryMineral}
-                        customStyles={spectraDropdownStyles}
-                    />
-                </div>
-                <div className={styles.deltaPlot}>
-                    { deltaPlotData && <Line
-                        data={deltaPlotData}
-                        options={DELTA_PLOT_OPTIONS}
-                        plugins={[chartBgColorPlugin]}
-                    /> }
-                </div>
+                { selectedSpectrum !== null && <>
+                    <div className={styles.mainPlot}>
+                        { mainPlotData && <Line
+                            data={mainPlotData}
+                            options={MAIN_PLOT_OPTIONS}
+                            plugins={[chartBgColorPlugin]}
+                        /> }
+                    </div>
+                    <div className={styles.librarySelect}>
+                        <p className={styles.dropdownLabel}>
+                            mineral profile
+                        </p>
+                        <Dropdown
+                            items={Object.keys(librarySpectra || {})}
+                            selected={`∆ ${libraryMineral}`}
+                            setSelected={setLibraryMineral}
+                            customStyles={spectraDropdownStyles}
+                        />
+                    </div>
+                    <div className={styles.deltaPlot}>
+                        { deltaPlotData && <Line
+                            data={deltaPlotData}
+                            options={DELTA_PLOT_OPTIONS}
+                            plugins={[chartBgColorPlugin]}
+                        /> }
+                    </div>
+                </> }
+                { selectedSpectrum === null &&
+                    <p className={styles.dataMissing}>
+                        data missing
+                    </p> }
             </div> }
         </div>
     )
