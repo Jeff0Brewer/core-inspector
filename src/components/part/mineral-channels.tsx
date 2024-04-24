@@ -9,6 +9,7 @@ import PartRenderer from '../../vis/part'
 import HoverInfo from '../../components/part/hover-info'
 import ViewControls from '../../components/part/view-controls'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
+import LoadIcon from '../../components/generic/load-icon'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
@@ -40,12 +41,19 @@ const MineralChannels = React.memo(({
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
 
+    const [loading, setLoading] = useState<boolean>(true)
+
+    useEffect(() => {
+        setLoading(true)
+    }, [part])
+
     useEffect(() => {
         const imgs = Object.values(channels)
         for (let i = 0; i < imgs.length; i++) {
             const img = imgs[i]
             if (img !== null) {
                 setImgDims([img.width, img.height])
+                setLoading(false)
                 break
             }
         }
@@ -73,7 +81,8 @@ const MineralChannels = React.memo(({
             setSpacing={setSpacing}
             channelWidth={viewDims[0]}
         />
-        <div className={styles.content}>
+        <div className={styles.content} data-loading={loading}>
+            <LoadIcon loading={loading} />
             <div className={styles.topLabels} style={{ gap }}>
                 <p className={styles.topLabel} style={{ width }}>
                     [visual range]

@@ -106,6 +106,8 @@ const PartView = React.memo((
             setChannels(channels)
         }
 
+        setChannels({})
+
         getMineralChannels()
     }, [vis, core, part, minerals])
 
