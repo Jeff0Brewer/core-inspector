@@ -17,15 +17,16 @@ function fetchBlob (path: string): Promise<Blob | null> {
 }
 
 // wrap image load event in promise for async use
-async function loadImageAsync (source: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
+async function loadImageAsync (source: string): Promise<HTMLImageElement | null> {
+    return new Promise((resolve, _reject) => {
         const image = new Image()
         image.src = source
         image.addEventListener('load', (): void => {
             resolve(image)
         })
-        image.addEventListener('error', (): void => {
-            reject(new Error(`Failed to load image ${source}`))
+        image.addEventListener('error', (err): void => {
+            console.error(err)
+            resolve(null)
         })
     })
 }

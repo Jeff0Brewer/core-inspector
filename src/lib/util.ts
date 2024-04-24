@@ -103,6 +103,10 @@ function getScale (viewWidth: number): string {
     return `x1/${(IMG_WIDTH / viewWidth).toFixed(0)}`
 }
 
+function notNull<T> (value: T | null): value is T {
+    return value !== null
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -127,7 +131,8 @@ export {
     checkStringType,
     get2dContext,
     getImageData,
-    getScale
+    getScale,
+    notNull
 }
 export type {
     BoundRect,
