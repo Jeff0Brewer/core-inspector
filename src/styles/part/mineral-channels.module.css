@@ -198,3 +198,13 @@
 .channel:hover .ghost-cursor {
     display: none;
 }
+
+.data-missing {
+    position: relative;
+    display: grid;
+    place-content: center;
+    color: var(--color4);
+    background-color: #191919;
+    text-transform: uppercase;
+    text-align: center;
+}

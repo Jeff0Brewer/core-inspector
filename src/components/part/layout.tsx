@@ -5,7 +5,7 @@ import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
-import { StringMap } from '../../lib/util'
+import { StringMap, notNull } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
@@ -42,7 +42,7 @@ const PartView = React.memo((
     { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
+    const [channels, setChannels] = useState<StringMap<HTMLImageElement | null>>({})
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number> | null>([])
@@ -71,29 +71,35 @@ const PartView = React.memo((
                 minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))
             )
 
-            setVis(
-                new PartRenderer(
-                    minerals,
-                    punchcardMaps,
-                    tiles,
-                    partIds
+            const loadedPunchcardMaps = punchcardMaps.filter(notNull)
+            if (loadedPunchcardMaps.length === punchcardMaps.length) {
+                setVis(
+                    new PartRenderer(
+                        minerals,
+                        loadedPunchcardMaps,
+                        tiles,
+                        partIds
+                    )
                 )
-            )
+            }
         }
 
         initVis()
     }, [core, minerals, partIds, tiles])
 
     useEffect(() => {
-        if (!vis) { return }
         const getMineralChannels = async (): Promise<void> => {
             const channelPaths = getAbundancePaths(core, part, minerals)
             const channelMaps = await Promise.all(
                 minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
             )
 
-            vis.setPart(minerals, channelMaps)
-            const channels: StringMap<HTMLImageElement> = {}
+            const loadedChannelMaps = channelMaps.filter(notNull)
+            if (loadedChannelMaps.length === channelMaps.length) {
+                vis?.setPart(minerals, loadedChannelMaps)
+            }
+
+            const channels: StringMap<HTMLImageElement | null> = {}
             minerals.forEach((mineral, i) => {
                 channels[mineral] = channelMaps[i]
             })

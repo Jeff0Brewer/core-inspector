@@ -20,7 +20,7 @@ type MineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
-    channels: StringMap<HTMLImageElement>,
+    channels: StringMap<HTMLImageElement | null>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
     setSelectedSpectrum: (s: Array<number> | null) => void,
@@ -41,9 +41,15 @@ const MineralChannels = React.memo(({
     const [spacing, setSpacing] = useState<number>(0.25)
 
     useEffect(() => {
-        if (!vis) { return }
-        setImgDims([vis.canvas.width, vis.canvas.height])
-    }, [vis, channels])
+        const imgs = Object.values(channels)
+        for (let i = 0; i < imgs.length; i++) {
+            const img = imgs[i]
+            if (img !== null) {
+                setImgDims([img.width, img.height])
+                break
+            }
+        }
+    }, [channels])
 
     useEffect(() => {
         const [imgWidth, imgHeight] = imgDims
@@ -140,7 +146,7 @@ type ChannelsViewProps = {
     core: string,
     part: string,
     vis: PartRenderer | null,
-    channels: StringMap<HTMLImageElement>,
+    channels: StringMap<HTMLImageElement | null>,
     imgDims: [number, number],
     viewDims: [number, number],
     viewGap: number,
@@ -223,9 +229,9 @@ const ChannelsView = React.memo(({
         const numChannels = Object.keys(channels).length
         if (!abundanceWorker || !numChannels) { return }
 
-        const imgData: StringMap<ImageData> = {}
+        const imgData: StringMap<ImageData | null> = {}
         Object.entries(channels).forEach(([mineral, img]) => {
-            imgData[mineral] = getImageData(img)
+            imgData[mineral] = img === null ? null : getImageData(img)
         })
 
         abundanceWorker.postMessage({ type: 'imgData', imgData, imgWidth: imgDims[0] })
@@ -266,19 +272,18 @@ const ChannelsView = React.memo(({
                     setMousePos={setMousePos}
                     onClick={selectSpectrum}
                 />
-                { vis &&
-                    <MineralChannel
-                        source={vis.canvas}
-                        width={width}
-                        height={height}
-                        mousePos={mousePos}
-                        setMousePos={setMousePos}
-                        onClick={selectSpectrum}
-                    /> }
+                <MineralChannel
+                    source={vis?.partMinerals ? vis.canvas : 'none'}
+                    width={width}
+                    height={height}
+                    mousePos={mousePos}
+                    setMousePos={setMousePos}
+                    onClick={selectSpectrum}
+                />
                 { Object.entries(channels)
                     .map(([_, img], i) =>
                         <MineralChannel
-                            source={img.src}
+                            source={img?.src || 'none'}
                             width={width}
                             height={height}
                             mousePos={mousePos}
@@ -309,7 +314,12 @@ type MineralChannelProps = {
 const MineralChannel = React.memo((
     { source, width, height, mousePos, setMousePos, onClick }: MineralChannelProps
 ): ReactElement => {
+    const [loadError, setLoadError] = useState<boolean>(false)
     const channelRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        setLoadError(false)
+    }, [source])
 
     useEffect(() => {
         const channel = channelRef.current
@@ -342,9 +352,27 @@ const MineralChannel = React.memo((
     return (
         <div className={styles.channel} onClick={onClick}>
             <div ref={channelRef}>
-                { typeof source === 'string'
-                    ? <img src={source} style={{ width, height }} draggable={false} />
-                    : <CanvasRenderer canvas={source} width={width} height={height} /> }
+                { typeof source !== 'string' &&
+                    <CanvasRenderer
+                        canvas={source}
+                        width={width}
+                        height={height}
+                    /> }
+                { !loadError && typeof source === 'string' &&
+                     <img
+                         src={source}
+                         style={{ width, height }}
+                         draggable={false}
+                         onError={() => setLoadError(true)}
+                     />
+                }
+                { loadError &&
+                    <p
+                        className={styles.dataMissing}
+                        style={{ width, height }}
+                    >
+                        data missing
+                    </p> }
             </div>
             { mousePos && <div
                 className={styles.ghostCursor}
