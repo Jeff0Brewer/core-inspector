@@ -43,7 +43,7 @@ const SpectraPanel = React.memo((
 
     // open spectra panel on spectrum change
     useEffect(() => {
-        setOpen(selectedSpectrum === null || selectedSpectrum.length > 0)
+        setOpen(!!selectedSpectrum?.length)
     }, [selectedSpectrum])
 
     // get library spectra and wavelength values for selected spectra
@@ -141,10 +141,6 @@ const SpectraPanel = React.memo((
                         /> }
                     </div>
                 </> }
-                { selectedSpectrum === null &&
-                    <p className={styles.dataMissing}>
-                        data missing
-                    </p> }
             </div> }
         </div>
     )
