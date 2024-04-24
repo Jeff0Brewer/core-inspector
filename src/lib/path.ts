@@ -68,7 +68,7 @@ function getAbundancePaths (
 
     const paths: StringMap<string> = {}
     minerals.forEach((mineral, i) => {
-        const mineralId = padZeros(i + 1, 2)
+        const mineralId = padZeros(i, 2)
         paths[mineral] = `${partPath}/${mineralId}/${coreId}_${partId}_${mineralId}.${ABUNDANCE_EXTENSION}`
     })
     return paths
