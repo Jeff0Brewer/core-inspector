@@ -106,8 +106,6 @@ const PartView = React.memo((
             setChannels(channels)
         }
 
-        setChannels({})
-
         getMineralChannels()
     }, [vis, core, part, minerals])
 
@@ -162,6 +160,7 @@ const PartView = React.memo((
                 vis={vis}
                 core={core}
                 part={part}
+                minerals={minerals}
                 channels={channels}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}

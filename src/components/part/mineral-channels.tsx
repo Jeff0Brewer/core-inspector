@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -21,6 +21,7 @@ type MineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
     part: string,
+    minerals: Array<string>,
     channels: StringMap<HTMLImageElement | null>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
@@ -29,19 +30,30 @@ type MineralChannelsProps = {
 }
 
 const MineralChannels = React.memo(({
-    vis, core, part, channels,
+    vis, core, part, minerals, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: MineralChannelsProps): ReactElement => {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
-    const [imgDims, setImgDims] = useState<[number, number]>([0, 0])
-    const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
-    const [viewGap, setViewGap] = useState<number>(0)
-
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
 
+    const [imgDims, setImgDims] = useState<[number, number]>([320, 3000])
+    const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
+    const [viewGap, setViewGap] = useState<number>(0)
+
     const [loading, setLoading] = useState<boolean>(true)
+
+    useLayoutEffect(() => {
+        const [imgWidth, imgHeight] = imgDims
+
+        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
+        const viewHeight = viewWidth * imgHeight / imgWidth
+        const viewGap = viewWidth * spacing
+
+        setViewDims([viewWidth, viewHeight])
+        setViewGap(viewGap)
+    }, [channels, zoom, spacing, imgDims])
 
     useEffect(() => {
         setLoading(true)
@@ -53,23 +65,14 @@ const MineralChannels = React.memo(({
             const img = imgs[i]
             if (img !== null) {
                 setImgDims([img.width, img.height])
-                setLoading(false)
                 break
             }
         }
+
+        if (imgs.length !== 0) {
+            setLoading(false)
+        }
     }, [channels])
-
-    useEffect(() => {
-        const [imgWidth, imgHeight] = imgDims
-        if (!vis || !imgWidth || !imgHeight) { return }
-
-        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
-        const viewHeight = viewWidth * imgHeight / imgWidth
-        const viewGap = viewWidth * spacing
-
-        setViewDims([viewWidth, viewHeight])
-        setViewGap(viewGap)
-    }, [channels, zoom, spacing, vis, imgDims])
 
     const width = `${viewDims[0]}px`
     const gap = `${viewGap}px`
@@ -82,7 +85,7 @@ const MineralChannels = React.memo(({
             channelWidth={viewDims[0]}
         />
         <div className={styles.content} data-loading={loading}>
-            <LoadIcon loading={loading} />
+            <LoadIcon loading={loading} showDelayMs={100} />
             <div className={styles.topLabels} style={{ gap }}>
                 <p className={styles.topLabel} style={{ width }}>
                     [visual range]
@@ -90,12 +93,11 @@ const MineralChannels = React.memo(({
                 <p className={styles.topLabel} style={{ width }}>
                     [blended]
                 </p>
-                { Object.keys(channels)
-                    .map((mineral, i) =>
-                        <p className={styles.topLabel} style={{ width }} key={i}>
-                            {mineral}
-                        </p>
-                    ) }
+                { minerals.map((mineral, i) =>
+                    <p className={styles.topLabel} style={{ width }} key={i}>
+                        {mineral}
+                    </p>
+                ) }
             </div>
             <ChannelsView
                 core={core}
@@ -121,31 +123,30 @@ const MineralChannels = React.memo(({
                         blended
                     </button>
                 </div>
-                { Object.keys(channels)
-                    .map((mineral, i) =>
-                        <div className={styles.bottomLabel} style={{ width }} key={i}>
-                            <div
-                                className={styles.blendColor}
-                                style={{
-                                    backgroundColor: getCssColor(
-                                        getBlendColor(palette, visibilities, monochrome, mineral)
-                                    )
-                                }}
-                            ></div>
-                            <button
-                                className={`${
-                                    styles.blendButton} ${
-                                    !isToggleable(mineral, palette, visibilities) && styles.disabled
-                                }`}
-                                onClick={() => {
-                                    visibilities[mineral] = !visibilities[mineral]
-                                    setVisibilities({ ...visibilities })
-                                }}
-                            >
-                                {mineral}
-                            </button>
-                        </div>
-                    ) }
+                { minerals.map((mineral, i) =>
+                    <div className={styles.bottomLabel} style={{ width }} key={i}>
+                        <div
+                            className={styles.blendColor}
+                            style={{
+                                backgroundColor: getCssColor(
+                                    getBlendColor(palette, visibilities, monochrome, mineral)
+                                )
+                            }}
+                        ></div>
+                        <button
+                            className={`${
+                                styles.blendButton} ${
+                                !isToggleable(mineral, palette, visibilities) && styles.disabled
+                            }`}
+                            onClick={() => {
+                                visibilities[mineral] = !visibilities[mineral]
+                                setVisibilities({ ...visibilities })
+                            }}
+                        >
+                            {mineral}
+                        </button>
+                    </div>
+                ) }
             </div>
         </div>
     </>

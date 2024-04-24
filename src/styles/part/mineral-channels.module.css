@@ -58,19 +58,6 @@
     flex-shrink: 0;
 }
 
-.top-label, .bottom-label, .channel {
-    transition: opacity 300ms ease;
-    opacity: 1;
-    transition-delay: 100ms;
-}
-
-.content[data-loading="true"] .top-label,
-.content[data-loading="true"] .bottom-label,
-.content[data-loading="true"] .channel {
-    opacity: 0;
-    transition-delay: 0s;
-}
-
 .top-label {
     display: grid;
     place-content: center;
@@ -170,6 +157,15 @@
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
     background-color: #202020;
+
+    transition: opacity 300ms ease;
+    transition-delay: 100ms;
+    opacity: 1;
+}
+
+.content[data-loading="true"] .channels {
+    transition-delay: 0s;
+    opacity: 0;
 }
 
 .channel {
