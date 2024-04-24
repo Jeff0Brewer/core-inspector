@@ -1,7 +1,7 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer } from '../lib/gl-wrap'
 import { POS_FPV } from '../lib/vert-gen'
-import { TileTextureMetadata } from '../lib/tile-texture'
+import { TileTextureMetadata } from '../lib/metadata'
 import vertSource from '../shaders/hover-highlight-vert.glsl?raw'
 import fragSource from '../shaders/hover-highlight-frag.glsl?raw'
 

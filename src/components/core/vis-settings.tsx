@@ -77,16 +77,16 @@ const VisSettings = React.memo((
                     setSelected={setCore}
                     customStyles={coreDropdownStyles}
                 />
-                <p>
+                { numSection && <p>
                     sections
                     <span>{padZeros(1)} - {padZeros(numSection)}</span>
-                </p>
-                <p>
+                </p> }
+                { topDepth && bottomDepth && <p>
                     depth
                     <span>
                         {formatFloat(topDepth)}m - {formatFloat(bottomDepth)}m
                     </span>
-                </p>
+                </p> }
             </div>
         </div>
     )

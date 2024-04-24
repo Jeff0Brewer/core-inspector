@@ -171,6 +171,7 @@ const ChannelsView = React.memo(({
     }, [core, part])
 
     useEffect(() => {
+        if (!depths) { return }
         const wrap = channelsRef.current
         if (!wrap) {
             throw new Error('No reference to content element')

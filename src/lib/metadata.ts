@@ -8,7 +8,26 @@ type DepthInfo = {
 type DepthMetadata = StringMap<DepthInfo>
 type HydrationMetadata = StringMap<number>
 
+type TileRect = {
+    left: number,
+    top: number,
+    width: number,
+    height: number
+}
+
+type TileTextureMetadata = {
+    downTiles: Array<TileRect>,
+    punchTiles: Array<TileRect>,
+    downDims: [number, number],
+    punchDims: [number, number],
+    numTiles: number,
+    punchNumRows: Array<number>,
+    punchTotalRows: number
+}
+
 export type {
     DepthMetadata,
-    HydrationMetadata
+    HydrationMetadata,
+    TileTextureMetadata,
+    TileRect
 }

@@ -41,7 +41,10 @@ const CorePanel = React.memo(({
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
         const getColumns = (): void => {
-            if (!columnsRef.current) { return }
+            if (minDepth === null || maxDepth === null || !depths) { return }
+            if (!columnsRef.current) {
+                throw new Error('No reference to dom elements')
+            }
 
             const heightPx = columnsRef.current.clientHeight
 

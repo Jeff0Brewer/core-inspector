@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
-import { nullResolve, loadImageAsync } from '../../lib/load'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
+import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
@@ -25,14 +26,15 @@ const CoreView = React.memo((
     { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
-    const [loading, setLoading] = useState<boolean>(true)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const { partIds, tiles } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
     useEffect(() => {
+        if (!partIds || !tiles) { return }
         if (!canvasRef.current) {
             throw new Error('No reference to full core canvas')
         }
@@ -47,36 +49,27 @@ const CoreView = React.memo((
                 punchcardPaths.push(`${corePath}/punchcard/${i}.png`)
             }
 
-            const [mineralImgs, punchcardImgs, tileMetadata, ids] = await Promise.all([
+            const [mineralImgs, punchcardImgs] = await Promise.all([
                 Promise.all(mineralPaths.map(path => loadImageAsync(path))),
-                Promise.all(punchcardPaths.map(path => loadImageAsync(path))),
-                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
-            ]).catch(err => {
-                console.error(err)
-                return [null, null, null, null]
-            })
+                Promise.all(punchcardPaths.map(path => loadImageAsync(path)))
+            ])
 
-            if (mineralImgs && punchcardImgs && tileMetadata && ids) {
-                setVis(
-                    new CoreRenderer(
-                        canvas,
-                        mineralImgs,
-                        punchcardImgs,
-                        tileMetadata,
-                        ids.ids,
-                        minerals
-                    )
+            setVis(
+                new CoreRenderer(
+                    canvas,
+                    mineralImgs,
+                    punchcardImgs,
+                    tiles,
+                    partIds,
+                    minerals
                 )
-            }
-            setLoading(false)
+            )
         }
 
-        setLoading(true)
         setVis(null)
 
         initCoreRenderer(canvasRef.current)
-    }, [core, minerals])
+    }, [core, minerals, partIds, tiles])
 
     useEffect(() => {
         if (!vis) { return }
@@ -102,11 +95,7 @@ const CoreView = React.memo((
     }, [vis, setPart])
 
     return <>
-        <LoadIcon loading={loading} showDelayMs={0} />
-        { !loading && !vis &&
-            <p className={styles.dataMissing}>
-                data not found
-            </p> }
+        <LoadIcon loading={!vis} showDelayMs={0} />
         <VisSettings
             vis={vis}
             cores={cores}

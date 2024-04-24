@@ -49,7 +49,7 @@ const PartView = React.memo((
     const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
-    const { ids } = useCoreMetadata()
+    const { partIds, tiles } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -59,6 +59,7 @@ const PartView = React.memo((
 
     useEffect(() => {
         const initVis = async (): Promise<void> => {
+            if (!partIds || !tiles) { return }
             const corePath = getCorePath(core)
 
             const punchcardPaths: StringMap<string> = {}
@@ -66,17 +67,22 @@ const PartView = React.memo((
                 punchcardPaths[mineral] = `${corePath}/punchcard/${i}.png`
             })
 
-            const [coreMaps, tileMetadata, idMetadata] = await Promise.all([
-                Promise.all(minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))),
-                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
-            ])
+            const punchcardMaps = await Promise.all(
+                minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))
+            )
 
-            setVis(new PartRenderer(minerals, coreMaps, tileMetadata, idMetadata.ids))
+            setVis(
+                new PartRenderer(
+                    minerals,
+                    punchcardMaps,
+                    tiles,
+                    partIds
+                )
+            )
         }
 
         initVis()
-    }, [core, minerals])
+    }, [core, minerals, partIds, tiles])
 
     useEffect(() => {
         if (!vis) { return }
@@ -138,7 +144,7 @@ const PartView = React.memo((
                 open={corePanelOpen}
                 vis={vis}
                 part={part}
-                parts={ids}
+                parts={partIds || []}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
                 finalTopDepth={scrollDepthTop}

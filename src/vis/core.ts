@@ -1,7 +1,7 @@
 import { mat4, vec2 } from 'gl-matrix'
 import { BoundRect, clamp, ease } from '../lib/util'
 import { initGl, GlContext } from '../lib/gl-wrap'
-import { TileTextureMetadata } from '../lib/tile-texture'
+import { TileTextureMetadata } from '../lib/metadata'
 import MineralBlender, { BlendParams } from '../vis/mineral-blend'
 import Camera2D from '../lib/camera'
 import DownscaledCoreRenderer from '../vis/downscaled-core'

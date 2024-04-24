@@ -29,6 +29,9 @@ const LineRepresentation = React.memo((
     const { topDepth, bottomDepth, depths } = useCoreMetadata()
 
     useEffect(() => {
+        if (topDepth === null || bottomDepth == null || !depths) {
+            return
+        }
         const center = depths[part].topDepth + 0.5 * depths[part].length
         const centerPercent = center / (bottomDepth - topDepth)
         setCenter(centerPercent)
@@ -66,19 +69,22 @@ const RectRepresentation = React.memo((
             className={styles.parts}
             style={{ gap: `${gap}px` }}
         >
-            { parts.map((id, i) =>
-                <div
-                    className={styles.rect}
-                    ref={id === part ? partRef : null}
-                    onClick={() => setPart(id)}
-                    style={{
-                        width: `${widthM * mToPx}px`,
-                        height: `${depths[id].length * mToPx}px`
-                    }}
-                    key={i}
-                >
-                </div>
-            ) }
+            { parts.map((id, i) => {
+                const heightM = depths?.[id]?.length || 0
+                return (
+                    <div
+                        className={styles.rect}
+                        ref={id === part ? partRef : null}
+                        onClick={() => setPart(id)}
+                        style={{
+                            width: `${widthM * mToPx}px`,
+                            height: `${heightM * mToPx}px`
+                        }}
+                        key={i}
+                    >
+                    </div>
+                )
+            }) }
         </div>
     )
 })
@@ -212,24 +218,27 @@ const CanvasRepresentation = React.memo(({
             className={styles.parts}
             style={{ '--gap-size': `${gap}px` } as React.CSSProperties}
         >
-            { parts.map((id, i) =>
-                <React.Fragment key={i}>
-                    <div
-                        className={styles.canvas}
-                        ref={id === part ? partRef : null}
-                        onClick={() => setPart(id)}
-                    >
-                        { canvasCtxs[id] && customRender(
-                            <CanvasRenderer
-                                canvas={canvasCtxs[id].canvas}
-                                width={`${widthM * mToPx * widthScale}px`}
-                                height={`${depths[id].length * mToPx}px`}
-                            />
-                        ) }
-                    </div>
-                    {i !== parts.length - 1 && canvasSpacer}
-                </React.Fragment>
-            ) }
+            { parts.map((id, i) => {
+                const heightM = depths?.[id]?.length || 0
+                return (
+                    <React.Fragment key={i}>
+                        <div
+                            className={styles.canvas}
+                            ref={id === part ? partRef : null}
+                            onClick={() => setPart(id)}
+                        >
+                            { canvasCtxs[id] && customRender(
+                                <CanvasRenderer
+                                    canvas={canvasCtxs[id].canvas}
+                                    width={`${widthM * mToPx * widthScale}px`}
+                                    height={`${heightM * mToPx}px`}
+                                />
+                            ) }
+                        </div>
+                        {i !== parts.length - 1 && canvasSpacer}
+                    </React.Fragment>
+                )
+            }) }
         </div>
     </>
 })

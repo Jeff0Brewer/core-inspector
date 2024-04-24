@@ -1,5 +1,5 @@
 import { GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-wrap'
-import { TileTextureMetadata } from '../lib/tile-texture'
+import { TileTextureMetadata } from '../lib/metadata'
 import { POS_FPV, TEX_FPV } from '../lib/vert-gen'
 import { CanvasCtx, glToCanvas } from '../vis/part'
 import MineralBlender from '../vis/mineral-blend'

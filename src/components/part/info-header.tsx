@@ -25,7 +25,7 @@ const PartInfoHeader = React.memo(({ core, part }: PartInfoHeaderProps): ReactEl
                     {getPartId(part)}
                 </span>
             </p>
-            { !!depths[part] && <p>
+            { depths?.[part] && <p>
                 depth
                 <span className={styles.lowercase}>
                     {formatDepthInfo(depths[part].topDepth, depths[part].length)}

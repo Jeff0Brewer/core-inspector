@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactElement, ReactNode } from 'react'
-import { DepthMetadata, HydrationMetadata } from '../lib/metadata'
+import { DepthMetadata, HydrationMetadata, TileTextureMetadata } from '../lib/metadata'
 import { getCorePath } from '../lib/path'
 import CoreMetadataContext from '../hooks/core-metadata-context'
 
@@ -11,34 +11,36 @@ type CoreMetadataProviderProps = {
 function CoreMetadataProvider (
     { core, children }: CoreMetadataProviderProps
 ): ReactElement {
-    const [numSection, setNumSection] = useState<number>(0)
-    const [topDepth, setTopDepth] = useState<number>(0)
-    const [bottomDepth, setBottomDepth] = useState<number>(0)
-    const [depths, setDepths] = useState<DepthMetadata>({})
-    const [hydrations, setHydrations] = useState<HydrationMetadata>({})
-    const [ids, setIds] = useState<Array<string>>([])
+    const [numSection, setNumSection] = useState<number | null>(null)
+    const [topDepth, setTopDepth] = useState<number | null>(null)
+    const [bottomDepth, setBottomDepth] = useState<number | null>(null)
+    const [partIds, setPartIds] = useState<Array<string> | null>(null)
+    const [depths, setDepths] = useState<DepthMetadata | null>(null)
+    const [hydrations, setHydrations] = useState<HydrationMetadata | null>(null)
+    const [tiles, setTiles] = useState<TileTextureMetadata | null>(null)
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
             const corePath = getCorePath(core)
 
             const [
-                { numSection, topDepth, bottomDepth },
+                { numSection, topDepth, bottomDepth, partIds },
                 { depth },
                 { hydration },
-                { ids }
+                tiles
             ] = await Promise.all([
                 fetch(`${corePath}/core-metadata.json`).then(res => res.json()),
                 fetch(`${corePath}/depth-metadata.json`).then(res => res.json()),
                 fetch(`${corePath}/hydration-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
+                fetch(`${corePath}/tile-metadata.json`).then(res => res.json())
             ])
             setNumSection(numSection)
             setTopDepth(topDepth)
             setBottomDepth(bottomDepth)
             setDepths(depth)
             setHydrations(hydration)
-            setIds(ids)
+            setPartIds(partIds)
+            setTiles(tiles)
         }
 
         getData()
@@ -50,7 +52,8 @@ function CoreMetadataProvider (
         bottomDepth,
         depths,
         hydrations,
-        ids
+        partIds,
+        tiles
     }
 
     return (
