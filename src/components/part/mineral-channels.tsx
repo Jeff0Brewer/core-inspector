@@ -173,6 +173,7 @@ const ChannelsView = React.memo(({
     const [rgbPath, setRGBPath] = useState<string>('')
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
+    const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
     const channelsRef = useRef<HTMLDivElement>(null)
     const mousePosRef = useRef<[number, number] | null>(null)
     const { depths } = useCoreMetadata()
@@ -208,9 +209,9 @@ const ChannelsView = React.memo(({
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
-        setAbundanceWorker(abundanceWorker)
-
         const spectraWorker = new SpectraWorker()
+
+        setAbundanceWorker(abundanceWorker)
         setSpectraWorker(spectraWorker)
 
         return () => {
@@ -243,7 +244,12 @@ const ChannelsView = React.memo(({
         if (!abundanceWorker || !spectraWorker || !channelsWrap) { return }
 
         const mousemove = (): void => {
-            if (!mousePosRef.current) { return }
+            if (!mousePosRef.current) {
+                setHoverInfoVisible(false)
+                return
+            }
+
+            setHoverInfoVisible(true)
 
             const [mouseX, mouseY] = mousePosRef.current
             const x = mouseX / viewDims[0] * imgDims[0]
@@ -251,6 +257,11 @@ const ChannelsView = React.memo(({
             abundanceWorker.postMessage({ type: 'mousePosition', x, y })
             spectraWorker.postMessage({ type: 'mousePosition', x, y })
         }
+
+        const hideHoverInfo = (): void => { setHoverInfoVisible(false) }
+
+        channelsWrap.addEventListener('mouseleave', hideHoverInfo)
+        channelsWrap.addEventListener('wheel', hideHoverInfo)
 
         window.addEventListener('mousemove', mousemove)
         return () => {
@@ -295,6 +306,7 @@ const ChannelsView = React.memo(({
                         />
                     ) }
                 <HoverInfo
+                    visible={hoverInfoVisible}
                     abundanceWorker={abundanceWorker}
                     spectrumWorker={spectraWorker}
                     setSelectedSpectrum={setSelectedSpectrum}

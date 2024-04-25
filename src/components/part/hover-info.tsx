@@ -4,6 +4,7 @@ import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
 
 type HoverInfoProps = {
+    visible: boolean,
     abundanceWorker: Worker | null,
     spectrumWorker: Worker | null,
     setSelectedSpectrum: (s: Array<number> | null) => void,
@@ -11,7 +12,7 @@ type HoverInfoProps = {
 }
 
 function HoverInfo ({
-    abundanceWorker, spectrumWorker,
+    visible, abundanceWorker, spectrumWorker,
     setSelectedSpectrum, setSpectrumPosition
 }: HoverInfoProps): ReactElement {
     const [abundances, setAbundances] = useState<StringMap<number>>({})
@@ -54,7 +55,7 @@ function HoverInfo ({
     return (
         <div
             ref={popupRef}
-            className={`${styles.hoverInfo} ${styles.visible}`}
+            className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
             <div className={styles.abundances}>
                 {Object.entries(abundances).map(([mineral, abundance], i) =>
