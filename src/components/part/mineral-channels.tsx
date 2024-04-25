@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -171,16 +171,19 @@ const ChannelsView = React.memo(({
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: ChannelsViewProps): ReactElement => {
     const [rgbPath, setRGBPath] = useState<string>('')
-    const channelsRef = useRef<HTMLDivElement>(null)
-    const { depths } = useCoreMetadata()
 
-    const [mousePos, setMousePos] = useState<[number, number] | null>(null)
+    const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
 
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
 
     const [spectrum, setSpectrum] = useState<Array<number> | null>([])
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
+
+    const channelsRef = useRef<HTMLDivElement>(null)
+    const mousePosRef = useRef<[number, number] | null>(null)
+
+    const { depths } = useCoreMetadata()
 
     useEffect(() => {
         setRGBPath(getRgbPath(core, part))
@@ -255,13 +258,29 @@ const ChannelsView = React.memo(({
     }, [spectraWorker, imgDims, core, part])
 
     useEffect(() => {
-        if (!mousePos || !abundanceWorker || !spectraWorker) { return }
-        const x = mousePos[0] / viewDims[0] * imgDims[0]
-        const y = mousePos[1] / viewDims[1] * imgDims[1]
+        const channelsWrap = channelsRef.current
+        if (!abundanceWorker || !spectraWorker || !channelsWrap) { return }
 
-        abundanceWorker.postMessage({ type: 'mousePosition', x, y })
-        spectraWorker.postMessage({ type: 'mousePosition', x, y })
-    }, [abundanceWorker, spectraWorker, mousePos, viewDims, imgDims])
+        const mousemove = (): void => {
+            if (!mousePosRef.current) {
+                setHoverInfoVisible(false)
+                return
+            }
+
+            const [mouseX, mouseY] = mousePosRef.current
+            const x = mouseX / viewDims[0] * imgDims[0]
+            const y = mouseY / viewDims[1] * imgDims[1]
+            abundanceWorker.postMessage({ type: 'mousePosition', x, y })
+            spectraWorker.postMessage({ type: 'mousePosition', x, y })
+
+            setHoverInfoVisible(true)
+        }
+
+        window.addEventListener('mousemove', mousemove)
+        return () => {
+            window.removeEventListener('mousemove', mousemove)
+        }
+    }, [abundanceWorker, spectraWorker, viewDims, imgDims])
 
     const selectSpectrum = useCallback(() => {
         if (!spectraWorker) { return }
@@ -278,16 +297,14 @@ const ChannelsView = React.memo(({
                     source={rgbPath}
                     width={width}
                     height={height}
-                    mousePos={mousePos}
-                    setMousePos={setMousePos}
+                    mousePosRef={mousePosRef}
                     onClick={selectSpectrum}
                 />
                 <MineralChannel
                     source={vis?.partMinerals ? vis.canvas : 'none'}
                     width={width}
                     height={height}
-                    mousePos={mousePos}
-                    setMousePos={setMousePos}
+                    mousePosRef={mousePosRef}
                     onClick={selectSpectrum}
                 />
                 { Object.entries(channels)
@@ -296,8 +313,7 @@ const ChannelsView = React.memo(({
                             source={img?.src || 'none'}
                             width={width}
                             height={height}
-                            mousePos={mousePos}
-                            setMousePos={setMousePos}
+                            mousePosRef={mousePosRef}
                             onClick={selectSpectrum}
                             key={i}
                         />
@@ -305,7 +321,7 @@ const ChannelsView = React.memo(({
                 <HoverInfo
                     abundances={abundances}
                     spectrum={spectrum}
-                    visible={!!mousePos}
+                    visible={hoverInfoVisible}
                 />
             </div>
         </div>
@@ -316,16 +332,16 @@ type MineralChannelProps = {
     source: HTMLCanvasElement | string,
     width: string,
     height: string,
-    mousePos: [number, number] | null,
-    setMousePos: (p: [number, number] | null) => void,
+    mousePosRef: MutableRefObject<[number, number] | null>,
     onClick: () => void
 }
 
 const MineralChannel = React.memo((
-    { source, width, height, mousePos, setMousePos, onClick }: MineralChannelProps
+    { source, width, height, mousePosRef, onClick }: MineralChannelProps
 ): ReactElement => {
     const [loadError, setLoadError] = useState<boolean>(false)
     const channelRef = useRef<HTMLDivElement>(null)
+    const cursorRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         setLoadError(false)
@@ -333,31 +349,46 @@ const MineralChannel = React.memo((
 
     useEffect(() => {
         const channel = channelRef.current
-        if (!channel) {
-            throw new Error('No reference to mineral channel')
+        const cursor = cursorRef.current
+        if (!channel || !cursor) {
+            throw new Error('No reference to dom elements')
         }
 
         const mousemove = (e: MouseEvent): void => {
             const { top, left } = channel.getBoundingClientRect()
-            setMousePos([
+            mousePosRef.current = [
                 e.clientX - left,
                 e.clientY - top
-            ])
+            ]
+        }
+
+        const updateCursor = (): void => {
+            if (mousePosRef.current) {
+                const [x, y] = mousePosRef.current
+                cursor.style.left = `${x}px`
+                cursor.style.top = `${y}px`
+                cursor.style.opacity = '1'
+            } else {
+                cursor.style.opacity = '0'
+            }
         }
 
         const clearMousePos = (): void => {
-            setMousePos(null)
+            mousePosRef.current = null
+            cursor.style.opacity = '0'
         }
 
         channel.addEventListener('mousemove', mousemove)
         channel.addEventListener('mouseleave', clearMousePos)
         window.addEventListener('wheel', clearMousePos)
+        window.addEventListener('mousemove', updateCursor)
         return () => {
             channel.removeEventListener('mousemove', mousemove)
             channel.removeEventListener('mouseleave', clearMousePos)
             window.removeEventListener('wheel', clearMousePos)
+            window.removeEventListener('mousemove', updateCursor)
         }
-    }, [setMousePos])
+    }, [mousePosRef])
 
     return (
         <div className={styles.channel} onClick={onClick}>
@@ -384,12 +415,9 @@ const MineralChannel = React.memo((
                         data missing
                     </p> }
             </div>
-            { mousePos && <div
-                className={styles.ghostCursor}
-                style={{ left: `${mousePos[0]}px`, top: `${mousePos[1]}px` }}
-            >
+            <div className={styles.ghostCursor} ref={cursorRef}>
                 {ICONS.cursor}
-            </div> }
+            </div>
         </div>
     )
 })
