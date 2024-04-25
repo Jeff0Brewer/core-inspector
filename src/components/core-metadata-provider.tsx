@@ -19,6 +19,7 @@ function CoreMetadataProvider (
     const [depths, setDepths] = useState<DepthMetadata | null>(null)
     const [hydrations, setHydrations] = useState<HydrationMetadata | null>(null)
     const [tiles, setTiles] = useState<TileTextureMetadata | null>(null)
+    const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false)
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
@@ -40,8 +41,11 @@ function CoreMetadataProvider (
             setDepths(depths)
             setHydrations(hydrations)
             setTiles(tiles)
+            setMetadataLoaded(true)
         }
 
+        // clear values from last core
+        setMetadataLoaded(false)
         setNumSection(null)
         setTopDepth(null)
         setBottomDepth(null)
@@ -60,7 +64,8 @@ function CoreMetadataProvider (
         depths,
         hydrations,
         partIds,
-        tiles
+        tiles,
+        metadataLoaded
     }
 
     return (

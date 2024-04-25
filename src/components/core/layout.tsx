@@ -30,7 +30,7 @@ const CoreView = React.memo((
     const [loadError, setLoadError] = useState<boolean>(false)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const { partIds, tiles } = useCoreMetadata()
+    const { partIds, tiles, metadataLoaded } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -39,7 +39,11 @@ const CoreView = React.memo((
         setVis(null)
         setLoadError(false)
 
-        if (!partIds || !tiles) { return }
+        if (!metadataLoaded) { return }
+        if (!tiles || !partIds) {
+            setLoadError(true)
+            return
+        }
         if (!canvasRef.current) {
             throw new Error('No reference to full core canvas')
         }
@@ -83,7 +87,7 @@ const CoreView = React.memo((
         }
 
         initCoreRenderer(canvasRef.current)
-    }, [core, minerals, partIds, tiles])
+    }, [core, minerals, partIds, tiles, metadataLoaded])
 
     useEffect(() => {
         if (!vis) { return }

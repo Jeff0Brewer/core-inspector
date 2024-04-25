@@ -8,7 +8,8 @@ type CoreMetadataContextProps = {
     partIds: Array<string> | null,
     depths: DepthMetadata | null,
     hydrations: HydrationMetadata | null,
-    tiles: TileTextureMetadata | null
+    tiles: TileTextureMetadata | null,
+    metadataLoaded: boolean
 }
 
 const CoreMetadataContext = createContext<CoreMetadataContextProps | null>(null)
