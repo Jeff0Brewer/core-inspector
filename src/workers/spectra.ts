@@ -169,35 +169,33 @@ async function getClickedSpectrum (
 function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64Format): void {
     const path = `${slicePath}.${format.fileExtension}`
 
-    if (path in sliceCache) {
-        const chunk = sliceCache[path]
-        if (chunk) {
-            postMessage({
-                type: 'hovered',
-                spectrum: getSpectrum(mousePos, chunk, format.toFloat)
-            })
-        } else {
-            postMessage({
-                type: 'hovered',
-                spectrum: null
-            })
-        }
-    } else {
+    if (!(path in sliceCache)) {
         cacheSlices(path, slicePath, format)
-        postMessage({
-            type: 'hovered',
-            spectrum: []
-        })
+        postMessage({ type: 'hovered', spectrum: [] })
+        return
     }
+
+    const chunk = sliceCache[path]
+
+    let spectrum: Array<number> | null
+    if (chunk === 'loading') {
+        spectrum = []
+    } else if (chunk === null) {
+        spectrum = null
+    } else {
+        spectrum = getSpectrum(mousePos, chunk, format.toFloat)
+    }
+
+    postMessage({ type: 'hovered', spectrum })
 }
 
-let sliceCache: StringMap<SpectraChunk | null> = {}
+let sliceCache: StringMap<SpectraChunk | 'loading' | null> = {}
 const cacheSlices = async (
     path: string,
     slicePath: string,
     format: Base64Format
 ): Promise<void> => {
-    sliceCache[path] = null
+    sliceCache[path] = 'loading'
     const chunk = await getChunk(path, base64ToU8)
     sliceCache[path] = chunk
 

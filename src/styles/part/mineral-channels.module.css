@@ -203,6 +203,7 @@
     z-index: 2;
     transform: translate(50%, -50%);
     pointer-events: none;
+    transition: opacity var(--transition-param);
 }
 
 .channel:hover .ghost-cursor {
