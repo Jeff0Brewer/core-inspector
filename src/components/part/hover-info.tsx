@@ -4,21 +4,57 @@ import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
 
 type HoverInfoProps = {
-    abundances: StringMap<number>,
-    spectrum: Array<number> | null,
-    visible: boolean
+    abundanceWorker: Worker | null,
+    spectrumWorker: Worker | null,
+    setSelectedSpectrum: (s: Array<number> | null) => void,
+    setSpectrumPosition: (p: [number, number]) => void
 }
 
-function HoverInfo (
-    { abundances, spectrum, visible }: HoverInfoProps
-): ReactElement {
+function HoverInfo ({
+    abundanceWorker, spectrumWorker,
+    setSelectedSpectrum, setSpectrumPosition
+}: HoverInfoProps): ReactElement {
+    const [abundances, setAbundances] = useState<StringMap<number>>({})
+    const [spectrum, setSpectrum] = useState<Array<number> | null>([])
+
+    useEffect(() => {
+        if (!abundanceWorker) { return }
+
+        const updateAbundances = ({ data }: MessageEvent): void => {
+            setAbundances(data.abundances)
+        }
+
+        abundanceWorker.addEventListener('message', updateAbundances)
+        return () => {
+            abundanceWorker.removeEventListener('message', updateAbundances)
+        }
+    }, [abundanceWorker])
+
+    useEffect(() => {
+        if (!spectrumWorker) { return }
+
+        const updateSpectrum = ({ data }: MessageEvent): void => {
+            if (data.type === 'hovered') {
+                setSpectrum(data.spectrum)
+            } else if (data.type === 'clicked') {
+                setSelectedSpectrum(data.spectrum)
+                setSpectrumPosition([data.x, data.y])
+            }
+        }
+
+        spectrumWorker.addEventListener('message', updateSpectrum)
+        return () => {
+            spectrumWorker.removeEventListener('message', updateSpectrum)
+        }
+    }, [spectrumWorker, setSelectedSpectrum, setSpectrumPosition])
+
     const popupRef = useRef<HTMLDivElement>(null)
     usePopupPosition(popupRef)
 
     return (
         <div
             ref={popupRef}
-            className={`${styles.hoverInfo} ${visible && styles.visible}`}
+            className={`${styles.hoverInfo} ${styles.visible}`}
         >
             <div className={styles.abundances}>
                 {Object.entries(abundances).map(([mineral, abundance], i) =>

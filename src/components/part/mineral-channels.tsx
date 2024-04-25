@@ -171,18 +171,10 @@ const ChannelsView = React.memo(({
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: ChannelsViewProps): ReactElement => {
     const [rgbPath, setRGBPath] = useState<string>('')
-
-    const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
-
-    const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
-
-    const [spectrum, setSpectrum] = useState<Array<number> | null>([])
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
-
     const channelsRef = useRef<HTMLDivElement>(null)
     const mousePosRef = useRef<[number, number] | null>(null)
-
     const { depths } = useCoreMetadata()
 
     useEffect(() => {
@@ -216,20 +208,9 @@ const ChannelsView = React.memo(({
 
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
-        abundanceWorker.addEventListener('message', ({ data }) =>
-            setAbundances(data.abundances)
-        )
         setAbundanceWorker(abundanceWorker)
 
         const spectraWorker = new SpectraWorker()
-        spectraWorker.addEventListener('message', ({ data }) => {
-            if (data.type === 'hovered') {
-                setSpectrum(data.spectrum)
-            } else if (data.type === 'clicked') {
-                setSelectedSpectrum(data.spectrum)
-                setSpectrumPosition([data.x, data.y])
-            }
-        })
         setSpectraWorker(spectraWorker)
 
         return () => {
@@ -262,18 +243,13 @@ const ChannelsView = React.memo(({
         if (!abundanceWorker || !spectraWorker || !channelsWrap) { return }
 
         const mousemove = (): void => {
-            if (!mousePosRef.current) {
-                setHoverInfoVisible(false)
-                return
-            }
+            if (!mousePosRef.current) { return }
 
             const [mouseX, mouseY] = mousePosRef.current
             const x = mouseX / viewDims[0] * imgDims[0]
             const y = mouseY / viewDims[1] * imgDims[1]
             abundanceWorker.postMessage({ type: 'mousePosition', x, y })
             spectraWorker.postMessage({ type: 'mousePosition', x, y })
-
-            setHoverInfoVisible(true)
         }
 
         window.addEventListener('mousemove', mousemove)
@@ -319,9 +295,10 @@ const ChannelsView = React.memo(({
                         />
                     ) }
                 <HoverInfo
-                    abundances={abundances}
-                    spectrum={spectrum}
-                    visible={hoverInfoVisible}
+                    abundanceWorker={abundanceWorker}
+                    spectrumWorker={spectraWorker}
+                    setSelectedSpectrum={setSelectedSpectrum}
+                    setSpectrumPosition={setSpectrumPosition}
                 />
             </div>
         </div>
