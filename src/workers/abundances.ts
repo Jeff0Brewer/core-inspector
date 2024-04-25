@@ -1,16 +1,16 @@
 import { StringMap } from '../lib/util'
 
-let pixels: StringMap<Uint8Array> = {}
+let pixels: StringMap<Uint8Array | null> = {}
 let width: number = 0
 
 onmessage = ({ data }): void => {
     if (data.type === 'imgData') {
-        const imgData: StringMap<ImageData> = data.imgData
+        const imgData: StringMap<ImageData | null> = data.imgData
         const minerals = Object.keys(imgData)
-        const monochromeData = Object.values(imgData).map(imageDataToMonochromeBytes)
         pixels = {}
-        minerals.forEach((mineral, i) => {
-            pixels[mineral] = monochromeData[i]
+        minerals.forEach(mineral => {
+            const data = imgData[mineral]
+            pixels[mineral] = data !== null ? imageDataToMonochromeBytes(data) : null
         })
         width = data.imgWidth
     } else if (data.type === 'mousePosition') {
@@ -20,7 +20,7 @@ onmessage = ({ data }): void => {
         const index = rowIndex + colIndex * width
         const abundances: StringMap<number> = {}
         Object.entries(pixels).forEach(([mineral, data]) => {
-            abundances[mineral] = data[index]
+            abundances[mineral] = data !== null ? data[index] : 0
         })
         postMessage({ abundances })
     }

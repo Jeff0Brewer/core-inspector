@@ -41,7 +41,10 @@ const CorePanel = React.memo(({
     // calculate all column depth ranges / visible parts when selected part changes
     useEffect(() => {
         const getColumns = (): void => {
-            if (!columnsRef.current) { return }
+            if (minDepth === null || maxDepth === null || !depths?.[part]) { return }
+            if (!columnsRef.current) {
+                throw new Error('No reference to dom elements')
+            }
 
             const heightPx = columnsRef.current.clientHeight
 
@@ -131,6 +134,10 @@ const CorePanel = React.memo(({
                     key={i}
                 />
             }) }
+            { render && depths && !depths[part] &&
+                <p className={styles.dataMissing}>
+                    data missing
+                </p> }
         </div>
         <div className={`${styles.bottomLabels} ${!open && styles.hidden}`}>
             { render && columns.map((column, i) =>

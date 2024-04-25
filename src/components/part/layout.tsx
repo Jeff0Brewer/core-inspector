@@ -5,7 +5,7 @@ import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
-import { StringMap } from '../../lib/util'
+import { StringMap, notNull } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
 import PartRenderer from '../../vis/part'
@@ -42,14 +42,14 @@ const PartView = React.memo((
     { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<HTMLImageElement>>({})
+    const [channels, setChannels] = useState<StringMap<HTMLImageElement | null>>({})
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-    const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number>>([])
+    const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number> | null>([])
     const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
-    const { ids } = useCoreMetadata()
+    const { partIds, tiles } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -59,6 +59,7 @@ const PartView = React.memo((
 
     useEffect(() => {
         const initVis = async (): Promise<void> => {
+            if (!partIds || !tiles) { return }
             const corePath = getCorePath(core)
 
             const punchcardPaths: StringMap<string> = {}
@@ -66,28 +67,39 @@ const PartView = React.memo((
                 punchcardPaths[mineral] = `${corePath}/punchcard/${i}.png`
             })
 
-            const [coreMaps, tileMetadata, idMetadata] = await Promise.all([
-                Promise.all(minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))),
-                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
-            ])
+            const punchcardMaps = await Promise.all(
+                minerals.map(mineral => loadImageAsync(punchcardPaths[mineral]))
+            )
 
-            setVis(new PartRenderer(minerals, coreMaps, tileMetadata, idMetadata.ids))
+            const loadedPunchcardMaps = punchcardMaps.filter(notNull)
+            if (loadedPunchcardMaps.length === punchcardMaps.length) {
+                setVis(
+                    new PartRenderer(
+                        minerals,
+                        loadedPunchcardMaps,
+                        tiles,
+                        partIds
+                    )
+                )
+            }
         }
 
         initVis()
-    }, [core, minerals])
+    }, [core, minerals, partIds, tiles])
 
     useEffect(() => {
-        if (!vis) { return }
         const getMineralChannels = async (): Promise<void> => {
             const channelPaths = getAbundancePaths(core, part, minerals)
             const channelMaps = await Promise.all(
                 minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
             )
 
-            vis.setPart(minerals, channelMaps)
-            const channels: StringMap<HTMLImageElement> = {}
+            const loadedChannelMaps = channelMaps.filter(notNull)
+            if (loadedChannelMaps.length === channelMaps.length) {
+                vis?.setPart(minerals, loadedChannelMaps)
+            }
+
+            const channels: StringMap<HTMLImageElement | null> = {}
             minerals.forEach((mineral, i) => {
                 channels[mineral] = channelMaps[i]
             })
@@ -138,7 +150,7 @@ const PartView = React.memo((
                 open={corePanelOpen}
                 vis={vis}
                 part={part}
-                parts={ids}
+                parts={partIds || []}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
                 finalTopDepth={scrollDepthTop}
@@ -148,6 +160,7 @@ const PartView = React.memo((
                 vis={vis}
                 core={core}
                 part={part}
+                minerals={minerals}
                 channels={channels}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}

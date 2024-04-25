@@ -23,7 +23,7 @@ function HoverInfo ({ vis }: HoverInfoProps): ReactElement {
         vis.setHovered(null)
     }, [vis])
 
-    const hasData = hovered && (depths[hovered] || hydrations[hovered])
+    const hasData = hovered && (depths?.[hovered] || hydrations?.[hovered])
 
     return (
         <div
@@ -34,15 +34,15 @@ function HoverInfo ({ vis }: HoverInfoProps): ReactElement {
                 {getPartId(hovered)}
             </div> }
             { hasData && <div className={styles.data}>
-                { depths[hovered] && <div>
+                { depths?.[hovered] && <div>
                     <p>top depth</p>
                     <span>{formatFloat(depths[hovered].topDepth)}m</span>
                 </div> }
-                { depths[hovered] && <div>
+                { depths?.[hovered] && <div>
                     <p>length</p>
                     <span>{formatFloat(depths[hovered].length)}m</span>
                 </div> }
-                { hydrations[hovered] && <div>
+                { hydrations?.[hovered] && <div>
                     <p>hydration</p>
                     <span>{formatFloat(hydrations[hovered] * 100)}%</span>
                 </div> }

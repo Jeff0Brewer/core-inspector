@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
+import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
+import { notNull } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
@@ -25,13 +27,23 @@ const CoreView = React.memo((
     { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
+    const [loadError, setLoadError] = useState<boolean>(false)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const { partIds, tiles, metadataLoaded } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
     useEffect(() => {
+        setVis(null)
+        setLoadError(false)
+
+        if (!metadataLoaded) { return }
+        if (!tiles || !partIds) {
+            setLoadError(true)
+            return
+        }
         if (!canvasRef.current) {
             throw new Error('No reference to full core canvas')
         }
@@ -46,30 +58,36 @@ const CoreView = React.memo((
                 punchcardPaths.push(`${corePath}/punchcard/${i}.png`)
             }
 
-            const [mineralImgs, punchcardImgs, tileMetadata, ids] = await Promise.all([
+            const [mineralImgs, punchcardImgs] = await Promise.all([
                 Promise.all(mineralPaths.map(path => loadImageAsync(path))),
-                Promise.all(punchcardPaths.map(path => loadImageAsync(path))),
-                fetch(`${corePath}/tile-metadata.json`).then(res => res.json()),
-                fetch(`${corePath}/id-metadata.json`).then(res => res.json())
+                Promise.all(punchcardPaths.map(path => loadImageAsync(path)))
             ])
+
+            // check if all images loaded
+            const loadedMineralImgs = mineralImgs.filter(notNull)
+            const loadedPunchcardImgs = punchcardImgs.filter(notNull)
+            if (
+                loadedMineralImgs.length !== mineralImgs.length ||
+                loadedPunchcardImgs.length !== punchcardImgs.length
+            ) {
+                setLoadError(true)
+                return
+            }
 
             setVis(
                 new CoreRenderer(
                     canvas,
-                    mineralImgs,
-                    punchcardImgs,
-                    tileMetadata,
-                    ids.ids,
+                    loadedMineralImgs,
+                    loadedPunchcardImgs,
+                    tiles,
+                    partIds,
                     minerals
                 )
             )
         }
 
-        // immediately set to null for loading state
-        setVis(null)
-
         initCoreRenderer(canvasRef.current)
-    }, [core, minerals])
+    }, [core, minerals, partIds, tiles, metadataLoaded])
 
     useEffect(() => {
         if (!vis) { return }
@@ -95,25 +113,31 @@ const CoreView = React.memo((
     }, [vis, setPart])
 
     return <>
-        <LoadIcon loading={!vis} showDelayMs={0} />
-        <VisSettings
-            vis={vis}
-            cores={cores}
-            core={core}
-            setCore={setCore}
-        />
-        <ViewControls vis={vis} />
-        <canvas
-            ref={canvasRef}
-            className={`${styles.visCanvas} ${!!vis && styles.visible}`}
-        ></canvas>
-        <MineralControls
-            vis={vis}
-            minerals={minerals}
-            palettes={palettes}
-        />
-        <HoverInfo vis={vis} />
-        <PanScrollbar vis={vis} />
+        <LoadIcon loading={!vis && !loadError} showDelayMs={0} />
+        { !loadError && <>
+            <VisSettings
+                vis={vis}
+                cores={cores}
+                core={core}
+                setCore={setCore}
+            />
+            <ViewControls vis={vis} />
+            <canvas
+                ref={canvasRef}
+                className={`${styles.visCanvas} ${!!vis && styles.visible}`}
+            ></canvas>
+            <MineralControls
+                vis={vis}
+                minerals={minerals}
+                palettes={palettes}
+            />
+            <HoverInfo vis={vis} />
+            <PanScrollbar vis={vis} />
+        </> }
+        { loadError &&
+            <p className={styles.dataMissing}>
+                data missing
+            </p> }
     </>
 })
 

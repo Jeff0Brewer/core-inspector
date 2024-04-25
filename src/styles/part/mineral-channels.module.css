@@ -137,6 +137,7 @@
     grid-area: channels;
     height: 100%;
     width: fit-content;
+    min-width: 100%;
     overflow-y: scroll;
 
     /* hide default scrollbars */
@@ -156,6 +157,15 @@
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
     background-color: #202020;
+
+    transition: opacity 300ms ease;
+    transition-delay: 100ms;
+    opacity: 1;
+}
+
+.content[data-loading="true"] .channels {
+    transition-delay: 0s;
+    opacity: 0;
 }
 
 .channel {
@@ -197,4 +207,14 @@
 
 .channel:hover .ghost-cursor {
     display: none;
+}
+
+.data-missing {
+    position: relative;
+    display: grid;
+    place-content: center;
+    color: var(--color4);
+    background-color: #191919;
+    text-transform: uppercase;
+    text-align: center;
 }

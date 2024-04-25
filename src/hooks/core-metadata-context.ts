@@ -1,13 +1,15 @@
 import { createContext, useContext } from 'react'
-import { DepthMetadata, HydrationMetadata } from '../lib/metadata'
+import { DepthMetadata, HydrationMetadata, TileTextureMetadata } from '../lib/metadata'
 
 type CoreMetadataContextProps = {
-    numSection: number,
-    topDepth: number,
-    bottomDepth: number,
-    depths: DepthMetadata,
-    hydrations: HydrationMetadata,
-    ids: Array<string>
+    numSection: number | null,
+    topDepth: number | null,
+    bottomDepth: number | null,
+    partIds: Array<string> | null,
+    depths: DepthMetadata | null,
+    hydrations: HydrationMetadata | null,
+    tiles: TileTextureMetadata | null,
+    metadataLoaded: boolean
 }
 
 const CoreMetadataContext = createContext<CoreMetadataContextProps | null>(null)

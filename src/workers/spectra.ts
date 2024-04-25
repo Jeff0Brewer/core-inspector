@@ -1,5 +1,6 @@
 import { TextWriter, BlobReader, ZipReader } from '@zip.js/zip.js'
 import { clamp, StringMap } from '../lib/util'
+import { fetchBlob } from '../lib/load'
 import { getSpectraBasePath, getSpectraSlicesId } from '../lib/path'
 
 type TypedArray = Uint8Array | Uint16Array
@@ -78,21 +79,29 @@ const SPECTRA_TYPE = `W${REDUCE_FACTOR}_S1_H${REDUCE_FACTOR}-n${SLICE_COUNT}`
 async function getChunk (
     path: string,
     parse: (b64: string) => TypedArray
-): Promise<SpectraChunk> {
-    const res = await fetch(path)
-    const blob = await res.blob()
+): Promise<SpectraChunk | null> {
+    const blob = await fetchBlob(path)
+    if (!blob) { return null }
 
     const blobReader = new BlobReader(blob)
     const zipReader = new ZipReader(blobReader)
     const entries = await zipReader.getEntries()
-    const firstEntry = entries.shift()
+        .catch(err => {
+            console.error(err)
+            return null
+        })
+    if (!entries) { return null }
 
-    if (!firstEntry || !firstEntry.getData) {
-        throw new Error('No data in zip file')
-    }
+    const firstEntry = entries.shift()
+    if (!firstEntry || !firstEntry.getData) { return null }
 
     const textWriter = new TextWriter()
     const jsonString = await firstEntry.getData(textWriter)
+        .catch(err => {
+            console.error(err)
+            return null
+        })
+    if (!jsonString) { return null }
 
     zipReader.close()
 
@@ -138,8 +147,17 @@ async function getClickedSpectrum (
     const { x, y } = mousePos
 
     const chunk = await getChunk(path, format.fromBase64)
-    const spectrum = getSpectrum(mousePos, chunk, format.toFloat)
+    if (!chunk) {
+        postMessage({
+            type: 'clicked',
+            spectrum: null,
+            x: Math.round(x),
+            y: Math.round(y)
+        })
+        return
+    }
 
+    const spectrum = getSpectrum(mousePos, chunk, format.toFloat)
     postMessage({
         type: 'clicked',
         spectrum,
@@ -151,13 +169,19 @@ async function getClickedSpectrum (
 function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64Format): void {
     const path = `${slicePath}.${format.fileExtension}`
 
-    const chunk = sliceCache[path]
-    if (chunk) {
-        const spectrum = getSpectrum(mousePos, chunk, format.toFloat)
-        postMessage({
-            type: 'hovered',
-            spectrum
-        })
+    if (path in sliceCache) {
+        const chunk = sliceCache[path]
+        if (chunk) {
+            postMessage({
+                type: 'hovered',
+                spectrum: getSpectrum(mousePos, chunk, format.toFloat)
+            })
+        } else {
+            postMessage({
+                type: 'hovered',
+                spectrum: null
+            })
+        }
     } else {
         cacheSlices(path, slicePath, format)
         postMessage({
@@ -167,12 +191,13 @@ function getHoveredSpectrum (mousePos: Point, slicePath: string, format: Base64F
     }
 }
 
-let sliceCache: StringMap<SpectraChunk> = {}
+let sliceCache: StringMap<SpectraChunk | null> = {}
 const cacheSlices = async (
     path: string,
     slicePath: string,
     format: Base64Format
 ): Promise<void> => {
+    sliceCache[path] = null
     const chunk = await getChunk(path, base64ToU8)
     sliceCache[path] = chunk
 
