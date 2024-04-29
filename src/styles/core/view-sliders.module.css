@@ -1,11 +1,11 @@
 .sliders {
     position: relative;
-    z-index: 2;
     grid-area: content;
-    width: 70px;
-    height: 100%;
+    width: 55px;
     z-index: 5;
+    height: fit-content;
     display: flex;
+    align-items: center;
     flex-direction: column;
     margin-top: 20px;
     gap: 20px;

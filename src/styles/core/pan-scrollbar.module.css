@@ -8,8 +8,8 @@
     height: 7px;
     overflow: hidden;
     transition: opacity var(--transition-param);
-    pointer-events: none;
     background-color: #202020;
+    cursor: pointer;
 }
 
 .track-hidden {
