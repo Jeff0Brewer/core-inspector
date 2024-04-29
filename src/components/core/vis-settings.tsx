@@ -8,7 +8,7 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
-import BugSvg from '../../assets/bug-icon.svg'
+import Logo from '../../components/logo'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
@@ -54,14 +54,7 @@ const VisSettings = React.memo((
     return (
         <div className={styles.settings}>
             <div className={styles.left}>
-                <div className={styles.title}>
-                    <a className={styles.bugIcon} href={'https://bit.ly/COREINSPECTOR-BUGS'}>
-                        <img src={BugSvg} />
-                    </a>
-                    <a className={styles.logo} href={'https://coreinspector.caltech.edu/HOME.html'}>
-                        <p>coreinspector</p>
-                    </a>
-                </div>
+                <Logo />
                 <div className={styles.controls}>
                     <ToggleSelect<CoreShape>
                         currValue={shape}
