@@ -33,12 +33,12 @@ const MineralChannels = React.memo(({
     vis, core, part, minerals, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: MineralChannelsProps): ReactElement => {
+    const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
     const [imgDims, setImgDims] = useState<[number, number]>([320, 3000])
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(true)
 
     useLayoutEffect(() => {
         const [imgWidth, imgHeight] = imgDims
@@ -82,19 +82,12 @@ const MineralChannels = React.memo(({
         />
         <div className={styles.content} data-loading={loading}>
             <LoadIcon loading={loading} showDelayMs={100} />
-            <div className={styles.topLabels} style={{ gap }}>
-                <p className={styles.topLabel} style={{ width }}>
-                    [visual range]
-                </p>
-                <p className={styles.topLabel} style={{ width }}>
-                    [blended]
-                </p>
-                { minerals.map((mineral, i) =>
-                    <p className={styles.topLabel} style={{ width }} key={i}>
-                        {mineral}
-                    </p>
-                ) }
-            </div>
+            <ChannelTopLabels
+                extraChannels={['visual range', 'blended']}
+                mineralChannels={minerals}
+                width={width}
+                gap={gap}
+            />
             <ChannelsView
                 core={core}
                 part={part}
@@ -118,16 +111,35 @@ const MineralChannels = React.memo(({
     </>
 })
 
-type ChannelBottomLabelsProps = {
+type ChannelLabelsProps = {
     extraChannels: Array<string>,
     mineralChannels: Array<string>,
     width: string,
     gap: string
 }
 
+const ChannelTopLabels = React.memo(({
+    extraChannels, mineralChannels, width, gap
+}: ChannelLabelsProps): ReactElement => {
+    return (
+        <div className={styles.topLabels} style={{ gap }}>
+            { extraChannels.map((label, i) =>
+                <p className={styles.topLabel} style={{ width }} key={i}>
+                    [{label}]
+                </p>
+            )}
+            { mineralChannels.map((mineral, i) =>
+                <p className={styles.topLabel} style={{ width }} key={i}>
+                    {mineral}
+                </p>
+            ) }
+        </div>
+    )
+})
+
 const ChannelBottomLabels = React.memo(({
     extraChannels, mineralChannels, width, gap
-}: ChannelBottomLabelsProps): ReactElement => {
+}: ChannelLabelsProps): ReactElement => {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     const toggleVisible = (mineral: string): void => {
