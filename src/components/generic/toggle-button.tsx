@@ -4,20 +4,26 @@ import styles from '../../styles/generic/toggle-button.module.css'
 type ToggleButtonProps = {
     active: boolean,
     toggleValue: () => void,
-    icon: ReactElement
+    icon: ReactElement,
+    label?: string
 }
 
 function ToggleButton (
-    { active, toggleValue, icon }: ToggleButtonProps
+    { active, toggleValue, icon, label }: ToggleButtonProps
 ): ReactElement {
     return (
-        <button
-            onClick={toggleValue}
-            className={styles.toggleButton}
-            data-active={active}
-        >
-            {icon}
-        </button>
+        <div className={styles.toggleButton}>
+            <button
+                onClick={toggleValue}
+                data-active={active}
+            >
+                {icon}
+            </button>
+            { label &&
+                <p className={styles.label}>
+                    {label}
+                </p>}
+        </div>
     )
 }
 

@@ -20,7 +20,7 @@ type CoreShape = keyof typeof CORE_SHAPES
 type CoreViewMode = 'punchcard' | 'downscaled'
 
 const TRANSFORM_SPEED = 1
-const VIEWPORT_PADDING: [number, number] = [0.9, 0.875]
+const VIEWPORT_PADDING: [number, number] = [0.9, 0.85]
 const PROJECTION_PARAMS = {
     fov: 0.5 * Math.PI,
     near: 0.01,

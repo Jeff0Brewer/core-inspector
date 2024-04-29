@@ -63,22 +63,25 @@ const VisSettings = React.memo((
                     </a>
                 </div>
                 <div className={styles.controls}>
-                    <ToggleButton
-                        active={calibration === 'show'}
-                        toggleValue={toggleCalibration}
-                        icon={ICONS.calibration}
-                    />
                     <ToggleSelect<CoreShape>
                         currValue={shape}
                         setValue={ s => vis?.setShape(s) }
                         item0={{ value: 'column', icon: ICONS.column }}
                         item1={{ value: 'spiral', icon: ICONS.spiral }}
+                        label={'layout'}
                     />
                     <ToggleSelect<CoreViewMode>
                         currValue={viewMode}
                         setValue={v => vis?.setViewMode(v)}
                         item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                         item1={{ value: 'punchcard', icon: ICONS.punchcard }}
+                        label={'view'}
+                    />
+                    <ToggleButton
+                        active={calibration === 'show'}
+                        toggleValue={toggleCalibration}
+                        icon={ICONS.calibration}
+                        label={'caps'}
                     />
                 </div>
             </div>
