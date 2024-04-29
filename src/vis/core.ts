@@ -377,7 +377,7 @@ class CoreRenderer {
 
         const wheel = (e: WheelEvent): void => {
             this.camera.mousewheel(e.deltaY)
-            this.uiState.setZoom?.(this.camera.zoomT)
+            this.uiState.setZoom?.(1 - this.camera.zoomT)
             this.setHovered(null)
         }
 
