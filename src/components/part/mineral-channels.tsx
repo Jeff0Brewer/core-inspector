@@ -33,16 +33,13 @@ const MineralChannels = React.memo(({
     vis, core, part, minerals, channels,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: MineralChannelsProps): ReactElement => {
-    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
-
     const [zoom, setZoom] = useState<number>(0.25)
     const [spacing, setSpacing] = useState<number>(0.25)
-
     const [imgDims, setImgDims] = useState<[number, number]>([320, 3000])
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
-
     const [loading, setLoading] = useState<boolean>(true)
+    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     useLayoutEffect(() => {
         const [imgWidth, imgHeight] = imgDims
@@ -262,9 +259,10 @@ const ChannelsView = React.memo(({
 
         channelsWrap.addEventListener('mouseleave', hideHoverInfo)
         channelsWrap.addEventListener('wheel', hideHoverInfo)
-
         window.addEventListener('mousemove', mousemove)
         return () => {
+            channelsWrap.removeEventListener('mouseleave', hideHoverInfo)
+            channelsWrap.removeEventListener('wheel', hideHoverInfo)
             window.removeEventListener('mousemove', mousemove)
         }
     }, [abundanceWorker, spectraWorker, viewDims, imgDims])
