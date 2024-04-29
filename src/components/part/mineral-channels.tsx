@@ -15,7 +15,7 @@ import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
 const BLEND_LABEL = 'blended'
-const VISUAL_LABEL = 'false color IR'
+const VISUAL_LABEL = 'false color'
 const EXTRA_CHANNELS = [VISUAL_LABEL, BLEND_LABEL]
 
 const MIN_WIDTH_PX = 50
