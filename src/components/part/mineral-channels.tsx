@@ -176,6 +176,19 @@ const ChannelsView = React.memo(({
     const { depths } = useCoreMetadata()
 
     useEffect(() => {
+        const abundanceWorker = new AbundanceWorker()
+        const spectraWorker = new SpectraWorker()
+
+        setAbundanceWorker(abundanceWorker)
+        setSpectraWorker(spectraWorker)
+
+        return () => {
+            abundanceWorker.terminate()
+            spectraWorker.terminate()
+        }
+    }, [])
+
+    useEffect(() => {
         setRGBPath(getRgbPath(core, part))
     }, [core, part])
 
@@ -203,19 +216,6 @@ const ChannelsView = React.memo(({
             wrap.removeEventListener('scroll', scroll)
         }
     }, [part, depths, setDepthTop, setDepthBottom, viewDims])
-
-    useEffect(() => {
-        const abundanceWorker = new AbundanceWorker()
-        const spectraWorker = new SpectraWorker()
-
-        setAbundanceWorker(abundanceWorker)
-        setSpectraWorker(spectraWorker)
-
-        return () => {
-            abundanceWorker.terminate()
-            spectraWorker.terminate()
-        }
-    }, [setSelectedSpectrum, setSpectrumPosition])
 
     useEffect(() => {
         const numChannels = Object.keys(channels).length
