@@ -131,6 +131,9 @@ const PartView = React.memo((
     return (
         <div className={styles.partView} style={gridParams}>
             <div className={styles.topLeft}>
+                <p className={`${styles.closeLabel} ${!corePanelOpen && styles.closeLabelHidden}`}>
+                    back to global view
+                </p>
                 <button
                     className={styles.closeButton}
                     onClick={() => setPart(null)}
