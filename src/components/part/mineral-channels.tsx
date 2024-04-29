@@ -39,7 +39,6 @@ const MineralChannels = React.memo(({
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
     const [loading, setLoading] = useState<boolean>(true)
-    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
 
     useLayoutEffect(() => {
         const [imgWidth, imgHeight] = imgDims
@@ -109,44 +108,62 @@ const MineralChannels = React.memo(({
                 setSelectedSpectrum={setSelectedSpectrum}
                 setSpectrumPosition={setSpectrumPosition}
             />
-            <div className={styles.bottomLabels} style={{ gap }}>
-                <div className={styles.bottomLabel} style={{ width }}>
-                    <button className={styles.toggleButton}>
-                        visual range
-                    </button>
-                </div>
-                <div className={styles.bottomLabel} style={{ width }}>
-                    <button className={styles.toggleButton}>
-                        blended
-                    </button>
-                </div>
-                { minerals.map((mineral, i) =>
-                    <div className={styles.bottomLabel} style={{ width }} key={i}>
-                        <div
-                            className={styles.blendColor}
-                            style={{
-                                backgroundColor: getCssColor(
-                                    getBlendColor(palette, visibilities, monochrome, mineral)
-                                )
-                            }}
-                        ></div>
-                        <button
-                            className={`${
-                                styles.blendButton} ${
-                                !isToggleable(mineral, palette, visibilities) && styles.disabled
-                            }`}
-                            onClick={() => {
-                                visibilities[mineral] = !visibilities[mineral]
-                                setVisibilities({ ...visibilities })
-                            }}
-                        >
-                            {mineral}
-                        </button>
-                    </div>
-                ) }
-            </div>
+            <ChannelBottomLabels
+                extraChannels={['visual range', 'blended']}
+                mineralChannels={minerals}
+                width={width}
+                gap={gap}
+            />
         </div>
     </>
+})
+
+type ChannelBottomLabelsProps = {
+    extraChannels: Array<string>,
+    mineralChannels: Array<string>,
+    width: string,
+    gap: string
+}
+
+const ChannelBottomLabels = React.memo(({
+    extraChannels, mineralChannels, width, gap
+}: ChannelBottomLabelsProps): ReactElement => {
+    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+    return (
+        <div className={styles.bottomLabels} style={{ gap }}>
+            { extraChannels.map((label, i) =>
+                <div className={styles.bottomLabel} style={{ width }} key={i}>
+                    <button className={styles.toggleButton}>
+                        {label}
+                    </button>
+                </div>
+            ) }
+            { mineralChannels.map((mineral, i) =>
+                <div className={styles.bottomLabel} style={{ width }} key={i}>
+                    <div
+                        className={styles.blendColor}
+                        style={{
+                            backgroundColor: getCssColor(
+                                getBlendColor(palette, visibilities, monochrome, mineral)
+                            )
+                        }}
+                    ></div>
+                    <button
+                        className={`${
+                            styles.blendButton} ${
+                            !isToggleable(mineral, palette, visibilities) && styles.disabled
+                        }`}
+                        onClick={() => {
+                            visibilities[mineral] = !visibilities[mineral]
+                            setVisibilities({ ...visibilities })
+                        }}
+                    >
+                        {mineral}
+                    </button>
+                </div>
+            ) }
+        </div>
+    )
 })
 
 type ChannelsViewProps = {
