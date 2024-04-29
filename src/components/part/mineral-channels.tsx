@@ -14,6 +14,10 @@ import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
 import styles from '../../styles/part/mineral-channels.module.css'
 
+const BLEND_LABEL = 'blended'
+const VISUAL_LABEL = 'visual range'
+const EXTRA_CHANNELS = [VISUAL_LABEL, BLEND_LABEL]
+
 const MIN_WIDTH_PX = 50
 
 // TODO: simplify
@@ -40,6 +44,10 @@ const MineralChannels = React.memo(({
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
 
+    useEffect(() => {
+        setLoading(true)
+    }, [part])
+
     useLayoutEffect(() => {
         const [imgWidth, imgHeight] = imgDims
 
@@ -50,10 +58,6 @@ const MineralChannels = React.memo(({
         setViewDims([viewWidth, viewHeight])
         setViewGap(viewGap)
     }, [channels, zoom, spacing, imgDims])
-
-    useEffect(() => {
-        setLoading(true)
-    }, [part])
 
     useEffect(() => {
         const imgs = Object.values(channels)
@@ -83,7 +87,7 @@ const MineralChannels = React.memo(({
         <div className={styles.content} data-loading={loading}>
             <LoadIcon loading={loading} showDelayMs={100} />
             <ChannelTopLabels
-                extraChannels={['visual range', 'blended']}
+                extraChannels={EXTRA_CHANNELS}
                 mineralChannels={minerals}
                 width={width}
                 gap={gap}
@@ -92,6 +96,8 @@ const MineralChannels = React.memo(({
                 core={core}
                 part={part}
                 vis={vis}
+                extraChannels={EXTRA_CHANNELS}
+                mineralChannels={minerals}
                 channels={channels}
                 imgDims={imgDims}
                 viewDims={viewDims}
@@ -102,7 +108,7 @@ const MineralChannels = React.memo(({
                 setSpectrumPosition={setSpectrumPosition}
             />
             <ChannelBottomLabels
-                extraChannels={['visual range', 'blended']}
+                extraChannels={EXTRA_CHANNELS}
                 mineralChannels={minerals}
                 width={width}
                 gap={gap}
@@ -179,6 +185,8 @@ type ChannelsViewProps = {
     core: string,
     part: string,
     vis: PartRenderer | null,
+    extraChannels: Array<string>,
+    mineralChannels: Array<string>,
     channels: StringMap<HTMLImageElement | null>,
     imgDims: [number, number],
     viewDims: [number, number],
@@ -190,10 +198,10 @@ type ChannelsViewProps = {
 }
 
 const ChannelsView = React.memo(({
-    core, part, vis, channels, imgDims, viewDims, viewGap,
+    core, part, vis, extraChannels, mineralChannels, channels, imgDims, viewDims, viewGap,
     setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
 }: ChannelsViewProps): ReactElement => {
-    const [rgbPath, setRGBPath] = useState<string>('')
+    const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
     const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
@@ -215,8 +223,21 @@ const ChannelsView = React.memo(({
     }, [])
 
     useEffect(() => {
-        setRGBPath(getRgbPath(core, part))
-    }, [core, part])
+        const sources: Array<string | HTMLCanvasElement> = []
+        for (const label of extraChannels) {
+            if (label === BLEND_LABEL) {
+                sources.push(vis?.partMinerals ? vis.canvas : 'none')
+            } else if (label === VISUAL_LABEL) {
+                sources.push(getRgbPath(core, part))
+            }
+        }
+        for (const mineral of mineralChannels) {
+            const imgSrc = channels?.[mineral]?.src
+            sources.push(imgSrc || 'none')
+        }
+
+        setSources(sources)
+    }, [core, part, vis, channels, extraChannels, mineralChannels])
 
     useEffect(() => {
         if (!depths?.[part]) { return }
@@ -304,31 +325,16 @@ const ChannelsView = React.memo(({
     return (
         <div className={styles.channelsWrap} ref={channelsRef}>
             <div className={styles.channels} style={{ gap }}>
-                <MineralChannel
-                    source={rgbPath}
-                    width={width}
-                    height={height}
-                    mousePosRef={mousePosRef}
-                    onClick={selectSpectrum}
-                />
-                <MineralChannel
-                    source={vis?.partMinerals ? vis.canvas : 'none'}
-                    width={width}
-                    height={height}
-                    mousePosRef={mousePosRef}
-                    onClick={selectSpectrum}
-                />
-                { Object.entries(channels)
-                    .map(([_, img], i) =>
-                        <MineralChannel
-                            source={img?.src || 'none'}
-                            width={width}
-                            height={height}
-                            mousePosRef={mousePosRef}
-                            onClick={selectSpectrum}
-                            key={i}
-                        />
-                    ) }
+                { sources.map((source, i) =>
+                    <MineralChannel
+                        source={source}
+                        width={width}
+                        height={height}
+                        mousePosRef={mousePosRef}
+                        onClick={selectSpectrum}
+                        key={i}
+                    />
+                ) }
                 <HoverInfo
                     visible={hoverInfoVisible}
                     abundanceWorker={abundanceWorker}
