@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { getCoreId, getPartId } from '../../lib/path'
+import Logo from '../../components/logo'
 import styles from '../../styles/part/info-header.module.css'
 
 type PartInfoHeaderProps = {
@@ -12,25 +13,28 @@ const PartInfoHeader = React.memo(({ core, part }: PartInfoHeaderProps): ReactEl
     const { depths } = useCoreMetadata()
 
     return (
-        <div className={styles.partInfo}>
-            <p>
-                core
-                <span>
-                    {getCoreId(core)}
-                </span>
-            </p>
-            <p>
-                section
-                <span>
-                    {getPartId(part)}
-                </span>
-            </p>
-            { depths?.[part] && <p>
-                depth
-                <span className={styles.lowercase}>
-                    {formatDepthInfo(depths[part].topDepth, depths[part].length)}
-                </span>
-            </p> }
+        <div className={styles.header}>
+            <Logo />
+            <div className={styles.partInfo}>
+                <p>
+                    core
+                    <span>
+                        {getCoreId(core)}
+                    </span>
+                </p>
+                <p>
+                    section
+                    <span>
+                        {getPartId(part)}
+                    </span>
+                </p>
+                { depths?.[part] && <p>
+                    depth
+                    <span className={styles.lowercase}>
+                        {formatDepthInfo(depths[part].topDepth, depths[part].length)}
+                    </span>
+                </p> }
+            </div>
         </div>
     )
 })
