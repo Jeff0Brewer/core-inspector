@@ -54,11 +54,13 @@ const VisSettings = React.memo((
     return (
         <div className={styles.settings}>
             <div className={styles.left}>
-                <div className={styles.logo}>
-                    <a href={'https://bit.ly/COREINSPECTOR-BUGS'}>
-                        <img className={styles.bugIcon} src={BugSvg} />
+                <div className={styles.title}>
+                    <a className={styles.bugIcon} href={'https://bit.ly/COREINSPECTOR-BUGS'}>
+                        <img src={BugSvg} />
                     </a>
-                    <p>coreinspector</p>
+                    <a className={styles.logo} href={'https://coreinspector.caltech.edu/HOME.html'}>
+                        <p>coreinspector</p>
+                    </a>
                 </div>
                 <div className={styles.controls}>
                     <ToggleButton
