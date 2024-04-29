@@ -8,6 +8,7 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
+import BugSvg from '../../assets/bug-icon.svg'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
@@ -52,23 +53,33 @@ const VisSettings = React.memo((
 
     return (
         <div className={styles.settings}>
-            <ToggleButton
-                active={calibration === 'show'}
-                toggleValue={toggleCalibration}
-                icon={ICONS.calibration}
-            />
-            <ToggleSelect<CoreShape>
-                currValue={shape}
-                setValue={ s => vis?.setShape(s) }
-                item0={{ value: 'column', icon: ICONS.column }}
-                item1={{ value: 'spiral', icon: ICONS.spiral }}
-            />
-            <ToggleSelect<CoreViewMode>
-                currValue={viewMode}
-                setValue={v => vis?.setViewMode(v)}
-                item0={{ value: 'downscaled', icon: ICONS.downscaled }}
-                item1={{ value: 'punchcard', icon: ICONS.punchcard }}
-            />
+            <div className={styles.left}>
+                <div className={styles.logo}>
+                    <a href={'https://bit.ly/COREINSPECTOR-BUGS'}>
+                        <img className={styles.bugIcon} src={BugSvg} />
+                    </a>
+                    <p>coreinspector</p>
+                </div>
+                <div className={styles.controls}>
+                    <ToggleButton
+                        active={calibration === 'show'}
+                        toggleValue={toggleCalibration}
+                        icon={ICONS.calibration}
+                    />
+                    <ToggleSelect<CoreShape>
+                        currValue={shape}
+                        setValue={ s => vis?.setShape(s) }
+                        item0={{ value: 'column', icon: ICONS.column }}
+                        item1={{ value: 'spiral', icon: ICONS.spiral }}
+                    />
+                    <ToggleSelect<CoreViewMode>
+                        currValue={viewMode}
+                        setValue={v => vis?.setViewMode(v)}
+                        item0={{ value: 'downscaled', icon: ICONS.downscaled }}
+                        item1={{ value: 'punchcard', icon: ICONS.punchcard }}
+                    />
+                </div>
+            </div>
             <div className={styles.info}>
                 <p>core</p>
                 <Dropdown
