@@ -132,7 +132,7 @@ const ChannelTopLabels = React.memo(({
                 <p className={styles.topLabel} style={{ width }} key={i}>
                     [{label}]
                 </p>
-            )}
+            ) }
             { mineralChannels.map((mineral, i) =>
                 <p className={styles.topLabel} style={{ width }} key={i}>
                     {mineral}
@@ -377,10 +377,7 @@ const MineralChannel = React.memo((
 
         const mousemove = (e: MouseEvent): void => {
             const { top, left } = channel.getBoundingClientRect()
-            mousePosRef.current = [
-                e.clientX - left,
-                e.clientY - top
-            ]
+            mousePosRef.current = [e.clientX - left, e.clientY - top]
         }
 
         const updateCursor = (): void => {
@@ -426,8 +423,7 @@ const MineralChannel = React.memo((
                          style={{ width, height }}
                          draggable={false}
                          onError={() => setLoadError(true)}
-                     />
-                }
+                     /> }
                 { loadError &&
                     <p
                         className={styles.dataMissing}
