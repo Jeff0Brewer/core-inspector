@@ -78,11 +78,7 @@ function PanScrollbar (
             ref={scrollbarWrapRef}
         >
             <div
-                className={`${
-                    styles.handle} ${
-                    !visible && styles.handleHidden} ${
-                    dragging && styles.handleExpanded
-                }`}
+                className={`${styles.handle} ${!visible && styles.handleHidden}`}
                 style={{
                     width: `${(panWidth || 0) * 100}%`,
                     left: `${pan * 100}%`
