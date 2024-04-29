@@ -42,7 +42,7 @@ const PartView = React.memo((
     { part, core, minerals, palettes, setPart }: PartViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
-    const [channels, setChannels] = useState<StringMap<HTMLImageElement | null>>({})
+    const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number> | null>([])
@@ -54,8 +54,8 @@ const PartView = React.memo((
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
 
-    // apply blending on change to params or current channels
-    useBlending(vis, channels)
+    // apply blending on change to params or current mineral maps
+    useBlending(vis, mineralMaps)
 
     useEffect(() => {
         const initVis = async (): Promise<void> => {
@@ -90,20 +90,20 @@ const PartView = React.memo((
     useEffect(() => {
         const getMineralChannels = async (): Promise<void> => {
             const channelPaths = getAbundancePaths(core, part, minerals)
-            const channelMaps = await Promise.all(
+            const channels = await Promise.all(
                 minerals.map(mineral => loadImageAsync(channelPaths[mineral]))
             )
 
-            const loadedChannelMaps = channelMaps.filter(notNull)
-            if (loadedChannelMaps.length === channelMaps.length) {
-                vis?.setPart(minerals, loadedChannelMaps)
+            const loadedChannels = channels.filter(notNull)
+            if (loadedChannels.length === channels.length) {
+                vis?.setPart(minerals, loadedChannels)
             }
 
-            const channels: StringMap<HTMLImageElement | null> = {}
+            const mineralMaps: StringMap<HTMLImageElement | null> = {}
             minerals.forEach((mineral, i) => {
-                channels[mineral] = channelMaps[i]
+                mineralMaps[mineral] = channels[i]
             })
-            setChannels(channels)
+            setMineralMaps(mineralMaps)
         }
 
         getMineralChannels()
@@ -161,7 +161,7 @@ const PartView = React.memo((
                 core={core}
                 part={part}
                 minerals={minerals}
-                channels={channels}
+                mineralMaps={mineralMaps}
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
                 setSelectedSpectrum={setSelectedSpectrum}
