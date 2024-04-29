@@ -129,6 +129,12 @@ const ChannelBottomLabels = React.memo(({
     extraChannels, mineralChannels, width, gap
 }: ChannelBottomLabelsProps): ReactElement => {
     const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+
+    const toggleVisible = (mineral: string): void => {
+        visibilities[mineral] = !visibilities[mineral]
+        setVisibilities({ ...visibilities })
+    }
+
     return (
         <div className={styles.bottomLabels} style={{ gap }}>
             { extraChannels.map((label, i) =>
@@ -138,30 +144,21 @@ const ChannelBottomLabels = React.memo(({
                     </button>
                 </div>
             ) }
-            { mineralChannels.map((mineral, i) =>
-                <div className={styles.bottomLabel} style={{ width }} key={i}>
-                    <div
-                        className={styles.blendColor}
-                        style={{
-                            backgroundColor: getCssColor(
-                                getBlendColor(palette, visibilities, monochrome, mineral)
-                            )
-                        }}
-                    ></div>
-                    <button
-                        className={`${
-                            styles.blendButton} ${
-                            !isToggleable(mineral, palette, visibilities) && styles.disabled
-                        }`}
-                        onClick={() => {
-                            visibilities[mineral] = !visibilities[mineral]
-                            setVisibilities({ ...visibilities })
-                        }}
-                    >
-                        {mineral}
-                    </button>
-                </div>
-            ) }
+            { mineralChannels.map((mineral, i) => {
+                const blendColor = getCssColor(getBlendColor(palette, visibilities, monochrome, mineral))
+                const toggleable = isToggleable(mineral, palette, visibilities)
+                return (
+                    <div className={styles.bottomLabel} style={{ width }} key={i}>
+                        <div className={styles.blendColor} style={{ backgroundColor: blendColor }}></div>
+                        <button
+                            className={`${styles.blendButton} ${!toggleable && styles.disabled}`}
+                            onClick={() => toggleVisible(mineral)}
+                        >
+                            {mineral}
+                        </button>
+                    </div>
+                )
+            }) }
         </div>
     )
 })
