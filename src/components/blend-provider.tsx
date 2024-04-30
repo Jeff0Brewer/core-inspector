@@ -1,7 +1,7 @@
-import { useState, ReactElement, ReactNode } from 'react'
+import { useState, useCallback, ReactElement, ReactNode } from 'react'
 import { StringMap } from '../lib/util'
 import { GenericPalette } from '../lib/palettes'
-import { BlendMode } from '../vis/mineral-blend'
+import { BlendMode, BlendParams } from '../vis/mineral-blend'
 import BlendContext from '../hooks/blend-context'
 
 type BlendProviderProps = {
@@ -25,6 +25,16 @@ function BlendProvider (
     const [mode, setMode] = useState<BlendMode>('additive')
     const [monochrome, setMonochrome] = useState<boolean>(false)
 
+    const setBlendParams = useCallback((params: BlendParams) => {
+        setMagnitudes(params.magnitudes)
+        setVisibilities(params.visibilities)
+        setPalette(params.palette)
+        setSaturation(params.saturation)
+        setThreshold(params.threshold)
+        setMode(params.mode)
+        setMonochrome(params.monochrome)
+    }, [])
+
     const value = {
         palette,
         setPalette,
@@ -39,7 +49,8 @@ function BlendProvider (
         mode,
         setMode,
         monochrome,
-        setMonochrome
+        setMonochrome,
+        setBlendParams
     }
 
     return (
