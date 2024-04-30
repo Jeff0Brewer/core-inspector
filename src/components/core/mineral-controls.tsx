@@ -4,6 +4,7 @@ import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable, BlendParams } from '../../vis/mineral-blend'
 import { getCssColor } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
+import BlendIcon from '../../assets/blend-icon.svg'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/mineral-controls.module.css'
@@ -92,6 +93,7 @@ const MineralControls = React.memo((
                         onClick={viewBlended}
                         data-active={numVisible > 1}
                     >
+                        <img src={BlendIcon} />
                         channel mixer
                         <span className={styles.mixerColors}>
                             { paletteColors.map((color, i) =>
@@ -122,7 +124,7 @@ const MineralControls = React.memo((
                     data-active={menuOpen}
                     onClick={() => setMenuOpen(!menuOpen)}
                 >
-                    <MdColorLens />
+                    <img src={BlendIcon} />
                 </button>
             </div>
             <BlendMenu
