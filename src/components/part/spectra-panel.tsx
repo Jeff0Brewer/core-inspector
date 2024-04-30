@@ -9,6 +9,7 @@ import { PiCaretRightBold } from 'react-icons/pi'
 import { StringMap, lerp } from '../../lib/util'
 import { fetchJson } from '../../lib/load'
 import Dropdown from '../../components/generic/dropdown'
+import DownloadIcon from '../../assets/download-icon.svg'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
@@ -103,16 +104,21 @@ const SpectraPanel = React.memo((
                 >
                     <PiCaretRightBold />
                 </button>
-                <div className={styles.positionLabel}>
-                    <p className={styles.positionHeader}>
-                        position
-                    </p>
-                    <p>
-                        X <span>{spectrumPosition[0]}px</span>
-                    </p>
-                    <p>
-                        Y <span>{spectrumPosition[1]}px</span>
-                    </p>
+                <div className={styles.topBar}>
+                    <div className={styles.positionLabel}>
+                        <p>
+                            X <span>{spectrumPosition[0]}px</span>
+                        </p>
+                        <p>
+                            Y <span>{spectrumPosition[1]}px</span>
+                        </p>
+                    </div>
+                    <div className={styles.downloads}>
+                        <button>
+                            <img src={DownloadIcon} />
+                            <p>csv</p>
+                        </button>
+                    </div>
                 </div>
                 { selectedSpectrum !== null && <>
                     <div className={styles.mainPlot}>
