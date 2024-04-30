@@ -12,9 +12,11 @@
         opacity var(--transition-param);
     transform: translateY(3px);
     opacity: 0;
+    pointer-events: none;
 }
 
 .visible {
+    pointer-events: auto;
     transform: none;
     opacity: 1;
 }

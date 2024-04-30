@@ -1,8 +1,9 @@
-import React, { useState, MouseEvent, ReactElement } from 'react'
-import { MdColorLens } from 'react-icons/md'
+import React, { useState, useRef, ReactElement } from 'react'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
-import { isToggleable } from '../../vis/mineral-blend'
+import { isToggleable, BlendParams } from '../../vis/mineral-blend'
+import { getCssColor } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
+import BlendIcon from '../../assets/blend-icon.svg'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/mineral-controls.module.css'
@@ -18,36 +19,101 @@ const MineralControls = React.memo((
 ): ReactElement => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
     const {
-        palette,
+        magnitudes,
         visibilities,
+        palette,
+        saturation,
+        threshold,
+        mode,
+        monochrome,
         setVisibilities,
-        setMonochrome
+        setMagnitudes,
+        setMonochrome,
+        setSaturation,
+        setThreshold,
+        setBlendParams
     } = useBlendState()
 
+    // apply blending on changes to blend params
     useBlending(vis)
 
-    const onMineralButtonClick = (e: MouseEvent, mineral: string): void => {
-        if (e.shiftKey) {
-            visibilities[mineral] = !visibilities[mineral]
-        } else {
-            minerals.forEach(mineral => {
-                visibilities[mineral] = false
-            })
-            visibilities[mineral] = true
-            setMonochrome(true)
+    // store last multi-channel blend state to revert to on exit monochrome view
+    const lastBlendParams = useRef<BlendParams>({
+        magnitudes, visibilities, palette, saturation, threshold, mode, monochrome
+    })
+
+    const numVisible = Object.values(visibilities).filter(v => v).length
+
+    const viewSingleChannelMonochrome = (mineral: string): void => {
+        if (!monochrome && numVisible > 1) {
+            // copy blend values to prevent mutation via reference
+            lastBlendParams.current = {
+                magnitudes: { ...magnitudes },
+                visibilities: { ...visibilities },
+                palette: { ...palette },
+                saturation,
+                threshold,
+                mode,
+                monochrome
+            }
         }
+
+        minerals.forEach(mineral => { visibilities[mineral] = false })
+        visibilities[mineral] = true
+        magnitudes[mineral] = 1
+
         setVisibilities({ ...visibilities })
+        setMagnitudes({ ...magnitudes })
+        setMonochrome(true)
+        setSaturation(1)
+        setThreshold(0)
+        setMenuOpen(false)
     }
+
+    const viewBlended = (): void => {
+        // revert to last multi channel blend state if currently in single
+        if (numVisible === 1) {
+            setBlendParams({ ...lastBlendParams.current })
+        }
+        if (monochrome) {
+            setMenuOpen(true)
+        } else {
+            setMenuOpen(!menuOpen)
+        }
+    }
+
+    const paletteColors = Object.values(palette.colors)
+    paletteColors.push(...Array(minerals.length - paletteColors.length).fill(null))
 
     return (
         <div className={styles.mineralControls}>
             <div className={styles.mineralBar}>
                 <div className={styles.minerals}>
+                    <button
+                        className={styles.mixerButton}
+                        onClick={viewBlended}
+                        data-active={numVisible > 1}
+                    >
+                        <img src={BlendIcon} />
+                        channel mixer
+                        <span className={styles.mixerColors}>
+                            { paletteColors.map((color, i) =>
+                                <span
+                                    className={color === null ? styles.swatchHidden : ''}
+                                    style={{
+                                        backgroundColor: getCssColor(color),
+                                        zIndex: 10 - i
+                                    }}
+                                    key={i}
+                                ></span>
+                            ) }
+                        </span>
+                    </button>
                     { minerals.map((mineral, i) =>
                         <button
                             className={`${!isToggleable(mineral, palette, visibilities) && styles.disabled}`}
-                            onClick={(e): void => onMineralButtonClick(e, mineral)}
-                            data-active={visibilities[mineral]}
+                            onClick={() => viewSingleChannelMonochrome(mineral)}
+                            data-active={numVisible === 1 && visibilities[mineral]}
                             key={i}
                         >
                             {mineral}
@@ -59,7 +125,7 @@ const MineralControls = React.memo((
                     data-active={menuOpen}
                     onClick={() => setMenuOpen(!menuOpen)}
                 >
-                    <MdColorLens />
+                    <img src={BlendIcon} />
                 </button>
             </div>
             <BlendMenu

@@ -6,9 +6,10 @@ import {
 import { Line } from 'react-chartjs-2'
 import React, { ReactElement, useState, useEffect } from 'react'
 import { PiCaretRightBold } from 'react-icons/pi'
-import { StringMap, lerp } from '../../lib/util'
+import { StringMap, lerp, downloadText } from '../../lib/util'
 import { fetchJson } from '../../lib/load'
 import Dropdown from '../../components/generic/dropdown'
+import DownloadIcon from '../../assets/download-icon.svg'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
@@ -35,6 +36,7 @@ const SpectraPanel = React.memo((
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra | null>(null)
     const [libraryMineral, setLibraryMineral] = useState<string>('')
 
+    const [selectedData, setSelectedData] = useState<Array<Point> | null>(null)
     const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
     const [deltaPlotData, setDeltaPlotData] = useState<ChartData<'line'> | null>(null)
 
@@ -73,6 +75,7 @@ const SpectraPanel = React.memo((
 
         const selectedData = getSpectrumData(coreWavelengths, selectedSpectrum)
         const libraryData = getLibraryData(selectedData, librarySpectrum)
+        setSelectedData(selectedData)
         setMainPlotData({
             datasets: [
                 { data: selectedData, ...DATASET_OPTIONS.selected },
@@ -103,16 +106,21 @@ const SpectraPanel = React.memo((
                 >
                     <PiCaretRightBold />
                 </button>
-                <div className={styles.positionLabel}>
-                    <p className={styles.positionHeader}>
-                        position
-                    </p>
-                    <p>
-                        X <span>{spectrumPosition[0]}px</span>
-                    </p>
-                    <p>
-                        Y <span>{spectrumPosition[1]}px</span>
-                    </p>
+                <div className={styles.topBar}>
+                    <div className={styles.positionLabel}>
+                        <p>X <span>{spectrumPosition[0]}px</span></p>
+                        <p>Y <span>{spectrumPosition[1]}px</span></p>
+                    </div>
+                    <div className={styles.downloads}>
+                        <button onClick={() => downloadCsv(selectedData)}>
+                            <img src={DownloadIcon} />
+                            <p>csv</p>
+                        </button>
+                        <button onClick={() => downloadSvg(selectedData)}>
+                            <img src={DownloadIcon} />
+                            <p>svg</p>
+                        </button>
+                    </div>
                 </div>
                 { selectedSpectrum !== null && <>
                     <div className={styles.mainPlot}>
@@ -145,6 +153,45 @@ const SpectraPanel = React.memo((
         </div>
     )
 })
+
+function downloadCsv (spectrum: Array<Point> | null): void {
+    if (!spectrum) { return }
+
+    const csvList = ['wavelength,reflectance']
+    for (const { x, y } of spectrum) {
+        csvList.push(`${x},${y}`)
+    }
+    const csv = csvList.join('\n')
+    downloadText('spectrum.csv', csv)
+}
+
+function downloadSvg (spectrum: Array<Point> | null): void {
+    if (!spectrum) { return }
+
+    let minX = Number.MAX_VALUE
+    let maxX = Number.MIN_VALUE
+    let minY = 0
+    let maxY = Number.MIN_VALUE
+    for (const { x, y } of spectrum) {
+        minX = Math.min(minX, x)
+        maxX = Math.max(maxX, x)
+        minY = Math.min(minY, y)
+        maxY = Math.max(maxY, y)
+    }
+    const viewBox = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
+
+    const points = []
+    for (const { x, y } of spectrum) {
+        points.push(`${x},${maxY - y}`)
+    }
+
+    const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="${viewBox}">
+            <polyline stroke="#000" fill="none" vector-effect="non-scaling-stroke" points="${points.join(' ')}"/>
+        </svg>`
+
+    downloadText('spectrum.svg', svg)
+}
 
 function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
     if (!wavelengths.length || !reflectances.length) {

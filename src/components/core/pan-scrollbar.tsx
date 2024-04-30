@@ -39,25 +39,37 @@ function PanScrollbar (
             throw new Error('No reference to scrollbar elements')
         }
 
+        const getHandleOffset = (mouseX: number): number => {
+            const { left, right } = scrollbarHandle.getBoundingClientRect()
+            const handleClickPercentage = clamp((mouseX - left) / (right - left), 0, 1)
+            return handleClickPercentage * panWidth
+        }
+
+        const getPan = (mouseX: number, handleOffset: number): number => {
+            const { left, right } = scrollbarWrap.getBoundingClientRect()
+            const clickPercent = clamp((mouseX - left) / (right - left), 0, 1)
+            return clickPercent - handleOffset
+        }
+
         if (!dragging) {
             const mousedown = (e: MouseEvent): void => {
+                const handleOffset = getHandleOffset(e.clientX)
+                const pan = getPan(e.clientX, handleOffset)
+                vis.setPan(pan)
+                setHandleClickOffset(handleOffset)
                 setDragging(true)
-                const { left, right } = scrollbarHandle.getBoundingClientRect()
-                const handleClickPercentage = clamp((e.clientX - left) / (right - left), 0, 1)
-                setHandleClickOffset(handleClickPercentage * panWidth)
             }
-            scrollbarHandle.addEventListener('mousedown', mousedown)
+            scrollbarWrap.addEventListener('mousedown', mousedown)
             return () => {
-                scrollbarHandle.removeEventListener('mousedown', mousedown)
+                scrollbarWrap.removeEventListener('mousedown', mousedown)
             }
         } else {
             const mouseup = (): void => { setDragging(false) }
             const mouseleave = (): void => { setDragging(false) }
             const mousemove = (e: MouseEvent): void => {
                 if (dragging) {
-                    const { left, right } = scrollbarWrap.getBoundingClientRect()
-                    const clickPercent = clamp((e.clientX - left) / (right - left), 0, 1)
-                    vis.setPan(clickPercent - handleClickOffset)
+                    const pan = getPan(e.clientX, handleClickOffset)
+                    vis.setPan(pan)
                 }
             }
 
@@ -78,11 +90,7 @@ function PanScrollbar (
             ref={scrollbarWrapRef}
         >
             <div
-                className={`${
-                    styles.handle} ${
-                    !visible && styles.handleHidden} ${
-                    dragging && styles.handleExpanded
-                }`}
+                className={`${styles.handle} ${!visible && styles.handleHidden}`}
                 style={{
                     width: `${(panWidth || 0) * 100}%`,
                     left: `${pan * 100}%`

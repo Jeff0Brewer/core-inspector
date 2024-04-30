@@ -1,5 +1,6 @@
 .spectra-panel-wrap {
     --chart-margin-left: 60px;
+    --chart-margin-right: 20px;
     grid-area: main;
     grid-column: punch / main;
     grid-row: main / bottom-main;
@@ -27,16 +28,47 @@
     padding: 20px 40px;
 }
 
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.downloads {
+    display: flex;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #ccc;
+    margin-right: var(--chart-margin-right);
+}
+
+.downloads > button {
+    display: flex;
+    transition: opacity var(--transition-param);
+}
+
+.downloads > button:hover {
+    opacity: 0.7;
+}
+
+.downloads p {
+    text-transform: uppercase;
+}
+
+.downloads img {
+    width: 20px;
+    height: 20px;
+}
+
 .position-label {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 5px;
     font-size: 0.85rem;
     font-weight: 300;
     color: var(--color4);
-    margin-right: 20px;
-    margin-bottom: 20px;
+    margin-left: var(--chart-margin-left);
     text-transform: uppercase;
     min-width: 300px;
 }
@@ -44,13 +76,6 @@
 .position-label span {
     color: #fff;
     text-transform: none;
-}
-
-.position-header {
-    border-right: 1px solid var(--color3);
-    padding-right: 5px;
-    height: 20px;
-    line-height: 20px;
 }
 
 .main-plot, .delta-plot {

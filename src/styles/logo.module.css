@@ -1,0 +1,32 @@
+.title {
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
+    color: #dedede;
+}
+
+.title > a {
+    text-decoration: none;
+    color: inherit;
+    opacity: 1;
+    transition: opacity var(--transition-param);
+}
+
+.title > a:hover {
+    opacity: 0.7;
+}
+
+.logo {
+    position: relative;
+    height: 12px;
+}
+
+.logo > img {
+    height: 100%;
+}
+
+.bug-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+}
