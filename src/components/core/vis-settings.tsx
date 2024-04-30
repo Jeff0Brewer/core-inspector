@@ -8,6 +8,8 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
+import CalibrationOnIcon from '../../assets/caps-on-icon.svg'
+import CalibrationOffIcon from '../../assets/caps-off-icon.svg'
 import Logo from '../../components/logo'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
@@ -58,7 +60,7 @@ const VisSettings = React.memo((
                 <div className={styles.controls}>
                     <ToggleSelect<CoreShape>
                         currValue={shape}
-                        setValue={ s => vis?.setShape(s) }
+                        setValue={s => vis?.setShape(s)}
                         item0={{ value: 'column', icon: ICONS.column }}
                         item1={{ value: 'spiral', icon: ICONS.spiral }}
                         label={'layout'}
@@ -70,10 +72,11 @@ const VisSettings = React.memo((
                         item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                         label={'view'}
                     />
-                    <ToggleButton
-                        active={calibration === 'show'}
-                        toggleValue={toggleCalibration}
-                        icon={ICONS.calibration}
+                    <ToggleSelect<CalibrationOption>
+                        currValue={calibration}
+                        setValue={c => vis?.setCalibration(c)}
+                        item0={{ value: 'show', icon: ICONS.calibrationOn }}
+                        item1={{ value: 'remove', icon: ICONS.calibrationOff }}
                         label={'caps'}
                     />
                 </div>
@@ -102,7 +105,8 @@ const VisSettings = React.memo((
 })
 
 const ICONS = {
-    calibration: <IoGridSharp style={{ fontSize: '16px' }} />,
+    calibrationOn: <img src={CalibrationOnIcon} style={{ height: '27px' }}/>,
+    calibrationOff: <img src={CalibrationOffIcon} style={{ height: '27px' }}/>,
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
     downscaled: <div className={styles.downscaledIcon}></div>,
