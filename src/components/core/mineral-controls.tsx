@@ -1,5 +1,4 @@
 import React, { useState, useRef, ReactElement } from 'react'
-import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable, BlendParams } from '../../vis/mineral-blend'
 import { getCssColor } from '../../lib/util'

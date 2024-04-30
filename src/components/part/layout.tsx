@@ -1,6 +1,5 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
-import { MdColorLens } from 'react-icons/md'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -8,6 +7,7 @@ import { loadImageAsync } from '../../lib/load'
 import { StringMap, notNull } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
 import { GenericPalette } from '../../lib/palettes'
+import BlendIcon from '../../assets/blend-icon.svg'
 import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
@@ -180,7 +180,7 @@ const PartView = React.memo((
                     onClick={() => setBlendMenuOpen(!blendMenuOpen)}
                     data-active={blendMenuOpen}
                 >
-                    <MdColorLens />
+                    <img src={BlendIcon} />
                 </button>
                 <BlendMenu
                     open={blendMenuOpen}

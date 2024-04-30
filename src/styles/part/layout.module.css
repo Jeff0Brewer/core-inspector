@@ -87,3 +87,8 @@
     font-size: 14px;
     border-radius: 5px 0 0 5px;
 }
+
+.blend-toggle > img {
+    width: 25px;
+    height: 25px;
+}
