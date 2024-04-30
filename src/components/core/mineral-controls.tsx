@@ -71,8 +71,10 @@ const MineralControls = React.memo((
     }
 
     const viewBlended = (): void => {
-        // revert to last multi channel blend state
-        setBlendParams({ ...lastBlendParams.current })
+        // revert to last multi channel blend state if currently in single
+        if (numVisible === 1) {
+            setBlendParams({ ...lastBlendParams.current })
+        }
         if (monochrome) {
             setMenuOpen(true)
         } else {
