@@ -1,9 +1,6 @@
 .title {
     display: flex;
     align-items: center;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-    font-weight: 200;
     padding-right: 20px;
     color: #dedede;
 }
@@ -21,7 +18,11 @@
 
 .logo {
     position: relative;
-    bottom: 1px;
+    height: 12px;
+}
+
+.logo > img {
+    height: 100%;
 }
 
 .bug-icon {
