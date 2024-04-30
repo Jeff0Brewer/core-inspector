@@ -23,7 +23,7 @@
     justify-content: center;
     width: 100%;
     min-width: 0;
-    max-width: 1000px;
+    max-width: 1150px;
     overflow-x: scroll;
 
     /* hide default scrollbars */
@@ -69,6 +69,7 @@
 
 .mineral-bar .mixer-button[data-active] {
     margin-right: 15px;
+    flex-grow: 0;
 }
 
 .mixer-button[data-active="true"] > .mixer-colors > * {
@@ -106,7 +107,8 @@
 }
 
 .swatch-hidden {
-    width: 3px;
+    /* width to offset negative margin for proper spacing */
+    width: 4px;
 }
 
 .disabled {
