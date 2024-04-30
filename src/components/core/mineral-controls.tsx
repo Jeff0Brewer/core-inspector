@@ -2,6 +2,7 @@ import React, { useState, useRef, ReactElement } from 'react'
 import { MdColorLens } from 'react-icons/md'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable, BlendParams } from '../../vis/mineral-blend'
+import { getCssColor } from '../../lib/util'
 import { GenericPalette } from '../../lib/palettes'
 import BlendMenu from '../../components/blend-menu'
 import CoreRenderer from '../../vis/core'
@@ -33,17 +34,19 @@ const MineralControls = React.memo((
         setBlendParams
     } = useBlendState()
 
+    // apply blending on changes to blend params
+    useBlending(vis)
+
+    // store last multi-channel blend state to revert to on exit monochrome view
     const lastBlendParams = useRef<BlendParams>({
         magnitudes, visibilities, palette, saturation, threshold, mode, monochrome
     })
-
-    useBlending(vis)
 
     const numVisible = Object.values(visibilities).filter(v => v).length
 
     const viewSingleChannelMonochrome = (mineral: string): void => {
         if (!monochrome && numVisible > 1) {
-            // store last blend state to revert to on exit monochrome view
+            // copy blend values to prevent mutation via reference
             lastBlendParams.current = {
                 magnitudes: { ...magnitudes },
                 visibilities: { ...visibilities },
@@ -55,11 +58,10 @@ const MineralControls = React.memo((
             }
         }
 
-        minerals.forEach(mineral => {
-            visibilities[mineral] = false
-        })
+        minerals.forEach(mineral => { visibilities[mineral] = false })
         visibilities[mineral] = true
         magnitudes[mineral] = 1
+
         setVisibilities({ ...visibilities })
         setMagnitudes({ ...magnitudes })
         setMonochrome(true)
@@ -69,6 +71,7 @@ const MineralControls = React.memo((
     }
 
     const viewBlended = (): void => {
+        // revert to last multi channel blend state
         setBlendParams({ ...lastBlendParams.current })
         if (monochrome) {
             setMenuOpen(true)
@@ -77,15 +80,31 @@ const MineralControls = React.memo((
         }
     }
 
+    const paletteColors = Object.values(palette.colors)
+    paletteColors.push(...Array(minerals.length - paletteColors.length).fill(null))
+
     return (
         <div className={styles.mineralControls}>
             <div className={styles.mineralBar}>
                 <div className={styles.minerals}>
                     <button
+                        className={styles.mixerButton}
                         onClick={viewBlended}
                         data-active={numVisible > 1}
                     >
                         channel mixer
+                        <span className={styles.mixerColors}>
+                            { paletteColors.map((color, i) =>
+                                <span
+                                    className={color === null ? styles.swatchHidden : ''}
+                                    style={{
+                                        backgroundColor: getCssColor(color),
+                                        zIndex: 10 - i
+                                    }}
+                                    key={i}
+                                ></span>
+                            ) }
+                        </span>
                     </button>
                     { minerals.map((mineral, i) =>
                         <button

@@ -67,6 +67,48 @@
     border-radius: var(--radius);
 }
 
+.mineral-bar .mixer-button[data-active] {
+    margin-right: 15px;
+}
+
+.mixer-button[data-active="true"] > .mixer-colors > * {
+    border-color: var(--color0);
+}
+
+.mixer-button[data-active="true"]:hover > .mixer-colors > *  {
+    border-color: var(--color1);
+}
+
+.mixer-button[data-active="false"] > .mixer-colors > *  {
+    border-color: var(--color2);
+}
+
+.mixer-button[data-active="false"]:hover > .mixer-colors > *  {
+    border-color: var(--color3);
+}
+
+.mixer-colors {
+    display: flex;
+    padding-left: 10px;
+}
+
+.mixer-colors > * {
+    display: block;
+    border-radius: 50%;
+    margin-left: -4px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid;
+    transition:
+        border-color var(--transition-param),
+        background-color var(--transition-param),
+        width var(--transition-param);
+}
+
+.swatch-hidden {
+    width: 3px;
+}
+
 .disabled {
     opacity: 0.4;
     pointer-events: none;
