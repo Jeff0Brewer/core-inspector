@@ -107,6 +107,17 @@ function notNull<T> (value: T | null): value is T {
     return value !== null
 }
 
+function downloadText (filename: string, text: string): void {
+    const element = document.createElement('a')
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+    element.setAttribute('download', filename)
+    element.style.display = 'none'
+
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+}
+
 type BoundRect = {
     top: number,
     bottom: number,
@@ -132,7 +143,8 @@ export {
     get2dContext,
     getImageData,
     getScale,
-    notNull
+    notNull,
+    downloadText
 }
 export type {
     BoundRect,
