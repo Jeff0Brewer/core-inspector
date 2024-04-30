@@ -1,12 +1,10 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
-import { IoGridSharp } from 'react-icons/io5'
 import { padZeros, formatFloat } from '../../lib/util'
 import CoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../../vis/core'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
-import ToggleButton from '../../components/generic/toggle-button'
 import Dropdown from '../../components/generic/dropdown'
 import CalibrationOnIcon from '../../assets/caps-on-icon.svg'
 import CalibrationOffIcon from '../../assets/caps-off-icon.svg'
@@ -44,14 +42,6 @@ const VisSettings = React.memo((
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
-
-    const toggleCalibration = (): void => {
-        if (calibration === 'show') {
-            vis?.setCalibration('remove')
-        } else {
-            vis?.setCalibration('show')
-        }
-    }
 
     return (
         <div className={styles.settings}>
