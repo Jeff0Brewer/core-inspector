@@ -120,6 +120,10 @@ const SpectraPanel = React.memo((
                             <img src={DownloadIcon} />
                             <p>csv</p>
                         </button>
+                        <button onClick={() => downloadSvg(selectedData)}>
+                            <img src={DownloadIcon} />
+                            <p>svg</p>
+                        </button>
                     </div>
                 </div>
                 { selectedSpectrum !== null && <>
@@ -163,6 +167,34 @@ function downloadCsv (spectrum: Array<Point> | null): void {
     }
     const csv = csvList.join('\n')
     downloadText('spectrum.csv', csv)
+}
+
+function downloadSvg (spectrum: Array<Point> | null): void {
+    if (!spectrum) { return }
+
+    let minX = Number.MAX_VALUE
+    let maxX = Number.MIN_VALUE
+    let minY = 0
+    let maxY = Number.MIN_VALUE
+    for (const { x, y } of spectrum) {
+        minX = Math.min(minX, x)
+        maxX = Math.max(maxX, x)
+        minY = Math.min(minY, y)
+        maxY = Math.max(maxY, y)
+    }
+    const viewBox = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
+
+    const points = []
+    for (const { x, y } of spectrum) {
+        points.push(`${x},${maxY - y}`)
+    }
+
+    const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="${viewBox}">
+            <polyline stroke="#000" fill="none" vector-effect="non-scaling-stroke" points="${points.join(' ')}"/>
+        </svg>`
+
+    downloadText('spectrum.svg', svg)
 }
 
 function getSpectrumData (wavelengths: Array<number>, reflectances: Array<number>): Array<Point> {
