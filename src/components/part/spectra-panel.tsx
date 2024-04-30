@@ -108,12 +108,8 @@ const SpectraPanel = React.memo((
                 </button>
                 <div className={styles.topBar}>
                     <div className={styles.positionLabel}>
-                        <p>
-                            X <span>{spectrumPosition[0]}px</span>
-                        </p>
-                        <p>
-                            Y <span>{spectrumPosition[1]}px</span>
-                        </p>
+                        <p>X <span>{spectrumPosition[0]}px</span></p>
+                        <p>Y <span>{spectrumPosition[1]}px</span></p>
                     </div>
                     <div className={styles.downloads}>
                         <button onClick={() => downloadCsv(selectedData)}>

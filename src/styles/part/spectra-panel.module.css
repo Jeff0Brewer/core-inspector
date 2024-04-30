@@ -37,6 +37,7 @@
 
 .downloads {
     display: flex;
+    gap: 10px;
     font-size: 0.85rem;
     color: #ccc;
     margin-right: var(--chart-margin-right);
