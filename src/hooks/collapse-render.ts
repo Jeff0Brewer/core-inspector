@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-function useCollapseRender (visible: boolean, timeout: number = 1000): boolean {
+function useCollapseRender (visible: boolean, timeoutMs: number = 1000): boolean {
     const [render, setRender] = useState<boolean>(visible)
     const timeoutIdRef = useRef<number>(-1)
 
@@ -13,10 +13,10 @@ function useCollapseRender (visible: boolean, timeout: number = 1000): boolean {
         } else {
             timeoutIdRef.current = window.setTimeout(
                 () => { setRender(false) },
-                timeout
+                timeoutMs
             )
         }
-    }, [visible, timeout])
+    }, [visible, timeoutMs])
 
     return render
 }
