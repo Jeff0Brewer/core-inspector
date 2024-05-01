@@ -170,7 +170,6 @@ const ScaleColumn = React.memo(({
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement => {
     const [partCenter, setPartCenter] = useState<number>(0)
-    const columnRef = useRef<HTMLDivElement>(null)
     const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -195,10 +194,7 @@ const ScaleColumn = React.memo(({
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
 
     return <>
-        <div
-            ref={columnRef}
-            className={`${styles.column} ${largeWidth && styles.largeWidth}`}
-        >
+        <div className={`${styles.column} ${largeWidth && styles.largeWidth}`}>
             <div
                 className={styles.nextWindow}
                 style={{
