@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
@@ -39,7 +39,7 @@ const CorePanel = React.memo(({
 
     // calculates progression of depth range between columns
     // and scale values for each column's layout
-    useLayoutEffect(() => {
+    useEffect(() => {
         const getColumns = (): void => {
             if (minDepth === null || maxDepth === null || !depths?.[part]) { return }
             if (!columnsRef.current) {
@@ -164,7 +164,7 @@ const ScaleColumn = React.memo(({
     const { topDepth: minDepth, bottomDepth: maxDepth, depths } = useCoreMetadata()
     const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         const visibleParts = parts.filter(part => {
             if (!depths?.[part]) { return false }
 
