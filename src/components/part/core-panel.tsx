@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
@@ -11,11 +11,10 @@ const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
     representation: ScaleRepresentation,
-    parts: Array<string>,
+    gap: number,
     topDepth: number,
     bottomDepth: number,
-    mToPx: number,
-    gap: number
+    mToPx: number
 }
 
 type CorePanelProps = {
@@ -38,8 +37,9 @@ const CorePanel = React.memo(({
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const render = useCollapseRender(open)
 
-    // calculate all column depth ranges / visible parts when selected part changes
-    useEffect(() => {
+    // calculates progression of depth range between columns
+    // and scale values for each column's layout
+    useLayoutEffect(() => {
         const getColumns = (): void => {
             if (minDepth === null || maxDepth === null || !depths?.[part]) { return }
             if (!columnsRef.current) {
@@ -50,7 +50,6 @@ const CorePanel = React.memo(({
 
             const columns: Array<CoreColumn> = [{
                 representation: representations[0],
-                parts,
                 topDepth: minDepth,
                 bottomDepth: maxDepth,
                 gap: 1,
@@ -72,26 +71,17 @@ const CorePanel = React.memo(({
                     lastTop + depthRange * 0.5,
                     lastBottom - depthRange * 0.5
                 )
+
                 const topDepth = depthCenter - depthRange * 0.5
                 const bottomDepth = depthCenter + depthRange * 0.5
-
-                const visibleParts = parts.filter(part => {
-                    if (!depths[part]) { return false }
-
-                    const partTopDepth = depths[part].topDepth
-                    const partBottomDepth = partTopDepth + depths[part].length
-
-                    return partBottomDepth > topDepth && partTopDepth < bottomDepth
-                })
-                const gap = 3 * lastGap
+                const mToPx = heightPx / (bottomDepth - topDepth)
 
                 columns.push({
-                    parts: visibleParts,
                     representation: representations[i],
+                    gap: 3 * lastGap,
                     topDepth,
                     bottomDepth,
-                    mToPx: heightPx / (bottomDepth - topDepth),
-                    gap
+                    mToPx
                 })
             }
 
@@ -121,7 +111,7 @@ const CorePanel = React.memo(({
                 const isLast = i === columns.length - 1
                 return <ScaleColumn
                     vis={vis}
-                    parts={column.parts}
+                    parts={parts}
                     part={part}
                     setPart={setPart}
                     representation={column.representation}
@@ -169,13 +159,23 @@ const ScaleColumn = React.memo(({
     representation, vis, part, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement => {
+    const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
-    const { topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
-    const {
-        element: RepresentationElement,
-        fullScale = false,
-        largeWidth = false
-    } = representation
+    const { topDepth: minDepth, bottomDepth: maxDepth, depths } = useCoreMetadata()
+    const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
+
+    useLayoutEffect(() => {
+        const visibleParts = parts.filter(part => {
+            if (!depths?.[part]) { return false }
+
+            const partTopDepth = depths[part].topDepth
+            const partBottomDepth = partTopDepth + depths[part].length
+
+            return partBottomDepth > topDepth && partTopDepth < bottomDepth
+        })
+
+        setVisibleParts(visibleParts)
+    }, [parts, depths, topDepth, bottomDepth])
 
     const wrapStyle: React.CSSProperties = {}
     if (topDepth === minDepth) {
@@ -206,7 +206,7 @@ const ScaleColumn = React.memo(({
                 <RepresentationElement
                     vis={vis}
                     part={part}
-                    parts={parts}
+                    parts={visibleParts}
                     mToPx={mToPx}
                     widthM={PART_WIDTH_M}
                     setCenter={setPartCenter}
