@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
+import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { clamp, getScale } from '../../lib/util'
@@ -36,6 +37,20 @@ const CorePanel = React.memo(({
     const columnsRef = useRef<HTMLDivElement>(null)
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const render = useCollapseRender(open)
+
+    const lastPart = useLastState(part)
+    const [transitioning, setTransitioning] = useState<boolean>(false)
+
+    useEffect(() => {
+        setTransitioning(true)
+        const timeoutId = window.setTimeout(
+            () => setTransitioning(false),
+            2000
+        )
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [lastPart])
 
     // calculates progression of depth range between columns
     // and scale values for each column's layout
@@ -114,6 +129,8 @@ const CorePanel = React.memo(({
                     parts={parts}
                     part={part}
                     setPart={setPart}
+                    lastPart={lastPart}
+                    transitioning={transitioning}
                     representation={column.representation}
                     gap={column.gap}
                     topDepth={column.topDepth}
@@ -146,6 +163,8 @@ type ScaleColumnProps = {
     parts: Array<string>,
     part: string,
     setPart: (p: string | null) => void,
+    lastPart: string | null,
+    transitioning: boolean,
     representation: ScaleRepresentation,
     gap: number,
     topDepth: number,
@@ -156,39 +175,63 @@ type ScaleColumnProps = {
 }
 
 const ScaleColumn = React.memo(({
-    representation, vis, part, parts, topDepth, bottomDepth, mToPx,
+    representation, vis, part, lastPart, transitioning, parts, topDepth, bottomDepth, mToPx,
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
+    const [lastCenter, setLastCenter] = useState<number>(0)
+    const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const { topDepth: minDepth, bottomDepth: maxDepth, depths } = useCoreMetadata()
     const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
 
+    const lastTopDepth = useLastState(topDepth)
+    const lastBottomDepth = useLastState(bottomDepth)
+
     useEffect(() => {
+        let rangeTop = topDepth
+        let rangeBottom = bottomDepth
+        if (transitioning && lastPart !== null) {
+            if (lastTopDepth !== null) {
+                rangeTop = Math.min(rangeTop, lastTopDepth)
+            }
+            if (lastBottomDepth !== null) {
+                rangeBottom = Math.max(rangeBottom, lastBottomDepth)
+            }
+        }
+
         const visibleParts = parts.filter(part => {
             if (!depths?.[part]) { return false }
 
             const partTopDepth = depths[part].topDepth
             const partBottomDepth = partTopDepth + depths[part].length
 
-            return partBottomDepth > topDepth && partTopDepth < bottomDepth
+            return partBottomDepth > rangeTop && partTopDepth < rangeBottom
         })
 
         setVisibleParts(visibleParts)
-    }, [parts, depths, topDepth, bottomDepth])
+    }, [lastPart, transitioning, parts, depths, topDepth, bottomDepth, lastTopDepth, lastBottomDepth])
 
-    const wrapStyle: React.CSSProperties = {}
-    if (topDepth === minDepth) {
-        wrapStyle.top = '0'
-    } else if (bottomDepth === maxDepth) {
-        wrapStyle.bottom = '0'
-    } else if (!fullScale) {
-        wrapStyle.transform = `translateY(-${partCenter * 100}%)`
-        wrapStyle.top = '50%'
-    }
-    if (fullScale) {
-        wrapStyle.height = '100%'
-    }
+    useEffect(() => {
+        if (topDepth === minDepth) {
+            setRepresentationStyle({
+                top: '0'
+            })
+        } else if (bottomDepth === maxDepth) {
+            setRepresentationStyle({
+                bottom: '0'
+            })
+        } else if (fullScale) {
+            setRepresentationStyle({
+                height: '100%'
+            })
+        } else {
+            setRepresentationStyle({
+                transform: `translateY(-${partCenter * 100}%)`,
+                top: '50%'
+            })
+        }
+    }, [topDepth, bottomDepth, minDepth, maxDepth, fullScale, partCenter])
 
     const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
@@ -202,10 +245,12 @@ const ScaleColumn = React.memo(({
                     bottom: `${(1 - windowBottom) * 100}%`
                 }}
             ></div>
-            <div className={styles.representation} style={wrapStyle}>
+            <div className={styles.representation} style={representationStyle}>
                 <RepresentationElement
                     vis={vis}
                     part={part}
+                    lastPart={lastPart}
+                    setLastCenter={setLastCenter}
                     parts={visibleParts}
                     mToPx={mToPx}
                     widthM={PART_WIDTH_M}
