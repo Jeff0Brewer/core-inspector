@@ -162,8 +162,12 @@ const ScaleColumn = React.memo(({
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
-    const { topDepth: minDepth, bottomDepth: maxDepth, depths } = useCoreMetadata()
-    const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
+    const { depths } = useCoreMetadata()
+    const {
+        element: RepresentationElement,
+        fullScale = false,
+        largeWidth = false
+    } = representation
 
     useEffect(() => {
         const visibleParts = parts.filter(part => {
@@ -178,25 +182,17 @@ const ScaleColumn = React.memo(({
     }, [parts, depths, topDepth, bottomDepth])
 
     useEffect(() => {
-        if (topDepth === minDepth) {
-            setRepresentationStyle({
-                top: '0'
-            })
-        } else if (bottomDepth === maxDepth) {
-            setRepresentationStyle({
-                bottom: '0'
-            })
-        } else if (fullScale) {
-            setRepresentationStyle({
-                height: '100%'
-            })
-        } else {
-            setRepresentationStyle({
-                transform: `translateY(-${partCenter * 100}%)`,
-                top: '50%'
-            })
+        const representationStyle: React.CSSProperties = {}
+
+        representationStyle.top = '50%'
+        representationStyle.transform = `translateY(-${partCenter * 100}%)`
+        representationStyle.transition = 'transform 1s ease'
+        if (fullScale) {
+            representationStyle.height = '100%'
         }
-    }, [topDepth, bottomDepth, minDepth, maxDepth, fullScale, partCenter])
+
+        setRepresentationStyle(representationStyle)
+    }, [partCenter, fullScale])
 
     const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
     const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)

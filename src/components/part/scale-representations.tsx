@@ -45,9 +45,36 @@ const LineRepresentation = React.memo((
 const RectRepresentation = React.memo((
     { part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
 ): ReactElement => {
-    const { depths } = useCoreMetadata()
+    const { partIds, depths } = useCoreMetadata()
+    const [paddingTop, setPaddingTop] = useState<number>(0)
+    const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (partIds === null || depths === null) { return }
+
+        const firstVisiblePart = parts[0]
+        const partsAboveVisible = partIds.slice(0, partIds.indexOf(firstVisiblePart))
+
+        let pxAboveVisible = 0
+        for (const id of partsAboveVisible) {
+            if (!depths?.[id]) { continue }
+
+            pxAboveVisible += depths[id].length * mToPx + gap
+        }
+        setPaddingTop(pxAboveVisible)
+
+        const lastVisiblePart = parts[parts.length - 1]
+        const partsBelowVisible = partIds.slice(partIds.indexOf(lastVisiblePart) + 1)
+        let pxBelowVisible = 0
+        for (const id of partsBelowVisible) {
+            if (!depths?.[id]) { continue }
+
+            pxBelowVisible += depths[id].length * mToPx + gap
+        }
+        setPaddingBottom(pxBelowVisible)
+    }, [partIds, parts, depths, mToPx, gap])
 
     useEffect(() => {
         const partDiv = partRef.current
@@ -61,13 +88,17 @@ const RectRepresentation = React.memo((
         const wrapHeight = wrapRect.height
 
         setCenter(partCenter / wrapHeight)
-    })
+    }, [paddingBottom, paddingTop, setCenter])
 
     return (
         <div
             ref={wrapRef}
             className={styles.parts}
-            style={{ gap: `${gap}px` }}
+            style={{
+                gap: `${gap}px`,
+                paddingTop,
+                paddingBottom
+            }}
         >
             { parts.map((id, i) => {
                 const heightM = depths?.[id]?.length || 0
@@ -195,9 +226,36 @@ const CanvasRepresentation = React.memo(({
     part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
-    const { depths } = useCoreMetadata()
+    const { partIds, depths } = useCoreMetadata()
+    const [paddingTop, setPaddingTop] = useState<number>(0)
+    const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (partIds === null || depths === null) { return }
+
+        const firstVisiblePart = parts[0]
+        const partsAboveVisible = partIds.slice(0, partIds.indexOf(firstVisiblePart))
+
+        let pxAboveVisible = 0
+        for (const id of partsAboveVisible) {
+            if (!depths?.[id]) { continue }
+
+            pxAboveVisible += depths[id].length * mToPx + gap
+        }
+        setPaddingTop(pxAboveVisible)
+
+        const lastVisiblePart = parts[parts.length - 1]
+        const partsBelowVisible = partIds.slice(partIds.indexOf(lastVisiblePart) + 1)
+        let pxBelowVisible = 0
+        for (const id of partsBelowVisible) {
+            if (!depths?.[id]) { continue }
+
+            pxBelowVisible += depths[id].length * mToPx + gap
+        }
+        setPaddingBottom(pxBelowVisible)
+    }, [partIds, parts, depths, mToPx, gap])
 
     useEffect(() => {
         const partDiv = partRef.current
@@ -211,13 +269,17 @@ const CanvasRepresentation = React.memo(({
         const wrapHeight = wrapRect.height
 
         setCenter(partCenter / wrapHeight)
-    })
+    }, [paddingTop, paddingBottom, setCenter])
 
     return <>
         <div
             ref={wrapRef}
             className={styles.parts}
-            style={{ '--gap-size': `${gap}px` } as React.CSSProperties}
+            style={{
+                '--gap-size': `${gap}px`,
+                paddingTop,
+                paddingBottom
+            } as React.CSSProperties}
         >
             { parts.map((id, i) => {
                 const heightM = depths?.[id]?.length || 0
