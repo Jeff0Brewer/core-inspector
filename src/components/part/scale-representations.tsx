@@ -9,12 +9,10 @@ import styles from '../../styles/part/scale-representations.module.css'
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
-    lastPart: string | null,
     parts: Array<string>,
     mToPx: number,
     widthM: number,
     setCenter: (c: number) => void,
-    setLastCenter: (c: number) => void,
     setPart: (p: string | null) => void,
     gap: number
 }
@@ -26,7 +24,7 @@ type ScaleRepresentation = {
 }
 
 const LineRepresentation = React.memo((
-    { part, lastPart, setCenter, setLastCenter }: ScaleRepresentationProps
+    { part, setCenter }: ScaleRepresentationProps
 ): ReactElement => {
     const { topDepth, bottomDepth, depths } = useCoreMetadata()
 
@@ -39,27 +37,17 @@ const LineRepresentation = React.memo((
         setCenter(centerPercent)
     }, [part, setCenter, depths, topDepth, bottomDepth])
 
-    useEffect(() => {
-        if (topDepth === null || bottomDepth == null || !lastPart || !depths?.[lastPart]) {
-            return
-        }
-        const center = depths[lastPart].topDepth + 0.5 * depths[lastPart].length
-        const centerPercent = center / (bottomDepth - topDepth)
-        setLastCenter(centerPercent)
-    }, [lastPart, setLastCenter, depths, topDepth, bottomDepth])
-
     return <>
         <div className={styles.line}></div>
     </>
 })
 
 const RectRepresentation = React.memo((
-    { part, parts, mToPx, widthM, gap, setCenter, setPart, lastPart, setLastCenter }: ScaleRepresentationProps
+    { part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
 ): ReactElement => {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
-    const lastPartRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const partDiv = partRef.current
@@ -75,20 +63,6 @@ const RectRepresentation = React.memo((
         setCenter(partCenter / wrapHeight)
     })
 
-    useEffect(() => {
-        const lastPartDiv = lastPartRef.current
-        const wrapDiv = wrapRef.current
-        if (!lastPartDiv || !wrapDiv) { return }
-
-        const lastPartRect = lastPartDiv.getBoundingClientRect()
-        const wrapRect = wrapDiv.getBoundingClientRect()
-
-        const lastPartCenter = (lastPartRect.top - wrapRect.top) + 0.5 * lastPartRect.height
-        const wrapHeight = wrapRect.height
-
-        setLastCenter(lastPartCenter / wrapHeight)
-    })
-
     return (
         <div
             ref={wrapRef}
@@ -97,17 +71,11 @@ const RectRepresentation = React.memo((
         >
             { parts.map((id, i) => {
                 const heightM = depths?.[id]?.length || 0
-                const refProp = {
-                    ref: id === part
-                        ? partRef
-                        : id === lastPart
-                            ? lastPartRef
-                            : null
-                }
+                const refProp = { ref: id === part ? partRef : null }
                 return (
                     <div
-                        className={styles.rect}
                         {...refProp}
+                        className={styles.rect}
                         onClick={() => setPart(id)}
                         style={{
                             width: `${widthM * mToPx}px`,
@@ -123,7 +91,7 @@ const RectRepresentation = React.memo((
 })
 
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, lastPart, setLastCenter
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
@@ -154,14 +122,12 @@ const PunchcardRepresentation = React.memo(({
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
-            lastPart={lastPart}
-            setLastCenter={setLastCenter}
         />
     )
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, lastPart, setLastCenter
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
@@ -193,8 +159,6 @@ const ChannelPunchcardRepresentation = React.memo(({
             setCenter={setCenter}
             setPart={setPart}
             widthScale={WIDTH_SCALE}
-            lastPart={lastPart}
-            setLastCenter={setLastCenter}
             canvasSpacer={
                 <div className={styles.channelPunchSpacer}></div>
             }
@@ -216,8 +180,6 @@ type CanvasRepresentationProps = {
     gap: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
-    lastPart: string | null,
-    setLastCenter: (c: number) => void,
     widthScale?: number,
     canvasSpacer?: ReactElement,
     customRender?: (canvas: ReactElement) => ReactElement
@@ -230,13 +192,12 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
 const CanvasRepresentation = React.memo(({
-    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, lastPart, setLastCenter,
+    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
-    const lastPartRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         const partDiv = partRef.current
@@ -252,20 +213,6 @@ const CanvasRepresentation = React.memo(({
         setCenter(partCenter / wrapHeight)
     })
 
-    useEffect(() => {
-        const lastPartDiv = lastPartRef.current
-        const wrapDiv = wrapRef.current
-        if (!lastPartDiv || !wrapDiv) { return }
-
-        const lastPartRect = lastPartDiv.getBoundingClientRect()
-        const wrapRect = wrapDiv.getBoundingClientRect()
-
-        const lastPartCenter = (lastPartRect.top - wrapRect.top) + 0.5 * lastPartRect.height
-        const wrapHeight = wrapRect.height
-
-        setLastCenter(lastPartCenter / wrapHeight)
-    })
-
     return <>
         <div
             ref={wrapRef}
@@ -274,13 +221,7 @@ const CanvasRepresentation = React.memo(({
         >
             { parts.map((id, i) => {
                 const heightM = depths?.[id]?.length || 0
-                const refProp = {
-                    ref: id === part
-                        ? partRef
-                        : id === lastPart
-                            ? lastPartRef
-                            : null
-                }
+                const refProp = { ref: id === part ? partRef : null }
                 return (
                     <React.Fragment key={i}>
                         <div
