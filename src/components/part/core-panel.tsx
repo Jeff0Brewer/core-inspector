@@ -182,16 +182,17 @@ const ScaleColumn = React.memo(({
     }, [parts, depths, topDepth, bottomDepth])
 
     useEffect(() => {
-        const representationStyle: React.CSSProperties = {}
-
-        representationStyle.top = '50%'
-        representationStyle.transform = `translateY(-${partCenter * 100}%)`
-        representationStyle.transition = 'transform 1s ease'
         if (fullScale) {
-            representationStyle.height = '100%'
+            setRepresentationStyle({
+                height: '100%'
+            })
+        } else {
+            setRepresentationStyle({
+                top: '50%',
+                transform: `translateY(-${partCenter * 100}%)`,
+                transition: 'transform 1s ease'
+            })
         }
-
-        setRepresentationStyle(representationStyle)
     }, [partCenter, fullScale])
 
     const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
