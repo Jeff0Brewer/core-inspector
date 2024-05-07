@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactElement, MemoExoticComponent } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, StringMap } from '../../lib/util'
@@ -51,44 +51,33 @@ const RectRepresentation = React.memo((
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        if (partIds === null || depths === null) { return }
+    useLayoutEffect(() => {
+        if (partIds === null || depths === null || !depths?.[part]) { return }
 
-        const firstVisiblePart = parts[0]
-        const partsAboveVisible = partIds.slice(0, partIds.indexOf(firstVisiblePart))
+        const firstVisibleInd = partIds.indexOf(parts[0])
+        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
-        let pxAboveVisible = 0
-        for (const id of partsAboveVisible) {
-            if (!depths?.[id]) { continue }
-
-            pxAboveVisible += depths[id].length * mToPx + gap
-        }
-        setPaddingTop(pxAboveVisible)
-
-        const lastVisiblePart = parts[parts.length - 1]
-        const partsBelowVisible = partIds.slice(partIds.indexOf(lastVisiblePart) + 1)
-        let pxBelowVisible = 0
-        for (const id of partsBelowVisible) {
-            if (!depths?.[id]) { continue }
-
-            pxBelowVisible += depths[id].length * mToPx + gap
-        }
-        setPaddingBottom(pxBelowVisible)
-    }, [partIds, parts, depths, mToPx, gap])
-
-    useEffect(() => {
-        const partDiv = partRef.current
-        const wrapDiv = wrapRef.current
-        if (!partDiv || !wrapDiv) { return }
-
-        const partRect = partDiv.getBoundingClientRect()
-        const wrapRect = wrapDiv.getBoundingClientRect()
-
-        const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
-        const wrapHeight = wrapRect.height
-
-        setCenter(partCenter / wrapHeight)
-    }, [paddingBottom, paddingTop, setCenter])
+        let totalHeightPx = 0
+        let centerPx = 0
+        let firstVisiblePx = 0
+        let lastVisiblePx = 0
+        partIds.forEach((id, i) => {
+            if (!depths?.[id]) { return }
+            if (i === firstVisibleInd) {
+                firstVisiblePx = totalHeightPx
+            }
+            if (id === part) {
+                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
+            }
+            if (i === lastVisibleInd + 1) {
+                lastVisiblePx = totalHeightPx
+            }
+            totalHeightPx += depths[id].length * mToPx + gap
+        })
+        setCenter(centerPx / totalHeightPx)
+        setPaddingTop(firstVisiblePx)
+        setPaddingBottom(totalHeightPx - lastVisiblePx)
+    }, [part, partIds, parts, depths, mToPx, gap, setCenter])
 
     return (
         <div
@@ -232,44 +221,33 @@ const CanvasRepresentation = React.memo(({
     const wrapRef = useRef<HTMLDivElement>(null)
     const partRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        if (partIds === null || depths === null) { return }
+    useLayoutEffect(() => {
+        if (partIds === null || depths === null || !depths?.[part]) { return }
 
-        const firstVisiblePart = parts[0]
-        const partsAboveVisible = partIds.slice(0, partIds.indexOf(firstVisiblePart))
+        const firstVisibleInd = partIds.indexOf(parts[0])
+        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
-        let pxAboveVisible = 0
-        for (const id of partsAboveVisible) {
-            if (!depths?.[id]) { continue }
-
-            pxAboveVisible += depths[id].length * mToPx + gap
-        }
-        setPaddingTop(pxAboveVisible)
-
-        const lastVisiblePart = parts[parts.length - 1]
-        const partsBelowVisible = partIds.slice(partIds.indexOf(lastVisiblePart) + 1)
-        let pxBelowVisible = 0
-        for (const id of partsBelowVisible) {
-            if (!depths?.[id]) { continue }
-
-            pxBelowVisible += depths[id].length * mToPx + gap
-        }
-        setPaddingBottom(pxBelowVisible)
-    }, [partIds, parts, depths, mToPx, gap])
-
-    useEffect(() => {
-        const partDiv = partRef.current
-        const wrapDiv = wrapRef.current
-        if (!partDiv || !wrapDiv) { return }
-
-        const partRect = partDiv.getBoundingClientRect()
-        const wrapRect = wrapDiv.getBoundingClientRect()
-
-        const partCenter = (partRect.top - wrapRect.top) + 0.5 * partRect.height
-        const wrapHeight = wrapRect.height
-
-        setCenter(partCenter / wrapHeight)
-    }, [paddingTop, paddingBottom, setCenter])
+        let totalHeightPx = 0
+        let centerPx = 0
+        let firstVisiblePx = 0
+        let lastVisiblePx = 0
+        partIds.forEach((id, i) => {
+            if (!depths?.[id]) { return }
+            if (i === firstVisibleInd) {
+                firstVisiblePx = totalHeightPx
+            }
+            if (id === part) {
+                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
+            }
+            if (i === lastVisibleInd + 1) {
+                lastVisiblePx = totalHeightPx
+            }
+            totalHeightPx += depths[id].length * mToPx + gap
+        })
+        setCenter(centerPx / totalHeightPx)
+        setPaddingTop(firstVisiblePx)
+        setPaddingBottom(totalHeightPx - lastVisiblePx)
+    }, [part, partIds, parts, depths, mToPx, gap, setCenter])
 
     return <>
         <div
@@ -297,6 +275,12 @@ const CanvasRepresentation = React.memo(({
                                     width={`${widthM * mToPx * widthScale}px`}
                                     height={`${heightM * mToPx}px`}
                                 />
+                            ) }
+                            { !canvasCtxs[id] && customRender(
+                                <div style={{
+                                    width: `${widthM * mToPx * widthScale}px`,
+                                    height: `${heightM * mToPx}px`
+                                }}></div>
                             ) }
                         </div>
                         {i !== parts.length - 1 && canvasSpacer}

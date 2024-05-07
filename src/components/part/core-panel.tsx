@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
+import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { clamp, getScale } from '../../lib/util'
@@ -169,17 +170,40 @@ const ScaleColumn = React.memo(({
         largeWidth = false
     } = representation
 
+    const lastTopDepth = useLastState(topDepth)
+    const lastBottomDepth = useLastState(bottomDepth)
+    const [transitioning, setTransitioning] = useState<boolean>(false)
+
     useEffect(() => {
+        setTransitioning(lastTopDepth !== null && lastBottomDepth !== null)
+        const timeoutId = window.setTimeout(() => setTransitioning(false), 3000)
+        return () => {
+            window.clearTimeout(timeoutId)
+        }
+    }, [lastTopDepth, lastBottomDepth])
+
+    useEffect(() => {
+        let rangeTop = topDepth
+        let rangeBottom = bottomDepth
+        if (transitioning) {
+            if (lastTopDepth !== null) {
+                rangeTop = Math.min(rangeTop, lastTopDepth)
+            }
+            if (lastBottomDepth !== null) {
+                rangeBottom = Math.max(rangeBottom, lastBottomDepth)
+            }
+        }
+
         const visibleParts = parts.filter(part => {
             if (!depths?.[part]) { return false }
 
             const partTopDepth = depths[part].topDepth
             const partBottomDepth = partTopDepth + depths[part].length
 
-            return partBottomDepth > topDepth && partTopDepth < bottomDepth
+            return partBottomDepth > rangeTop && partTopDepth < rangeBottom
         })
         setVisibleParts(visibleParts)
-    }, [parts, depths, topDepth, bottomDepth])
+    }, [parts, depths, topDepth, bottomDepth, transitioning, lastTopDepth, lastBottomDepth])
 
     useEffect(() => {
         if (fullScale) {
