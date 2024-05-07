@@ -60,14 +60,18 @@
     position: relative;
     flex-grow: 0;
     flex-shrink: 0;
+    width: var(--gap-size, 0);
+    height: var(--gap-size, 0);
+    display: grid;
+    place-content: center;
+}
+
+.canvas-spacer:after {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 4px;
     background-color: #fff;
-    min-width: 4px;
-    min-height: 4px;
-    min-margin: 4px;
-    --spacer-size: calc(var(--gap-size, 0) * 0.3333);
-    width: var(--spacer-size);
-    height: var(--spacer-size);
-    margin: var(--spacer-size);
 }
 
 .channel-punch-spacer {

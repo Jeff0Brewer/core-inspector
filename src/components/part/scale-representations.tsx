@@ -287,7 +287,7 @@ const CanvasRepresentation = React.memo(({
                                 }}></div>
                             ) }
                         </div>
-                        {i !== parts.length - 1 && canvasSpacer}
+                        {canvasSpacer}
                     </React.Fragment>
                 )
             }) }
