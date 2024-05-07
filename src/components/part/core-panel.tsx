@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -163,6 +163,8 @@ const ScaleColumn = React.memo(({
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
+    const [windowTop, setWindowTop] = useState<number>(0)
+    const [windowBottom, setWindowBottom] = useState<number>(0)
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -176,13 +178,13 @@ const ScaleColumn = React.memo(({
 
     useEffect(() => {
         setTransitioning(lastTopDepth !== null && lastBottomDepth !== null)
-        const timeoutId = window.setTimeout(() => setTransitioning(false), 3000)
+        const timeoutId = window.setTimeout(() => setTransitioning(false), 2000)
         return () => {
             window.clearTimeout(timeoutId)
         }
     }, [lastTopDepth, lastBottomDepth])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         let rangeTop = topDepth
         let rangeBottom = bottomDepth
         if (transitioning) {
@@ -219,8 +221,10 @@ const ScaleColumn = React.memo(({
         }
     }, [partCenter, fullScale])
 
-    const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
-    const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
+    useEffect(() => {
+        setWindowTop((nextTopDepth - topDepth) / (bottomDepth - topDepth))
+        setWindowBottom((nextBottomDepth - topDepth) / (bottomDepth - topDepth))
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth])
 
     return <>
         <div className={`${styles.column} ${largeWidth && styles.largeWidth}`}>

@@ -74,8 +74,7 @@
     position: relative;
     flex-grow: 0;
     flex-shrink: 0;
-    min-margin: 4px;
-    margin: calc(var(--gap-size, 0) * 0.5);
+    height: var(--gap-size, 0);
 
 }
 

@@ -236,11 +236,11 @@ const CanvasRepresentation = React.memo(({
             if (i === firstVisibleInd) {
                 firstVisiblePx = totalHeightPx
             }
-            if (id === part) {
-                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
-            }
             if (i === lastVisibleInd + 1) {
                 lastVisiblePx = totalHeightPx
+            }
+            if (id === part) {
+                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
             }
             totalHeightPx += depths[id].length * mToPx + gap
         })
@@ -260,7 +260,11 @@ const CanvasRepresentation = React.memo(({
             } as React.CSSProperties}
         >
             { parts.map((id, i) => {
-                const heightM = depths?.[id]?.length || 0
+                if (!depths?.[id]) {
+                    return <></>
+                }
+
+                const heightM = depths[id].length || 0
                 const refProp = { ref: id === part ? partRef : null }
                 return (
                     <React.Fragment key={i}>
