@@ -89,7 +89,7 @@ const RectRepresentation = React.memo((
                 paddingBottom
             }}
         >
-            { parts.map((id, i) => {
+            { parts.map(id => {
                 const heightM = depths?.[id]?.length || 0
                 const refProp = { ref: id === part ? partRef : null }
                 return (
@@ -101,7 +101,7 @@ const RectRepresentation = React.memo((
                             width: `${widthM * mToPx}px`,
                             height: `${heightM * mToPx}px`
                         }}
-                        key={i}
+                        key={id}
                     >
                     </div>
                 )
@@ -259,7 +259,7 @@ const CanvasRepresentation = React.memo(({
                 paddingBottom
             } as React.CSSProperties}
         >
-            { parts.map((id, i) => {
+            { parts.map(id => {
                 if (!depths?.[id]) {
                     return <></>
                 }
@@ -267,7 +267,7 @@ const CanvasRepresentation = React.memo(({
                 const heightM = depths[id].length || 0
                 const refProp = { ref: id === part ? partRef : null }
                 return (
-                    <React.Fragment key={i}>
+                    <React.Fragment key={id}>
                         <div
                             {...refProp}
                             className={styles.canvas}

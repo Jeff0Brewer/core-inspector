@@ -221,7 +221,7 @@ const ScaleColumn = React.memo(({
         }
     }, [partCenter, fullScale])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         setWindowTop((nextTopDepth - topDepth) / (bottomDepth - topDepth))
         setWindowBottom((nextBottomDepth - topDepth) / (bottomDepth - topDepth))
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth])
