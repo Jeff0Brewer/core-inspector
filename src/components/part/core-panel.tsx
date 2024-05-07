@@ -222,14 +222,18 @@ const ScaleColumn = React.memo(({
     }, [partCenter, fullScale])
 
     useLayoutEffect(() => {
-        setWindowTop((nextTopDepth - topDepth) / (bottomDepth - topDepth))
-        setWindowBottom((nextBottomDepth - topDepth) / (bottomDepth - topDepth))
+        if (nextBottomDepth !== nextTopDepth) {
+            setWindowTop((nextTopDepth - topDepth) / (bottomDepth - topDepth))
+            setWindowBottom((nextBottomDepth - topDepth) / (bottomDepth - topDepth))
+        }
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth])
+
+    const windowHidden = nextTopDepth === nextBottomDepth
 
     return <>
         <div className={`${styles.column} ${largeWidth && styles.largeWidth}`}>
             <div
-                className={styles.nextWindow}
+                className={`${styles.nextWindow} ${windowHidden && styles.windowHidden}`}
                 style={{
                     top: `${windowTop * 100}%`,
                     bottom: `${(1 - windowBottom) * 100}%`
@@ -248,7 +252,7 @@ const ScaleColumn = React.memo(({
                 />
             </div>
         </div>
-        <div className={styles.zoomLines}>
+        <div className={`${styles.zoomLines} ${windowHidden && styles.windowHidden}`}>
             { getZoomSvg(windowTop, windowBottom) }
         </div>
     </>

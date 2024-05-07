@@ -106,6 +106,9 @@ const PartView = React.memo((
             setMineralMaps(mineralMaps)
         }
 
+        setScrollDepthTop(0)
+        setScrollDepthBottom(0)
+
         getMineralChannels()
     }, [vis, core, part, minerals])
 

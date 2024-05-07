@@ -34,6 +34,7 @@
     position: relative;
     width: 60px;
     height: 100%;
+    transition: opacity var(--transition-param);
 }
 
 .label {
@@ -145,6 +146,17 @@
     position: absolute;
     width: 100%;
     background-color: #111;
+}
+
+.next-window, .zoom-lines {
+    transition: opacity 500ms ease;
+    transition-delay: 200ms;
+    opacity: 1;
+}
+
+.window-hidden {
+    transition-delay: 0s;
+    opacity: 0;
 }
 
 .hidden {
