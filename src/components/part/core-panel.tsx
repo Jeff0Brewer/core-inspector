@@ -161,12 +161,13 @@ const ScaleColumn = React.memo(({
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
-    const [partCenter, setPartCenter] = useState<number>(0)
+    const [partCenter, setPartCenter] = useState<number | null>(null)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
     const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
-    const [visibleTopDepth, setVisibleTopDepth] = useState<number>(0)
-    const [visibleBottomDepth, setVisibleBottomDepth] = useState<number>(0)
+    const lastPart = useLastState(part)
+    const [visibleTopDepth, setVisibleTopDepth] = useState<number | null>(null)
+    const [visibleBottomDepth, setVisibleBottomDepth] = useState<number | null>(null)
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -175,11 +176,19 @@ const ScaleColumn = React.memo(({
     } = representation
 
     useEffect(() => {
-        setVisibleTopDepth(Math.min(topDepth, visibleTopDepth))
+        if (visibleTopDepth === null) {
+            setVisibleTopDepth(topDepth)
+        } else {
+            setVisibleTopDepth(Math.min(topDepth, visibleTopDepth))
+        }
     }, [topDepth, visibleTopDepth])
 
     useEffect(() => {
-        setVisibleBottomDepth(Math.max(bottomDepth, visibleBottomDepth))
+        if (visibleBottomDepth === null) {
+            setVisibleBottomDepth(bottomDepth)
+        } else {
+            setVisibleBottomDepth(Math.max(bottomDepth, visibleBottomDepth))
+        }
     }, [bottomDepth, visibleBottomDepth])
 
     useEffect(() => {
@@ -193,6 +202,8 @@ const ScaleColumn = React.memo(({
     }, [topDepth, bottomDepth])
 
     useLayoutEffect(() => {
+        if (visibleTopDepth === null || visibleBottomDepth === null) { return }
+
         const visibleParts = parts.filter(part => {
             if (!depths?.[part]) { return false }
 
@@ -205,6 +216,7 @@ const ScaleColumn = React.memo(({
     }, [parts, depths, visibleTopDepth, visibleBottomDepth])
 
     useEffect(() => {
+        if (partCenter === null) { return }
         if (fullScale) {
             setRepresentationStyle({
                 height: '100%'
@@ -213,10 +225,10 @@ const ScaleColumn = React.memo(({
             setRepresentationStyle({
                 top: '50%',
                 transform: `translateY(-${partCenter * 100}%)`,
-                transition: 'transform 1s ease'
+                transition: lastPart === null ? '' : 'transform 1s ease'
             })
         }
-    }, [partCenter, fullScale])
+    }, [partCenter, fullScale, lastPart])
 
     useLayoutEffect(() => {
         if (nextBottomDepth !== nextTopDepth) {
@@ -225,12 +237,12 @@ const ScaleColumn = React.memo(({
             setWindowStyle({
                 transform: `translateY(${(nextTopDepth - topDepth) * mToPx}px)`,
                 height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`,
-                transition: largeWidth ? '' : 'transform 1s ease, height 1s ease'
+                transition: largeWidth || lastPart === null ? '' : 'transform 1s ease, height 1s ease'
 
             })
             setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth])
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart])
 
     const windowHidden = nextTopDepth === nextBottomDepth
 
