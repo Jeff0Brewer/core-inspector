@@ -165,7 +165,8 @@ const ScaleColumn = React.memo(({
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
     const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
-
+    const [visibleTopDepth, setVisibleTopDepth] = useState<number>(0)
+    const [visibleBottomDepth, setVisibleBottomDepth] = useState<number>(0)
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -173,40 +174,35 @@ const ScaleColumn = React.memo(({
         largeWidth = false
     } = representation
 
-    const lastTopDepth = useLastState(topDepth)
-    const lastBottomDepth = useLastState(bottomDepth)
-    const [transitioning, setTransitioning] = useState<boolean>(false)
+    useEffect(() => {
+        setVisibleTopDepth(Math.min(topDepth, visibleTopDepth))
+    }, [topDepth, visibleTopDepth])
 
     useEffect(() => {
-        setTransitioning(lastTopDepth !== null && lastBottomDepth !== null)
-        const timeoutId = window.setTimeout(() => setTransitioning(false), 2000)
+        setVisibleBottomDepth(Math.max(bottomDepth, visibleBottomDepth))
+    }, [bottomDepth, visibleBottomDepth])
+
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => {
+            setVisibleTopDepth(topDepth)
+            setVisibleBottomDepth(bottomDepth)
+        }, 2000)
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [lastTopDepth, lastBottomDepth])
+    }, [topDepth, bottomDepth])
 
     useLayoutEffect(() => {
-        let rangeTop = topDepth
-        let rangeBottom = bottomDepth
-        if (transitioning) {
-            if (lastTopDepth !== null) {
-                rangeTop = Math.min(rangeTop, lastTopDepth)
-            }
-            if (lastBottomDepth !== null) {
-                rangeBottom = Math.max(rangeBottom, lastBottomDepth)
-            }
-        }
-
         const visibleParts = parts.filter(part => {
             if (!depths?.[part]) { return false }
 
             const partTopDepth = depths[part].topDepth
             const partBottomDepth = partTopDepth + depths[part].length
 
-            return partBottomDepth > rangeTop && partTopDepth < rangeBottom
+            return partBottomDepth > visibleTopDepth && partTopDepth < visibleBottomDepth
         })
         setVisibleParts(visibleParts)
-    }, [parts, depths, topDepth, bottomDepth, transitioning, lastTopDepth, lastBottomDepth])
+    }, [parts, depths, visibleTopDepth, visibleBottomDepth])
 
     useEffect(() => {
         if (fullScale) {
