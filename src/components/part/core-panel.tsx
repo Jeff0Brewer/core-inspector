@@ -168,6 +168,7 @@ const ScaleColumn = React.memo(({
     const lastPart = useLastState(part)
     const [visibleTopDepth, setVisibleTopDepth] = useState<number | null>(null)
     const [visibleBottomDepth, setVisibleBottomDepth] = useState<number | null>(null)
+    const columnRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -221,9 +222,14 @@ const ScaleColumn = React.memo(({
                 height: '100%'
             })
         } else {
+            const columnHeight = columnRef.current?.getBoundingClientRect().height
+            if (!columnHeight) { return }
+            const minY = `calc(-100% + ${columnHeight * 0.5}px)`
+            const centerY = `-${partCenter * 100}%`
+            const maxY = `-${columnHeight * 0.5}px`
             setRepresentationStyle({
                 top: '50%',
-                transform: `translateY(-${partCenter * 100}%)`,
+                transform: `translateY(clamp(${minY}, ${centerY}, ${maxY}))`,
                 transition: lastPart === null ? '' : 'transform 1s ease'
             })
         }
@@ -246,7 +252,10 @@ const ScaleColumn = React.memo(({
     const windowHidden = nextTopDepth === nextBottomDepth
 
     return <>
-        <div className={`${styles.column} ${largeWidth && styles.largeWidth}`}>
+        <div
+            ref={columnRef}
+            className={`${styles.column} ${largeWidth && styles.largeWidth}`}
+        >
             <div
                 className={`${styles.nextWindow} ${windowHidden && styles.windowHidden}`}
                 style={windowStyle}

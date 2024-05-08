@@ -74,6 +74,9 @@ const RectRepresentation = React.memo((
             }
             totalHeightPx += depths[id].length * mToPx + gap
         })
+        if (lastVisibleInd === partIds.length - 1) {
+            lastVisiblePx = totalHeightPx
+        }
         setCenter(centerPx / totalHeightPx)
         setPaddingTop(firstVisiblePx)
         setPaddingBottom(totalHeightPx - lastVisiblePx)
@@ -244,6 +247,9 @@ const CanvasRepresentation = React.memo(({
             }
             totalHeightPx += depths[id].length * mToPx + gap
         })
+        if (lastVisibleInd === partIds.length - 1) {
+            lastVisiblePx = totalHeightPx
+        }
         setCenter(centerPx / totalHeightPx)
         setPaddingTop(firstVisiblePx)
         setPaddingBottom(totalHeightPx - lastVisiblePx)
