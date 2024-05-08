@@ -157,8 +157,9 @@
 }
 
 .next-window, .zoom-lines {
-    transition: opacity 500ms ease;
-    transition-delay: 200ms;
+    /* TODO: align with channels transition via variable */
+    transition: opacity 300ms ease;
+    transition-delay: 100ms;
     opacity: 1;
 }
 
