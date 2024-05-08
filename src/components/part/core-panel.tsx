@@ -161,7 +161,7 @@ const ScaleColumn = React.memo(({
     nextTopDepth, nextBottomDepth, gap, setPart
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
-    const [partCenter, setPartCenter] = useState<number | null>(null)
+    const [partCenter, setPartCenter] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
     const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
@@ -216,7 +216,6 @@ const ScaleColumn = React.memo(({
     }, [parts, depths, visibleTopDepth, visibleBottomDepth])
 
     useEffect(() => {
-        if (partCenter === null) { return }
         if (fullScale) {
             setRepresentationStyle({
                 height: '100%'
