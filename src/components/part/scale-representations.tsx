@@ -46,19 +46,26 @@ const LineRepresentation = React.memo((
         if (!line) { return }
 
         const getHoveredPart = (e: MouseEvent): string | null => {
-            // TODO: cleanup
-            const metadataLoaded = topDepth !== null && bottomDepth !== null && partIds !== null && depths !== null
-            if (!lineRef.current || !metadataLoaded) { return null }
+            // ensure reference to dom element and metadata loaded
+            if (
+                !lineRef.current ||
+                topDepth === null ||
+                bottomDepth === null ||
+                partIds === null ||
+                depths === null
+            ) { return null }
 
-            const { height, top } = lineRef.current.getBoundingClientRect()
-
-            const hoverPercentage = (e.clientY - top) / height
+            // find depth in M closest to cursor position
+            const { height: lineHeight, top: lineTop } = lineRef.current.getBoundingClientRect()
+            const hoverPercentage = (e.clientY - lineTop) / lineHeight
             const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
 
+            // binary search for part with depth closest to cursor depth
             let left = 0
             let right = partIds.length - 1
             while (left < right) {
                 const center = Math.round((left + right) * 0.5)
+
                 if (!depths[partIds[center]]) { return null }
                 const { topDepth, length } = depths[partIds[center]]
                 const centerDepth = topDepth + 0.5 * length
@@ -72,18 +79,12 @@ const LineRepresentation = React.memo((
                 }
             }
 
+            // return closest hovered part
             return partIds[right]
         }
 
-        const mousemove = (e: MouseEvent): void => {
-            const hovered = getHoveredPart(e)
-            setHoveredPart(hovered)
-        }
-
-        const mousedown = (e: MouseEvent): void => {
-            const clicked = getHoveredPart(e)
-            setPart(clicked)
-        }
+        const mousemove = (e: MouseEvent): void => { setHoveredPart(getHoveredPart(e)) }
+        const mousedown = (e: MouseEvent): void => { setPart(getHoveredPart(e)) }
 
         line.addEventListener('mousemove', mousemove)
         line.addEventListener('mousedown', mousedown)
