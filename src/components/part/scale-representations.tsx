@@ -6,6 +6,8 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
+const MAX_CANVAS_PER_COLUMN = 50
+
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
@@ -144,7 +146,7 @@ const RectRepresentation = React.memo((
     return (
         <div
             ref={wrapRef}
-            className={styles.parts}
+            className={`${styles.parts} ${parts.length > 0 && styles.partsVisible}`}
             style={{
                 gap: `${gap}px`,
                 paddingTop,
@@ -181,6 +183,11 @@ const PunchcardRepresentation = React.memo(({
     const blending = useBlendState()
 
     useEffect(() => {
+        if (parts.length > MAX_CANVAS_PER_COLUMN) {
+            setCanvasCtxs({})
+            return
+        }
+
         const canvasCtxs: StringMap<CanvasCtx> = {}
         for (const part of parts) {
             canvasCtxs[part] = getCanvasCtx()
@@ -218,6 +225,11 @@ const ChannelPunchcardRepresentation = React.memo(({
     const WIDTH_SCALE = 2
 
     useEffect(() => {
+        if (parts.length > MAX_CANVAS_PER_COLUMN) {
+            setCanvasCtxs({})
+            return
+        }
+
         const canvasCtxs: StringMap<CanvasCtx> = {}
         for (const part of parts) {
             canvasCtxs[part] = getCanvasCtx()
@@ -319,17 +331,19 @@ const CanvasRepresentation = React.memo(({
         setPaddingBottom(totalHeightPx - lastVisiblePx)
     }, [part, partIds, parts, depths, mToPx, gap, setCenter])
 
+    const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
+    console.log(partsVisible)
     return <>
         <div
             ref={wrapRef}
-            className={styles.parts}
+            className={`${styles.parts} ${partsVisible && styles.partsVisible}`}
             style={{
                 '--gap-size': `${gap}px`,
                 paddingTop,
                 paddingBottom
             } as React.CSSProperties}
         >
-            { parts.map(id => {
+            { partsVisible && parts.map(id => {
                 if (!depths?.[id]) {
                     return <></>
                 }
@@ -355,7 +369,8 @@ const CanvasRepresentation = React.memo(({
                             { !canvasCtxs[id] && customRender(
                                 <div style={{
                                     width: `${widthM * mToPx * widthScale}px`,
-                                    height: `${heightM * mToPx}px`
+                                    height: `${heightM * mToPx}px`,
+                                    backgroundColor: 'rgba(0, 0, 0, 0.2)'
                                 }}></div>
                             ) }
                         </div>
