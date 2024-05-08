@@ -47,17 +47,6 @@ const MineralChannels = React.memo(({
         setLoading(true)
     }, [part])
 
-    useLayoutEffect(() => {
-        const [imgWidth, imgHeight] = imgDims
-
-        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
-        const viewHeight = viewWidth * imgHeight / imgWidth
-        const viewGap = viewWidth * spacing
-
-        setViewDims([viewWidth, viewHeight])
-        setViewGap(viewGap)
-    }, [mineralMaps, zoom, spacing, imgDims])
-
     useEffect(() => {
         const imgs = Object.values(mineralMaps)
         for (let i = 0; i < imgs.length; i++) {
@@ -72,6 +61,17 @@ const MineralChannels = React.memo(({
             setLoading(false)
         }
     }, [mineralMaps])
+
+    useLayoutEffect(() => {
+        const [imgWidth, imgHeight] = imgDims
+
+        const viewWidth = zoom * (imgWidth - MIN_WIDTH_PX) + MIN_WIDTH_PX
+        const viewHeight = viewWidth * imgHeight / imgWidth
+        const viewGap = viewWidth * spacing
+
+        setViewDims([viewWidth, viewHeight])
+        setViewGap(viewGap)
+    }, [mineralMaps, zoom, spacing, imgDims])
 
     const width = `${viewDims[0]}px`
     const gap = `${viewGap}px`
@@ -229,16 +229,18 @@ const ChannelsView = React.memo(({
     // or changes to channel view dimensions
     useEffect(() => {
         const channelsWrap = channelsRef.current
-        if (!depths?.[part] || !channelsWrap) { return }
+        if (!depths?.[part] || !channelsWrap || !Object.keys(mineralMaps).length) { return }
 
         const scroll = (): void => {
-            const { scrollTop, scrollHeight, clientHeight } = channelsWrap
-            const topPercent = scrollTop / scrollHeight
-            const bottomPercent = (scrollTop + clientHeight) / scrollHeight
+            const { scrollTop, clientHeight } = channelsWrap
+            const topPercent = scrollTop / viewDims[1]
+            const bottomPercent = (scrollTop + clientHeight) / viewDims[1]
 
             const { topDepth, length } = depths[part]
-            setDepthTop(topPercent * length + topDepth)
-            setDepthBottom(bottomPercent * length + topDepth)
+            const depthTop = Math.max(topDepth, topPercent * length + topDepth)
+            const depthBottom = Math.min(topDepth + length, bottomPercent * length + topDepth)
+            setDepthTop(depthTop)
+            setDepthBottom(depthBottom)
         }
 
         scroll()
@@ -247,7 +249,7 @@ const ChannelsView = React.memo(({
         return () => {
             channelsWrap.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, setDepthTop, setDepthBottom, viewDims])
+    }, [part, depths, setDepthTop, setDepthBottom, viewDims, mineralMaps])
 
     // init workers for abundance / spectrum hover info
     useEffect(() => {
