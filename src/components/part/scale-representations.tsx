@@ -6,7 +6,7 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
-const MAX_CANVAS_PER_COLUMN = 50
+const MAX_CANVAS_PER_COLUMN = 75
 
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
@@ -332,7 +332,6 @@ const CanvasRepresentation = React.memo(({
     }, [part, partIds, parts, depths, mToPx, gap, setCenter])
 
     const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
-    console.log(partsVisible)
     return <>
         <div
             ref={wrapRef}
