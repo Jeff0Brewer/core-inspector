@@ -335,6 +335,7 @@ const CanvasRepresentation = React.memo(({
             }
             totalHeightPx += depths[id].length * mToPx + gap
         })
+        totalHeightPx -= gap // remove final gap
         if (lastVisibleInd === partIds.length - 1) {
             lastVisiblePx = totalHeightPx
         }
@@ -354,7 +355,7 @@ const CanvasRepresentation = React.memo(({
                 paddingBottom
             } as React.CSSProperties}
         >
-            { partsVisible && parts.map(id => {
+            { partsVisible && parts.map((id, i) => {
                 if (!depths?.[id]) {
                     return <></>
                 }
@@ -385,7 +386,7 @@ const CanvasRepresentation = React.memo(({
                                 }}></div>
                             ) }
                         </div>
-                        {canvasSpacer}
+                        {(i !== parts.length - 1) && canvasSpacer}
                     </React.Fragment>
                 )
             }) }
