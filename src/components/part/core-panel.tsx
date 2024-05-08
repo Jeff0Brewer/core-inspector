@@ -223,12 +223,13 @@ const ScaleColumn = React.memo(({
             const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
             const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
             setWindowStyle({
-                top: `${windowTop * 100}%`,
-                bottom: `${(1 - windowBottom) * 100}%`
+                transform: `translateY(${(nextTopDepth - topDepth) * mToPx}px)`,
+                height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`,
+                transition: 'transform 1s ease, height 1s ease'
             })
             setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth])
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx])
 
     const windowHidden = nextTopDepth === nextBottomDepth
 
