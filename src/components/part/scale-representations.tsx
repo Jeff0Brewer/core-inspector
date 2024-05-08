@@ -30,6 +30,7 @@ const LineRepresentation = React.memo((
     { part, setCenter, setPart, setHoveredPart }: ScaleRepresentationProps
 ): ReactElement => {
     const lineRef = useRef<HTMLDivElement>(null)
+    const hoverRef = useRef<HTMLDivElement>(null)
     const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
     useEffect(() => {
@@ -46,9 +47,10 @@ const LineRepresentation = React.memo((
         if (!line) { return }
 
         const getHoveredPart = (e: MouseEvent): string | null => {
-            // ensure reference to dom element and metadata loaded
+            // ensure reference to dom elements and metadata loaded
             if (
                 !lineRef.current ||
+                !hoverRef.current ||
                 topDepth === null ||
                 bottomDepth === null ||
                 partIds === null ||
@@ -59,6 +61,8 @@ const LineRepresentation = React.memo((
             const { height: lineHeight, top: lineTop } = lineRef.current.getBoundingClientRect()
             const hoverPercentage = (e.clientY - lineTop) / lineHeight
             const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
+
+            hoverRef.current.style.top = `${hoverPercentage * 100}%`
 
             // binary search for part with depth closest to cursor depth
             let left = 0
@@ -84,7 +88,12 @@ const LineRepresentation = React.memo((
         }
 
         const mousemove = (e: MouseEvent): void => { setHoveredPart(getHoveredPart(e)) }
-        const mousedown = (e: MouseEvent): void => { setPart(getHoveredPart(e)) }
+        const mousedown = (e: MouseEvent): void => {
+            const hoveredPart = getHoveredPart(e)
+            if (hoveredPart !== null) {
+                setPart(hoveredPart)
+            }
+        }
 
         line.addEventListener('mousemove', mousemove)
         line.addEventListener('mousedown', mousedown)
@@ -100,7 +109,9 @@ const LineRepresentation = React.memo((
             ref={lineRef}
             className={styles.line}
             onMouseLeave={() => setHoveredPart(null)}
-        ></div>
+        >
+            <div ref={hoverRef} className={styles.lineHover}></div>
+        </div>
     </>
 })
 

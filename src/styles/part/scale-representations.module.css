@@ -16,6 +16,20 @@
     background-color: #fff;
 }
 
+.line-hover {
+    position: absolute;
+    z-index: 500;
+    width: 9px;
+    height: 1px;
+    background-color: #ebffc8;
+    transition: opacity var(--transition-param);
+    opacity: 0;
+}
+
+.line:hover .line-hover {
+    opacity: 1;
+}
+
 .parts {
     position: relative;
     display: flex;
