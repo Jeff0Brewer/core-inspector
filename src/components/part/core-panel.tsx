@@ -163,8 +163,9 @@ const ScaleColumn = React.memo(({
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
-    const [windowTop, setWindowTop] = useState<number>(0)
-    const [windowBottom, setWindowBottom] = useState<number>(0)
+    const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
+    const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
+
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -223,8 +224,13 @@ const ScaleColumn = React.memo(({
 
     useLayoutEffect(() => {
         if (nextBottomDepth !== nextTopDepth) {
-            setWindowTop((nextTopDepth - topDepth) / (bottomDepth - topDepth))
-            setWindowBottom((nextBottomDepth - topDepth) / (bottomDepth - topDepth))
+            const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
+            const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
+            setWindowStyle({
+                top: `${windowTop * 100}%`,
+                bottom: `${(1 - windowBottom) * 100}%`
+            })
+            setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth])
 
@@ -234,10 +240,7 @@ const ScaleColumn = React.memo(({
         <div className={`${styles.column} ${largeWidth && styles.largeWidth}`}>
             <div
                 className={`${styles.nextWindow} ${windowHidden && styles.windowHidden}`}
-                style={{
-                    top: `${windowTop * 100}%`,
-                    bottom: `${(1 - windowBottom) * 100}%`
-                }}
+                style={windowStyle}
             ></div>
             <div className={styles.representation} style={representationStyle}>
                 <RepresentationElement
@@ -253,7 +256,7 @@ const ScaleColumn = React.memo(({
             </div>
         </div>
         <div className={`${styles.zoomLines} ${windowHidden && styles.windowHidden}`}>
-            { getZoomSvg(windowTop, windowBottom) }
+            { zoomSvg }
         </div>
     </>
 })
