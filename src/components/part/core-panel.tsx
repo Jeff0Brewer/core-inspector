@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -99,6 +99,11 @@ const CorePanel = React.memo(({
         }
     }, [part, parts, representations, depths, minDepth, maxDepth])
 
+    const navigateToPart = useCallback((part: string | null): void => {
+        setPart(part)
+        setHoveredPart(null)
+    }, [setPart])
+
     return <>
         <div className={styles.topLabels}>
             { render && columns.map((column, i) =>
@@ -118,7 +123,7 @@ const CorePanel = React.memo(({
                     vis={vis}
                     parts={parts}
                     part={part}
-                    setPart={setPart}
+                    setPart={navigateToPart}
                     setHoveredPart={setHoveredPart}
                     representation={column.representation}
                     gap={column.gap}
