@@ -183,3 +183,29 @@
     text-transform: uppercase;
     text-align: center;
 }
+
+.tooltip {
+    position: fixed;
+    z-index: 100;
+    padding: 5px;
+
+    background-color: var(--color0);
+    color: #fff;
+    border-radius: var(--radius);
+
+    text-transform: uppercase;
+    font-size: 0.6rem;
+
+    pointer-events: none;
+    user-select: none;
+    overflow: hidden;
+
+    transition:
+        transform var(--transition-param),
+        opacity var(--transition-param);
+    opacity: 0;
+}
+
+.tooltip-visible {
+    opacity: 1;
+}

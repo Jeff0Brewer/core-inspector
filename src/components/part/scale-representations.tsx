@@ -14,6 +14,7 @@ type ScaleRepresentationProps = {
     widthM: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
+    setHoveredPart: (p: string | null) => void,
     gap: number
 }
 
@@ -43,7 +44,7 @@ const LineRepresentation = React.memo((
 })
 
 const RectRepresentation = React.memo((
-    { part, parts, mToPx, widthM, gap, setCenter, setPart }: ScaleRepresentationProps
+    { part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart }: ScaleRepresentationProps
 ): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
@@ -100,6 +101,8 @@ const RectRepresentation = React.memo((
                         {...refProp}
                         className={styles.rect}
                         onClick={() => setPart(id)}
+                        onMouseEnter={() => setHoveredPart(id)}
+                        onMouseLeave={() => setHoveredPart(null)}
                         style={{
                             width: `${widthM * mToPx}px`,
                             height: `${heightM * mToPx}px`
@@ -114,7 +117,7 @@ const RectRepresentation = React.memo((
 })
 
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
@@ -145,12 +148,13 @@ const PunchcardRepresentation = React.memo(({
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
+            setHoveredPart={setHoveredPart}
         />
     )
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
@@ -181,6 +185,7 @@ const ChannelPunchcardRepresentation = React.memo(({
             gap={gap}
             setCenter={setCenter}
             setPart={setPart}
+            setHoveredPart={setHoveredPart}
             widthScale={WIDTH_SCALE}
             canvasSpacer={
                 <div className={styles.channelPunchSpacer}></div>
@@ -203,6 +208,7 @@ type CanvasRepresentationProps = {
     gap: number,
     setCenter: (c: number) => void,
     setPart: (p: string | null) => void,
+    setHoveredPart: (p: string | null) => void,
     widthScale?: number,
     canvasSpacer?: ReactElement,
     customRender?: (canvas: ReactElement) => ReactElement
@@ -215,7 +221,7 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
 const CanvasRepresentation = React.memo(({
-    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart,
+    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
@@ -278,6 +284,8 @@ const CanvasRepresentation = React.memo(({
                             {...refProp}
                             className={styles.canvas}
                             onClick={() => setPart(id)}
+                            onMouseEnter={() => setHoveredPart(id)}
+                            onMouseLeave={() => setHoveredPart(null)}
                         >
                             { canvasCtxs[id] && customRender(
                                 <CanvasRenderer

@@ -3,6 +3,8 @@ import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
+import { usePopupPosition } from '../../hooks/popup-position'
+import { getPartId } from '../../lib/path'
 import { clamp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { ScaleRepresentation } from '../../components/part/scale-representations'
@@ -34,6 +36,7 @@ const CorePanel = React.memo(({
     finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
+    const [hoveredPart, setHoveredPart] = useState<string | null>(null)
     const columnsRef = useRef<HTMLDivElement>(null)
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const render = useCollapseRender(open)
@@ -108,6 +111,7 @@ const CorePanel = React.memo(({
             ) }
         </div>
         <div className={styles.columns} ref={columnsRef}>
+            <CorePanelTooltip hoveredPart={hoveredPart} />
             { render && columns.map((column, i) => {
                 const isLast = i === columns.length - 1
                 return <ScaleColumn
@@ -115,6 +119,7 @@ const CorePanel = React.memo(({
                     parts={parts}
                     part={part}
                     setPart={setPart}
+                    setHoveredPart={setHoveredPart}
                     representation={column.representation}
                     gap={column.gap}
                     topDepth={column.topDepth}
@@ -142,11 +147,37 @@ const CorePanel = React.memo(({
     </>
 })
 
+type CorePanelTooltipProps = {
+    hoveredPart: string | null
+}
+
+function CorePanelTooltip ({ hoveredPart }: CorePanelTooltipProps): ReactElement {
+    const [validPart, setValidPart] = useState<string>('')
+    const popupRef = useRef<HTMLDivElement>(null)
+    usePopupPosition(popupRef)
+
+    useEffect(() => {
+        if (hoveredPart !== null) {
+            setValidPart(hoveredPart)
+        }
+    }, [hoveredPart])
+
+    return (
+        <div
+            ref={popupRef}
+            className={`${styles.tooltip} ${hoveredPart && styles.tooltipVisible}`}
+        >
+            {validPart && getPartId(validPart)}
+        </div>
+    )
+}
+
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     parts: Array<string>,
     part: string,
     setPart: (p: string | null) => void,
+    setHoveredPart: (p: string | null) => void,
     representation: ScaleRepresentation,
     gap: number,
     topDepth: number,
@@ -158,7 +189,7 @@ type ScaleColumnProps = {
 
 const ScaleColumn = React.memo(({
     representation, vis, part, parts, topDepth, bottomDepth, mToPx,
-    nextTopDepth, nextBottomDepth, gap, setPart
+    nextTopDepth, nextBottomDepth, gap, setPart, setHoveredPart
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
@@ -269,6 +300,7 @@ const ScaleColumn = React.memo(({
                     widthM={PART_WIDTH_M}
                     setCenter={setPartCenter}
                     setPart={setPart}
+                    setHoveredPart={setHoveredPart}
                     gap={gap}
                 />
             </div>
