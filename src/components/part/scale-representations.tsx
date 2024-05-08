@@ -25,9 +25,10 @@ type ScaleRepresentation = {
 }
 
 const LineRepresentation = React.memo((
-    { part, setCenter }: ScaleRepresentationProps
+    { part, setCenter, setHoveredPart }: ScaleRepresentationProps
 ): ReactElement => {
-    const { topDepth, bottomDepth, depths } = useCoreMetadata()
+    const lineRef = useRef<HTMLDivElement>(null)
+    const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
     useEffect(() => {
         if (topDepth === null || bottomDepth == null || !depths?.[part]) {
@@ -38,8 +39,54 @@ const LineRepresentation = React.memo((
         setCenter(centerPercent)
     }, [part, setCenter, depths, topDepth, bottomDepth])
 
+    useEffect(() => {
+        const line = lineRef.current
+        if (!line) { return }
+
+        const getHoveredPart = (e: MouseEvent): void => {
+            // TODO: cleanup
+            const metadataLoaded = topDepth !== null && bottomDepth !== null && partIds !== null && depths !== null
+            if (!lineRef.current || !metadataLoaded) { return }
+
+            const { height, top } = lineRef.current.getBoundingClientRect()
+
+            const hoverPercentage = (e.clientY - top) / height
+            const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
+
+            let left = 0
+            let right = partIds.length - 1
+            while (left < right) {
+                const center = Math.round((left + right) * 0.5)
+                if (!depths[partIds[center]]) { return }
+                const { topDepth, length } = depths[partIds[center]]
+                const centerDepth = topDepth + 0.5 * length
+
+                if (hoverDepth === centerDepth) {
+                    setHoveredPart(partIds[center])
+                    return
+                } else if (hoverDepth < centerDepth) {
+                    right = center - 1
+                } else {
+                    left = center
+                }
+            }
+
+            setHoveredPart(partIds[right])
+        }
+
+        line.addEventListener('mousemove', getHoveredPart)
+
+        return () => {
+            line.removeEventListener('mousemove', getHoveredPart)
+        }
+    }, [topDepth, bottomDepth, partIds, depths, setHoveredPart])
+
     return <>
-        <div className={styles.line}></div>
+        <div
+            ref={lineRef}
+            className={styles.line}
+            onMouseLeave={() => setHoveredPart(null)}
+        ></div>
     </>
 })
 
