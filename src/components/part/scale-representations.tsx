@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
-import { get2dContext, StringMap } from '../../lib/util'
+import { get2dContext, lerp, StringMap } from '../../lib/util'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
@@ -14,7 +14,10 @@ type ScaleRepresentationProps = {
     parts: Array<string>,
     mToPx: number,
     widthM: number,
+    topDepth: number,
+    bottomDepth: number,
     setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
     gap: number
@@ -27,7 +30,7 @@ type ScaleRepresentation = {
 }
 
 const LineRepresentation = React.memo((
-    { part, setCenter, setPart, setHoveredPart }: ScaleRepresentationProps
+    { part, setCenter, setCenterWindow, setPart, setHoveredPart }: ScaleRepresentationProps
 ): ReactElement => {
     const lineRef = useRef<HTMLDivElement>(null)
     const hoverRef = useRef<HTMLDivElement>(null)
@@ -40,7 +43,8 @@ const LineRepresentation = React.memo((
         const center = depths[part].topDepth + 0.5 * depths[part].length
         const centerPercent = center / (bottomDepth - topDepth)
         setCenter(centerPercent)
-    }, [part, setCenter, depths, topDepth, bottomDepth])
+        setCenterWindow(centerPercent)
+    }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
 
     useEffect(() => {
         const line = lineRef.current
@@ -115,9 +119,10 @@ const LineRepresentation = React.memo((
     </>
 })
 
-const RectRepresentation = React.memo((
-    { part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart }: ScaleRepresentationProps
-): ReactElement => {
+const RectRepresentation = React.memo(({
+    part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
+    topDepth, bottomDepth, setCenterWindow
+}: ScaleRepresentationProps): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
@@ -130,30 +135,55 @@ const RectRepresentation = React.memo((
         const firstVisibleInd = partIds.indexOf(parts[0])
         const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
+        let totalHeightM = 0
         let totalHeightPx = 0
         let centerPx = 0
         let firstVisiblePx = 0
         let lastVisiblePx = 0
+        let topDepthPx: number | null = null
+        let bottomDepthPx: number | null = null
         partIds.forEach((id, i) => {
             if (!depths?.[id]) { return }
-            if (i === firstVisibleInd) {
-                firstVisiblePx = totalHeightPx
+            const { topDepth: partTop, length: partLength } = depths[id]
+
+            const lastHeightPx = totalHeightPx
+            totalHeightPx += partLength * mToPx + gap
+
+            const lastHeightM = totalHeightM
+            totalHeightM = partTop + partLength
+
+            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
+                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
             }
-            if (id === part) {
-                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
+
+            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
+                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            }
+
+            if (i === firstVisibleInd) {
+                firstVisiblePx = lastHeightPx
             }
             if (i === lastVisibleInd + 1) {
-                lastVisiblePx = totalHeightPx
+                lastVisiblePx = lastHeightPx
             }
-            totalHeightPx += depths[id].length * mToPx + gap
+            if (id === part) {
+                centerPx = lastHeightPx + 0.5 * partLength * mToPx
+            }
         })
+        totalHeightPx -= gap // remove final gap
         if (lastVisibleInd === partIds.length - 1) {
             lastVisiblePx = totalHeightPx
         }
         setCenter(centerPx / totalHeightPx)
         setPaddingTop(firstVisiblePx)
         setPaddingBottom(totalHeightPx - lastVisiblePx)
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter])
+        if (topDepthPx !== null && bottomDepthPx !== null) {
+            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
+            setCenterWindow(percent)
+        }
+    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
 
     return (
         <div
@@ -189,7 +219,8 @@ const RectRepresentation = React.memo((
 })
 
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
+    topDepth, bottomDepth, setCenterWindow
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
@@ -220,10 +251,13 @@ const PunchcardRepresentation = React.memo(({
             part={part}
             parts={parts}
             canvasCtxs={canvasCtxs}
+            topDepth={topDepth}
+            bottomDepth={bottomDepth}
             mToPx={mToPx}
             widthM={widthM}
             gap={gap}
             setCenter={setCenter}
+            setCenterWindow={setCenterWindow}
             setPart={setPart}
             setHoveredPart={setHoveredPart}
         />
@@ -231,7 +265,8 @@ const PunchcardRepresentation = React.memo(({
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart
+    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
+    topDepth, bottomDepth, setCenterWindow
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
@@ -264,8 +299,11 @@ const ChannelPunchcardRepresentation = React.memo(({
             canvasCtxs={canvasCtxs}
             mToPx={mToPx}
             widthM={widthM}
+            topDepth={topDepth}
+            bottomDepth={bottomDepth}
             gap={gap}
             setCenter={setCenter}
+            setCenterWindow={setCenterWindow}
             setPart={setPart}
             setHoveredPart={setHoveredPart}
             widthScale={WIDTH_SCALE}
@@ -287,8 +325,11 @@ type CanvasRepresentationProps = {
     canvasCtxs: StringMap<CanvasCtx>,
     mToPx: number,
     widthM: number,
+    topDepth: number,
+    bottomDepth: number,
     gap: number,
     setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
     widthScale?: number,
@@ -304,6 +345,7 @@ const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
 const CanvasRepresentation = React.memo(({
     part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
+    topDepth, bottomDepth, setCenterWindow,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
@@ -318,22 +360,42 @@ const CanvasRepresentation = React.memo(({
         const firstVisibleInd = partIds.indexOf(parts[0])
         const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
+        let totalHeightM = 0
         let totalHeightPx = 0
         let centerPx = 0
         let firstVisiblePx = 0
         let lastVisiblePx = 0
+        let topDepthPx: number | null = null
+        let bottomDepthPx: number | null = null
         partIds.forEach((id, i) => {
             if (!depths?.[id]) { return }
+            const { topDepth: partTop, length: partLength } = depths[id]
+
+            const lastHeightPx = totalHeightPx
+            totalHeightPx += partLength * mToPx + gap
+
+            const lastHeightM = totalHeightM
+            totalHeightM = partTop + partLength
+
+            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
+                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            }
+
+            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
+                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            }
+
             if (i === firstVisibleInd) {
-                firstVisiblePx = totalHeightPx
+                firstVisiblePx = lastHeightPx
             }
             if (i === lastVisibleInd + 1) {
-                lastVisiblePx = totalHeightPx
+                lastVisiblePx = lastHeightPx
             }
             if (id === part) {
-                centerPx = totalHeightPx + 0.5 * depths[id].length * mToPx
+                centerPx = lastHeightPx + 0.5 * partLength * mToPx
             }
-            totalHeightPx += depths[id].length * mToPx + gap
         })
         totalHeightPx -= gap // remove final gap
         if (lastVisibleInd === partIds.length - 1) {
@@ -342,7 +404,11 @@ const CanvasRepresentation = React.memo(({
         setCenter(centerPx / totalHeightPx)
         setPaddingTop(firstVisiblePx)
         setPaddingBottom(totalHeightPx - lastVisiblePx)
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter])
+        if (topDepthPx !== null && bottomDepthPx !== null) {
+            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
+            setCenterWindow(percent)
+        }
+    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
 
     const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
     return <>

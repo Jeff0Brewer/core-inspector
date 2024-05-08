@@ -198,6 +198,7 @@ const ScaleColumn = React.memo(({
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
+    const [partCenterWindow, setPartCenterWindow] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
     const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
@@ -275,15 +276,22 @@ const ScaleColumn = React.memo(({
         if (nextBottomDepth !== nextTopDepth) {
             const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
             const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
+            const columnHeight = (bottomDepth - topDepth) * mToPx
+            const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
+            const windowY = clamp(
+                partCenterWindow * columnHeight - windowHeight * 0.5,
+                0,
+                columnHeight - windowHeight
+            )
             setWindowStyle({
-                transform: `translateY(${(nextTopDepth - topDepth) * mToPx}px)`,
-                height: `${(nextBottomDepth - nextTopDepth) * mToPx}px`,
+                transform: `translateY(${windowY}px)`,
+                height: `${windowHeight}px`,
                 transition: largeWidth || lastPart === null ? '' : 'transform 1s ease, height 1s ease'
 
             })
             setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart])
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow])
 
     const windowHidden = nextTopDepth === nextBottomDepth
 
@@ -301,9 +309,12 @@ const ScaleColumn = React.memo(({
                     vis={vis}
                     part={part}
                     parts={visibleParts}
+                    topDepth={topDepth}
+                    bottomDepth={bottomDepth}
                     mToPx={mToPx}
                     widthM={PART_WIDTH_M}
                     setCenter={setPartCenter}
+                    setCenterWindow={setPartCenterWindow}
                     setPart={setPart}
                     setHoveredPart={setHoveredPart}
                     gap={gap}
