@@ -227,7 +227,7 @@ const ScaleColumn = React.memo(({
         const timeoutId = window.setTimeout(() => {
             setVisibleTopDepth(topDepth)
             setVisibleBottomDepth(bottomDepth)
-        }, 2000)
+        }, 1000)
         return () => {
             window.clearTimeout(timeoutId)
         }

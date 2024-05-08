@@ -182,7 +182,7 @@ const PunchcardRepresentation = React.memo(({
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (parts.length > MAX_CANVAS_PER_COLUMN) {
             setCanvasCtxs({})
             return
@@ -195,7 +195,7 @@ const PunchcardRepresentation = React.memo(({
         setCanvasCtxs(canvasCtxs)
     }, [parts])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!vis) { return }
         const canvasWidth = widthM * mToPx * window.devicePixelRatio
         for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
@@ -224,7 +224,7 @@ const ChannelPunchcardRepresentation = React.memo(({
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (parts.length > MAX_CANVAS_PER_COLUMN) {
             setCanvasCtxs({})
             return
@@ -237,7 +237,7 @@ const ChannelPunchcardRepresentation = React.memo(({
         setCanvasCtxs(canvasCtxs)
     }, [parts])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!vis) { return }
         const canvasWidth = widthM * mToPx * window.devicePixelRatio
         for (const [part, canvasCtx] of Object.entries(canvasCtxs)) {
