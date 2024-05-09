@@ -307,7 +307,7 @@ const ScaleColumn = React.memo(({
         }
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow, transitioning])
 
-    const windowHidden = nextTopDepth === nextBottomDepth
+    const windowHidden = nextTopDepth === nextBottomDepth || (largeWidth && transitioning)
 
     return <>
         <div
