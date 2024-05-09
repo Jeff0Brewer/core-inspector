@@ -5,7 +5,7 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { getPartId } from '../../lib/path'
-import { clamp, getScale } from '../../lib/util'
+import { clamp, lerp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { ScaleRepresentation } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -278,6 +278,27 @@ const ScaleColumn = React.memo(({
     }, [partCenter, fullScale, lastPart])
 
     useLayoutEffect(() => {
+        if (largeWidth) {
+            if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
+            const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
+            const { top: partTop, bottom: partBottom } = partRef.current.getBoundingClientRect()
+            const windowMin = partTop - columnTop
+            const windowMax = partBottom - columnTop
+            const depthMin = depths[part].topDepth
+            const depthMax = depths[part].topDepth + depths[part].length
+            const windowTop = lerp(windowMin, windowMax, (nextTopDepth - depthMin) / (depthMax - depthMin))
+            const windowBottom = lerp(windowMin, windowMax, (nextBottomDepth - depthMin) / (depthMax - depthMin))
+            setWindowStyle({
+                transform: `translateY(${windowTop}px`,
+                height: `${windowBottom - windowTop}px`
+            })
+
+            const windowTopPercent = windowTop / columnHeight
+            const windowBottomPercent = windowBottom / columnHeight
+            setZoomSvg(getZoomSvg(windowTopPercent, windowBottomPercent))
+            return
+        }
+
         let partCenterPercent = partCenterWindow
         if (!transitioning && partRef.current && columnRef.current) {
             const { top: columnTop, bottom: columnBottom } = columnRef.current.getBoundingClientRect()
@@ -300,14 +321,15 @@ const ScaleColumn = React.memo(({
             setWindowStyle({
                 transform: `translateY(${windowY}px)`,
                 height: `${windowHeight}px`,
-                transition: largeWidth || lastPart === null ? '' : 'transform 1s ease, height 1s ease'
+                transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
 
             })
             setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow, transitioning])
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, part, lastPart, partCenterWindow, transitioning, depths])
 
     const windowHidden = nextTopDepth === nextBottomDepth || (largeWidth && transitioning)
+    console.log(windowHidden)
 
     return <>
         <div
