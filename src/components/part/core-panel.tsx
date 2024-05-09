@@ -201,7 +201,8 @@ const ScaleColumn = React.memo(({
     const [partCenterWindow, setPartCenterWindow] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
-    const [zoomSvg, setZoomSvg] = useState<ReactElement | null>(null)
+    const [windowTop, setWindowTop] = useState<number>(0)
+    const [windowBottom, setWindowBottom] = useState<number>(0)
     const lastPart = useLastState(part)
     const [visibleTopDepth, setVisibleTopDepth] = useState<number | null>(null)
     const [visibleBottomDepth, setVisibleBottomDepth] = useState<number | null>(null)
@@ -288,21 +289,17 @@ const ScaleColumn = React.memo(({
             const depthMax = depths[part].topDepth + depths[part].length
             const windowTop = lerp(windowMin, windowMax, (nextTopDepth - depthMin) / (depthMax - depthMin))
             const windowBottom = lerp(windowMin, windowMax, (nextBottomDepth - depthMin) / (depthMax - depthMin))
+
             setWindowStyle({
                 transform: `translateY(${windowTop}px`,
                 height: `${windowBottom - windowTop}px`
             })
-
-            const windowTopPercent = windowTop / columnHeight
-            const windowBottomPercent = windowBottom / columnHeight
-            setZoomSvg(getZoomSvg(windowTopPercent, windowBottomPercent))
+            setWindowTop(windowTop / columnHeight)
+            setWindowBottom(windowBottom / columnHeight)
             return
         }
 
         if (nextBottomDepth !== nextTopDepth) {
-            const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
-            const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
-
             const columnHeight = (bottomDepth - topDepth) * mToPx
             const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
             const windowY = clamp(
@@ -315,7 +312,8 @@ const ScaleColumn = React.memo(({
                 height: `${windowHeight}px`,
                 transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
             })
-            setZoomSvg(getZoomSvg(windowTop, windowBottom))
+            setWindowTop((windowY) / columnHeight)
+            setWindowBottom((windowY + windowHeight) / columnHeight)
         }
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, part, lastPart, partCenterWindow, transitioning, depths])
 
@@ -349,7 +347,7 @@ const ScaleColumn = React.memo(({
             </div>
         </div>
         <div className={`${styles.zoomLines} ${windowHidden && styles.windowHidden}`}>
-            { zoomSvg }
+            <ZoomLines windowTop={windowTop} windowBottom={windowBottom} />
         </div>
     </>
 })
@@ -403,13 +401,14 @@ const ScaleColumnBottomLabel = React.memo((
     )
 })
 
-function getZoomSvg (
+type ZoomLinesProps = {
     windowTop: number,
     windowBottom: number
-): ReactElement {
-    if (Number.isNaN(windowTop) || Number.isNaN(windowBottom)) {
-        return <></>
-    }
+}
+
+const ZoomLines = React.memo((
+    { windowTop, windowBottom }: ZoomLinesProps
+): ReactElement => {
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
             <polygon
@@ -418,6 +417,6 @@ function getZoomSvg (
             />
         </svg>
     )
-}
+})
 
 export default CorePanel
