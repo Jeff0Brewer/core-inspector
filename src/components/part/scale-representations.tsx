@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
@@ -20,6 +20,7 @@ type ScaleRepresentationProps = {
     setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
+    partRef: RefObject<HTMLDivElement>,
     gap: number
 }
 
@@ -121,13 +122,12 @@ const LineRepresentation = React.memo((
 
 const RectRepresentation = React.memo(({
     part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow
+    topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const wrapRef = useRef<HTMLDivElement>(null)
-    const partRef = useRef<HTMLDivElement>(null)
 
     useLayoutEffect(() => {
         if (partIds === null || depths === null || !depths?.[part]) { return }
@@ -142,6 +142,7 @@ const RectRepresentation = React.memo(({
         let lastVisiblePx = 0
         let topDepthPx: number | null = null
         let bottomDepthPx: number | null = null
+
         partIds.forEach((id, i) => {
             if (!depths?.[id]) { return }
             const { topDepth: partTop, length: partLength } = depths[id]
@@ -220,7 +221,7 @@ const RectRepresentation = React.memo(({
 
 const PunchcardRepresentation = React.memo(({
     vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow
+    topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const blending = useBlendState()
@@ -250,6 +251,7 @@ const PunchcardRepresentation = React.memo(({
         <CanvasRepresentation
             part={part}
             parts={parts}
+            partRef={partRef}
             canvasCtxs={canvasCtxs}
             topDepth={topDepth}
             bottomDepth={bottomDepth}
@@ -266,7 +268,7 @@ const PunchcardRepresentation = React.memo(({
 
 const ChannelPunchcardRepresentation = React.memo(({
     vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow
+    topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
     const WIDTH_SCALE = 2
@@ -301,6 +303,7 @@ const ChannelPunchcardRepresentation = React.memo(({
             widthM={widthM}
             topDepth={topDepth}
             bottomDepth={bottomDepth}
+            partRef={partRef}
             gap={gap}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
@@ -328,6 +331,7 @@ type CanvasRepresentationProps = {
     topDepth: number,
     bottomDepth: number,
     gap: number,
+    partRef: RefObject<HTMLDivElement>,
     setCenter: (c: number) => void,
     setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
@@ -345,14 +349,13 @@ const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
 
 const CanvasRepresentation = React.memo(({
     part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow,
+    topDepth, bottomDepth, setCenterWindow, partRef,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const wrapRef = useRef<HTMLDivElement>(null)
-    const partRef = useRef<HTMLDivElement>(null)
 
     useLayoutEffect(() => {
         if (partIds === null || depths === null || !depths?.[part]) { return }

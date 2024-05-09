@@ -205,6 +205,7 @@ const ScaleColumn = React.memo(({
     const lastPart = useLastState(part)
     const [visibleTopDepth, setVisibleTopDepth] = useState<number | null>(null)
     const [visibleBottomDepth, setVisibleBottomDepth] = useState<number | null>(null)
+    const partRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
     const {
@@ -212,6 +213,8 @@ const ScaleColumn = React.memo(({
         fullScale = false,
         largeWidth = false
     } = representation
+
+    const [transitioning, setTransitioning] = useState<boolean>(false)
 
     useEffect(() => {
         if (visibleTopDepth === null) {
@@ -229,10 +232,12 @@ const ScaleColumn = React.memo(({
         }
     }, [bottomDepth, visibleBottomDepth])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
+        setTransitioning(true)
         const timeoutId = window.setTimeout(() => {
             setVisibleTopDepth(topDepth)
             setVisibleBottomDepth(bottomDepth)
+            setTransitioning(false)
         }, 1200)
         return () => {
             window.clearTimeout(timeoutId)
@@ -273,13 +278,22 @@ const ScaleColumn = React.memo(({
     }, [partCenter, fullScale, lastPart])
 
     useLayoutEffect(() => {
+        let partCenterPercent = partCenterWindow
+        if (!transitioning && partRef.current && columnRef.current) {
+            const { top: columnTop, bottom: columnBottom } = columnRef.current.getBoundingClientRect()
+            const { top: partTop, bottom: partBottom } = partRef.current.getBoundingClientRect()
+            const partCenterPx = (partTop + partBottom) * 0.5
+            partCenterPercent = (partCenterPx - columnTop) / (columnBottom - columnTop)
+        }
+
         if (nextBottomDepth !== nextTopDepth) {
             const windowTop = (nextTopDepth - topDepth) / (bottomDepth - topDepth)
             const windowBottom = (nextBottomDepth - topDepth) / (bottomDepth - topDepth)
+
             const columnHeight = (bottomDepth - topDepth) * mToPx
             const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
             const windowY = clamp(
-                partCenterWindow * columnHeight - windowHeight * 0.5,
+                partCenterPercent * columnHeight - windowHeight * 0.5,
                 0,
                 columnHeight - windowHeight
             )
@@ -291,7 +305,7 @@ const ScaleColumn = React.memo(({
             })
             setZoomSvg(getZoomSvg(windowTop, windowBottom))
         }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow])
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow, transitioning])
 
     const windowHidden = nextTopDepth === nextBottomDepth
 
@@ -317,6 +331,7 @@ const ScaleColumn = React.memo(({
                     setCenterWindow={setPartCenterWindow}
                     setPart={setPart}
                     setHoveredPart={setHoveredPart}
+                    partRef={partRef}
                     gap={gap}
                 />
             </div>
