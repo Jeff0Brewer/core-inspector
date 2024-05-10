@@ -13,7 +13,7 @@ import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
 import CorePanel from '../../components/part/core-panel'
-import SpectraPanel from '../../components/part/spectra-panel'
+import SpectraPanel, { SpectraPanelProps } from '../../components/part/spectra-panel'
 import {
     ScaleRepresentation,
     LineRepresentation,
@@ -45,8 +45,9 @@ const PartView = React.memo((
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
     const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
     const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
-    const [selectedSpectrum, setSelectedSpectrum] = useState<Array<number> | null>([])
-    const [spectrumPosition, setSpectrumPosition] = useState<[number, number]>([0, 0])
+    const [selectedSpectrum, setSelectedSpectrum] = useState<SpectraPanelProps>({
+        selectedSpectrum: null, spectrumPosition: [0, 0], maxMineral: 'chlorite' // TODO: remove this
+    })
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
     const { partIds, tiles } = useCoreMetadata()
@@ -171,12 +172,9 @@ const PartView = React.memo((
                 setDepthTop={setScrollDepthTop}
                 setDepthBottom={setScrollDepthBottom}
                 setSelectedSpectrum={setSelectedSpectrum}
-                setSpectrumPosition={setSpectrumPosition}
             />
-            <SpectraPanel
-                selectedSpectrum={selectedSpectrum}
-                spectrumPosition={spectrumPosition}
-            />
+            { selectedSpectrum &&
+                <SpectraPanel { ...selectedSpectrum } /> }
             <div className={styles.blendWrap}>
                 <button
                     className={styles.blendToggle}

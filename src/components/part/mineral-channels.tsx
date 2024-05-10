@@ -12,6 +12,7 @@ import CanvasRenderer from '../../components/generic/canvas-renderer'
 import LoadIcon from '../../components/generic/load-icon'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
+import { SpectraPanelProps } from '../../components/part/spectra-panel'
 import styles from '../../styles/part/mineral-channels.module.css'
 
 const BLEND_LABEL = 'blended'
@@ -28,13 +29,12 @@ type MineralChannelsProps = {
     mineralMaps: StringMap<HTMLImageElement | null>,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectrum: (s: Array<number> | null) => void,
-    setSpectrumPosition: (p: [number, number]) => void
+    setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 const MineralChannels = React.memo(({
     vis, core, part, minerals, mineralMaps,
-    setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
+    setDepthTop, setDepthBottom, setSelectedSpectrum
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -104,7 +104,6 @@ const MineralChannels = React.memo(({
                 setDepthTop={setDepthTop}
                 setDepthBottom={setDepthBottom}
                 setSelectedSpectrum={setSelectedSpectrum}
-                setSpectrumPosition={setSpectrumPosition}
             />
             <ChannelBottomLabels
                 extraChannels={EXTRA_CHANNELS}
@@ -192,13 +191,12 @@ type ChannelsViewProps = {
     viewGap: number,
     setDepthTop: (d: number) => void,
     setDepthBottom: (d: number) => void,
-    setSelectedSpectrum: (s: Array<number> | null) => void,
-    setSpectrumPosition: (p: [number, number]) => void
+    setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 const ChannelsView = React.memo(({
     core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
-    setDepthTop, setDepthBottom, setSelectedSpectrum, setSpectrumPosition
+    setDepthTop, setDepthBottom, setSelectedSpectrum
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
@@ -344,7 +342,6 @@ const ChannelsView = React.memo(({
                     abundanceWorker={abundanceWorker}
                     spectrumWorker={spectraWorker}
                     setSelectedSpectrum={setSelectedSpectrum}
-                    setSpectrumPosition={setSpectrumPosition}
                 />
             </div>
         </div>

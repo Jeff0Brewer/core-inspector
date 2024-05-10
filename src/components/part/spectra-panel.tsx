@@ -19,6 +19,18 @@ Chart.defaults.color = '#ccc'
 Chart.defaults.font.family = 'system-ui'
 const CHART_BG_COLOR = 'rgba(125, 125, 125, 0.35)'
 
+const MINERAL_LIB_MAP: StringMap<string> = {
+    amphibole: 'actinolite',
+    chlorite: 'clinochlore',
+    epidote: 'epidote',
+    prehnite: 'prehnite',
+    zeolite: 'laumontite',
+    pyroxene: 'augite',
+    carbonate: 'calcite',
+    gypsum: 'gypsum',
+    'kaolinite-montmorillonite': 'kaolinite'
+}
+
 type Point = { x: number, y: number }
 
 type CoreWavelengths = Array<number>
@@ -26,15 +38,16 @@ type LibrarySpectra = StringMap<Array<Point>>
 
 type SpectraPanelProps = {
     selectedSpectrum: Array<number> | null,
-    spectrumPosition: [number, number]
+    spectrumPosition: [number, number],
+    maxMineral: string
 }
 
 const SpectraPanel = React.memo((
-    { selectedSpectrum, spectrumPosition }: SpectraPanelProps
+    { selectedSpectrum, spectrumPosition, maxMineral }: SpectraPanelProps
 ): ReactElement => {
     const [coreWavelengths, setCoreWavelengths] = useState<CoreWavelengths | null>(null)
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra | null>(null)
-    const [libraryMineral, setLibraryMineral] = useState<string>('')
+    const [libraryMineral, setLibraryMineral] = useState<string>('chlorite')
 
     const [selectedData, setSelectedData] = useState<Array<Point> | null>(null)
     const [mainPlotData, setMainPlotData] = useState<ChartData<'line'> | null>(null)
@@ -57,14 +70,16 @@ const SpectraPanel = React.memo((
             ])
             setCoreWavelengths(coreWavelengths)
             setLibrarySpectra(librarySpectra)
-
-            const firstMineral = librarySpectra && Object.keys(librarySpectra)[0]
-            if (firstMineral) {
-                setLibraryMineral(firstMineral)
-            }
         }
         getSpectraMetadata()
     }, [])
+
+    useEffect(() => {
+        const libraryMineral = MINERAL_LIB_MAP[maxMineral]
+        if (libraryMineral) {
+            setLibraryMineral(libraryMineral)
+        }
+    }, [maxMineral])
 
     // calculate chart data
     useEffect(() => {
@@ -540,4 +555,5 @@ function excludeFirstLastTick (
         : value
 }
 
+export type { SpectraPanelProps }
 export default SpectraPanel

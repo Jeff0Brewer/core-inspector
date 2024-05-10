@@ -141,7 +141,8 @@ function getSpectrum (
 async function getClickedSpectrum (
     mousePos: Point,
     slicePath: string,
-    format: Base64Format
+    format: Base64Format,
+    maxMineral: string
 ): Promise<void> {
     const path = `${slicePath}.${format.fileExtension}`
     const { x, y } = mousePos
@@ -162,7 +163,8 @@ async function getClickedSpectrum (
         type: 'clicked',
         spectrum,
         x: Math.round(x),
-        y: Math.round(y)
+        y: Math.round(y),
+        maxMineral
     })
 }
 
@@ -208,6 +210,7 @@ let slicePath = ''
 let core = ''
 let part = ''
 let imgHeight = 0
+let maxMineral = ''
 const mousePos = { x: 0, y: 0 }
 
 onmessage = ({ data }): void => {
@@ -224,11 +227,14 @@ onmessage = ({ data }): void => {
             slicePath,
             HOVER_PARSER
         )
+    } else if (data.type === 'abundance') {
+        maxMineral = data.maxMineral
     } else if (data.type === 'mouseClick') {
         getClickedSpectrum(
             mousePos,
             slicePath,
-            CLICK_PARSER
+            CLICK_PARSER,
+            maxMineral
         )
     } else if (data.type === 'id') {
         // clear cached slices from prior part

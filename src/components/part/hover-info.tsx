@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
+import { SpectraPanelProps } from '../../components/part/spectra-panel'
 import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
 
@@ -7,13 +8,11 @@ type HoverInfoProps = {
     visible: boolean,
     abundanceWorker: Worker | null,
     spectrumWorker: Worker | null,
-    setSelectedSpectrum: (s: Array<number> | null) => void,
-    setSpectrumPosition: (p: [number, number]) => void
+    setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 function HoverInfo ({
-    visible, abundanceWorker, spectrumWorker,
-    setSelectedSpectrum, setSpectrumPosition
+    visible, abundanceWorker, spectrumWorker, setSelectedSpectrum
 }: HoverInfoProps): ReactElement {
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [spectrum, setSpectrum] = useState<Array<number> | null>([])
@@ -22,14 +21,25 @@ function HoverInfo ({
         if (!abundanceWorker) { return }
 
         const updateAbundances = ({ data }: MessageEvent): void => {
-            setAbundances(data.abundances)
+            const abundances: StringMap<number> = data.abundances
+            setAbundances(abundances)
+
+            let maxAbundance = 0
+            let maxMineral = 'chlorite'
+            for (const [mineral, abundance] of Object.entries(abundances)) {
+                if (abundance > maxAbundance) {
+                    maxMineral = mineral
+                    maxAbundance = abundance
+                }
+            }
+            spectrumWorker?.postMessage({ type: 'abundance', maxMineral })
         }
 
         abundanceWorker.addEventListener('message', updateAbundances)
         return () => {
             abundanceWorker.removeEventListener('message', updateAbundances)
         }
-    }, [abundanceWorker])
+    }, [abundanceWorker, spectrumWorker])
 
     useEffect(() => {
         if (!spectrumWorker) { return }
@@ -38,8 +48,12 @@ function HoverInfo ({
             if (data.type === 'hovered') {
                 setSpectrum(data.spectrum)
             } else if (data.type === 'clicked') {
-                setSelectedSpectrum(data.spectrum)
-                setSpectrumPosition([data.x, data.y])
+                const { spectrum, x, y, maxMineral } = data
+                setSelectedSpectrum({
+                    selectedSpectrum: spectrum,
+                    spectrumPosition: [x, y],
+                    maxMineral
+                })
             }
         }
 
@@ -47,7 +61,7 @@ function HoverInfo ({
         return () => {
             spectrumWorker.removeEventListener('message', updateSpectrum)
         }
-    }, [spectrumWorker, setSelectedSpectrum, setSpectrumPosition])
+    }, [spectrumWorker, setSelectedSpectrum])
 
     const popupRef = useRef<HTMLDivElement>(null)
     usePopupPosition(popupRef)
