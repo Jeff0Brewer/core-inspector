@@ -5,7 +5,7 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { getPartId } from '../../lib/path'
-import { clamp, lerp, ease, getScale } from '../../lib/util'
+import { clamp, lerp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { ScaleRepresentation } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -43,7 +43,7 @@ const CorePanel = React.memo(({
 
     // calculates progression of depth range between columns
     // and scale values for each column's layout
-    useEffect(() => {
+    useLayoutEffect(() => {
         const getColumns = (): void => {
             if (minDepth === null || maxDepth === null || !depths?.[part]) { return }
             if (!columnsRef.current) {
