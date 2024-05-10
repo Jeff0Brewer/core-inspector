@@ -277,7 +277,7 @@ const ScaleColumn = React.memo(({
         }
     }, [partCenter, fullScale, lastPart])
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (!largeWidth) { return }
 
         if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
