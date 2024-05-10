@@ -28,7 +28,7 @@ const MINERAL_LIB_MAP: StringMap<string> = {
     pyroxene: 'augite',
     carbonate: 'calcite',
     gypsum: 'gypsum',
-    'kaolinite-montmorillonite': 'kaolinite'
+    'kaolinite-montmorillinite': 'kaolinite'
 }
 
 type Point = { x: number, y: number }
