@@ -233,7 +233,7 @@ const ScaleColumn = React.memo(({
     }, [bottomDepth, visibleBottomDepth])
 
     useLayoutEffect(() => {
-        setTransitioning(true)
+        setTransitioning(lastPart !== null)
         const timeoutId = window.setTimeout(() => {
             setVisibleTopDepth(topDepth)
             setVisibleBottomDepth(bottomDepth)
@@ -242,7 +242,7 @@ const ScaleColumn = React.memo(({
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [part, topDepth, bottomDepth])
+    }, [lastPart, topDepth, bottomDepth])
 
     useLayoutEffect(() => {
         if (visibleTopDepth === null || visibleBottomDepth === null) { return }
