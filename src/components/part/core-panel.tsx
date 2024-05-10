@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement, RefObject } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { getPartId } from '../../lib/path'
-import { clamp, lerp, getScale } from '../../lib/util'
+import { clamp, lerp, ease, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { ScaleRepresentation } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -201,13 +201,12 @@ const ScaleColumn = React.memo(({
     const [partCenterWindow, setPartCenterWindow] = useState<number>(0)
     const [representationStyle, setRepresentationStyle] = useState<React.CSSProperties>({})
     const [windowStyle, setWindowStyle] = useState<React.CSSProperties>({})
-    const [windowTop, setWindowTop] = useState<number>(0)
-    const [windowBottom, setWindowBottom] = useState<number>(0)
     const lastPart = useLastState(part)
     const [visibleTopDepth, setVisibleTopDepth] = useState<number | null>(null)
     const [visibleBottomDepth, setVisibleBottomDepth] = useState<number | null>(null)
     const partRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
+    const windowRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
     const {
         element: RepresentationElement,
@@ -243,7 +242,7 @@ const ScaleColumn = React.memo(({
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [topDepth, bottomDepth])
+    }, [part, topDepth, bottomDepth])
 
     useLayoutEffect(() => {
         if (visibleTopDepth === null || visibleBottomDepth === null) { return }
@@ -279,43 +278,40 @@ const ScaleColumn = React.memo(({
     }, [partCenter, fullScale, lastPart])
 
     useLayoutEffect(() => {
-        if (largeWidth) {
-            if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
-            const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
-            const { top: partTop, bottom: partBottom } = partRef.current.getBoundingClientRect()
-            const windowMin = partTop - columnTop
-            const windowMax = partBottom - columnTop
-            const depthMin = depths[part].topDepth
-            const depthMax = depths[part].topDepth + depths[part].length
-            const windowTop = lerp(windowMin, windowMax, (nextTopDepth - depthMin) / (depthMax - depthMin))
-            const windowBottom = lerp(windowMin, windowMax, (nextBottomDepth - depthMin) / (depthMax - depthMin))
+        if (!largeWidth) { return }
 
-            setWindowStyle({
-                transform: `translateY(${windowTop}px`,
-                height: `${windowBottom - windowTop}px`
-            })
-            setWindowTop(windowTop / columnHeight)
-            setWindowBottom(windowBottom / columnHeight)
-            return
-        }
+        if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
+        const { top: columnTop } = columnRef.current.getBoundingClientRect()
+        const { top: partTop, bottom: partBottom } = partRef.current.getBoundingClientRect()
+        const windowMin = partTop - columnTop
+        const windowMax = partBottom - columnTop
+        const depthMin = depths[part].topDepth
+        const depthMax = depths[part].topDepth + depths[part].length
+        const windowTop = lerp(windowMin, windowMax, (nextTopDepth - depthMin) / (depthMax - depthMin))
+        const windowBottom = lerp(windowMin, windowMax, (nextBottomDepth - depthMin) / (depthMax - depthMin))
 
-        if (nextBottomDepth !== nextTopDepth) {
-            const columnHeight = (bottomDepth - topDepth) * mToPx
-            const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
-            const windowY = clamp(
-                partCenterWindow * columnHeight - windowHeight * 0.5,
-                0,
-                columnHeight - windowHeight
-            )
-            setWindowStyle({
-                transform: `translateY(${windowY}px)`,
-                height: `${windowHeight}px`,
-                transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
-            })
-            setWindowTop((windowY) / columnHeight)
-            setWindowBottom((windowY + windowHeight) / columnHeight)
-        }
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, part, lastPart, partCenterWindow, transitioning, depths])
+        setWindowStyle({
+            transform: `translateY(${windowTop}px`,
+            height: `${windowBottom - windowTop}px`
+        })
+    }, [largeWidth, depths, part, nextTopDepth, nextBottomDepth, transitioning])
+
+    useLayoutEffect(() => {
+        if (largeWidth) { return }
+
+        const columnHeight = (bottomDepth - topDepth) * mToPx
+        const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
+        const windowY = clamp(
+            partCenterWindow * columnHeight - windowHeight * 0.5,
+            0,
+            columnHeight - windowHeight
+        )
+        setWindowStyle({
+            transform: `translateY(${windowY}px)`,
+            height: `${windowHeight}px`,
+            transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
+        })
+    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow])
 
     const windowHidden = nextTopDepth === nextBottomDepth || (largeWidth && transitioning)
 
@@ -325,6 +321,7 @@ const ScaleColumn = React.memo(({
             className={`${styles.column} ${largeWidth && styles.largeWidth}`}
         >
             <div
+                ref={windowRef}
                 className={`${styles.nextWindow} ${windowHidden && styles.windowHidden}`}
                 style={windowStyle}
             ></div>
@@ -347,7 +344,12 @@ const ScaleColumn = React.memo(({
             </div>
         </div>
         <div className={`${styles.zoomLines} ${windowHidden && styles.windowHidden}`}>
-            <ZoomLines windowTop={windowTop} windowBottom={windowBottom} />
+            <ZoomLines
+                windowRef={windowRef}
+                columnRef={columnRef}
+                transitioning={transitioning}
+                styleDependency={windowStyle}
+            />
         </div>
     </>
 })
@@ -402,19 +404,52 @@ const ScaleColumnBottomLabel = React.memo((
 })
 
 type ZoomLinesProps = {
-    windowTop: number,
-    windowBottom: number
+    windowRef: RefObject<HTMLDivElement>,
+    columnRef: RefObject<HTMLDivElement>,
+    transitioning?: boolean,
+    styleDependency?: React.CSSProperties
 }
 
 const ZoomLines = React.memo((
-    { windowTop, windowBottom }: ZoomLinesProps
+    { windowRef, columnRef, transitioning, styleDependency }: ZoomLinesProps
 ): ReactElement => {
+    const [points, setPoints] = useState<string>('')
+    const idRef = useRef<number>(-1)
+
+    useLayoutEffect(() => {
+        if (!transitioning) {
+            if (!windowRef.current || !columnRef.current) { return }
+
+            const { top: windowTop, bottom: windowBottom } = windowRef.current.getBoundingClientRect()
+            const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
+            const topPercent = 100 * (windowTop - columnTop) / columnHeight
+            const bottomPercent = 100 * (windowBottom - columnTop) / columnHeight
+            setPoints(`0,${topPercent} 0,${bottomPercent} 100,100 100,0`)
+            return
+        }
+
+        const animate = (): void => {
+            if (!windowRef.current || !columnRef.current) { return }
+
+            const { top: windowTop, bottom: windowBottom } = windowRef.current.getBoundingClientRect()
+            const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
+            const topPercent = 100 * (windowTop - columnTop) / columnHeight
+            const bottomPercent = 100 * (windowBottom - columnTop) / columnHeight
+            setPoints(`0,${topPercent} 0,${bottomPercent} 100,100 100,0`)
+
+            idRef.current = window.requestAnimationFrame(animate)
+        }
+
+        animate()
+
+        return () => {
+            window.cancelAnimationFrame(idRef.current)
+        }
+    }, [windowRef, columnRef, transitioning, styleDependency])
+
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <polygon
-                fill="#1d1d1e"
-                points={`0,${windowTop * 100} 0,${windowBottom * 100} 100,100 100,0`}
-            />
+            <polygon fill="#1d1d1e" points={points} />
         </svg>
     )
 })
