@@ -414,37 +414,35 @@ const ZoomLines = React.memo((
     { windowRef, columnRef, transitioning, styleDependency }: ZoomLinesProps
 ): ReactElement => {
     const [points, setPoints] = useState<string>('')
-    const idRef = useRef<number>(-1)
 
     useLayoutEffect(() => {
-        if (!transitioning) {
+        const updateWindowPosition = (): void => {
             if (!windowRef.current || !columnRef.current) { return }
 
             const { top: windowTop, bottom: windowBottom } = windowRef.current.getBoundingClientRect()
             const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
+
             const topPercent = 100 * (windowTop - columnTop) / columnHeight
             const bottomPercent = 100 * (windowBottom - columnTop) / columnHeight
+
             setPoints(`0,${topPercent} 0,${bottomPercent} 100,100 100,0`)
-            return
         }
 
-        const animate = (): void => {
-            if (!windowRef.current || !columnRef.current) { return }
+        // loop animation frames to update svg until no longer transitioning
+        if (transitioning) {
+            let frameId = -1
+            const animate = (): void => {
+                updateWindowPosition()
+                frameId = window.requestAnimationFrame(animate)
+            }
+            animate()
 
-            const { top: windowTop, bottom: windowBottom } = windowRef.current.getBoundingClientRect()
-            const { top: columnTop, height: columnHeight } = columnRef.current.getBoundingClientRect()
-            const topPercent = 100 * (windowTop - columnTop) / columnHeight
-            const bottomPercent = 100 * (windowBottom - columnTop) / columnHeight
-            setPoints(`0,${topPercent} 0,${bottomPercent} 100,100 100,0`)
-
-            idRef.current = window.requestAnimationFrame(animate)
+            return () => {
+                window.cancelAnimationFrame(frameId)
+            }
         }
 
-        animate()
-
-        return () => {
-            window.cancelAnimationFrame(idRef.current)
-        }
+        updateWindowPosition()
     }, [windowRef, columnRef, transitioning, styleDependency])
 
     return (
