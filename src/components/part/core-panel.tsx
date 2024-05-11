@@ -152,31 +152,6 @@ const CorePanel = React.memo(({
     </>
 })
 
-type CorePanelTooltipProps = {
-    hoveredPart: string | null
-}
-
-function CorePanelTooltip ({ hoveredPart }: CorePanelTooltipProps): ReactElement {
-    const [validPart, setValidPart] = useState<string>('')
-    const popupRef = useRef<HTMLDivElement>(null)
-    usePopupPosition(popupRef)
-
-    useEffect(() => {
-        if (hoveredPart !== null) {
-            setValidPart(hoveredPart)
-        }
-    }, [hoveredPart])
-
-    return (
-        <div
-            ref={popupRef}
-            className={`${styles.tooltip} ${hoveredPart && styles.tooltipVisible}`}
-        >
-            {validPart && getPartId(validPart)}
-        </div>
-    )
-}
-
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     parts: Array<string>,
@@ -451,5 +426,30 @@ const ZoomLines = React.memo((
         </svg>
     )
 })
+
+type CorePanelTooltipProps = {
+    hoveredPart: string | null
+}
+
+function CorePanelTooltip ({ hoveredPart }: CorePanelTooltipProps): ReactElement {
+    const [validPart, setValidPart] = useState<string>('')
+    const popupRef = useRef<HTMLDivElement>(null)
+    usePopupPosition(popupRef)
+
+    useEffect(() => {
+        if (hoveredPart !== null) {
+            setValidPart(hoveredPart)
+        }
+    }, [hoveredPart])
+
+    return (
+        <div
+            ref={popupRef}
+            className={`${styles.tooltip} ${hoveredPart && styles.tooltipVisible}`}
+        >
+            {validPart && getPartId(validPart)}
+        </div>
+    )
+}
 
 export default CorePanel
