@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
@@ -40,50 +40,43 @@ const LineRepresentation = React.memo((
 
     useLineRepresentationPositioning(part, setCenter, setCenterWindow)
 
-    useEffect(() => {
-        const line = lineRef.current
-        if (!line) { return }
+    const getHoveredPart = useCallback((e: React.MouseEvent): string | null => {
+        if (
+            !lineRef.current || !hoverRef.current || topDepth === null ||
+            bottomDepth === null || partIds === null || depths === null
+        ) { return null }
 
-        const getHoveredPart = (e: MouseEvent): string | null => {
-            if (
-                !lineRef.current || !hoverRef.current || topDepth === null ||
-                bottomDepth === null || partIds === null || depths === null
-            ) { return null }
+        // Find cursor position as percentage of line height to position hover
+        // indicator and meters to search for closest part.
+        const { top, height } = lineRef.current.getBoundingClientRect()
+        const hoverPercentage = (e.clientY - top) / height
+        const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
 
-            // Find cursor position as percentage of line height to position hover
-            // indicator and meters to search for closest part.
-            const { top, height } = lineRef.current.getBoundingClientRect()
-            const hoverPercentage = (e.clientY - top) / height
-            const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
+        hoverRef.current.style.top = `${hoverPercentage * 100}%`
+        return searchClosestPart(hoverDepth, partIds, depths)
+    }, [partIds, topDepth, bottomDepth, depths])
 
-            hoverRef.current.style.top = `${hoverPercentage * 100}%`
-            return searchClosestPart(hoverDepth, partIds, depths)
+    const mouseleave = (): void => {
+        setHoveredPart(null)
+    }
+    const mousemove = (e: React.MouseEvent): void => {
+        const part = getHoveredPart(e)
+        setHoveredPart(part)
+    }
+    const mousedown = (e: React.MouseEvent): void => {
+        const part = getHoveredPart(e)
+        if (part) {
+            setPart(part)
         }
-
-        const mousemove = (e: MouseEvent): void => {
-            setHoveredPart(getHoveredPart(e))
-        }
-        const mousedown = (e: MouseEvent): void => {
-            const hoveredPart = getHoveredPart(e)
-            if (hoveredPart !== null) {
-                setPart(hoveredPart)
-            }
-        }
-
-        line.addEventListener('mousemove', mousemove)
-        line.addEventListener('mousedown', mousedown)
-
-        return () => {
-            line.removeEventListener('mousemove', mousemove)
-            line.removeEventListener('mousedown', mousedown)
-        }
-    }, [topDepth, bottomDepth, partIds, depths, setHoveredPart, setPart])
+    }
 
     return <>
         <div
             ref={lineRef}
             className={styles.line}
-            onMouseLeave={() => setHoveredPart(null)}
+            onMouseLeave={mouseleave}
+            onMouseMove={mousemove}
+            onMouseDown={mousedown}
         >
             <div ref={hoverRef} className={styles.lineHover}></div>
         </div>
