@@ -7,8 +7,6 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
-const MAX_CANVAS_PER_COLUMN = 75
-
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
@@ -143,6 +141,77 @@ const RectRepresentation = React.memo(({
     )
 })
 
+type CanvasRepresentationProps = ScaleRepresentationProps & {
+    canvasCtxs: StringMap<CanvasCtx>,
+    widthScale?: number,
+    canvasSpacer?: ReactElement,
+    customRender?: (canvas: ReactElement) => ReactElement
+}
+
+const MAX_CANVAS_PER_COLUMN = 75
+const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
+const DEFAULT_CANVAS_SPACER: ReactElement = (
+    <div className={styles.canvasSpacer}></div>
+)
+
+const CanvasRepresentation = React.memo(({
+    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
+    topDepth, bottomDepth, setCenterWindow, partRef,
+    widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
+}: CanvasRepresentationProps): ReactElement => {
+    const [paddingTop, setPaddingTop] = useState<number>(0)
+    const [paddingBottom, setPaddingBottom] = useState<number>(0)
+    const wrapRef = useRef<HTMLDivElement>(null)
+    const { depths } = useCoreMetadata()
+
+    usePartRepresentationPositioning(
+        part, parts, topDepth, bottomDepth, mToPx, gap,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    )
+
+    const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
+
+    return (
+        <div
+            ref={wrapRef}
+            className={`${styles.parts} ${partsVisible && styles.partsVisible}`}
+            style={{ '--gap-size': `${gap}px`, paddingTop, paddingBottom } as React.CSSProperties}
+        >
+            { partsVisible && parts.map((id, i) => {
+                if (!depths?.[id]) {
+                    return <></>
+                }
+
+                const width = `${widthM * mToPx * widthScale}px`
+                const height = `${depths[id].length * mToPx}px`
+
+                return (
+                    <React.Fragment key={id}>
+                        <div
+                            ref={ id === part ? partRef : null }
+                            className={styles.canvas}
+                            onClick={() => setPart(id)}
+                            onMouseEnter={() => setHoveredPart(id)}
+                            onMouseLeave={() => setHoveredPart(null)}
+                        >
+                            { customRender(
+                                canvasCtxs[id]
+                                    ? <CanvasRenderer
+                                        canvas={canvasCtxs[id].canvas}
+                                        width={width}
+                                        height={height}
+                                    />
+                                    : <div style={{ width, height }}></div>
+                            ) }
+                        </div>
+                        {(i !== parts.length - 1) && canvasSpacer}
+                    </React.Fragment>
+                )
+            }) }
+        </div>
+    )
+})
+
 const PunchcardRepresentation = React.memo(({
     vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
     topDepth, bottomDepth, setCenterWindow, partRef
@@ -173,6 +242,7 @@ const PunchcardRepresentation = React.memo(({
 
     return (
         <CanvasRepresentation
+            vis={vis}
             part={part}
             parts={parts}
             partRef={partRef}
@@ -220,6 +290,7 @@ const ChannelPunchcardRepresentation = React.memo(({
 
     return (
         <CanvasRepresentation
+            vis={vis}
             part={part}
             parts={parts}
             canvasCtxs={canvasCtxs}
@@ -244,96 +315,6 @@ const ChannelPunchcardRepresentation = React.memo(({
             </>}
         />
     )
-})
-
-type CanvasRepresentationProps = {
-    part: string,
-    parts: Array<string>,
-    canvasCtxs: StringMap<CanvasCtx>,
-    mToPx: number,
-    widthM: number,
-    topDepth: number,
-    bottomDepth: number,
-    gap: number,
-    partRef: RefObject<HTMLDivElement>,
-    setCenter: (c: number) => void,
-    setCenterWindow: (c: number) => void,
-    setPart: (p: string | null) => void,
-    setHoveredPart: (p: string | null) => void,
-    widthScale?: number,
-    canvasSpacer?: ReactElement,
-    customRender?: (canvas: ReactElement) => ReactElement
-}
-
-const DEFAULT_CANVAS_SPACER: ReactElement = (
-    <div className={styles.canvasSpacer}></div>
-)
-
-const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
-
-const CanvasRepresentation = React.memo(({
-    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef,
-    widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
-}: CanvasRepresentationProps): ReactElement => {
-    const [paddingTop, setPaddingTop] = useState<number>(0)
-    const [paddingBottom, setPaddingBottom] = useState<number>(0)
-    const { depths } = useCoreMetadata()
-    const wrapRef = useRef<HTMLDivElement>(null)
-
-    usePartRepresentationPositioning(
-        part, parts, topDepth, bottomDepth, mToPx, gap,
-        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
-    )
-
-    const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
-    return <>
-        <div
-            ref={wrapRef}
-            className={`${styles.parts} ${partsVisible && styles.partsVisible}`}
-            style={{
-                '--gap-size': `${gap}px`,
-                paddingTop,
-                paddingBottom
-            } as React.CSSProperties}
-        >
-            { partsVisible && parts.map((id, i) => {
-                if (!depths?.[id]) {
-                    return <></>
-                }
-
-                const heightM = depths[id].length || 0
-                const refProp = { ref: id === part ? partRef : null }
-                return (
-                    <React.Fragment key={id}>
-                        <div
-                            {...refProp}
-                            className={styles.canvas}
-                            onClick={() => setPart(id)}
-                            onMouseEnter={() => setHoveredPart(id)}
-                            onMouseLeave={() => setHoveredPart(null)}
-                        >
-                            { canvasCtxs[id] && customRender(
-                                <CanvasRenderer
-                                    canvas={canvasCtxs[id].canvas}
-                                    width={`${widthM * mToPx * widthScale}px`}
-                                    height={`${heightM * mToPx}px`}
-                                />
-                            ) }
-                            { !canvasCtxs[id] && customRender(
-                                <div style={{
-                                    width: `${widthM * mToPx * widthScale}px`,
-                                    height: `${heightM * mToPx}px`,
-                                    backgroundColor: 'rgba(0, 0, 0, 0.2)'
-                                }}></div>
-                            ) }
-                        </div>
-                        {(i !== parts.length - 1) && canvasSpacer}
-                    </React.Fragment>
-                )
-            }) }
-        </div>
-    </>
 })
 
 function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
