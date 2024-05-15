@@ -6,6 +6,80 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
+function usePartRepresentationPositioning (
+    part: string,
+    parts: Array<string>,
+    topDepth: number,
+    bottomDepth: number,
+    mToPx: number,
+    gapPx: number,
+    setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void,
+    setPaddingTop: (p: number) => void,
+    setPaddingBottom: (p: number) => void
+): void {
+    const { partIds, depths } = useCoreMetadata()
+
+    useLayoutEffect(() => {
+        if (partIds === null || depths === null || !depths?.[part]) { return }
+
+        const firstVisibleInd = partIds.indexOf(parts[0])
+        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
+
+        let totalHeightM = 0
+        let totalHeightPx = 0
+        let centerPx = 0
+        let firstVisiblePx = 0
+        let lastVisiblePx = 0
+        let topDepthPx: number | null = null
+        let bottomDepthPx: number | null = null
+
+        partIds.forEach((id, i) => {
+            if (!depths?.[id]) { return }
+            const { topDepth: partTop, length: partLength } = depths[id]
+
+            const lastHeightPx = totalHeightPx
+            const lastHeightM = totalHeightM
+            totalHeightPx += partLength * mToPx + gapPx
+            totalHeightM = partTop + partLength
+
+            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
+                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            }
+
+            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
+                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
+                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            }
+
+            if (i === firstVisibleInd) {
+                firstVisiblePx = lastHeightPx
+            }
+            if (i === lastVisibleInd + 1) {
+                lastVisiblePx = lastHeightPx
+            }
+            if (id === part) {
+                centerPx = lastHeightPx + 0.5 * partLength * mToPx
+            }
+        })
+        totalHeightPx -= gapPx // remove final gap
+        if (lastVisibleInd === partIds.length - 1) {
+            lastVisiblePx = totalHeightPx
+        }
+        setCenter(centerPx / totalHeightPx)
+        setPaddingTop(firstVisiblePx)
+        setPaddingBottom(totalHeightPx - lastVisiblePx)
+        if (topDepthPx !== null && bottomDepthPx !== null) {
+            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
+            setCenterWindow(percent)
+        }
+    }, [
+        partIds, depths, part, parts, topDepth, bottomDepth, mToPx, gapPx,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    ])
+}
+
 const MAX_CANVAS_PER_COLUMN = 75
 
 type ScaleRepresentationProps = {
@@ -124,67 +198,15 @@ const RectRepresentation = React.memo(({
     part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
     topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
+    const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
 
-    useLayoutEffect(() => {
-        if (partIds === null || depths === null || !depths?.[part]) { return }
-
-        const firstVisibleInd = partIds.indexOf(parts[0])
-        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
-
-        let totalHeightM = 0
-        let totalHeightPx = 0
-        let centerPx = 0
-        let firstVisiblePx = 0
-        let lastVisiblePx = 0
-        let topDepthPx: number | null = null
-        let bottomDepthPx: number | null = null
-
-        partIds.forEach((id, i) => {
-            if (!depths?.[id]) { return }
-            const { topDepth: partTop, length: partLength } = depths[id]
-
-            const lastHeightPx = totalHeightPx
-            totalHeightPx += partLength * mToPx + gap
-
-            const lastHeightM = totalHeightM
-            totalHeightM = partTop + partLength
-
-            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
-                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
-                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (i === firstVisibleInd) {
-                firstVisiblePx = lastHeightPx
-            }
-            if (i === lastVisibleInd + 1) {
-                lastVisiblePx = lastHeightPx
-            }
-            if (id === part) {
-                centerPx = lastHeightPx + 0.5 * partLength * mToPx
-            }
-        })
-        totalHeightPx -= gap // remove final gap
-        if (lastVisibleInd === partIds.length - 1) {
-            lastVisiblePx = totalHeightPx
-        }
-        setCenter(centerPx / totalHeightPx)
-        setPaddingTop(firstVisiblePx)
-        setPaddingBottom(totalHeightPx - lastVisiblePx)
-        if (topDepthPx !== null && bottomDepthPx !== null) {
-            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
-            setCenterWindow(percent)
-        }
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
+    usePartRepresentationPositioning(
+        part, parts, topDepth, bottomDepth, mToPx, gap,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    )
 
     return (
         <div
@@ -352,66 +374,15 @@ const CanvasRepresentation = React.memo(({
     topDepth, bottomDepth, setCenterWindow, partRef,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
-    const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
+    const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
 
-    useLayoutEffect(() => {
-        if (partIds === null || depths === null || !depths?.[part]) { return }
-
-        const firstVisibleInd = partIds.indexOf(parts[0])
-        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
-
-        let totalHeightM = 0
-        let totalHeightPx = 0
-        let centerPx = 0
-        let firstVisiblePx = 0
-        let lastVisiblePx = 0
-        let topDepthPx: number | null = null
-        let bottomDepthPx: number | null = null
-        partIds.forEach((id, i) => {
-            if (!depths?.[id]) { return }
-            const { topDepth: partTop, length: partLength } = depths[id]
-
-            const lastHeightPx = totalHeightPx
-            totalHeightPx += partLength * mToPx + gap
-
-            const lastHeightM = totalHeightM
-            totalHeightM = partTop + partLength
-
-            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
-                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
-                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (i === firstVisibleInd) {
-                firstVisiblePx = lastHeightPx
-            }
-            if (i === lastVisibleInd + 1) {
-                lastVisiblePx = lastHeightPx
-            }
-            if (id === part) {
-                centerPx = lastHeightPx + 0.5 * partLength * mToPx
-            }
-        })
-        totalHeightPx -= gap // remove final gap
-        if (lastVisibleInd === partIds.length - 1) {
-            lastVisiblePx = totalHeightPx
-        }
-        setCenter(centerPx / totalHeightPx)
-        setPaddingTop(firstVisiblePx)
-        setPaddingBottom(totalHeightPx - lastVisiblePx)
-        if (topDepthPx !== null && bottomDepthPx !== null) {
-            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
-            setCenterWindow(percent)
-        }
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
+    usePartRepresentationPositioning(
+        part, parts, topDepth, bottomDepth, mToPx, gap,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    )
 
     const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
     return <>
