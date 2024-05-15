@@ -70,7 +70,7 @@ const LineRepresentation = React.memo((
         }
     }
 
-    return <>
+    return (
         <div
             ref={lineRef}
             className={styles.line}
@@ -80,7 +80,7 @@ const LineRepresentation = React.memo((
         >
             <div ref={hoverRef} className={styles.lineHover}></div>
         </div>
-    </>
+    )
 })
 
 const RectRepresentation = React.memo(({
