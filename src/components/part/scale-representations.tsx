@@ -216,21 +216,8 @@ const PunchcardRepresentation = React.memo(({
     vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
     topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const canvasCtxs = usePartCanvasCtxs(parts)
     const blending = useBlendState()
-
-    useEffect(() => {
-        if (parts.length > MAX_CANVAS_PER_COLUMN) {
-            setCanvasCtxs({})
-            return
-        }
-
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
 
     useEffect(() => {
         if (!vis) { return }
@@ -264,21 +251,8 @@ const ChannelPunchcardRepresentation = React.memo(({
     vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
     topDepth, bottomDepth, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const canvasCtxs = usePartCanvasCtxs(parts)
     const WIDTH_SCALE = 2
-
-    useEffect(() => {
-        if (parts.length > MAX_CANVAS_PER_COLUMN) {
-            setCanvasCtxs({})
-            return
-        }
-
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
 
     useEffect(() => {
         if (!vis) { return }
@@ -317,16 +291,6 @@ const ChannelPunchcardRepresentation = React.memo(({
     )
 })
 
-function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
-    const canvas = document.createElement('canvas')
-    const ctx = get2dContext(canvas)
-
-    canvas.width = width
-    canvas.height = height
-
-    return { canvas, ctx }
-}
-
 // Binary search for part with depth closest to search depth.
 // Must supply parts list in sorted order.
 function searchClosestPart (
@@ -356,6 +320,30 @@ function searchClosestPart (
 
     // return closest part if no exact equality
     return parts[right]
+}
+
+// TODO: convert to obj pool of canvases, only init canvases if length of parts increases, assign canvases from pool to part ids on change
+function usePartCanvasCtxs (
+    parts: Array<string>
+): StringMap<CanvasCtx> {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+
+    useEffect(() => {
+        if (parts.length > MAX_CANVAS_PER_COLUMN) {
+            setCanvasCtxs({})
+            return
+        }
+
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            const canvas = document.createElement('canvas')
+            const ctx = get2dContext(canvas)
+            canvasCtxs[part] = { canvas, ctx }
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    return canvasCtxs
 }
 
 function usePartRepresentationPositioning (
