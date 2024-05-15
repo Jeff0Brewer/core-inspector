@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, Memo
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
+import { DepthMetadata } from '../../lib/metadata'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
@@ -44,47 +45,24 @@ const LineRepresentation = React.memo((
         if (!line) { return }
 
         const getHoveredPart = (e: MouseEvent): string | null => {
-            // ensure reference to dom elements and metadata loaded
             if (
-                !lineRef.current ||
-                !hoverRef.current ||
-                topDepth === null ||
-                bottomDepth === null ||
-                partIds === null ||
-                depths === null
+                !lineRef.current || !hoverRef.current || topDepth === null ||
+                bottomDepth === null || partIds === null || depths === null
             ) { return null }
 
-            // find depth in M closest to cursor position
-            const { height: lineHeight, top: lineTop } = lineRef.current.getBoundingClientRect()
-            const hoverPercentage = (e.clientY - lineTop) / lineHeight
+            // Find cursor position as percentage of line height to position hover
+            // indicator and meters to search for closest part.
+            const { top, height } = lineRef.current.getBoundingClientRect()
+            const hoverPercentage = (e.clientY - top) / height
             const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
 
             hoverRef.current.style.top = `${hoverPercentage * 100}%`
-
-            // binary search for part with depth closest to cursor depth
-            let left = 0
-            let right = partIds.length - 1
-            while (left < right) {
-                const center = Math.round((left + right) * 0.5)
-
-                if (!depths[partIds[center]]) { return null }
-                const { topDepth, length } = depths[partIds[center]]
-                const centerDepth = topDepth + 0.5 * length
-
-                if (hoverDepth === centerDepth) {
-                    return partIds[center]
-                } else if (hoverDepth < centerDepth) {
-                    right = center - 1
-                } else {
-                    left = center
-                }
-            }
-
-            // return closest hovered part
-            return partIds[right]
+            return searchClosestPart(hoverDepth, partIds, depths)
         }
 
-        const mousemove = (e: MouseEvent): void => { setHoveredPart(getHoveredPart(e)) }
+        const mousemove = (e: MouseEvent): void => {
+            setHoveredPart(getHoveredPart(e))
+        }
         const mousedown = (e: MouseEvent): void => {
             const hoveredPart = getHoveredPart(e)
             if (hoveredPart !== null) {
@@ -360,6 +338,37 @@ function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     canvas.height = height
 
     return { canvas, ctx }
+}
+
+// Binary search for part with depth closest to search depth.
+// Must supply parts list in sorted order.
+function searchClosestPart (
+    searchDepth: number,
+    parts: Array<string>,
+    depths: DepthMetadata
+): string | null {
+    let left = 0
+    let right = parts.length - 1
+    while (left < right) {
+        const center = Math.round((left + right) * 0.5)
+        if (!depths[parts[center]]) {
+            return null
+        }
+
+        const { topDepth, length } = depths[parts[center]]
+        const centerDepth = topDepth + 0.5 * length
+
+        if (searchDepth === centerDepth) {
+            return parts[center]
+        } else if (searchDepth < centerDepth) {
+            right = center - 1
+        } else {
+            left = center
+        }
+    }
+
+    // return closest part if no exact equality
+    return parts[right]
 }
 
 function useLineRepresentationPositioning (
