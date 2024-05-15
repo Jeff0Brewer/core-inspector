@@ -37,15 +37,7 @@ const LineRepresentation = React.memo((
     const hoverRef = useRef<HTMLDivElement>(null)
     const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
-    useEffect(() => {
-        if (topDepth === null || bottomDepth == null || !depths?.[part]) {
-            return
-        }
-        const center = depths[part].topDepth + 0.5 * depths[part].length
-        const centerPercent = center / (bottomDepth - topDepth)
-        setCenter(centerPercent)
-        setCenterWindow(centerPercent)
-    }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
+    useLineRepresentationPositioning(part, setCenter, setCenterWindow)
 
     useEffect(() => {
         const line = lineRef.current
@@ -368,6 +360,28 @@ function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     canvas.height = height
 
     return { canvas, ctx }
+}
+
+function useLineRepresentationPositioning (
+    part: string,
+    setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void
+): void {
+    const { topDepth, bottomDepth, depths } = useCoreMetadata()
+
+    useEffect(() => {
+        if (topDepth === null || bottomDepth == null || !depths?.[part]) {
+            return
+        }
+
+        // Line representation positions are representative of actual depths, so parts
+        // can be assumed to be exactly at their depth percentage in full core.
+        const center = depths[part].topDepth + 0.5 * depths[part].length
+        const centerPercent = center / (bottomDepth - topDepth)
+
+        setCenter(centerPercent)
+        setCenterWindow(centerPercent)
+    }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
 }
 
 function usePartRepresentationPositioning (
