@@ -38,7 +38,20 @@ const LineRepresentation = React.memo((
     const hoverRef = useRef<HTMLDivElement>(null)
     const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
-    useLineRepresentationPositioning(part, setCenter, setCenterWindow)
+    // Calculate positioning parameters from depth values. Don't need to reference
+    // px values since line is representative of actual depths and parts can
+    // be assumed to be exactly at their depth percentage in full core.
+    useLayoutEffect(() => {
+        if (topDepth === null || bottomDepth == null || !depths?.[part]) {
+            return
+        }
+
+        const center = depths[part].topDepth + 0.5 * depths[part].length
+        const centerPercent = center / (bottomDepth - topDepth)
+
+        setCenter(centerPercent)
+        setCenterWindow(centerPercent)
+    }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
 
     const getHoveredPart = useCallback((e: React.MouseEvent): string | null => {
         if (
@@ -362,28 +375,6 @@ function searchClosestPart (
 
     // return closest part if no exact equality
     return parts[right]
-}
-
-function useLineRepresentationPositioning (
-    part: string,
-    setCenter: (c: number) => void,
-    setCenterWindow: (c: number) => void
-): void {
-    const { topDepth, bottomDepth, depths } = useCoreMetadata()
-
-    useEffect(() => {
-        if (topDepth === null || bottomDepth == null || !depths?.[part]) {
-            return
-        }
-
-        // Line representation positions are representative of actual depths, so parts
-        // can be assumed to be exactly at their depth percentage in full core.
-        const center = depths[part].topDepth + 0.5 * depths[part].length
-        const centerPercent = center / (bottomDepth - topDepth)
-
-        setCenter(centerPercent)
-        setCenterWindow(centerPercent)
-    }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
 }
 
 function usePartRepresentationPositioning (
