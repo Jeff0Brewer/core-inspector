@@ -6,80 +6,6 @@ import PartRenderer, { CanvasCtx } from '../../vis/part'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
-function usePartRepresentationPositioning (
-    part: string,
-    parts: Array<string>,
-    topDepth: number,
-    bottomDepth: number,
-    mToPx: number,
-    gapPx: number,
-    setCenter: (c: number) => void,
-    setCenterWindow: (c: number) => void,
-    setPaddingTop: (p: number) => void,
-    setPaddingBottom: (p: number) => void
-): void {
-    const { partIds, depths } = useCoreMetadata()
-
-    useLayoutEffect(() => {
-        if (partIds === null || depths === null || !depths?.[part]) { return }
-
-        const firstVisibleInd = partIds.indexOf(parts[0])
-        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
-
-        let totalHeightM = 0
-        let totalHeightPx = 0
-        let centerPx = 0
-        let firstVisiblePx = 0
-        let lastVisiblePx = 0
-        let topDepthPx: number | null = null
-        let bottomDepthPx: number | null = null
-
-        partIds.forEach((id, i) => {
-            if (!depths?.[id]) { return }
-            const { topDepth: partTop, length: partLength } = depths[id]
-
-            const lastHeightPx = totalHeightPx
-            const lastHeightM = totalHeightM
-            totalHeightPx += partLength * mToPx + gapPx
-            totalHeightM = partTop + partLength
-
-            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
-                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
-                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (i === firstVisibleInd) {
-                firstVisiblePx = lastHeightPx
-            }
-            if (i === lastVisibleInd + 1) {
-                lastVisiblePx = lastHeightPx
-            }
-            if (id === part) {
-                centerPx = lastHeightPx + 0.5 * partLength * mToPx
-            }
-        })
-        totalHeightPx -= gapPx // remove final gap
-        if (lastVisibleInd === partIds.length - 1) {
-            lastVisiblePx = totalHeightPx
-        }
-        setCenter(centerPx / totalHeightPx)
-        setPaddingTop(firstVisiblePx)
-        setPaddingBottom(totalHeightPx - lastVisiblePx)
-        if (topDepthPx !== null && bottomDepthPx !== null) {
-            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
-            setCenterWindow(percent)
-        }
-    }, [
-        partIds, depths, part, parts, topDepth, bottomDepth, mToPx, gapPx,
-        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
-    ])
-}
-
 const MAX_CANVAS_PER_COLUMN = 75
 
 type ScaleRepresentationProps = {
@@ -442,6 +368,101 @@ function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
     canvas.height = height
 
     return { canvas, ctx }
+}
+
+function usePartRepresentationPositioning (
+    part: string,
+    parts: Array<string>,
+    topDepth: number,
+    bottomDepth: number,
+    mToPx: number,
+    gapPx: number,
+    setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void,
+    setPaddingTop: (p: number) => void,
+    setPaddingBottom: (p: number) => void
+): void {
+    const { partIds, depths } = useCoreMetadata()
+
+    // Calculate pixel positions of parts to get layout values for
+    // top / bottom / center of column. Because of transitions, cannot wait for
+    // actual DOM to render to get positions so must calculate here.
+    useLayoutEffect(() => {
+        if (partIds === null || depths === null || !depths?.[part]) {
+            return
+        }
+
+        const firstVisibleInd = partIds.indexOf(parts[0])
+        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
+
+        let currHeightM = 0
+        let currHeightPx = 0
+        let centerPx = 0
+        let firstVisiblePx = 0
+        let lastVisiblePx = 0
+        let topDepthPx: number | null = null
+        let bottomDepthPx: number | null = null
+
+        partIds.forEach((id, i) => {
+            if (!depths?.[id]) {
+                return
+            }
+
+            const { topDepth: partTop, length: partLength } = depths[id]
+            const lastHeightPx = currHeightPx
+            const lastHeightM = currHeightM
+            currHeightPx += partLength * mToPx + gapPx
+            currHeightM = partTop + partLength
+
+            // Since px gap between parts is not representative of actual depth,
+            // parts are not positioned exactly at their percentage depth in the core.
+            // Must interpolate between adjacent part values convert m positions to px.
+            if (lastHeightM <= topDepth && currHeightM > topDepth) {
+                const t = (topDepth - lastHeightM) / (currHeightM - lastHeightM)
+                topDepthPx = lerp(lastHeightPx, currHeightPx, t)
+            }
+            if (lastHeightM < bottomDepth && currHeightM >= bottomDepth) {
+                const t = (bottomDepth - lastHeightM) / (currHeightM - lastHeightM)
+                bottomDepthPx = lerp(lastHeightPx, currHeightPx, t)
+            }
+
+            if (i === firstVisibleInd) {
+                firstVisiblePx = lastHeightPx
+            }
+            if (i === lastVisibleInd + 1) {
+                lastVisiblePx = lastHeightPx
+            }
+            if (id === part) {
+                centerPx = lastHeightPx + 0.5 * partLength * mToPx
+            }
+        })
+
+        // No gap after last part, remove here.
+        currHeightPx -= gapPx
+
+        // Ensure last visible position is set if part is last in core.
+        if (lastVisibleInd === partIds.length - 1) {
+            lastVisiblePx = currHeightPx
+        }
+
+        // Top / bottom padding fills space that would be taken by all non-visible parts in core.
+        // This prevents part px position from changing when set of visible parts changes and simplifies
+        // smooth scrolling transition on part change.
+        setPaddingTop(firstVisiblePx)
+        setPaddingBottom(currHeightPx - lastVisiblePx)
+
+        // Get center as percentage of total representation height to position representation in column.
+        setCenter(centerPx / currHeightPx)
+
+        // Get center as percentage of total column height to position highlight window on top of column.
+        if (topDepthPx !== null && bottomDepthPx !== null) {
+            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
+            setCenterWindow(percent)
+        }
+    }, [
+        partIds, depths, part, parts, topDepth, bottomDepth, mToPx, gapPx,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    ])
 }
 
 export type { ScaleRepresentation }
