@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement, RefObject } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement, RefObject, MutableRefObject } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -39,12 +39,12 @@ type CorePanelProps = {
     part: string,
     representations: RepresentationSettings,
     setPart: (p: string | null) => void,
-    scrollDepth: ScrollDepth,
+    scrollDepthRef: MutableRefObject<ScrollDepth>,
     open: boolean
 }
 
 const CorePanel = React.memo(({
-    vis, part, representations, setPart, open, scrollDepth
+    vis, part, representations, setPart, open, scrollDepthRef
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const [hoveredPart, setHoveredPart] = useState<string | null>(null)
@@ -135,8 +135,8 @@ const CorePanel = React.memo(({
                     setPart={navigateToPart}
                     setHoveredPart={setHoveredPart}
                     column={column}
-                    nextTopDepth={(columns[i + 1] || scrollDepth).topDepth}
-                    nextBottomDepth={(columns[i + 1] || scrollDepth).bottomDepth}
+                    nextTopDepth={(columns[i + 1] || scrollDepthRef.current).topDepth}
+                    nextBottomDepth={(columns[i + 1] || scrollDepthRef.current).bottomDepth}
                     key={i}
                 />
             ) }

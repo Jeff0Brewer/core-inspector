@@ -28,14 +28,14 @@ type MineralChannelsProps = {
     part: string,
     minerals: Array<string>,
     mineralMaps: StringMap<HTMLImageElement | null>,
-    setScrollDepth: (d: ScrollDepth) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    scrollDepthRef: MutableRefObject<ScrollDepth>,
     zoomSliderRef: RefObject<HTMLInputElement>
 }
 
 const MineralChannels = React.memo(({
     vis, core, part, minerals, mineralMaps,
-    setScrollDepth, setSelectedSpectrum, zoomSliderRef
+    setSelectedSpectrum, scrollDepthRef, zoomSliderRef
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -103,8 +103,8 @@ const MineralChannels = React.memo(({
                 imgDims={imgDims}
                 viewDims={viewDims}
                 viewGap={viewGap}
-                setScrollDepth={setScrollDepth}
                 setSelectedSpectrum={setSelectedSpectrum}
+                scrollDepthRef={scrollDepthRef}
             />
             <ChannelBottomLabels
                 extraChannels={EXTRA_CHANNELS}
@@ -190,13 +190,13 @@ type ChannelsViewProps = {
     imgDims: [number, number],
     viewDims: [number, number],
     viewGap: number,
-    setScrollDepth: (d: ScrollDepth) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    scrollDepthRef: MutableRefObject<ScrollDepth>
 }
 
 const ChannelsView = React.memo(({
     core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
-    setScrollDepth, setSelectedSpectrum
+    setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
@@ -235,10 +235,10 @@ const ChannelsView = React.memo(({
             const bottomPercent = (scrollTop + clientHeight) / viewDims[1]
 
             const { topDepth, length } = depths[part]
-            setScrollDepth({
+            scrollDepthRef.current = {
                 topDepth: Math.max(topDepth, topPercent * length + topDepth),
                 bottomDepth: Math.min(topDepth + length, bottomPercent * length + topDepth)
-            })
+            }
         }
         scroll()
 
@@ -246,7 +246,7 @@ const ChannelsView = React.memo(({
         return () => {
             channelsWrap.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, viewDims, mineralMaps, setScrollDepth])
+    }, [part, depths, viewDims, mineralMaps, scrollDepthRef])
 
     // init workers for abundance / spectrum hover info
     useEffect(() => {

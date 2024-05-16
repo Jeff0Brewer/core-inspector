@@ -42,14 +42,15 @@ const PartView = React.memo((
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
-    const [scrollDepth, setScrollDepth] = useState<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
     const [selectedSpectrum, setSelectedSpectrum] = useState<SpectraPanelProps>({
         selectedSpectrum: null, spectrumPosition: [0, 0], maxMineral: 'chlorite' // TODO: remove this
     })
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
 
+    // Need ref to zoom slider to update core panel final window on change to zoom.
     const zoomSliderRef = useRef<HTMLInputElement>(null)
+    const scrollDepthRef = useRef<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
 
     const { partIds, tiles } = useCoreMetadata()
 
@@ -108,8 +109,6 @@ const PartView = React.memo((
             setMineralMaps(mineralMaps)
         }
 
-        setScrollDepth({ topDepth: 0, bottomDepth: 0 })
-
         getMineralChannels()
     }, [vis, core, part, minerals])
 
@@ -159,7 +158,7 @@ const PartView = React.memo((
                 part={part}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
-                scrollDepth={scrollDepth}
+                scrollDepthRef={scrollDepthRef}
             />
             <MineralChannels
                 vis={vis}
@@ -167,8 +166,8 @@ const PartView = React.memo((
                 part={part}
                 minerals={minerals}
                 mineralMaps={mineralMaps}
-                setScrollDepth={setScrollDepth}
                 setSelectedSpectrum={setSelectedSpectrum}
+                scrollDepthRef={scrollDepthRef}
                 zoomSliderRef={zoomSliderRef}
             />
             { selectedSpectrum &&
