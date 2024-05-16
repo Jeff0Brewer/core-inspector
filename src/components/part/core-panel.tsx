@@ -52,26 +52,23 @@ const CorePanel = React.memo(({
     // and scale values for each column's layout.
     useLayoutEffect(() => {
         const getColumns = (): void => {
-            if (minDepth === null || maxDepth === null || !depths?.[part]) {
+            if (!columnsRef.current || minDepth === null || maxDepth === null || !depths?.[part]) {
                 return
             }
-            if (!columnsRef.current) {
-                throw new Error('No reference to dom elements')
-            }
 
+            const partCenter = depths[part].topDepth + depths[part].length * 0.5
             const heightPx = columnsRef.current.clientHeight
 
+            const { element, fullScale, largeWidth } = representations[0]
             const columns: Array<CoreColumn> = [{
-                element: representations[0].element,
-                fullScale: representations[0].fullScale,
-                largeWidth: representations[0].largeWidth,
+                element,
+                fullScale,
+                largeWidth,
                 topDepth: minDepth,
                 bottomDepth: maxDepth,
                 gap: 1,
                 mToPx: heightPx / (maxDepth - minDepth)
             }]
-
-            const partCenter = depths[part].topDepth + depths[part].length * 0.5
 
             for (let i = 1; i < representations.length; i++) {
                 const {
@@ -90,15 +87,18 @@ const CorePanel = React.memo(({
                 const topDepth = depthCenter - depthRange * 0.5
                 const bottomDepth = depthCenter + depthRange * 0.5
                 const mToPx = heightPx / (bottomDepth - topDepth)
+                const gap = lastGap * 3
+
+                const { element, fullScale, largeWidth } = representations[i]
 
                 columns.push({
-                    element: representations[i].element,
-                    fullScale: representations[i].fullScale,
-                    largeWidth: representations[i].largeWidth,
-                    gap: 3 * lastGap,
+                    element,
+                    fullScale,
+                    largeWidth,
                     topDepth,
                     bottomDepth,
-                    mToPx
+                    mToPx,
+                    gap
                 })
             }
 
@@ -311,13 +311,13 @@ const ScaleColumn = React.memo(({
                     topDepth={topDepth}
                     bottomDepth={bottomDepth}
                     mToPx={mToPx}
+                    gap={gap}
                     widthM={PART_WIDTH_M}
+                    partRef={partRef}
                     setCenter={setPartCenter}
                     setCenterWindow={setPartCenterWindow}
                     setPart={setPart}
                     setHoveredPart={setHoveredPart}
-                    partRef={partRef}
-                    gap={gap}
                 />
             </div>
         </div>
