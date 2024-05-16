@@ -159,6 +159,7 @@ const PartView = React.memo((
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
                 scrollDepthRef={scrollDepthRef}
+                zoomSliderRef={zoomSliderRef}
             />
             <MineralChannels
                 vis={vis}

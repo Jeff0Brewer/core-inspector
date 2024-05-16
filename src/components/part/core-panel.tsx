@@ -47,7 +47,8 @@ type ScrollDepth = {
 
 type CorePanelContextProps = {
     columns: Array<CoreColumn>,
-    scrollDepthRef: MutableRefObject<ScrollDepth>
+    scrollDepthRef: MutableRefObject<ScrollDepth>,
+    zoomSliderRef: RefObject<HTMLInputElement>
 }
 
 const CorePanelContext = createContext<CorePanelContextProps | null>(null)
@@ -66,11 +67,12 @@ type CorePanelProps = {
     representations: RepresentationSettings,
     setPart: (p: string | null) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>,
+    zoomSliderRef: RefObject<HTMLInputElement>,
     open: boolean
 }
 
 const CorePanel = React.memo(({
-    vis, part, representations, setPart, open, scrollDepthRef
+    vis, part, representations, setPart, open, scrollDepthRef, zoomSliderRef
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const [hoveredPart, setHoveredPart] = useState<string | null>(null)
@@ -141,7 +143,7 @@ const CorePanel = React.memo(({
         setHoveredPart(null)
     }, [setPart])
 
-    return <CorePanelContext.Provider value={{ columns, scrollDepthRef }}>
+    return <CorePanelContext.Provider value={{ columns, scrollDepthRef, zoomSliderRef }}>
         <div className={styles.topLabels}>
             { render && columns.map(({ topDepth, bottomDepth, largeWidth }, i) =>
                 <ScaleColumnTopLabel
@@ -203,25 +205,15 @@ const ScaleColumn = React.memo(({
     const lastPart = useLastState(part)
     const { partIds, depths } = useCoreMetadata()
 
-    const { columns } = useCorePanelContext()
+    const { columns, scrollDepthRef, zoomSliderRef } = useCorePanelContext()
     const column = columns[index]
+    const RepresentationElement = column.element
 
-    let nextTopDepth: number = 0
-    let nextBottomDepth: number = 0
-    if (index < columns.length - 1) {
-        nextTopDepth = columns[index + 1].topDepth
-        nextBottomDepth = columns[index + 1].bottomDepth
-    }
-
-    const {
-        topDepth, bottomDepth, mToPx, gap, fullScale, largeWidth,
-        element: RepresentationElement
-    } = column
     const {
         min: visibleTopDepth,
         max: visibleBottomDepth,
         transitioning
-    } = useTransitionBounds(topDepth, bottomDepth)
+    } = useTransitionBounds(column.topDepth, column.bottomDepth)
 
     useLayoutEffect(() => {
         if (visibleTopDepth === null || visibleBottomDepth === null || partIds === null) {
@@ -239,7 +231,7 @@ const ScaleColumn = React.memo(({
     }, [partIds, depths, visibleTopDepth, visibleBottomDepth])
 
     useEffect(() => {
-        if (fullScale) {
+        if (column.fullScale) {
             setRepresentationStyle({ height: '100%' })
             return
         }
@@ -256,54 +248,92 @@ const ScaleColumn = React.memo(({
             ))`,
             transition: lastPart === null ? '' : 'transform 1s ease'
         })
-    }, [partCenter, fullScale, largeWidth, lastPart])
+    }, [column, partCenter, lastPart])
 
     useLayoutEffect(() => {
-        if (!largeWidth) { return }
-        if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
+        if (index < columns.length - 1) {
+            const { topDepth, bottomDepth, mToPx } = column
+            const {
+                topDepth: nextTopDepth,
+                bottomDepth: nextBottomDepth
+            } = columns[index + 1]
+            const columnHeight = (bottomDepth - topDepth) * mToPx
+            const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
+            const windowCenter = partCenterWindow * columnHeight
 
-        const { top: columnTopPx } = columnRef.current.getBoundingClientRect()
-        const { top: partTopPx, bottom: partBottomPx } = partRef.current.getBoundingClientRect()
-
-        const minM = depths[part].topDepth
-        const maxM = minM + depths[part].length
-
-        const minPx = partTopPx - columnTopPx
-        const maxPx = partBottomPx - columnTopPx
-
-        const windowTop = mapBounds(nextTopDepth, minM, maxM, minPx, maxPx)
-        const windowBottom = mapBounds(nextBottomDepth, minM, maxM, minPx, maxPx)
-
-        setWindowStyle({
-            transform: `translateY(${windowTop}px`,
-            height: `${windowBottom - windowTop}px`
-        })
-    }, [largeWidth, depths, part, nextTopDepth, nextBottomDepth, transitioning])
+            setWindowStyle({
+                height: `${windowHeight}px`,
+                transform: `translateY(clamp(
+                    0px,
+                    ${windowCenter - windowHeight * 0.5}px,
+                    ${columnHeight - windowHeight}px
+                ))`,
+                transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
+            })
+        }
+    }, [column, index, columns, partCenterWindow, lastPart])
 
     useLayoutEffect(() => {
-        if (largeWidth) { return }
+        if (index !== columns.length - 1 || transitioning || !depths?.[part]) {
+            return
+        }
 
-        const columnHeight = (bottomDepth - topDepth) * mToPx
-        const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
-        const windowCenter = partCenterWindow * columnHeight
+        const transitionMs = 200
+        let totalElapsed = 0
+        let lastTime = 0
+        let requestId = -1
+        const updateFinalWindow = (currTime: number): void => {
+            if (!columnRef.current || !partRef.current) { return }
 
-        setWindowStyle({
-            height: `${windowHeight}px`,
-            transform: `translateY(clamp(
-                0px,
-                ${windowCenter - windowHeight * 0.5}px,
-                ${columnHeight - windowHeight}px
-            ))`,
-            transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
-        })
-    }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow])
+            const elapsed = currTime - lastTime
+            lastTime = currTime
+            if (elapsed < transitionMs) {
+                totalElapsed += elapsed
+            }
 
-    const windowHidden = nextTopDepth === nextBottomDepth || (largeWidth && transitioning)
+            const { top: columnTopPx } = columnRef.current.getBoundingClientRect()
+            const { top: partTopPx, bottom: partBottomPx } = partRef.current.getBoundingClientRect()
+
+            const minM = depths[part].topDepth
+            const maxM = minM + depths[part].length
+
+            const minPx = partTopPx - columnTopPx
+            const maxPx = partBottomPx - columnTopPx
+
+            const windowTop = mapBounds(scrollDepthRef.current.topDepth, minM, maxM, minPx, maxPx)
+            const windowBottom = mapBounds(scrollDepthRef.current.bottomDepth, minM, maxM, minPx, maxPx)
+
+            setWindowStyle({
+                transform: `translateY(${windowTop}px`,
+                height: `${windowBottom - windowTop}px`
+            })
+            if (totalElapsed < transitionMs) {
+                requestId = window.requestAnimationFrame(updateFinalWindow)
+            }
+        }
+
+        const animateFinalWindow = (): void => {
+            totalElapsed = 0
+            window.cancelAnimationFrame(requestId)
+            requestId = window.requestAnimationFrame(updateFinalWindow)
+        }
+
+        const zoomSlider = zoomSliderRef.current
+        window.addEventListener('wheel', animateFinalWindow)
+        zoomSlider?.addEventListener('input', animateFinalWindow)
+        return () => {
+            window.removeEventListener('wheel', animateFinalWindow)
+            zoomSlider?.removeEventListener('input', animateFinalWindow)
+            window.cancelAnimationFrame(requestId)
+        }
+    }, [column, columns, depths, part, index, transitioning, scrollDepthRef, zoomSliderRef])
+
+    const windowHidden = (column.largeWidth && transitioning)
 
     return <>
         <div
             ref={columnRef}
-            className={`${styles.column} ${largeWidth && styles.largeWidth}`}
+            className={`${styles.column} ${column.largeWidth && styles.largeWidth}`}
         >
             <div
                 ref={windowRef}
@@ -315,10 +345,10 @@ const ScaleColumn = React.memo(({
                     vis={vis}
                     part={part}
                     parts={visibleParts}
-                    topDepth={topDepth}
-                    bottomDepth={bottomDepth}
-                    mToPx={mToPx}
-                    gap={gap}
+                    topDepth={column.topDepth}
+                    bottomDepth={column.bottomDepth}
+                    mToPx={column.mToPx}
+                    gap={column.gap}
                     widthM={PART_WIDTH_M}
                     partRef={partRef}
                     setCenter={setPartCenter}
