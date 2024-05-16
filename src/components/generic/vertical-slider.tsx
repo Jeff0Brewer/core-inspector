@@ -10,7 +10,7 @@ type VerticalSliderProps = {
     min?: number,
     max?: number,
     step?: number,
-    ref?: RefObject<HTMLInputElement>
+    customRef?: RefObject<HTMLInputElement>
 }
 
 function VerticalSlider ({
@@ -19,7 +19,7 @@ function VerticalSlider ({
     min = 0,
     max = 1,
     step = 0.1,
-    ref: customRef
+    customRef
 }: VerticalSliderProps): ReactElement {
     const localRef = useRef<HTMLInputElement>(null)
 

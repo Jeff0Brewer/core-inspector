@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject, RefObject } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
@@ -30,10 +30,12 @@ type MineralChannelsProps = {
     mineralMaps: StringMap<HTMLImageElement | null>,
     setScrollDepth: (d: ScrollDepth) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    zoomSliderRef: RefObject<HTMLInputElement>
 }
 
 const MineralChannels = React.memo(({
-    vis, core, part, minerals, mineralMaps, setScrollDepth, setSelectedSpectrum
+    vis, core, part, minerals, mineralMaps,
+    setScrollDepth, setSelectedSpectrum, zoomSliderRef
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -81,6 +83,7 @@ const MineralChannels = React.memo(({
             setZoom={setZoom}
             setSpacing={setSpacing}
             channelWidth={viewDims[0]}
+            zoomSliderRef={zoomSliderRef}
         />
         <div className={styles.content} data-loading={loading}>
             <LoadIcon loading={loading} showDelayMs={100} />

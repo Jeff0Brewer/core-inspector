@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
@@ -48,6 +48,9 @@ const PartView = React.memo((
     })
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
+
+    const zoomSliderRef = useRef<HTMLInputElement>(null)
+
     const { partIds, tiles } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
@@ -166,6 +169,7 @@ const PartView = React.memo((
                 mineralMaps={mineralMaps}
                 setScrollDepth={setScrollDepth}
                 setSelectedSpectrum={setSelectedSpectrum}
+                zoomSliderRef={zoomSliderRef}
             />
             { selectedSpectrum &&
                 <SpectraPanel { ...selectedSpectrum } /> }
