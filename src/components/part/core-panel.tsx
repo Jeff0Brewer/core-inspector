@@ -253,21 +253,23 @@ const ScaleColumn = React.memo(({
             const { top: columnTopPx } = columnRef.current.getBoundingClientRect()
             const { top: partTopPx, bottom: partBottomPx } = partRef.current.getBoundingClientRect()
 
-            const minM = depths[part].topDepth
-            const maxM = minM + depths[part].length
-
             const minPx = partTopPx - columnTopPx
             const maxPx = partBottomPx - columnTopPx
 
-            const windowTop = mapBounds(scrollDepthRef.current.topDepth, minM, maxM, minPx, maxPx)
-            const windowBottom = mapBounds(scrollDepthRef.current.bottomDepth, minM, maxM, minPx, maxPx)
+            const minM = depths[part].topDepth
+            const maxM = minM + depths[part].length
+
+            const topM = scrollDepthRef.current.topDepth
+            const bottomM = scrollDepthRef.current.bottomDepth
+
+            const windowTop = mapBounds(topM, minM, maxM, minPx, maxPx)
+            const windowBottom = mapBounds(bottomM, minM, maxM, minPx, maxPx)
 
             setWindowStyle({
                 transform: `translateY(${windowTop}px`,
                 height: `${windowBottom - windowTop}px`
             })
         }
-
         updateFinalWindow()
 
         const requestIdRef: ObjectRef<number> = { current: -1 }
@@ -278,6 +280,7 @@ const ScaleColumn = React.memo(({
         const zoomSlider = zoomSliderRef.current
         window.addEventListener('wheel', animateFinalWindow)
         zoomSlider?.addEventListener('input', updateFinalWindow)
+
         return () => {
             window.removeEventListener('wheel', animateFinalWindow)
             zoomSlider?.removeEventListener('input', updateFinalWindow)
