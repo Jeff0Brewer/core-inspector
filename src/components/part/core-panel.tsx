@@ -1,4 +1,15 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement, RefObject, MutableRefObject } from 'react'
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useCallback,
+    ReactElement,
+    RefObject,
+    MutableRefObject
+} from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -32,6 +43,21 @@ type RepresentationSettings = Array<{
 type ScrollDepth = {
     topDepth: number,
     bottomDepth: number
+}
+
+type CorePanelContextProps = {
+    columns: Array<CoreColumn>,
+    scrollDepthRef: MutableRefObject<ScrollDepth>
+}
+
+const CorePanelContext = createContext<CorePanelContextProps | null>(null)
+
+const useCorePanelContext = (): CorePanelContextProps => {
+    const context = useContext(CorePanelContext)
+    if (context === null) {
+        throw new Error('useCorePanelContext must be called from a child of CorePanelProvider')
+    }
+    return context
 }
 
 type CorePanelProps = {
@@ -115,7 +141,7 @@ const CorePanel = React.memo(({
         setHoveredPart(null)
     }, [setPart])
 
-    return <>
+    return <CorePanelContext.Provider value={{ columns, scrollDepthRef }}>
         <div className={styles.topLabels}>
             { render && columns.map(({ topDepth, bottomDepth, largeWidth }, i) =>
                 <ScaleColumnTopLabel
@@ -128,15 +154,13 @@ const CorePanel = React.memo(({
         </div>
         <div className={styles.columns} ref={columnsRef}>
             <CorePanelTooltip hoveredPart={hoveredPart} />
-            { render && columns.map((column, i) =>
+            { render && columns.map((_, i) =>
                 <ScaleColumn
                     vis={vis}
                     part={part}
                     setPart={navigateToPart}
                     setHoveredPart={setHoveredPart}
-                    column={column}
-                    nextTopDepth={(columns[i + 1] || scrollDepthRef.current).topDepth}
-                    nextBottomDepth={(columns[i + 1] || scrollDepthRef.current).bottomDepth}
+                    index={i}
                     key={i}
                 />
             ) }
@@ -154,21 +178,19 @@ const CorePanel = React.memo(({
                 />
             ) }
         </div>
-    </>
+    </CorePanelContext.Provider>
 })
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
     part: string,
-    column: CoreColumn,
-    nextTopDepth: number,
-    nextBottomDepth: number,
     setPart: (p: string | null) => void,
-    setHoveredPart: (p: string | null) => void
+    setHoveredPart: (p: string | null) => void,
+    index: number
 }
 
 const ScaleColumn = React.memo(({
-    vis, part, column, nextTopDepth, nextBottomDepth, setPart, setHoveredPart
+    vis, part, setPart, setHoveredPart, index
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
@@ -180,6 +202,17 @@ const ScaleColumn = React.memo(({
     const windowRef = useRef<HTMLDivElement>(null)
     const lastPart = useLastState(part)
     const { partIds, depths } = useCoreMetadata()
+
+    const { columns } = useCorePanelContext()
+    const column = columns[index]
+
+    let nextTopDepth: number = 0
+    let nextBottomDepth: number = 0
+    if (index < columns.length - 1) {
+        nextTopDepth = columns[index + 1].topDepth
+        nextBottomDepth = columns[index + 1].bottomDepth
+    }
+
     const {
         topDepth, bottomDepth, mToPx, gap, fullScale, largeWidth,
         element: RepresentationElement
