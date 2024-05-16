@@ -305,16 +305,13 @@ const ScaleColumn = React.memo(({
                     vis={vis}
                     part={part}
                     parts={visibleParts}
-                    topDepth={column.topDepth}
-                    bottomDepth={column.bottomDepth}
-                    mToPx={column.mToPx}
-                    gap={column.gap}
+                    column={column}
                     widthM={PART_WIDTH_M}
-                    partRef={partRef}
-                    setCenter={setPartCenter}
-                    setCenterWindow={setPartCenterWindow}
                     setPart={setPart}
                     setHoveredPart={setHoveredPart}
+                    setCenter={setPartCenter}
+                    setCenterWindow={setPartCenterWindow}
+                    partRef={partRef}
                 />
             </div>
         </div>
@@ -453,5 +450,6 @@ function CorePanelTooltip ({ hoveredPart }: CorePanelTooltipProps): ReactElement
 export default CorePanel
 export type {
     RepresentationSettings,
-    ScrollDepth
+    ScrollDepth,
+    CoreColumn
 }

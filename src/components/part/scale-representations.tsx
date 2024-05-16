@@ -4,6 +4,7 @@ import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
 import { DepthMetadata } from '../../lib/metadata'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
+import { CoreColumn } from '../../components/part/core-panel'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
 
@@ -11,16 +12,13 @@ type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    mToPx: number,
+    column: CoreColumn,
     widthM: number,
-    topDepth: number,
-    bottomDepth: number,
     setCenter: (c: number) => void,
     setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
-    partRef: RefObject<HTMLDivElement>,
-    gap: number
+    partRef: RefObject<HTMLDivElement>
 }
 
 type RepresentationElement = MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>
@@ -91,16 +89,16 @@ const LineRepresentation = React.memo((
 })
 
 const RectRepresentation = React.memo(({
-    part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    part, parts, column, widthM, setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
 
+    const { mToPx, gap } = column
     usePartRepresentationPositioning(
-        part, parts, topDepth, bottomDepth, mToPx, gap,
+        part, parts, column,
         setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
     )
 
@@ -151,8 +149,8 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 )
 
 const CanvasRepresentation = React.memo(({
-    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef,
+    part, parts, column, canvasCtxs, widthM,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const [paddingTop, setPaddingTop] = useState<number>(0)
@@ -160,8 +158,9 @@ const CanvasRepresentation = React.memo(({
     const wrapRef = useRef<HTMLDivElement>(null)
     const { depths } = useCoreMetadata()
 
+    const { mToPx, gap } = column
     usePartRepresentationPositioning(
-        part, parts, topDepth, bottomDepth, mToPx, gap,
+        part, parts, column,
         setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
     )
 
@@ -209,11 +208,13 @@ const CanvasRepresentation = React.memo(({
 })
 
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    vis, part, parts, column, widthM,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const canvasCtxs = usePartCanvasCtxs(parts)
     const blending = useBlendState()
+
+    const { mToPx } = column
 
     useEffect(() => {
         if (!vis) { return }
@@ -228,13 +229,10 @@ const PunchcardRepresentation = React.memo(({
             vis={vis}
             part={part}
             parts={parts}
+            column={column}
             partRef={partRef}
             canvasCtxs={canvasCtxs}
-            topDepth={topDepth}
-            bottomDepth={bottomDepth}
-            mToPx={mToPx}
             widthM={widthM}
-            gap={gap}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
             setPart={setPart}
@@ -244,11 +242,13 @@ const PunchcardRepresentation = React.memo(({
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    vis, part, parts, widthM, column,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const canvasCtxs = usePartCanvasCtxs(parts)
     const WIDTH_SCALE = 2
+
+    const { mToPx } = column
 
     useEffect(() => {
         if (!vis) { return }
@@ -263,13 +263,10 @@ const ChannelPunchcardRepresentation = React.memo(({
             vis={vis}
             part={part}
             parts={parts}
+            column={column}
             canvasCtxs={canvasCtxs}
-            mToPx={mToPx}
             widthM={widthM}
-            topDepth={topDepth}
-            bottomDepth={bottomDepth}
             partRef={partRef}
-            gap={gap}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
             setPart={setPart}
@@ -345,10 +342,7 @@ function usePartCanvasCtxs (
 function usePartRepresentationPositioning (
     part: string,
     parts: Array<string>,
-    topDepth: number,
-    bottomDepth: number,
-    mToPx: number,
-    gapPx: number,
+    column: CoreColumn,
     setCenter: (c: number) => void,
     setCenterWindow: (c: number) => void,
     setPaddingTop: (p: number) => void,
@@ -364,6 +358,7 @@ function usePartRepresentationPositioning (
             return
         }
 
+        const { topDepth, bottomDepth, mToPx, gap: gapPx } = column
         const firstVisibleInd = partIds.indexOf(parts[0])
         const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
@@ -431,10 +426,7 @@ function usePartRepresentationPositioning (
             const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
             setCenterWindow(percent)
         }
-    }, [
-        partIds, depths, part, parts, topDepth, bottomDepth, mToPx, gapPx,
-        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
-    ])
+    }, [partIds, depths, part, parts, column, setCenter, setCenterWindow, setPaddingTop, setPaddingBottom])
 }
 
 export type { RepresentationElement }
