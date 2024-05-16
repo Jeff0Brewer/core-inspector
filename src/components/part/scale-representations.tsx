@@ -23,11 +23,7 @@ type ScaleRepresentationProps = {
     gap: number
 }
 
-type ScaleRepresentation = {
-    element: MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>,
-    fullScale?: boolean,
-    largeWidth?: boolean
-}
+type RepresentationElement = MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>
 
 const LineRepresentation = React.memo((
     { part, setCenter, setCenterWindow, setPart, setHoveredPart }: ScaleRepresentationProps
@@ -441,7 +437,7 @@ function usePartRepresentationPositioning (
     ])
 }
 
-export type { ScaleRepresentation }
+export type { RepresentationElement }
 export {
     LineRepresentation,
     RectRepresentation,

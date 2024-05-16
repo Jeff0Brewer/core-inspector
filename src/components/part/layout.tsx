@@ -12,10 +12,9 @@ import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
-import CorePanel from '../../components/part/core-panel'
+import CorePanel, { RepresentationSettings } from '../../components/part/core-panel'
 import SpectraPanel, { SpectraPanelProps } from '../../components/part/spectra-panel'
 import {
-    ScaleRepresentation,
     LineRepresentation,
     RectRepresentation,
     PunchcardRepresentation,
@@ -23,7 +22,7 @@ import {
 } from '../../components/part/scale-representations'
 import styles from '../../styles/part/layout.module.css'
 
-const CORE_PANEL_REPRESENTATIONS: Array<ScaleRepresentation> = [
+const CORE_PANEL_REPRESENTATIONS: RepresentationSettings = [
     { element: LineRepresentation, fullScale: true },
     { element: RectRepresentation },
     { element: PunchcardRepresentation },

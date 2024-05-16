@@ -7,23 +7,31 @@ import { usePopupPosition } from '../../hooks/popup-position'
 import { getPartId } from '../../lib/path'
 import { clamp, lerp, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
-import { ScaleRepresentation } from '../../components/part/scale-representations'
+import { RepresentationElement } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
 
 const PART_WIDTH_M = 0.0525
 
 type CoreColumn = {
-    representation: ScaleRepresentation,
+    element: RepresentationElement,
+    fullScale?: boolean,
+    largeWidth?: boolean,
     gap: number,
     topDepth: number,
     bottomDepth: number,
     mToPx: number
 }
 
+type RepresentationSettings = Array<{
+    element: RepresentationElement,
+    fullScale?: boolean,
+    largeWidth?: boolean
+}>
+
 type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
-    representations: Array<ScaleRepresentation>,
+    representations: RepresentationSettings,
     setPart: (p: string | null) => void,
     finalTopDepth?: number,
     finalBottomDepth?: number,
@@ -36,11 +44,12 @@ const CorePanel = React.memo(({
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const [hoveredPart, setHoveredPart] = useState<string | null>(null)
     const columnsRef = useRef<HTMLDivElement>(null)
-    const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
-    const render = useCollapseRender(open)
 
-    // calculates progression of depth range between columns
-    // and scale values for each column's layout
+    const render = useCollapseRender(open)
+    const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
+
+    // Calculates progression of depth range between columns
+    // and scale values for each column's layout.
     useLayoutEffect(() => {
         const getColumns = (): void => {
             if (minDepth === null || maxDepth === null || !depths?.[part]) {
@@ -53,7 +62,9 @@ const CorePanel = React.memo(({
             const heightPx = columnsRef.current.clientHeight
 
             const columns: Array<CoreColumn> = [{
-                representation: representations[0],
+                element: representations[0].element,
+                fullScale: representations[0].fullScale,
+                largeWidth: representations[0].largeWidth,
                 topDepth: minDepth,
                 bottomDepth: maxDepth,
                 gap: 1,
@@ -81,7 +92,9 @@ const CorePanel = React.memo(({
                 const mToPx = heightPx / (bottomDepth - topDepth)
 
                 columns.push({
-                    representation: representations[i],
+                    element: representations[i].element,
+                    fullScale: representations[i].fullScale,
+                    largeWidth: representations[i].largeWidth,
                     gap: 3 * lastGap,
                     topDepth,
                     bottomDepth,
@@ -106,11 +119,11 @@ const CorePanel = React.memo(({
 
     return <>
         <div className={styles.topLabels}>
-            { render && columns.map((column, i) =>
+            { render && columns.map(({ topDepth, bottomDepth, largeWidth }, i) =>
                 <ScaleColumnTopLabel
-                    topDepth={column.topDepth}
-                    bottomDepth={column.bottomDepth}
-                    largeWidth={!!column.representation.largeWidth}
+                    topDepth={topDepth}
+                    bottomDepth={bottomDepth}
+                    largeWidth={!!largeWidth}
                     key={i}
                 />
             ) }
@@ -136,10 +149,10 @@ const CorePanel = React.memo(({
                 </p> }
         </div>
         <div className={`${styles.bottomLabels} ${!open && styles.hidden}`}>
-            { render && columns.map((column, i) =>
+            { render && columns.map(({ mToPx, largeWidth }, i) =>
                 <ScaleColumnBottomLabel
-                    pixelWidth={column.mToPx * PART_WIDTH_M}
-                    largeWidth={!!column.representation.largeWidth}
+                    pixelWidth={mToPx * PART_WIDTH_M}
+                    largeWidth={!!largeWidth}
                     key={i}
                 />
             ) }
@@ -172,11 +185,12 @@ const ScaleColumn = React.memo(({
     const columnRef = useRef<HTMLDivElement>(null)
     const windowRef = useRef<HTMLDivElement>(null)
     const { partIds, depths } = useCoreMetadata()
-
-    const { representation, gap, topDepth, bottomDepth, mToPx } = column
-    const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
-
     const [transitioning, setTransitioning] = useState<boolean>(false)
+
+    const {
+        topDepth, bottomDepth, mToPx, gap, fullScale, largeWidth,
+        element: RepresentationElement
+    } = column
 
     useEffect(() => {
         if (visibleTopDepth === null) {
@@ -441,4 +455,5 @@ function CorePanelTooltip ({ hoveredPart }: CorePanelTooltipProps): ReactElement
     )
 }
 
+export type { RepresentationSettings }
 export default CorePanel
