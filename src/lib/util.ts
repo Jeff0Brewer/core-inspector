@@ -13,6 +13,17 @@ function clamp (v: number, min: number, max: number): number {
     return Math.max(Math.min(v, max), min)
 }
 
+function mapBounds (
+    value: number,
+    sourceMin: number,
+    sourceMax: number,
+    destMin: number,
+    destMax: number
+): number {
+    const t = (value - sourceMin) / (sourceMax - sourceMin)
+    return destMin + (destMax - destMin) * t
+}
+
 function roundTo (n: number, decimals: number): number {
     const scale = Math.pow(10, decimals)
     return Math.round(n * scale) / scale
@@ -131,6 +142,7 @@ export {
     lerp,
     ease,
     clamp,
+    mapBounds,
     roundTo,
     bytesToHex,
     floatsToHex,

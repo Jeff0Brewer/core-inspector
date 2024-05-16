@@ -6,7 +6,7 @@ import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useTransitionBounds } from '../../hooks/transition-bounds'
 import { getPartId } from '../../lib/path'
-import { clamp, lerp, getScale } from '../../lib/util'
+import { clamp, lerp, mapBounds, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { RepresentationElement } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -227,18 +227,22 @@ const ScaleColumn = React.memo(({
         })
     }, [partCenter, fullScale, largeWidth, lastPart])
 
+    // Handle final window position from scroll.
     useEffect(() => {
         if (!largeWidth) { return }
-
         if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
-        const { top: columnTop } = columnRef.current.getBoundingClientRect()
-        const { top: partTop, bottom: partBottom } = partRef.current.getBoundingClientRect()
-        const windowMin = partTop - columnTop
-        const windowMax = partBottom - columnTop
-        const depthMin = depths[part].topDepth
-        const depthMax = depths[part].topDepth + depths[part].length
-        const windowTop = lerp(windowMin, windowMax, (nextTopDepth - depthMin) / (depthMax - depthMin))
-        const windowBottom = lerp(windowMin, windowMax, (nextBottomDepth - depthMin) / (depthMax - depthMin))
+
+        const { top: columnTopPx } = columnRef.current.getBoundingClientRect()
+        const { top: partTopPx, bottom: partBottomPx } = partRef.current.getBoundingClientRect()
+
+        const minM = depths[part].topDepth
+        const maxM = minM + depths[part].length
+
+        const minPx = partTopPx - columnTopPx
+        const maxPx = partBottomPx - columnTopPx
+
+        const windowTop = mapBounds(nextTopDepth, minM, maxM, minPx, maxPx)
+        const windowBottom = mapBounds(nextBottomDepth, minM, maxM, minPx, maxPx)
 
         setWindowStyle({
             transform: `translateY(${windowTop}px`,
