@@ -6,7 +6,7 @@ import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useTransitionBounds } from '../../hooks/transition-bounds'
 import { getPartId } from '../../lib/path'
-import { clamp, lerp, mapBounds, getScale } from '../../lib/util'
+import { clamp, mapBounds, getScale } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { RepresentationElement } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -180,12 +180,10 @@ const ScaleColumn = React.memo(({
     const windowRef = useRef<HTMLDivElement>(null)
     const lastPart = useLastState(part)
     const { partIds, depths } = useCoreMetadata()
-
     const {
         topDepth, bottomDepth, mToPx, gap, fullScale, largeWidth,
         element: RepresentationElement
     } = column
-
     const {
         min: visibleTopDepth,
         max: visibleBottomDepth,
@@ -218,17 +216,16 @@ const ScaleColumn = React.memo(({
 
         setRepresentationStyle({
             top: '50%',
-            transition: lastPart === null ? '' : 'transform 1s ease',
             transform: `translateY(clamp(
                 calc(-100% + ${columnHeight * 0.5}px), 
                 -${partCenter * 100}%, 
                 -${columnHeight * 0.5}px
-            ))`
+            ))`,
+            transition: lastPart === null ? '' : 'transform 1s ease'
         })
     }, [partCenter, fullScale, largeWidth, lastPart])
 
-    // Handle final window position from scroll.
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!largeWidth) { return }
         if (transitioning || !partRef.current || !columnRef.current || !depths?.[part]) { return }
 
@@ -255,14 +252,15 @@ const ScaleColumn = React.memo(({
 
         const columnHeight = (bottomDepth - topDepth) * mToPx
         const windowHeight = (nextBottomDepth - nextTopDepth) * mToPx
-        const windowY = clamp(
-            partCenterWindow * columnHeight - windowHeight * 0.5,
-            0,
-            columnHeight - windowHeight
-        )
+        const windowCenter = partCenterWindow * columnHeight
+
         setWindowStyle({
-            transform: `translateY(${windowY}px)`,
             height: `${windowHeight}px`,
+            transform: `translateY(clamp(
+                0px,
+                ${windowCenter - windowHeight * 0.5}px,
+                ${columnHeight - windowHeight}px
+            ))`,
             transition: lastPart === null ? '' : 'transform 1s ease, height 1s ease'
         })
     }, [topDepth, bottomDepth, nextTopDepth, nextBottomDepth, mToPx, largeWidth, lastPart, partCenterWindow])
