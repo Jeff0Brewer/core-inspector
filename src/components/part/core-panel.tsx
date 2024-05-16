@@ -311,6 +311,7 @@ const ScaleColumn = React.memo(({
                 requestId = window.requestAnimationFrame(updateFinalWindow)
             }
         }
+        updateFinalWindow(0)
 
         const animateFinalWindow = (): void => {
             totalElapsed = 0
