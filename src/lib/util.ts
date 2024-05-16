@@ -138,6 +138,36 @@ type BoundRect = {
 
 type StringMap<T> = { [key: string]: T }
 
+type ObjectRef<T> = {
+    current: T
+}
+
+function animateForDuration (
+    update: () => void,
+    requestIdRef: ObjectRef<number>,
+    durationMs: number = 1000
+): void {
+    let totalElapsed = 0
+    let lastTime = 0
+    window.cancelAnimationFrame(requestIdRef.current)
+
+    const tick = (currTime: number): void => {
+        update()
+
+        const elapsed = currTime - lastTime
+        lastTime = currTime
+        if (elapsed < durationMs) {
+            totalElapsed += elapsed
+        }
+
+        if (totalElapsed < durationMs) {
+            requestIdRef.current = window.requestAnimationFrame(tick)
+        }
+    }
+
+    requestIdRef.current = window.requestAnimationFrame(tick)
+}
+
 export {
     lerp,
     ease,
@@ -156,9 +186,11 @@ export {
     getImageData,
     getScale,
     notNull,
-    downloadText
+    downloadText,
+    animateForDuration
 }
 export type {
     BoundRect,
-    StringMap
+    StringMap,
+    ObjectRef
 }

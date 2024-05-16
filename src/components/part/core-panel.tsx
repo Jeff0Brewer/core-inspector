@@ -6,7 +6,7 @@ import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
 import { useTransitionBounds } from '../../hooks/transition-bounds'
 import { getPartId } from '../../lib/path'
-import { clamp, mapBounds, getScale } from '../../lib/util'
+import { clamp, mapBounds, getScale, animateForDuration, ObjectRef } from '../../lib/util'
 import PartRenderer from '../../vis/part'
 import { RepresentationElement } from '../../components/part/scale-representations'
 import styles from '../../styles/part/core-panel.module.css'
@@ -247,18 +247,8 @@ const ScaleColumn = React.memo(({
             return
         }
 
-        const transitionMs = 200
-        let totalElapsed = 0
-        let lastTime = 0
-        let requestId = -1
-        const updateFinalWindow = (currTime: number): void => {
+        const updateFinalWindow = (): void => {
             if (!columnRef.current || !partRef.current) { return }
-
-            const elapsed = currTime - lastTime
-            lastTime = currTime
-            if (elapsed < transitionMs) {
-                totalElapsed += elapsed
-            }
 
             const { top: columnTopPx } = columnRef.current.getBoundingClientRect()
             const { top: partTopPx, bottom: partBottomPx } = partRef.current.getBoundingClientRect()
@@ -276,25 +266,22 @@ const ScaleColumn = React.memo(({
                 transform: `translateY(${windowTop}px`,
                 height: `${windowBottom - windowTop}px`
             })
-            if (totalElapsed < transitionMs) {
-                requestId = window.requestAnimationFrame(updateFinalWindow)
-            }
         }
-        updateFinalWindow(0)
 
+        updateFinalWindow()
+
+        const requestIdRef: ObjectRef<number> = { current: -1 }
         const animateFinalWindow = (): void => {
-            totalElapsed = 0
-            window.cancelAnimationFrame(requestId)
-            requestId = window.requestAnimationFrame(updateFinalWindow)
+            animateForDuration(updateFinalWindow, requestIdRef, 200)
         }
 
         const zoomSlider = zoomSliderRef.current
         window.addEventListener('wheel', animateFinalWindow)
-        zoomSlider?.addEventListener('input', animateFinalWindow)
+        zoomSlider?.addEventListener('input', updateFinalWindow)
         return () => {
             window.removeEventListener('wheel', animateFinalWindow)
-            zoomSlider?.removeEventListener('input', animateFinalWindow)
-            window.cancelAnimationFrame(requestId)
+            zoomSlider?.removeEventListener('input', updateFinalWindow)
+            window.cancelAnimationFrame(requestIdRef.current)
         }
     }, [column, columns, depths, part, index, transitioning, scrollDepthRef, zoomSliderRef])
 
