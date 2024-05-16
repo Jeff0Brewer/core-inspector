@@ -23,7 +23,6 @@ type CoreColumn = {
 type CorePanelProps = {
     vis: PartRenderer | null,
     part: string,
-    parts: Array<string>,
     representations: Array<ScaleRepresentation>,
     setPart: (p: string | null) => void,
     finalTopDepth?: number,
@@ -32,8 +31,7 @@ type CorePanelProps = {
 }
 
 const CorePanel = React.memo(({
-    vis, part, parts, representations, setPart, open,
-    finalTopDepth = 0, finalBottomDepth = 0
+    vis, part, representations, setPart, open, finalTopDepth = 0, finalBottomDepth = 0
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const [hoveredPart, setHoveredPart] = useState<string | null>(null)
@@ -45,7 +43,9 @@ const CorePanel = React.memo(({
     // and scale values for each column's layout
     useLayoutEffect(() => {
         const getColumns = (): void => {
-            if (minDepth === null || maxDepth === null || !depths?.[part]) { return }
+            if (minDepth === null || maxDepth === null || !depths?.[part]) {
+                return
+            }
             if (!columnsRef.current) {
                 throw new Error('No reference to dom elements')
             }
@@ -97,7 +97,7 @@ const CorePanel = React.memo(({
         return () => {
             window.removeEventListener('resize', getColumns)
         }
-    }, [part, parts, representations, depths, minDepth, maxDepth])
+    }, [part, representations, depths, minDepth, maxDepth])
 
     const navigateToPart = useCallback((part: string | null): void => {
         setPart(part)
@@ -121,15 +121,10 @@ const CorePanel = React.memo(({
                 const isLast = i === columns.length - 1
                 return <ScaleColumn
                     vis={vis}
-                    parts={parts}
                     part={part}
                     setPart={navigateToPart}
                     setHoveredPart={setHoveredPart}
-                    representation={column.representation}
-                    gap={column.gap}
-                    topDepth={column.topDepth}
-                    bottomDepth={column.bottomDepth}
-                    mToPx={column.mToPx}
+                    column={column}
                     nextTopDepth={isLast ? finalTopDepth : columns[i + 1].topDepth}
                     nextBottomDepth={isLast ? finalBottomDepth : columns[i + 1].bottomDepth}
                     key={i}
@@ -154,22 +149,16 @@ const CorePanel = React.memo(({
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
-    parts: Array<string>,
     part: string,
-    setPart: (p: string | null) => void,
-    setHoveredPart: (p: string | null) => void,
-    representation: ScaleRepresentation,
-    gap: number,
-    topDepth: number,
-    bottomDepth: number,
-    mToPx: number,
+    column: CoreColumn,
     nextTopDepth: number,
     nextBottomDepth: number,
+    setPart: (p: string | null) => void,
+    setHoveredPart: (p: string | null) => void
 }
 
 const ScaleColumn = React.memo(({
-    representation, vis, part, parts, topDepth, bottomDepth, mToPx,
-    nextTopDepth, nextBottomDepth, gap, setPart, setHoveredPart
+    vis, part, column, nextTopDepth, nextBottomDepth, setPart, setHoveredPart
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
@@ -182,12 +171,10 @@ const ScaleColumn = React.memo(({
     const partRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
     const windowRef = useRef<HTMLDivElement>(null)
-    const { depths } = useCoreMetadata()
-    const {
-        element: RepresentationElement,
-        fullScale = false,
-        largeWidth = false
-    } = representation
+    const { partIds, depths } = useCoreMetadata()
+
+    const { representation, gap, topDepth, bottomDepth, mToPx } = column
+    const { element: RepresentationElement, fullScale = false, largeWidth = false } = representation
 
     const [transitioning, setTransitioning] = useState<boolean>(false)
 
@@ -220,9 +207,11 @@ const ScaleColumn = React.memo(({
     }, [lastPart, topDepth, bottomDepth])
 
     useLayoutEffect(() => {
-        if (visibleTopDepth === null || visibleBottomDepth === null) { return }
+        if (visibleTopDepth === null || visibleBottomDepth === null || partIds === null) {
+            return
+        }
 
-        const visibleParts = parts.filter(part => {
+        const visibleParts = partIds.filter(part => {
             if (!depths?.[part]) { return false }
 
             const partTopDepth = depths[part].topDepth
@@ -231,7 +220,7 @@ const ScaleColumn = React.memo(({
             return partBottomDepth > visibleTopDepth && partTopDepth < visibleBottomDepth
         })
         setVisibleParts(visibleParts)
-    }, [parts, depths, visibleTopDepth, visibleBottomDepth])
+    }, [partIds, depths, visibleTopDepth, visibleBottomDepth])
 
     useEffect(() => {
         if (fullScale) {

@@ -157,7 +157,6 @@ const PartView = React.memo((
                 open={corePanelOpen}
                 vis={vis}
                 part={part}
-                parts={partIds || []}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
                 finalTopDepth={scrollDepthTop}
