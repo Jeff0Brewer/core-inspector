@@ -209,9 +209,7 @@ const ScaleColumn = React.memo(({
 
     useEffect(() => {
         if (fullScale) {
-            setRepresentationStyle({
-                height: '100%'
-            })
+            setRepresentationStyle({ height: '100%' })
             return
         }
 
