@@ -12,7 +12,7 @@ import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
-import CorePanel, { RepresentationSettings } from '../../components/part/core-panel'
+import CorePanel, { RepresentationSettings, ScrollDepth } from '../../components/part/core-panel'
 import SpectraPanel, { SpectraPanelProps } from '../../components/part/spectra-panel'
 import {
     LineRepresentation,
@@ -42,8 +42,7 @@ const PartView = React.memo((
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
-    const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
-    const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
+    const [scrollDepth, setScrollDepth] = useState<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
     const [selectedSpectrum, setSelectedSpectrum] = useState<SpectraPanelProps>({
         selectedSpectrum: null, spectrumPosition: [0, 0], maxMineral: 'chlorite' // TODO: remove this
     })
@@ -106,8 +105,7 @@ const PartView = React.memo((
             setMineralMaps(mineralMaps)
         }
 
-        setScrollDepthTop(0)
-        setScrollDepthBottom(0)
+        setScrollDepth({ topDepth: 0, bottomDepth: 0 })
 
         getMineralChannels()
     }, [vis, core, part, minerals])
@@ -158,8 +156,7 @@ const PartView = React.memo((
                 part={part}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
-                finalTopDepth={scrollDepthTop}
-                finalBottomDepth={scrollDepthBottom}
+                scrollDepth={scrollDepth}
             />
             <MineralChannels
                 vis={vis}
@@ -167,8 +164,7 @@ const PartView = React.memo((
                 part={part}
                 minerals={minerals}
                 mineralMaps={mineralMaps}
-                setDepthTop={setScrollDepthTop}
-                setDepthBottom={setScrollDepthBottom}
+                setScrollDepth={setScrollDepth}
                 setSelectedSpectrum={setSelectedSpectrum}
             />
             { selectedSpectrum &&

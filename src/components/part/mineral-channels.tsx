@@ -12,6 +12,7 @@ import CanvasRenderer from '../../components/generic/canvas-renderer'
 import LoadIcon from '../../components/generic/load-icon'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
+import { ScrollDepth } from '../../components/part/core-panel'
 import { SpectraPanelProps } from '../../components/part/spectra-panel'
 import styles from '../../styles/part/mineral-channels.module.css'
 
@@ -27,14 +28,12 @@ type MineralChannelsProps = {
     part: string,
     minerals: Array<string>,
     mineralMaps: StringMap<HTMLImageElement | null>,
-    setDepthTop: (d: number) => void,
-    setDepthBottom: (d: number) => void,
+    setScrollDepth: (d: ScrollDepth) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 const MineralChannels = React.memo(({
-    vis, core, part, minerals, mineralMaps,
-    setDepthTop, setDepthBottom, setSelectedSpectrum
+    vis, core, part, minerals, mineralMaps, setScrollDepth, setSelectedSpectrum
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -101,8 +100,7 @@ const MineralChannels = React.memo(({
                 imgDims={imgDims}
                 viewDims={viewDims}
                 viewGap={viewGap}
-                setDepthTop={setDepthTop}
-                setDepthBottom={setDepthBottom}
+                setScrollDepth={setScrollDepth}
                 setSelectedSpectrum={setSelectedSpectrum}
             />
             <ChannelBottomLabels
@@ -189,14 +187,13 @@ type ChannelsViewProps = {
     imgDims: [number, number],
     viewDims: [number, number],
     viewGap: number,
-    setDepthTop: (d: number) => void,
-    setDepthBottom: (d: number) => void,
+    setScrollDepth: (d: ScrollDepth) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 const ChannelsView = React.memo(({
     core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
-    setDepthTop, setDepthBottom, setSelectedSpectrum
+    setScrollDepth, setSelectedSpectrum
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
@@ -235,19 +232,18 @@ const ChannelsView = React.memo(({
             const bottomPercent = (scrollTop + clientHeight) / viewDims[1]
 
             const { topDepth, length } = depths[part]
-            const depthTop = Math.max(topDepth, topPercent * length + topDepth)
-            const depthBottom = Math.min(topDepth + length, bottomPercent * length + topDepth)
-            setDepthTop(depthTop)
-            setDepthBottom(depthBottom)
+            setScrollDepth({
+                topDepth: Math.max(topDepth, topPercent * length + topDepth),
+                bottomDepth: Math.min(topDepth + length, bottomPercent * length + topDepth)
+            })
         }
-
         scroll()
 
         channelsWrap.addEventListener('scroll', scroll)
         return () => {
             channelsWrap.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, setDepthTop, setDepthBottom, viewDims, mineralMaps])
+    }, [part, depths, viewDims, mineralMaps, setScrollDepth])
 
     // init workers for abundance / spectrum hover info
     useEffect(() => {
