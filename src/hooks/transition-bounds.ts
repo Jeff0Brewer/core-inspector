@@ -9,7 +9,9 @@ type TransitionBoundsValue = {
 function useTransitionBounds (
     min: number,
     max: number,
-    timeoutMs: number = 1200
+    timeoutMs: number = 1000,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    extraDependency?: any
 ): TransitionBoundsValue {
     const [currMin, setCurrMin] = useState<number | null>(null)
     const [currMax, setCurrMax] = useState<number | null>(null)
@@ -44,7 +46,7 @@ function useTransitionBounds (
         return () => {
             window.clearTimeout(timeoutId)
         }
-    }, [min, max, timeoutMs])
+    }, [min, max, timeoutMs, extraDependency])
 
     return {
         min: currMin,

@@ -182,7 +182,7 @@ const ScaleColumn = React.memo(({
         min: visibleTopDepth,
         max: visibleBottomDepth,
         transitioning
-    } = useTransitionBounds(column.topDepth, column.bottomDepth)
+    } = useTransitionBounds(column.topDepth, column.bottomDepth, 1000, part)
 
     useLayoutEffect(() => {
         if (visibleTopDepth === null || visibleBottomDepth === null || partIds === null) {
@@ -321,6 +321,7 @@ const ScaleColumn = React.memo(({
                 columnRef={columnRef}
                 transitioning={transitioning}
                 styleDependency={windowStyle}
+                index={index}
             />
         </div>
     </>
@@ -377,11 +378,12 @@ type ZoomLinesProps = {
     windowRef: RefObject<HTMLDivElement>,
     columnRef: RefObject<HTMLDivElement>,
     transitioning?: boolean,
-    styleDependency?: React.CSSProperties
+    styleDependency?: React.CSSProperties,
+    index: number
 }
 
 const ZoomLines = React.memo((
-    { windowRef, columnRef, transitioning, styleDependency }: ZoomLinesProps
+    { windowRef, columnRef, transitioning, styleDependency, index }: ZoomLinesProps
 ): ReactElement => {
     const [points, setPoints] = useState<string>('')
 
@@ -413,7 +415,7 @@ const ZoomLines = React.memo((
         }
 
         updateWindowPosition()
-    }, [windowRef, columnRef, transitioning, styleDependency])
+    }, [windowRef, columnRef, transitioning, styleDependency, index])
 
     return (
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
