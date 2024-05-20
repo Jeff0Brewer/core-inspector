@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject, RefObject } from 'react'
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { StringMap, getImageData, getCssColor } from '../../lib/util'
-import { getRgbPath } from '../../lib/path'
+import { getRgbPath, getHydrationPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import HoverInfo from '../../components/part/hover-info'
@@ -12,12 +12,14 @@ import CanvasRenderer from '../../components/generic/canvas-renderer'
 import LoadIcon from '../../components/generic/load-icon'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
+import { ScrollDepth } from '../../components/part/core-panel'
 import { SpectraPanelProps } from '../../components/part/spectra-panel'
 import styles from '../../styles/part/mineral-channels.module.css'
 
-const BLEND_LABEL = 'blended'
 const VISUAL_LABEL = 'false color'
-const EXTRA_CHANNELS = [VISUAL_LABEL, BLEND_LABEL]
+const HYDRATION_LABEL = 'hydration'
+const BLEND_LABEL = 'blended'
+const EXTRA_CHANNELS = [VISUAL_LABEL, HYDRATION_LABEL, BLEND_LABEL]
 
 const MIN_WIDTH_PX = 50
 
@@ -27,14 +29,14 @@ type MineralChannelsProps = {
     part: string,
     minerals: Array<string>,
     mineralMaps: StringMap<HTMLImageElement | null>,
-    setDepthTop: (d: number) => void,
-    setDepthBottom: (d: number) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    scrollDepthRef: MutableRefObject<ScrollDepth>,
+    zoomSliderRef: RefObject<HTMLInputElement>
 }
 
 const MineralChannels = React.memo(({
     vis, core, part, minerals, mineralMaps,
-    setDepthTop, setDepthBottom, setSelectedSpectrum
+    setSelectedSpectrum, scrollDepthRef, zoomSliderRef
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -82,6 +84,7 @@ const MineralChannels = React.memo(({
             setZoom={setZoom}
             setSpacing={setSpacing}
             channelWidth={viewDims[0]}
+            zoomSliderRef={zoomSliderRef}
         />
         <div className={styles.content} data-loading={loading}>
             <LoadIcon loading={loading} showDelayMs={100} />
@@ -101,9 +104,8 @@ const MineralChannels = React.memo(({
                 imgDims={imgDims}
                 viewDims={viewDims}
                 viewGap={viewGap}
-                setDepthTop={setDepthTop}
-                setDepthBottom={setDepthBottom}
                 setSelectedSpectrum={setSelectedSpectrum}
+                scrollDepthRef={scrollDepthRef}
             />
             <ChannelBottomLabels
                 extraChannels={EXTRA_CHANNELS}
@@ -189,16 +191,15 @@ type ChannelsViewProps = {
     imgDims: [number, number],
     viewDims: [number, number],
     viewGap: number,
-    setDepthTop: (d: number) => void,
-    setDepthBottom: (d: number) => void,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    scrollDepthRef: MutableRefObject<ScrollDepth>
 }
 
 const ChannelsView = React.memo(({
     core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
-    setDepthTop, setDepthBottom, setSelectedSpectrum
+    setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
-    const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
+    const [sources, setSources] = useState<StringMap<string | HTMLCanvasElement>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
     const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
@@ -208,16 +209,21 @@ const ChannelsView = React.memo(({
 
     // get channel sources
     useEffect(() => {
-        const sources: Array<string | HTMLCanvasElement> = []
+        const sources: StringMap<string | HTMLCanvasElement> = {}
         for (const label of extraChannels) {
-            if (label === BLEND_LABEL) {
-                sources.push(vis?.partMinerals ? vis.canvas : 'none')
-            } else if (label === VISUAL_LABEL) {
-                sources.push(getRgbPath(core, part))
+            switch (label) {
+                case BLEND_LABEL:
+                    sources[BLEND_LABEL] = vis?.partMinerals ? vis.canvas : 'none'
+                    break
+                case VISUAL_LABEL:
+                    sources[VISUAL_LABEL] = getRgbPath(core, part)
+                    break
+                case HYDRATION_LABEL:
+                    sources[HYDRATION_LABEL] = getHydrationPath(core, part)
             }
         }
         for (const mineral of mineralChannels) {
-            sources.push(mineralMaps?.[mineral]?.src || 'none')
+            sources[mineral] = mineralMaps?.[mineral]?.src || 'none'
         }
 
         setSources(sources)
@@ -235,19 +241,18 @@ const ChannelsView = React.memo(({
             const bottomPercent = (scrollTop + clientHeight) / viewDims[1]
 
             const { topDepth, length } = depths[part]
-            const depthTop = Math.max(topDepth, topPercent * length + topDepth)
-            const depthBottom = Math.min(topDepth + length, bottomPercent * length + topDepth)
-            setDepthTop(depthTop)
-            setDepthBottom(depthBottom)
+            scrollDepthRef.current = {
+                topDepth: Math.max(topDepth, topPercent * length + topDepth),
+                bottomDepth: Math.min(topDepth + length, bottomPercent * length + topDepth)
+            }
         }
-
         scroll()
 
         channelsWrap.addEventListener('scroll', scroll)
         return () => {
             channelsWrap.removeEventListener('scroll', scroll)
         }
-    }, [part, depths, setDepthTop, setDepthBottom, viewDims, mineralMaps])
+    }, [part, depths, viewDims, mineralMaps, scrollDepthRef])
 
     // init workers for abundance / spectrum hover info
     useEffect(() => {
@@ -327,13 +332,14 @@ const ChannelsView = React.memo(({
     return (
         <div className={styles.channelsWrap} ref={channelsRef}>
             <div className={styles.channels} style={{ gap }}>
-                { sources.map((source, i) =>
+                { Object.entries(sources).map(([label, source], i) =>
                     <MineralChannel
                         source={source}
                         width={width}
                         height={height}
                         mousePosRef={mousePosRef}
                         onClick={selectSpectrum}
+                        customClass={label === HYDRATION_LABEL ? styles.blueColorized : ''}
                         key={i}
                     />
                 ) }
@@ -353,11 +359,12 @@ type MineralChannelProps = {
     width: string,
     height: string,
     mousePosRef: MutableRefObject<[number, number] | null>,
-    onClick: () => void
+    onClick: () => void,
+    customClass?: string
 }
 
 const MineralChannel = React.memo((
-    { source, width, height, mousePosRef, onClick }: MineralChannelProps
+    { source, width, height, mousePosRef, onClick, customClass }: MineralChannelProps
 ): ReactElement => {
     const [loadError, setLoadError] = useState<boolean>(false)
     const channelRef = useRef<HTMLDivElement>(null)
@@ -409,7 +416,7 @@ const MineralChannel = React.memo((
 
     return (
         <div className={styles.channel} onClick={onClick}>
-            <div ref={channelRef}>
+            <div ref={channelRef} className={customClass}>
                 { typeof source !== 'string' &&
                     <CanvasRenderer
                         canvas={source}

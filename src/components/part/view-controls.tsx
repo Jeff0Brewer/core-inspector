@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react'
+import React, { ReactElement, RefObject } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
 import { getScale } from '../../lib/util'
@@ -10,12 +10,13 @@ type ViewControlsProps = {
     spacing: number,
     setZoom: (z: number) => void,
     setSpacing: (s: number) => void,
-    channelWidth: number
+    channelWidth: number,
+    zoomSliderRef: RefObject<HTMLInputElement>
 }
 
-const ViewControls = React.memo((
-    { zoom, spacing, setZoom, setSpacing, channelWidth }: ViewControlsProps
-): ReactElement => {
+const ViewControls = React.memo(({
+    zoom, spacing, setZoom, setSpacing, channelWidth, zoomSliderRef
+}: ViewControlsProps): ReactElement => {
     return (
         <div className={styles.viewControls}>
             <h2 className={styles.header}>
@@ -45,6 +46,7 @@ const ViewControls = React.memo((
                         min={0}
                         max={1}
                         step={0.01}
+                        customRef={zoomSliderRef}
                     />
                 </div>
             </div>

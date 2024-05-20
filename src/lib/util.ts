@@ -13,6 +13,17 @@ function clamp (v: number, min: number, max: number): number {
     return Math.max(Math.min(v, max), min)
 }
 
+function mapBounds (
+    value: number,
+    sourceMin: number,
+    sourceMax: number,
+    destMin: number,
+    destMax: number
+): number {
+    const t = (value - sourceMin) / (sourceMax - sourceMin)
+    return destMin + (destMax - destMin) * t
+}
+
 function roundTo (n: number, decimals: number): number {
     const scale = Math.pow(10, decimals)
     return Math.round(n * scale) / scale
@@ -127,10 +138,41 @@ type BoundRect = {
 
 type StringMap<T> = { [key: string]: T }
 
+type ObjectRef<T> = {
+    current: T
+}
+
+function animateForDuration (
+    update: () => void,
+    requestIdRef: ObjectRef<number>,
+    durationMs: number = 1000
+): void {
+    let totalElapsed = 0
+    let lastTime = 0
+    window.cancelAnimationFrame(requestIdRef.current)
+
+    const tick = (currTime: number): void => {
+        update()
+
+        const elapsed = currTime - lastTime
+        lastTime = currTime
+        if (elapsed < durationMs) {
+            totalElapsed += elapsed
+        }
+
+        if (totalElapsed < durationMs) {
+            requestIdRef.current = window.requestAnimationFrame(tick)
+        }
+    }
+
+    requestIdRef.current = window.requestAnimationFrame(tick)
+}
+
 export {
     lerp,
     ease,
     clamp,
+    mapBounds,
     roundTo,
     bytesToHex,
     floatsToHex,
@@ -144,9 +186,11 @@ export {
     getImageData,
     getScale,
     notNull,
-    downloadText
+    downloadText,
+    animateForDuration
 }
 export type {
     BoundRect,
-    StringMap
+    StringMap,
+    ObjectRef
 }

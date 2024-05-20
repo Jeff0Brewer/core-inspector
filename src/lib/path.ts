@@ -56,6 +56,13 @@ function getRgbPath (core: string, part: string, root: string = '.'): string {
     return `${partPath}/rgb/${coreId}_${partId}_rgb.png`
 }
 
+function getHydrationPath (core: string, part: string, root: string = '.'): string {
+    const partPath = getPartPath(core, part, root)
+    const coreId = getCoreId(core)
+    const partId = getPartId(part)
+    return `${partPath}/hydration/${coreId}_${partId}_hydration.png`
+}
+
 function getAbundancePaths (
     core: string,
     part: string,
@@ -82,5 +89,6 @@ export {
     getSpectraBasePath,
     getSpectraSlicesId,
     getRgbPath,
+    getHydrationPath,
     getAbundancePaths
 }

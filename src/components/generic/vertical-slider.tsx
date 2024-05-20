@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, ReactElement } from 'react'
+import React, { useEffect, useRef, ReactElement, RefObject } from 'react'
 import styles from '../../styles/generic/vertical-slider.module.css'
 
 type VerticalSliderProps = {
@@ -9,7 +9,8 @@ type VerticalSliderProps = {
     icon?: ReactElement,
     min?: number,
     max?: number,
-    step?: number
+    step?: number,
+    customRef?: RefObject<HTMLInputElement>
 }
 
 function VerticalSlider ({
@@ -17,13 +18,14 @@ function VerticalSlider ({
     height = '80px',
     min = 0,
     max = 1,
-    step = 0.1
+    step = 0.1,
+    customRef
 }: VerticalSliderProps): ReactElement {
-    const inputRef = useRef<HTMLInputElement>(null)
+    const localRef = useRef<HTMLInputElement>(null)
 
     // update input element if value changed external to this component
     useEffect(() => {
-        const input = inputRef.current
+        const input = customRef?.current || localRef.current
         if (!input) {
             throw new Error('No reference to range input')
         }
@@ -32,7 +34,7 @@ function VerticalSlider ({
         if (Math.abs(value - input.valueAsNumber) >= step) {
             input.valueAsNumber = value
         }
-    }, [value, step])
+    }, [value, step, customRef])
 
     // cast required to set css variable
     const heightStyle = { '--height': height } as React.CSSProperties
@@ -41,7 +43,7 @@ function VerticalSlider ({
         <div className={styles.wrap} style={heightStyle}>
             <input
                 className={styles.slider}
-                ref={inputRef}
+                ref={customRef || localRef}
                 type={'range'}
                 defaultValue={value}
                 min={min}

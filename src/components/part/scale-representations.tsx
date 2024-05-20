@@ -1,34 +1,27 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
+import { DepthMetadata } from '../../lib/metadata'
 import PartRenderer, { CanvasCtx } from '../../vis/part'
+import { CoreColumn } from '../../components/part/core-panel'
 import CanvasRenderer from '../../components/generic/canvas-renderer'
 import styles from '../../styles/part/scale-representations.module.css'
-
-const MAX_CANVAS_PER_COLUMN = 75
 
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
     part: string,
     parts: Array<string>,
-    mToPx: number,
+    column: CoreColumn,
     widthM: number,
-    topDepth: number,
-    bottomDepth: number,
     setCenter: (c: number) => void,
     setCenterWindow: (c: number) => void,
     setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
-    partRef: RefObject<HTMLDivElement>,
-    gap: number
+    partRef: RefObject<HTMLDivElement>
 }
 
-type ScaleRepresentation = {
-    element: MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>,
-    fullScale?: boolean,
-    largeWidth?: boolean
-}
+type RepresentationElement = MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>
 
 const LineRepresentation = React.memo((
     { part, setCenter, setCenterWindow, setPart, setHoveredPart }: ScaleRepresentationProps
@@ -37,154 +30,77 @@ const LineRepresentation = React.memo((
     const hoverRef = useRef<HTMLDivElement>(null)
     const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
-    useEffect(() => {
+    // Calculate positioning parameters from depth values. Don't need to reference
+    // px values since line is representative of actual depths and parts can
+    // be assumed to be exactly at their depth percentage in full core.
+    useLayoutEffect(() => {
         if (topDepth === null || bottomDepth == null || !depths?.[part]) {
             return
         }
+
         const center = depths[part].topDepth + 0.5 * depths[part].length
         const centerPercent = center / (bottomDepth - topDepth)
+
         setCenter(centerPercent)
         setCenterWindow(centerPercent)
     }, [part, setCenter, setCenterWindow, depths, topDepth, bottomDepth])
 
-    useEffect(() => {
-        const line = lineRef.current
-        if (!line) { return }
+    const getHoveredPart = useCallback((e: React.MouseEvent): string | null => {
+        if (
+            !lineRef.current || !hoverRef.current || topDepth === null ||
+            bottomDepth === null || partIds === null || depths === null
+        ) { return null }
 
-        const getHoveredPart = (e: MouseEvent): string | null => {
-            // ensure reference to dom elements and metadata loaded
-            if (
-                !lineRef.current ||
-                !hoverRef.current ||
-                topDepth === null ||
-                bottomDepth === null ||
-                partIds === null ||
-                depths === null
-            ) { return null }
+        // Find cursor position as percentage of line height to position hover
+        // indicator and meters to search for closest part.
+        const { top, height } = lineRef.current.getBoundingClientRect()
+        const hoverPercentage = (e.clientY - top) / height
+        const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
 
-            // find depth in M closest to cursor position
-            const { height: lineHeight, top: lineTop } = lineRef.current.getBoundingClientRect()
-            const hoverPercentage = (e.clientY - lineTop) / lineHeight
-            const hoverDepth = hoverPercentage * (bottomDepth - topDepth) + topDepth
+        hoverRef.current.style.top = `${hoverPercentage * 100}%`
+        return searchClosestPart(hoverDepth, partIds, depths)
+    }, [partIds, topDepth, bottomDepth, depths])
 
-            hoverRef.current.style.top = `${hoverPercentage * 100}%`
-
-            // binary search for part with depth closest to cursor depth
-            let left = 0
-            let right = partIds.length - 1
-            while (left < right) {
-                const center = Math.round((left + right) * 0.5)
-
-                if (!depths[partIds[center]]) { return null }
-                const { topDepth, length } = depths[partIds[center]]
-                const centerDepth = topDepth + 0.5 * length
-
-                if (hoverDepth === centerDepth) {
-                    return partIds[center]
-                } else if (hoverDepth < centerDepth) {
-                    right = center - 1
-                } else {
-                    left = center
-                }
-            }
-
-            // return closest hovered part
-            return partIds[right]
+    const mouseleave = (): void => {
+        setHoveredPart(null)
+    }
+    const mousemove = (e: React.MouseEvent): void => {
+        const part = getHoveredPart(e)
+        setHoveredPart(part)
+    }
+    const mousedown = (e: React.MouseEvent): void => {
+        const part = getHoveredPart(e)
+        if (part) {
+            setPart(part)
         }
+    }
 
-        const mousemove = (e: MouseEvent): void => { setHoveredPart(getHoveredPart(e)) }
-        const mousedown = (e: MouseEvent): void => {
-            const hoveredPart = getHoveredPart(e)
-            if (hoveredPart !== null) {
-                setPart(hoveredPart)
-            }
-        }
-
-        line.addEventListener('mousemove', mousemove)
-        line.addEventListener('mousedown', mousedown)
-
-        return () => {
-            line.removeEventListener('mousemove', mousemove)
-            line.removeEventListener('mousedown', mousedown)
-        }
-    }, [topDepth, bottomDepth, partIds, depths, setHoveredPart, setPart])
-
-    return <>
+    return (
         <div
             ref={lineRef}
             className={styles.line}
-            onMouseLeave={() => setHoveredPart(null)}
+            onMouseLeave={mouseleave}
+            onMouseMove={mousemove}
+            onMouseDown={mousedown}
         >
             <div ref={hoverRef} className={styles.lineHover}></div>
         </div>
-    </>
+    )
 })
 
 const RectRepresentation = React.memo(({
-    part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    part, parts, column, widthM, setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const { partIds, depths } = useCoreMetadata()
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
+    const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
 
-    useLayoutEffect(() => {
-        if (partIds === null || depths === null || !depths?.[part]) { return }
-
-        const firstVisibleInd = partIds.indexOf(parts[0])
-        const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
-
-        let totalHeightM = 0
-        let totalHeightPx = 0
-        let centerPx = 0
-        let firstVisiblePx = 0
-        let lastVisiblePx = 0
-        let topDepthPx: number | null = null
-        let bottomDepthPx: number | null = null
-
-        partIds.forEach((id, i) => {
-            if (!depths?.[id]) { return }
-            const { topDepth: partTop, length: partLength } = depths[id]
-
-            const lastHeightPx = totalHeightPx
-            totalHeightPx += partLength * mToPx + gap
-
-            const lastHeightM = totalHeightM
-            totalHeightM = partTop + partLength
-
-            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
-                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
-                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
-            }
-
-            if (i === firstVisibleInd) {
-                firstVisiblePx = lastHeightPx
-            }
-            if (i === lastVisibleInd + 1) {
-                lastVisiblePx = lastHeightPx
-            }
-            if (id === part) {
-                centerPx = lastHeightPx + 0.5 * partLength * mToPx
-            }
-        })
-        totalHeightPx -= gap // remove final gap
-        if (lastVisibleInd === partIds.length - 1) {
-            lastVisiblePx = totalHeightPx
-        }
-        setCenter(centerPx / totalHeightPx)
-        setPaddingTop(firstVisiblePx)
-        setPaddingBottom(totalHeightPx - lastVisiblePx)
-        if (topDepthPx !== null && bottomDepthPx !== null) {
-            const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
-            setCenterWindow(percent)
-        }
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
+    const { mToPx, gap } = column
+    usePartRepresentationPositioning(
+        part, parts, column,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    )
 
     return (
         <div
@@ -219,25 +135,86 @@ const RectRepresentation = React.memo(({
     )
 })
 
+type CanvasRepresentationProps = ScaleRepresentationProps & {
+    canvasCtxs: StringMap<CanvasCtx>,
+    widthScale?: number,
+    canvasSpacer?: ReactElement,
+    customRender?: (canvas: ReactElement) => ReactElement
+}
+
+const MAX_CANVAS_PER_COLUMN = 75
+const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
+const DEFAULT_CANVAS_SPACER: ReactElement = (
+    <div className={styles.canvasSpacer}></div>
+)
+
+const CanvasRepresentation = React.memo(({
+    part, parts, column, canvasCtxs, widthM,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef,
+    widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
+}: CanvasRepresentationProps): ReactElement => {
+    const [paddingTop, setPaddingTop] = useState<number>(0)
+    const [paddingBottom, setPaddingBottom] = useState<number>(0)
+    const wrapRef = useRef<HTMLDivElement>(null)
+    const { depths } = useCoreMetadata()
+
+    const { mToPx, gap } = column
+    usePartRepresentationPositioning(
+        part, parts, column,
+        setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
+    )
+
+    const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
+
+    return (
+        <div
+            ref={wrapRef}
+            className={`${styles.parts} ${partsVisible && styles.partsVisible}`}
+            style={{ '--gap-size': `${gap}px`, paddingTop, paddingBottom } as React.CSSProperties}
+        >
+            { partsVisible && parts.map((id, i) => {
+                if (!depths?.[id]) {
+                    return <></>
+                }
+
+                const width = `${widthM * mToPx * widthScale}px`
+                const height = `${depths[id].length * mToPx}px`
+
+                return (
+                    <React.Fragment key={id}>
+                        <div
+                            ref={ id === part ? partRef : null }
+                            className={styles.canvas}
+                            onClick={() => setPart(id)}
+                            onMouseEnter={() => setHoveredPart(id)}
+                            onMouseLeave={() => setHoveredPart(null)}
+                        >
+                            { customRender(
+                                canvasCtxs[id]
+                                    ? <CanvasRenderer
+                                        canvas={canvasCtxs[id].canvas}
+                                        width={width}
+                                        height={height}
+                                    />
+                                    : <div style={{ width, height }}></div>
+                            ) }
+                        </div>
+                        {(i !== parts.length - 1) && canvasSpacer}
+                    </React.Fragment>
+                )
+            }) }
+        </div>
+    )
+})
+
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    vis, part, parts, column, widthM,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const canvasCtxs = usePartCanvasCtxs(parts)
     const blending = useBlendState()
 
-    useEffect(() => {
-        if (parts.length > MAX_CANVAS_PER_COLUMN) {
-            setCanvasCtxs({})
-            return
-        }
-
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
+    const { mToPx } = column
 
     useEffect(() => {
         if (!vis) { return }
@@ -249,15 +226,13 @@ const PunchcardRepresentation = React.memo(({
 
     return (
         <CanvasRepresentation
+            vis={vis}
             part={part}
             parts={parts}
+            column={column}
             partRef={partRef}
             canvasCtxs={canvasCtxs}
-            topDepth={topDepth}
-            bottomDepth={bottomDepth}
-            mToPx={mToPx}
             widthM={widthM}
-            gap={gap}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
             setPart={setPart}
@@ -267,24 +242,13 @@ const PunchcardRepresentation = React.memo(({
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef
+    vis, part, parts, widthM, column,
+    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
-    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
+    const canvasCtxs = usePartCanvasCtxs(parts)
     const WIDTH_SCALE = 2
 
-    useEffect(() => {
-        if (parts.length > MAX_CANVAS_PER_COLUMN) {
-            setCanvasCtxs({})
-            return
-        }
-
-        const canvasCtxs: StringMap<CanvasCtx> = {}
-        for (const part of parts) {
-            canvasCtxs[part] = getCanvasCtx()
-        }
-        setCanvasCtxs(canvasCtxs)
-    }, [parts])
+    const { mToPx } = column
 
     useEffect(() => {
         if (!vis) { return }
@@ -296,15 +260,13 @@ const ChannelPunchcardRepresentation = React.memo(({
 
     return (
         <CanvasRepresentation
+            vis={vis}
             part={part}
             parts={parts}
+            column={column}
             canvasCtxs={canvasCtxs}
-            mToPx={mToPx}
             widthM={widthM}
-            topDepth={topDepth}
-            bottomDepth={bottomDepth}
             partRef={partRef}
-            gap={gap}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
             setPart={setPart}
@@ -322,72 +284,113 @@ const ChannelPunchcardRepresentation = React.memo(({
     )
 })
 
-type CanvasRepresentationProps = {
-    part: string,
+// Binary search for part with depth closest to search depth.
+// Must supply parts list in sorted order.
+function searchClosestPart (
+    searchDepth: number,
     parts: Array<string>,
-    canvasCtxs: StringMap<CanvasCtx>,
-    mToPx: number,
-    widthM: number,
-    topDepth: number,
-    bottomDepth: number,
-    gap: number,
-    partRef: RefObject<HTMLDivElement>,
-    setCenter: (c: number) => void,
-    setCenterWindow: (c: number) => void,
-    setPart: (p: string | null) => void,
-    setHoveredPart: (p: string | null) => void,
-    widthScale?: number,
-    canvasSpacer?: ReactElement,
-    customRender?: (canvas: ReactElement) => ReactElement
+    depths: DepthMetadata
+): string | null {
+    let left = 0
+    let right = parts.length - 1
+    while (left < right) {
+        const center = Math.round((left + right) * 0.5)
+        if (!depths[parts[center]]) {
+            return null
+        }
+
+        const { topDepth, length } = depths[parts[center]]
+        const centerDepth = topDepth + 0.5 * length
+
+        if (searchDepth === centerDepth) {
+            return parts[center]
+        } else if (searchDepth < centerDepth) {
+            right = center - 1
+        } else {
+            left = center
+        }
+    }
+
+    // return closest part if no exact equality
+    return parts[right]
 }
 
-const DEFAULT_CANVAS_SPACER: ReactElement = (
-    <div className={styles.canvasSpacer}></div>
-)
+// TODO: convert to obj pool of canvases, only init canvases if length of parts increases, assign canvases from pool to part ids on change
+function usePartCanvasCtxs (
+    parts: Array<string>
+): StringMap<CanvasCtx> {
+    const [canvasCtxs, setCanvasCtxs] = useState<StringMap<CanvasCtx>>({})
 
-const DEFAULT_CANVAS_RENDER = (canvas: ReactElement): ReactElement => canvas
+    useEffect(() => {
+        if (parts.length > MAX_CANVAS_PER_COLUMN) {
+            setCanvasCtxs({})
+            return
+        }
 
-const CanvasRepresentation = React.memo(({
-    part, parts, canvasCtxs, mToPx, widthM, gap, setCenter, setPart, setHoveredPart,
-    topDepth, bottomDepth, setCenterWindow, partRef,
-    widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
-}: CanvasRepresentationProps): ReactElement => {
+        const canvasCtxs: StringMap<CanvasCtx> = {}
+        for (const part of parts) {
+            const canvas = document.createElement('canvas')
+            const ctx = get2dContext(canvas)
+            canvasCtxs[part] = { canvas, ctx }
+        }
+        setCanvasCtxs(canvasCtxs)
+    }, [parts])
+
+    return canvasCtxs
+}
+
+function usePartRepresentationPositioning (
+    part: string,
+    parts: Array<string>,
+    column: CoreColumn,
+    setCenter: (c: number) => void,
+    setCenterWindow: (c: number) => void,
+    setPaddingTop: (p: number) => void,
+    setPaddingBottom: (p: number) => void
+): void {
     const { partIds, depths } = useCoreMetadata()
-    const [paddingTop, setPaddingTop] = useState<number>(0)
-    const [paddingBottom, setPaddingBottom] = useState<number>(0)
-    const wrapRef = useRef<HTMLDivElement>(null)
 
+    // Calculate pixel positions of parts to get layout values for
+    // top / bottom / center of column. Because of transitions, cannot wait for
+    // actual DOM to render to get positions so must calculate here.
     useLayoutEffect(() => {
-        if (partIds === null || depths === null || !depths?.[part]) { return }
+        if (partIds === null || depths === null || !depths?.[part]) {
+            return
+        }
 
+        const { topDepth, bottomDepth, mToPx, gap: gapPx } = column
         const firstVisibleInd = partIds.indexOf(parts[0])
         const lastVisibleInd = partIds.indexOf(parts[parts.length - 1])
 
-        let totalHeightM = 0
-        let totalHeightPx = 0
+        let currHeightM = 0
+        let currHeightPx = 0
         let centerPx = 0
         let firstVisiblePx = 0
         let lastVisiblePx = 0
         let topDepthPx: number | null = null
         let bottomDepthPx: number | null = null
+
         partIds.forEach((id, i) => {
-            if (!depths?.[id]) { return }
-            const { topDepth: partTop, length: partLength } = depths[id]
-
-            const lastHeightPx = totalHeightPx
-            totalHeightPx += partLength * mToPx + gap
-
-            const lastHeightM = totalHeightM
-            totalHeightM = partTop + partLength
-
-            if (lastHeightM <= topDepth && totalHeightM > topDepth) {
-                const t = (topDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                topDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            if (!depths?.[id]) {
+                return
             }
 
-            if (lastHeightM < bottomDepth && totalHeightM >= bottomDepth) {
-                const t = (bottomDepth - lastHeightM) / (totalHeightM - lastHeightM)
-                bottomDepthPx = lerp(lastHeightPx, totalHeightPx, t)
+            const { topDepth: partTop, length: partLength } = depths[id]
+            const lastHeightPx = currHeightPx
+            const lastHeightM = currHeightM
+            currHeightPx += partLength * mToPx + gapPx
+            currHeightM = partTop + partLength
+
+            // Since px gap between parts is not representative of actual depth,
+            // parts are not positioned exactly at their percentage depth in the core.
+            // Must interpolate between adjacent part values convert m positions to px.
+            if (lastHeightM <= topDepth && currHeightM > topDepth) {
+                const t = (topDepth - lastHeightM) / (currHeightM - lastHeightM)
+                topDepthPx = lerp(lastHeightPx, currHeightPx, t)
+            }
+            if (lastHeightM < bottomDepth && currHeightM >= bottomDepth) {
+                const t = (bottomDepth - lastHeightM) / (currHeightM - lastHeightM)
+                bottomDepthPx = lerp(lastHeightPx, currHeightPx, t)
             }
 
             if (i === firstVisibleInd) {
@@ -400,80 +403,33 @@ const CanvasRepresentation = React.memo(({
                 centerPx = lastHeightPx + 0.5 * partLength * mToPx
             }
         })
-        totalHeightPx -= gap // remove final gap
+
+        // No gap after last part, remove here.
+        currHeightPx -= gapPx
+
+        // Ensure last visible position is set if part is last in core.
         if (lastVisibleInd === partIds.length - 1) {
-            lastVisiblePx = totalHeightPx
+            lastVisiblePx = currHeightPx
         }
-        setCenter(centerPx / totalHeightPx)
+
+        // Top / bottom padding fills space that would be taken by all non-visible parts in core.
+        // This prevents part px position from changing when set of visible parts changes and simplifies
+        // smooth scrolling transition on part change.
         setPaddingTop(firstVisiblePx)
-        setPaddingBottom(totalHeightPx - lastVisiblePx)
+        setPaddingBottom(currHeightPx - lastVisiblePx)
+
+        // Get center as percentage of total representation height to position representation in column.
+        setCenter(centerPx / currHeightPx)
+
+        // Get center as percentage of total column height to position highlight window on top of column.
         if (topDepthPx !== null && bottomDepthPx !== null) {
             const percent = (centerPx - topDepthPx) / (bottomDepthPx - topDepthPx)
             setCenterWindow(percent)
         }
-    }, [part, partIds, parts, depths, mToPx, gap, setCenter, topDepth, bottomDepth, setCenterWindow])
-
-    const partsVisible = parts.length > 0 && parts.length < MAX_CANVAS_PER_COLUMN
-    return <>
-        <div
-            ref={wrapRef}
-            className={`${styles.parts} ${partsVisible && styles.partsVisible}`}
-            style={{
-                '--gap-size': `${gap}px`,
-                paddingTop,
-                paddingBottom
-            } as React.CSSProperties}
-        >
-            { partsVisible && parts.map((id, i) => {
-                if (!depths?.[id]) {
-                    return <></>
-                }
-
-                const heightM = depths[id].length || 0
-                const refProp = { ref: id === part ? partRef : null }
-                return (
-                    <React.Fragment key={id}>
-                        <div
-                            {...refProp}
-                            className={styles.canvas}
-                            onClick={() => setPart(id)}
-                            onMouseEnter={() => setHoveredPart(id)}
-                            onMouseLeave={() => setHoveredPart(null)}
-                        >
-                            { canvasCtxs[id] && customRender(
-                                <CanvasRenderer
-                                    canvas={canvasCtxs[id].canvas}
-                                    width={`${widthM * mToPx * widthScale}px`}
-                                    height={`${heightM * mToPx}px`}
-                                />
-                            ) }
-                            { !canvasCtxs[id] && customRender(
-                                <div style={{
-                                    width: `${widthM * mToPx * widthScale}px`,
-                                    height: `${heightM * mToPx}px`,
-                                    backgroundColor: 'rgba(0, 0, 0, 0.2)'
-                                }}></div>
-                            ) }
-                        </div>
-                        {(i !== parts.length - 1) && canvasSpacer}
-                    </React.Fragment>
-                )
-            }) }
-        </div>
-    </>
-})
-
-function getCanvasCtx (width: number = 0, height: number = 0): CanvasCtx {
-    const canvas = document.createElement('canvas')
-    const ctx = get2dContext(canvas)
-
-    canvas.width = width
-    canvas.height = height
-
-    return { canvas, ctx }
+    }, [partIds, depths, part, parts, column, setCenter, setCenterWindow, setPaddingTop, setPaddingBottom])
 }
 
-export type { ScaleRepresentation }
+export type { RepresentationElement }
 export {
     LineRepresentation,
     RectRepresentation,

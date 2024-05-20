@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactElement } from 'react'
+import React, { useState, useRef, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
@@ -12,10 +12,9 @@ import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
-import CorePanel from '../../components/part/core-panel'
+import CorePanel, { RepresentationSettings, ScrollDepth } from '../../components/part/core-panel'
 import SpectraPanel, { SpectraPanelProps } from '../../components/part/spectra-panel'
 import {
-    ScaleRepresentation,
     LineRepresentation,
     RectRepresentation,
     PunchcardRepresentation,
@@ -23,7 +22,7 @@ import {
 } from '../../components/part/scale-representations'
 import styles from '../../styles/part/layout.module.css'
 
-const CORE_PANEL_REPRESENTATIONS: Array<ScaleRepresentation> = [
+const CORE_PANEL_REPRESENTATIONS: RepresentationSettings = [
     { element: LineRepresentation, fullScale: true },
     { element: RectRepresentation },
     { element: PunchcardRepresentation },
@@ -43,13 +42,16 @@ const PartView = React.memo((
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
-    const [scrollDepthTop, setScrollDepthTop] = useState<number>(0)
-    const [scrollDepthBottom, setScrollDepthBottom] = useState<number>(0)
     const [selectedSpectrum, setSelectedSpectrum] = useState<SpectraPanelProps>({
         selectedSpectrum: null, spectrumPosition: [0, 0], maxMineral: 'chlorite' // TODO: remove this
     })
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
+
+    // Need ref to zoom slider to update core panel final window on change to zoom.
+    const zoomSliderRef = useRef<HTMLInputElement>(null)
+    const scrollDepthRef = useRef<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
+
     const { partIds, tiles } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
@@ -107,9 +109,6 @@ const PartView = React.memo((
             setMineralMaps(mineralMaps)
         }
 
-        setScrollDepthTop(0)
-        setScrollDepthBottom(0)
-
         getMineralChannels()
     }, [vis, core, part, minerals])
 
@@ -157,11 +156,10 @@ const PartView = React.memo((
                 open={corePanelOpen}
                 vis={vis}
                 part={part}
-                parts={partIds || []}
                 representations={CORE_PANEL_REPRESENTATIONS}
                 setPart={setPart}
-                finalTopDepth={scrollDepthTop}
-                finalBottomDepth={scrollDepthBottom}
+                scrollDepthRef={scrollDepthRef}
+                zoomSliderRef={zoomSliderRef}
             />
             <MineralChannels
                 vis={vis}
@@ -169,9 +167,9 @@ const PartView = React.memo((
                 part={part}
                 minerals={minerals}
                 mineralMaps={mineralMaps}
-                setDepthTop={setScrollDepthTop}
-                setDepthBottom={setScrollDepthBottom}
                 setSelectedSpectrum={setSelectedSpectrum}
+                scrollDepthRef={scrollDepthRef}
+                zoomSliderRef={zoomSliderRef}
             />
             { selectedSpectrum &&
                 <SpectraPanel { ...selectedSpectrum } /> }
