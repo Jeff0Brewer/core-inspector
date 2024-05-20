@@ -25,6 +25,15 @@
     font-size: 12px;
 }
 
+.close-button {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    font-size: 20px;
+    transition: color var(--transition-param);
+    color: #dedede;
+}
+
 .core-panel-toggle:hover, .close-button:hover {
     color: var(--color4);
 }
@@ -41,7 +50,6 @@
 
 .close-label {
     text-transform: uppercase;
-    color: #dedede;
     font-size: 0.75rem;
     font-weight: 300;
     width: 150px;
@@ -49,18 +57,11 @@
     white-space: nowrap;
     transition: width 500ms ease;
     overflow: hidden;
+    text-align: left;
 }
 
 .close-label-hidden {
     width: 0;
-}
-
-.close-button {
-    display: grid;
-    place-content: center;
-    height: 100%;
-    font-size: 20px;
-    transition: color var(--transition-param);
 }
 
 .top-left {
