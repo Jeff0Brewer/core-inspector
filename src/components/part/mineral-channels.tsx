@@ -3,7 +3,7 @@ import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { StringMap, getImageData, getCssColor } from '../../lib/util'
-import { getRgbPath } from '../../lib/path'
+import { getRgbPath, getHydrationPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
 import PartRenderer from '../../vis/part'
 import HoverInfo from '../../components/part/hover-info'
@@ -16,9 +16,10 @@ import { ScrollDepth } from '../../components/part/core-panel'
 import { SpectraPanelProps } from '../../components/part/spectra-panel'
 import styles from '../../styles/part/mineral-channels.module.css'
 
-const BLEND_LABEL = 'blended'
 const VISUAL_LABEL = 'false color'
-const EXTRA_CHANNELS = [VISUAL_LABEL, BLEND_LABEL]
+const HYDRATION_LABEL = 'hydration'
+const BLEND_LABEL = 'blended'
+const EXTRA_CHANNELS = [VISUAL_LABEL, HYDRATION_LABEL, BLEND_LABEL]
 
 const MIN_WIDTH_PX = 50
 
@@ -210,10 +211,15 @@ const ChannelsView = React.memo(({
     useEffect(() => {
         const sources: Array<string | HTMLCanvasElement> = []
         for (const label of extraChannels) {
-            if (label === BLEND_LABEL) {
-                sources.push(vis?.partMinerals ? vis.canvas : 'none')
-            } else if (label === VISUAL_LABEL) {
-                sources.push(getRgbPath(core, part))
+            switch (label) {
+                case BLEND_LABEL:
+                    sources.push(vis?.partMinerals ? vis.canvas : 'none')
+                    break
+                case VISUAL_LABEL:
+                    sources.push(getRgbPath(core, part))
+                    break
+                case HYDRATION_LABEL:
+                    sources.push(getHydrationPath(core, part))
             }
         }
         for (const mineral of mineralChannels) {
