@@ -50,7 +50,7 @@ function BlendProvider (
             const colors = await fetchJson<Array<GenericColors>>(
                 './data-processed/temp/color-presets.json'
             )
-            console.log(colors)
+
             if (colors) {
                 const palettes = colorsToPalettes(colors)
                 setPalettes(palettes)
