@@ -1,6 +1,6 @@
 import { createContext, useContext, useLayoutEffect } from 'react'
 import { StringMap } from '../lib/util'
-import { GenericPalette } from '../lib/palettes'
+import { GenericPalette } from '../components/blend-provider'
 import { BlendMode, BlendParams } from '../vis/mineral-blend'
 import CoreRenderer from '../vis/core'
 import PartRenderer from '../vis/part'
@@ -20,7 +20,8 @@ type BlendContextProps = {
     setMode: (m: BlendMode) => void,
     monochrome: boolean,
     setMonochrome: (m: boolean) => void,
-    setBlendParams: (b: BlendParams) => void
+    setBlendParams: (b: BlendParams) => void,
+    palettes: Array<GenericPalette>
 }
 
 const BlendContext = createContext<BlendContextProps | null>(null)

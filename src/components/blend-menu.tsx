@@ -5,7 +5,7 @@ import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent, StringMap } from '../lib/util'
 import { useBlendState } from '../hooks/blend-context'
 import { useCollapseRender } from '../hooks/collapse-render'
-import { GenericPalette } from '../lib/palettes'
+import { GenericPalette } from '../components/blend-provider'
 import { BlendMode, getBlendColor, isToggleable } from '../vis/mineral-blend'
 import Dropdown from '../components/generic/dropdown'
 import Slider from '../components/generic/slider'
@@ -17,12 +17,11 @@ import paramSliderStyles from '../styles/custom/param-slider.module.css'
 
 type BlendMenuProps = {
     open: boolean,
-    minerals: Array<string>,
-    palettes: Array<GenericPalette>,
+    minerals: Array<string>
 }
 
 const BlendMenu = React.memo((
-    { open, minerals, palettes }: BlendMenuProps
+    { open, minerals }: BlendMenuProps
 ): ReactElement => {
     const render = useCollapseRender(open)
     const {
@@ -32,7 +31,8 @@ const BlendMenu = React.memo((
         saturation, setSaturation,
         threshold, setThreshold,
         mode, setMode,
-        monochrome, setMonochrome
+        monochrome, setMonochrome,
+        palettes
     } = useBlendState()
 
     // update visibilities to match newly selected palette on change

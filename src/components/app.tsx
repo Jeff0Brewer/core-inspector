@@ -1,5 +1,4 @@
 import { useState, ReactElement } from 'react'
-import { COLOR_PRESETS } from '../lib/palettes'
 import BlendProvider from '../components/blend-provider'
 import CoreMetadataProvider from '../components/core-metadata-provider'
 import CoreView from '../components/core/layout'
@@ -26,12 +25,11 @@ function App (): ReactElement {
     return (
         <main className={styles.app}>
             <CoreMetadataProvider core={core}>
-                <BlendProvider minerals={MINERALS} palettes={COLOR_PRESETS}>
+                <BlendProvider minerals={MINERALS}>
                     { part === null &&
                         <CoreView
                             cores={CORES}
                             minerals={MINERALS}
-                            palettes={COLOR_PRESETS}
                             core={core}
                             setCore={setCore}
                             setPart={setPart}
@@ -42,7 +40,6 @@ function App (): ReactElement {
                             part={part}
                             core={core}
                             minerals={MINERALS}
-                            palettes={COLOR_PRESETS}
                             setPart={setPart}
                         />
                     }

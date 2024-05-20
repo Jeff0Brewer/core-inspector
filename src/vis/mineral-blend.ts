@@ -1,6 +1,6 @@
 import { vec3 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTexture, GlTextureFramebuffer, getTextureAttachments } from '../lib/gl-wrap'
-import { GenericPalette } from '../lib/palettes'
+import { GenericPalette } from '../components/blend-provider'
 import { StringMap } from '../lib/util'
 import { POS_FPV, TEX_FPV, FULLSCREEN_RECT } from '../lib/vert-gen'
 import vertSource from '../shaders/mineral-blend-vert.glsl?raw'

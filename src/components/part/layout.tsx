@@ -6,7 +6,6 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { StringMap, notNull } from '../../lib/util'
 import { getCorePath, getAbundancePaths } from '../../lib/path'
-import { GenericPalette } from '../../lib/palettes'
 import BlendIcon from '../../assets/blend-icon.svg'
 import PartRenderer from '../../vis/part'
 import InfoHeader from '../../components/part/info-header'
@@ -33,12 +32,11 @@ type PartViewProps = {
     part: string,
     core: string,
     minerals: Array<string>,
-    palettes: Array<GenericPalette>,
     setPart: (p: string | null) => void
 }
 
 const PartView = React.memo((
-    { part, core, minerals, palettes, setPart }: PartViewProps
+    { part, core, minerals, setPart }: PartViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
@@ -181,11 +179,7 @@ const PartView = React.memo((
                 >
                     <img src={BlendIcon} />
                 </button>
-                <BlendMenu
-                    open={blendMenuOpen}
-                    minerals={minerals}
-                    palettes={palettes}
-                />
+                <BlendMenu open={blendMenuOpen} minerals={minerals} />
             </div>
         </div>
     )

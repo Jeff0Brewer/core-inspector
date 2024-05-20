@@ -1,17 +1,35 @@
-import { useState, useCallback, ReactElement, ReactNode } from 'react'
+import { useState, useEffect, useCallback, ReactElement, ReactNode } from 'react'
+import { vec3 } from 'gl-matrix'
 import { StringMap } from '../lib/util'
-import { GenericPalette } from '../lib/palettes'
+import { fetchJson } from '../lib/load'
 import { BlendMode, BlendParams } from '../vis/mineral-blend'
 import BlendContext from '../hooks/blend-context'
 
+type UnlabelledColors = Array<vec3>
+type LabelledColors = { [mineral: string]: vec3 }
+type GenericColors = LabelledColors | UnlabelledColors
+
+type LabelledPalette = { type: 'labelled', colors: LabelledColors }
+type UnlabelledPalette = { type: 'unlabelled', colors: UnlabelledColors }
+type GenericPalette = LabelledPalette | UnlabelledPalette
+
+function colorsToPalettes (colorsList: Array<GenericColors>): Array<GenericPalette> {
+    return colorsList.map(colors => {
+        if (Array.isArray(colors)) {
+            return { type: 'unlabelled', colors }
+        } else {
+            return { type: 'labelled', colors }
+        }
+    })
+}
+
 type BlendProviderProps = {
     minerals: Array<string>,
-    palettes: Array<GenericPalette>,
     children: ReactNode
 }
 
 function BlendProvider (
-    { minerals, palettes, children }: BlendProviderProps
+    { minerals, children }: BlendProviderProps
 ): ReactElement {
     const [magnitudes, setMagnitudes] = useState<StringMap<number>>(
         Object.fromEntries(minerals.map(mineral => [mineral, 1]))
@@ -19,11 +37,28 @@ function BlendProvider (
     const [visibilities, setVisibilities] = useState<StringMap<boolean>>(
         Object.fromEntries(minerals.map(mineral => [mineral, true]))
     )
-    const [palette, setPalette] = useState<GenericPalette>(palettes[0])
+    const [palette, setPalette] = useState<GenericPalette>({ type: 'unlabelled', colors: [] })
     const [saturation, setSaturation] = useState<number>(1)
     const [threshold, setThreshold] = useState<number>(0)
     const [mode, setMode] = useState<BlendMode>('additive')
     const [monochrome, setMonochrome] = useState<boolean>(false)
+
+    const [palettes, setPalettes] = useState<Array<GenericPalette>>([])
+
+    useEffect(() => {
+        const getPalettes = async (): Promise<void> => {
+            const colors = await fetchJson<Array<GenericColors>>(
+                './data-processed/temp/color-presets.json'
+            )
+            console.log(colors)
+            if (colors) {
+                const palettes = colorsToPalettes(colors)
+                setPalettes(palettes)
+                setPalette(palettes[0])
+            }
+        }
+        getPalettes()
+    }, [])
 
     const setBlendParams = useCallback((params: BlendParams) => {
         setMagnitudes(params.magnitudes)
@@ -50,7 +85,8 @@ function BlendProvider (
         setMode,
         monochrome,
         setMonochrome,
-        setBlendParams
+        setBlendParams,
+        palettes
     }
 
     return (
@@ -61,3 +97,4 @@ function BlendProvider (
 }
 
 export default BlendProvider
+export type { GenericPalette }

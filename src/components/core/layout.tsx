@@ -4,7 +4,6 @@ import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
 import { notNull } from '../../lib/util'
-import { GenericPalette } from '../../lib/palettes'
 import LoadIcon from '../../components/generic/load-icon'
 import CoreRenderer from '../../vis/core'
 import VisSettings from '../../components/core/vis-settings'
@@ -17,14 +16,13 @@ import styles from '../../styles/core/layout.module.css'
 type CoreViewProps = {
     cores: Array<string>,
     minerals: Array<string>,
-    palettes: Array<GenericPalette>
     core: string,
     setCore: (c: string) => void,
     setPart: (p: string) => void
 }
 
 const CoreView = React.memo((
-    { cores, minerals, palettes, core, setCore, setPart }: CoreViewProps
+    { cores, minerals, core, setCore, setPart }: CoreViewProps
 ): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
     const [loadError, setLoadError] = useState<boolean>(false)
@@ -126,11 +124,7 @@ const CoreView = React.memo((
                 ref={canvasRef}
                 className={`${styles.visCanvas} ${!!vis && styles.visible}`}
             ></canvas>
-            <MineralControls
-                vis={vis}
-                minerals={minerals}
-                palettes={palettes}
-            />
+            <MineralControls vis={vis} minerals={minerals} />
             <HoverInfo vis={vis} />
             <PanScrollbar vis={vis} />
         </> }
