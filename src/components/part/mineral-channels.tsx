@@ -199,7 +199,7 @@ const ChannelsView = React.memo(({
     core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
     setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
-    const [sources, setSources] = useState<Array<string | HTMLCanvasElement>>([])
+    const [sources, setSources] = useState<StringMap<string | HTMLCanvasElement>>({})
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
     const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
@@ -209,21 +209,21 @@ const ChannelsView = React.memo(({
 
     // get channel sources
     useEffect(() => {
-        const sources: Array<string | HTMLCanvasElement> = []
+        const sources: StringMap<string | HTMLCanvasElement> = {}
         for (const label of extraChannels) {
             switch (label) {
                 case BLEND_LABEL:
-                    sources.push(vis?.partMinerals ? vis.canvas : 'none')
+                    sources[BLEND_LABEL] = vis?.partMinerals ? vis.canvas : 'none'
                     break
                 case VISUAL_LABEL:
-                    sources.push(getRgbPath(core, part))
+                    sources[VISUAL_LABEL] = getRgbPath(core, part)
                     break
                 case HYDRATION_LABEL:
-                    sources.push(getHydrationPath(core, part))
+                    sources[HYDRATION_LABEL] = getHydrationPath(core, part)
             }
         }
         for (const mineral of mineralChannels) {
-            sources.push(mineralMaps?.[mineral]?.src || 'none')
+            sources[mineral] = mineralMaps?.[mineral]?.src || 'none'
         }
 
         setSources(sources)
@@ -332,13 +332,14 @@ const ChannelsView = React.memo(({
     return (
         <div className={styles.channelsWrap} ref={channelsRef}>
             <div className={styles.channels} style={{ gap }}>
-                { sources.map((source, i) =>
+                { Object.entries(sources).map(([label, source], i) =>
                     <MineralChannel
                         source={source}
                         width={width}
                         height={height}
                         mousePosRef={mousePosRef}
                         onClick={selectSpectrum}
+                        customClass={label === HYDRATION_LABEL ? styles.blueColorized : ''}
                         key={i}
                     />
                 ) }
@@ -358,11 +359,12 @@ type MineralChannelProps = {
     width: string,
     height: string,
     mousePosRef: MutableRefObject<[number, number] | null>,
-    onClick: () => void
+    onClick: () => void,
+    customClass?: string
 }
 
 const MineralChannel = React.memo((
-    { source, width, height, mousePosRef, onClick }: MineralChannelProps
+    { source, width, height, mousePosRef, onClick, customClass }: MineralChannelProps
 ): ReactElement => {
     const [loadError, setLoadError] = useState<boolean>(false)
     const channelRef = useRef<HTMLDivElement>(null)
@@ -414,7 +416,7 @@ const MineralChannel = React.memo((
 
     return (
         <div className={styles.channel} onClick={onClick}>
-            <div ref={channelRef}>
+            <div ref={channelRef} className={customClass}>
                 { typeof source !== 'string' &&
                     <CanvasRenderer
                         canvas={source}
