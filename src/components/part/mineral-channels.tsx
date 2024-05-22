@@ -254,7 +254,6 @@ const ChannelsView = React.memo(({
         }
     }, [part, depths, viewDims, mineralMaps, scrollDepthRef])
 
-    // init workers for abundance / spectrum hover info
     useEffect(() => {
         const abundanceWorker = new AbundanceWorker()
         const spectraWorker = new SpectraWorker()
@@ -268,22 +267,8 @@ const ChannelsView = React.memo(({
         }
     }, [])
 
-    // send image data from mineral channels to abundance worker
     useEffect(() => {
-        const imgData: StringMap<ImageData | null> = {}
-        for (const [mineral, img] of Object.entries(mineralMaps)) {
-            imgData[mineral] = getImageData(img)
-        }
-
-        abundanceWorker?.postMessage({
-            type: 'init',
-            imgData,
-            imgWidth: imgDims[0]
-        })
-    }, [abundanceWorker, mineralMaps, imgDims])
-
-    // send info to spectra worker for constructing file paths
-    useEffect(() => {
+        // Send info required by spectra worker to construct file paths on hover.
         spectraWorker?.postMessage({
             type: 'init',
             core,
@@ -292,54 +277,75 @@ const ChannelsView = React.memo(({
         })
     }, [spectraWorker, imgDims, core, part])
 
-    // update hover info on mouse move
+    useEffect(() => {
+        // Read image data from mineral channels once on part change.
+        const imgData: StringMap<ImageData | null> = {}
+        for (const [mineral, img] of Object.entries(mineralMaps)) {
+            imgData[mineral] = getImageData(img)
+        }
+
+        // Send image data to worker to read on hover, preventing canvas
+        // reads on the main thread.
+        abundanceWorker?.postMessage({
+            type: 'init',
+            imgData,
+            imgWidth: imgDims[0]
+        })
+    }, [abundanceWorker, imgDims, mineralMaps])
+
     useEffect(() => {
         const channelsWrap = channelsRef.current
-        if (!abundanceWorker || !spectraWorker || !channelsWrap) { return }
+        if (!abundanceWorker || !spectraWorker || !channelsWrap) {
+            return
+        }
 
-        const mousemove = (): void => {
+        const updateHoverInfo = (): void => {
             if (!mousePosRef.current) {
                 setHoverInfoVisible(false)
                 return
             }
 
-            setHoverInfoVisible(true)
+            const mousePosMessage = {
+                type: 'mousePosition',
+                x: mousePosRef.current[0] / viewDims[0] * imgDims[0],
+                y: mousePosRef.current[1] / viewDims[1] * imgDims[1]
+            }
 
-            const [mouseX, mouseY] = mousePosRef.current
-            const x = mouseX / viewDims[0] * imgDims[0]
-            const y = mouseY / viewDims[1] * imgDims[1]
-            abundanceWorker.postMessage({ type: 'mousePosition', x, y })
-            spectraWorker.postMessage({ type: 'mousePosition', x, y })
+            abundanceWorker.postMessage(mousePosMessage)
+            spectraWorker.postMessage(mousePosMessage)
+
+            setHoverInfoVisible(true)
         }
 
-        const hideHoverInfo = (): void => { setHoverInfoVisible(false) }
+        const hideHoverInfo = (): void => {
+            setHoverInfoVisible(false)
+        }
 
         channelsWrap.addEventListener('mouseleave', hideHoverInfo)
         channelsWrap.addEventListener('wheel', hideHoverInfo)
-        window.addEventListener('mousemove', mousemove)
+        window.addEventListener('mousemove', updateHoverInfo)
+
         return () => {
             channelsWrap.removeEventListener('mouseleave', hideHoverInfo)
             channelsWrap.removeEventListener('wheel', hideHoverInfo)
-            window.removeEventListener('mousemove', mousemove)
+            window.removeEventListener('mousemove', updateHoverInfo)
         }
     }, [abundanceWorker, spectraWorker, viewDims, imgDims])
 
     const selectSpectrum = useCallback(() => {
-        if (!spectraWorker) { return }
-        spectraWorker.postMessage({ type: 'mouseClick' })
+        spectraWorker?.postMessage({
+            type: 'mouseClick'
+        })
     }, [spectraWorker])
 
-    const width = `${viewDims[0]}px`
-    const height = `${viewDims[1]}px`
-    const gap = `${viewGap}px`
     return (
-        <div className={styles.channelsWrap} ref={channelsRef}>
-            <div className={styles.channels} style={{ gap }}>
+        <div ref={channelsRef} className={styles.channelsWrap}>
+            <div className={styles.channels} style={{ gap: `${viewGap}px` }}>
                 { Object.entries(sources).map(([label, source], i) =>
                     <MineralChannel
                         source={source}
-                        width={width}
-                        height={height}
+                        width={`${viewDims[0]}px`}
+                        height={`${viewDims[1]}px`}
                         mousePosRef={mousePosRef}
                         onClick={selectSpectrum}
                         customClass={label === HYDRATION_LABEL ? styles.blueColorized : ''}
