@@ -24,15 +24,14 @@ function HoverInfo ({
             const abundances: StringMap<number> = data.abundances
             setAbundances(abundances)
 
-            let maxAbundance = 0
-            let maxMineral = 'chlorite'
-            for (const [mineral, abundance] of Object.entries(abundances)) {
-                if (abundance > maxAbundance) {
-                    maxMineral = mineral
-                    maxAbundance = abundance
-                }
-            }
-            spectrumWorker?.postMessage({ type: 'abundance', maxMineral })
+            // Send mineral with maximum abundance to spectrum worker
+            // to set selected library spectra on spectrum panel open.
+            spectrumWorker?.postMessage({
+                type: 'abundance',
+                maxMineral: Object.keys(abundances).reduce(
+                    (a, b) => abundances[a] > abundances[b] ? a : b
+                )
+            })
         }
 
         abundanceWorker.addEventListener('message', updateAbundances)
@@ -48,11 +47,10 @@ function HoverInfo ({
             if (data.type === 'hovered') {
                 setSpectrum(data.spectrum)
             } else if (data.type === 'clicked') {
-                const { spectrum, x, y, maxMineral } = data
                 setSelectedSpectrum({
-                    selectedSpectrum: spectrum,
-                    spectrumPosition: [x, y],
-                    maxMineral
+                    selectedSpectrum: data.spectrum,
+                    spectrumPosition: [data.x, data.y],
+                    maxMineral: data.maxMineral
                 })
             }
         }
