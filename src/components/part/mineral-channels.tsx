@@ -300,6 +300,8 @@ const ChannelsView = React.memo(({
             imgDataSentRef.current = true
         }
 
+        // Read / send image data only on mouse enter into channels to prevent expensive
+        // read operations when navigating between parts without hovering channels.
         const channelsWrap = channelsRef.current
         channelsWrap?.addEventListener('mouseenter', initAbundanceData)
         return () => {
