@@ -372,6 +372,7 @@ const ChannelsView = React.memo(({
                 ) }
                 <HoverInfo
                     visible={hoverInfoVisible}
+                    mineralChannels={mineralChannels}
                     abundanceWorker={abundanceWorker}
                     spectrumWorker={spectraWorker}
                     setSelectedSpectrum={setSelectedSpectrum}

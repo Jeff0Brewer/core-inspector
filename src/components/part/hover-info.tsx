@@ -6,13 +6,14 @@ import styles from '../../styles/part/hover-info.module.css'
 
 type HoverInfoProps = {
     visible: boolean,
+    mineralChannels: Array<string>,
     abundanceWorker: Worker | null,
     spectrumWorker: Worker | null,
     setSelectedSpectrum: (s: SpectraPanelProps) => void,
 }
 
 function HoverInfo ({
-    visible, abundanceWorker, spectrumWorker, setSelectedSpectrum
+    visible, mineralChannels, abundanceWorker, spectrumWorker, setSelectedSpectrum
 }: HoverInfoProps): ReactElement {
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [spectrum, setSpectrum] = useState<Array<number> | null>([])
@@ -71,11 +72,11 @@ function HoverInfo ({
             className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
             <div className={styles.abundances}>
-                {Object.entries(abundances).map(([mineral, abundance], i) =>
-                    <div className={styles.abundanceBar} key={i}>
+                {mineralChannels.map(mineral =>
+                    <div className={styles.abundanceBar} key={mineral}>
                         <div
                             className={styles.abundance}
-                            style={{ height: `${abundance * 80}%` }}
+                            style={{ height: `${(abundances?.[mineral] || 0) * 80}%` }}
                         ></div>
                         <p>{mineral.substring(0, 2)}</p>
                     </div>
