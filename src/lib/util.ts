@@ -98,7 +98,8 @@ function get2dContext (
     return ctx as CanvasRenderingContext2D
 }
 
-function getImageData (img: HTMLImageElement): ImageData {
+function getImageData (img: HTMLImageElement | null): ImageData | null {
+    if (img === null) { return null }
     const { width, height } = img
 
     const canvas = new OffscreenCanvas(width, height)

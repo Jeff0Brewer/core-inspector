@@ -236,7 +236,7 @@ onmessage = ({ data }): void => {
             CLICK_PARSER,
             maxMineral
         )
-    } else if (data.type === 'id') {
+    } else if (data.type === 'init') {
         // clear cached slices from prior part
         sliceCache = {}
 

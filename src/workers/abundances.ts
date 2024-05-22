@@ -4,7 +4,7 @@ let pixels: StringMap<Uint8Array | null> = {}
 let width: number = 0
 
 onmessage = ({ data }): void => {
-    if (data.type === 'imgData') {
+    if (data.type === 'init') {
         const imgData: StringMap<ImageData | null> = data.imgData
         const minerals = Object.keys(imgData)
         pixels = {}

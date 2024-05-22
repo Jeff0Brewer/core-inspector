@@ -270,23 +270,26 @@ const ChannelsView = React.memo(({
 
     // send image data from mineral channels to abundance worker
     useEffect(() => {
-        const numChannels = Object.keys(mineralMaps).length
-        if (!abundanceWorker || !numChannels) { return }
-
         const imgData: StringMap<ImageData | null> = {}
-        Object.entries(mineralMaps).forEach(([mineral, img]) => {
-            imgData[mineral] = img === null ? null : getImageData(img)
-        })
+        for (const [mineral, img] of Object.entries(mineralMaps)) {
+            imgData[mineral] = getImageData(img)
+        }
 
-        abundanceWorker.postMessage({ type: 'imgData', imgData, imgWidth: imgDims[0] })
+        abundanceWorker?.postMessage({
+            type: 'init',
+            imgData,
+            imgWidth: imgDims[0]
+        })
     }, [abundanceWorker, mineralMaps, imgDims])
 
     // send info to spectra worker for constructing file paths
     useEffect(() => {
-        const imgHeight = imgDims[1]
-        if (!spectraWorker || !imgHeight) { return }
-
-        spectraWorker.postMessage({ type: 'id', core, part, imgHeight })
+        spectraWorker?.postMessage({
+            type: 'init',
+            core,
+            part,
+            imgHeight: imgDims[1]
+        })
     }, [spectraWorker, imgDims, core, part])
 
     // update hover info on mouse move
