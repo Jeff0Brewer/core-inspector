@@ -294,16 +294,13 @@ const ChannelsView = React.memo(({
     }, [abundanceWorker, imgDims, mineralMaps])
 
     useEffect(() => {
-        const channelsWrap = channelsRef.current
-        if (!abundanceWorker || !spectraWorker || !channelsWrap) {
-            return
-        }
-
         const updateHoverInfo = (): void => {
             if (!mousePosRef.current) {
                 setHoverInfoVisible(false)
                 return
             }
+
+            setHoverInfoVisible(true)
 
             const mousePosMessage = {
                 type: 'mousePosition',
@@ -311,28 +308,29 @@ const ChannelsView = React.memo(({
                 y: mousePosRef.current[1] / viewDims[1] * imgDims[1]
             }
 
-            abundanceWorker.postMessage(mousePosMessage)
-            spectraWorker.postMessage(mousePosMessage)
-
-            setHoverInfoVisible(true)
+            abundanceWorker?.postMessage(mousePosMessage)
+            spectraWorker?.postMessage(mousePosMessage)
         }
 
         const hideHoverInfo = (): void => {
             setHoverInfoVisible(false)
         }
 
-        channelsWrap.addEventListener('mouseleave', hideHoverInfo)
-        channelsWrap.addEventListener('wheel', hideHoverInfo)
+        const channelsWrap = channelsRef.current
+        channelsWrap?.addEventListener('mouseleave', hideHoverInfo)
+        channelsWrap?.addEventListener('wheel', hideHoverInfo)
         window.addEventListener('mousemove', updateHoverInfo)
 
         return () => {
-            channelsWrap.removeEventListener('mouseleave', hideHoverInfo)
-            channelsWrap.removeEventListener('wheel', hideHoverInfo)
+            channelsWrap?.removeEventListener('mouseleave', hideHoverInfo)
+            channelsWrap?.removeEventListener('wheel', hideHoverInfo)
             window.removeEventListener('mousemove', updateHoverInfo)
         }
     }, [abundanceWorker, spectraWorker, viewDims, imgDims])
 
     const selectSpectrum = useCallback(() => {
+        // Only need to send message type since worker already contains
+        // info required to open selected spectrum in panel.
         spectraWorker?.postMessage({
             type: 'mouseClick'
         })
