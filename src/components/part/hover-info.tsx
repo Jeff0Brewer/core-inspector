@@ -16,6 +16,9 @@ function HoverInfo ({
 }: HoverInfoProps): ReactElement {
     const [abundances, setAbundances] = useState<StringMap<number>>({})
     const [spectrum, setSpectrum] = useState<Array<number> | null>([])
+    const popupRef = useRef<HTMLDivElement>(null)
+
+    usePopupPosition(popupRef)
 
     useEffect(() => {
         if (!abundanceWorker) { return }
@@ -29,7 +32,8 @@ function HoverInfo ({
             spectrumWorker?.postMessage({
                 type: 'abundance',
                 maxMineral: Object.keys(abundances).reduce(
-                    (a, b) => abundances[a] > abundances[b] ? a : b
+                    (a, b) => abundances[a] > abundances[b] ? a : b,
+                    'epidote'
                 )
             })
         }
@@ -60,9 +64,6 @@ function HoverInfo ({
             spectrumWorker.removeEventListener('message', updateSpectrum)
         }
     }, [spectrumWorker, setSelectedSpectrum])
-
-    const popupRef = useRef<HTMLDivElement>(null)
-    usePopupPosition(popupRef)
 
     return (
         <div
