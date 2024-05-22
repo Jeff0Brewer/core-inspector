@@ -207,33 +207,34 @@ const ChannelsView = React.memo(({
     const mousePosRef = useRef<[number, number] | null>(null)
     const { depths } = useCoreMetadata()
 
-    // get channel sources
     useEffect(() => {
         const sources: StringMap<string | HTMLCanvasElement> = {}
-        for (const label of extraChannels) {
+
+        extraChannels.forEach(label => {
             switch (label) {
-                case BLEND_LABEL:
-                    sources[BLEND_LABEL] = vis?.partMinerals ? vis.canvas : 'none'
-                    break
                 case VISUAL_LABEL:
-                    sources[VISUAL_LABEL] = getRgbPath(core, part)
+                    sources[label] = getRgbPath(core, part)
                     break
                 case HYDRATION_LABEL:
-                    sources[HYDRATION_LABEL] = getHydrationPath(core, part)
+                    sources[label] = getHydrationPath(core, part)
+                    break
+                case BLEND_LABEL:
+                    sources[label] = vis?.partMinerals ? vis.canvas : 'none'
             }
-        }
-        for (const mineral of mineralChannels) {
+        })
+
+        mineralChannels.forEach(mineral => {
             sources[mineral] = mineralMaps?.[mineral]?.src || 'none'
-        }
+        })
 
         setSources(sources)
     }, [core, part, vis, mineralMaps, extraChannels, mineralChannels])
 
-    // update top / bottom depth for core panel final window on scroll
-    // or changes to channel view dimensions
+    // Calculate currently visible top / bottom depth of part for
+    // positioning core panel's final selection window.
     useEffect(() => {
         const channelsWrap = channelsRef.current
-        if (!depths?.[part] || !channelsWrap || !Object.keys(mineralMaps).length) { return }
+        if (!channelsWrap || !depths?.[part]) { return }
 
         const scroll = (): void => {
             const { scrollTop, clientHeight } = channelsWrap
@@ -246,6 +247,7 @@ const ChannelsView = React.memo(({
                 bottomDepth: Math.min(topDepth + length, bottomPercent * length + topDepth)
             }
         }
+
         scroll()
 
         channelsWrap.addEventListener('scroll', scroll)
