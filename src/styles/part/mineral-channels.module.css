@@ -158,13 +158,12 @@
     background-repeat: infinite;
     background-color: #202020;
 
-    transition: opacity 300ms ease;
-    transition-delay: 100ms;
+    transition: opacity 300ms ease 200ms;
     opacity: 1;
 }
 
-.content[data-loading="true"] .channels {
-    transition-delay: 0s;
+.channels-hidden {
+    transition: opacity 300ms ease 0ms;
     opacity: 0;
 }
 

@@ -75,6 +75,8 @@ const MineralChannels = React.memo(({
         setViewGap(viewGap)
     }, [mineralMaps, zoom, spacing, imgDims])
 
+    useEffect(() => { console.log(loading) }, [loading])
+
     const width = `${viewDims[0]}px`
     const gap = `${viewGap}px`
     return <>
@@ -86,7 +88,7 @@ const MineralChannels = React.memo(({
             channelWidth={viewDims[0]}
             zoomSliderRef={zoomSliderRef}
         />
-        <div className={styles.content} data-loading={loading}>
+        <div className={styles.content}>
             <LoadIcon loading={loading} showDelayMs={100} />
             <ChannelTopLabels
                 extraChannels={EXTRA_CHANNELS}
@@ -95,6 +97,7 @@ const MineralChannels = React.memo(({
                 gap={gap}
             />
             <ChannelsView
+                loading={loading}
                 core={core}
                 part={part}
                 vis={vis}
@@ -182,6 +185,7 @@ const ChannelBottomLabels = React.memo(({
 })
 
 type ChannelsViewProps = {
+    loading: boolean,
     core: string,
     part: string,
     vis: PartRenderer | null,
@@ -196,7 +200,7 @@ type ChannelsViewProps = {
 }
 
 const ChannelsView = React.memo(({
-    core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
+    loading, core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
     setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<StringMap<string | HTMLCanvasElement>>({})
@@ -355,8 +359,12 @@ const ChannelsView = React.memo(({
 
     return (
         <div ref={channelsRef} className={styles.channelsWrap}>
-            <div className={styles.channels} style={{ gap: `${viewGap}px` }}>
-                { Object.entries(sources).map(([label, source], i) =>
+            <div
+                className={`${styles.channels} ${loading && styles.channelsHidden}`}
+                style={{ gap: `${viewGap}px` }}
+                key={'channels'}
+            >
+                { Object.entries(sources).map(([label, source]) =>
                     <MineralChannel
                         source={source}
                         width={`${viewDims[0]}px`}
@@ -364,7 +372,7 @@ const ChannelsView = React.memo(({
                         mousePosRef={mousePosRef}
                         onClick={selectSpectrum}
                         customClass={label === HYDRATION_LABEL ? styles.blueColorized : ''}
-                        key={i}
+                        key={label}
                     />
                 ) }
                 <HoverInfo

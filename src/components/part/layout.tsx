@@ -104,6 +104,7 @@ const PartView = React.memo((
             minerals.forEach((mineral, i) => {
                 mineralMaps[mineral] = channels[i]
             })
+
             setMineralMaps(mineralMaps)
         }
 
