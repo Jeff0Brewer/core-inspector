@@ -20,7 +20,9 @@ onmessage = ({ data }): void => {
         const index = rowIndex + colIndex * width
         const abundances: StringMap<number> = {}
         Object.entries(pixels).forEach(([mineral, data]) => {
-            abundances[mineral] = data !== null ? data[index] : 0
+            abundances[mineral] = data !== null
+                ? data[index] / 255
+                : 0
         })
         postMessage({ abundances })
     }

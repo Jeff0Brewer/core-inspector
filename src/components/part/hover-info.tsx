@@ -75,7 +75,7 @@ function HoverInfo ({
                     <div className={styles.abundanceBar} key={i}>
                         <div
                             className={styles.abundance}
-                            style={{ height: `${(abundance / 255) * 80}%` }}
+                            style={{ height: `${abundance * 80}%` }}
                         ></div>
                         <p>{mineral.substring(0, 2)}</p>
                     </div>
