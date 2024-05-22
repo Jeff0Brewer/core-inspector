@@ -23,6 +23,13 @@ const EXTRA_CHANNELS = [VISUAL_LABEL, HYDRATION_LABEL, BLEND_LABEL]
 
 const MIN_WIDTH_PX = 50
 
+type ChannelLabelsProps = {
+    extraChannels: Array<string>,
+    mineralChannels: Array<string>,
+    width: string,
+    gap: string
+}
+
 type MineralChannelsProps = {
     vis: PartRenderer | null,
     core: string,
@@ -75,10 +82,13 @@ const MineralChannels = React.memo(({
         setViewGap(viewGap)
     }, [mineralMaps, zoom, spacing, imgDims])
 
-    useEffect(() => { console.log(loading) }, [loading])
+    const labelProps: ChannelLabelsProps = {
+        extraChannels: EXTRA_CHANNELS,
+        mineralChannels: minerals,
+        width: `${viewDims[0]}px`,
+        gap: `${viewGap}px`
+    }
 
-    const width = `${viewDims[0]}px`
-    const gap = `${viewGap}px`
     return <>
         <ViewControls
             zoom={zoom}
@@ -90,12 +100,7 @@ const MineralChannels = React.memo(({
         />
         <div className={styles.content}>
             <LoadIcon loading={loading} showDelayMs={100} />
-            <ChannelTopLabels
-                extraChannels={EXTRA_CHANNELS}
-                mineralChannels={minerals}
-                width={width}
-                gap={gap}
-            />
+            <ChannelTopLabels {...labelProps} />
             <ChannelsView
                 loading={loading}
                 core={core}
@@ -110,22 +115,10 @@ const MineralChannels = React.memo(({
                 setSelectedSpectrum={setSelectedSpectrum}
                 scrollDepthRef={scrollDepthRef}
             />
-            <ChannelBottomLabels
-                extraChannels={EXTRA_CHANNELS}
-                mineralChannels={minerals}
-                width={width}
-                gap={gap}
-            />
+            <ChannelBottomLabels {...labelProps } />
         </div>
     </>
 })
-
-type ChannelLabelsProps = {
-    extraChannels: Array<string>,
-    mineralChannels: Array<string>,
-    width: string,
-    gap: string
-}
 
 const ChannelTopLabels = React.memo(({
     extraChannels, mineralChannels, width, gap
