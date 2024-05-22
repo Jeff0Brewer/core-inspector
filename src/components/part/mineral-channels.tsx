@@ -203,12 +203,14 @@ const ChannelsView = React.memo(({
     const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
     const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
     const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
+    const imgDataSentRef = useRef<boolean>(false)
     const channelsRef = useRef<HTMLDivElement>(null)
     const mousePosRef = useRef<[number, number] | null>(null)
     const { depths } = useCoreMetadata()
 
     useEffect(() => {
         const sources: StringMap<string | HTMLCanvasElement> = {}
+        imgDataSentRef.current = false
 
         extraChannels.forEach(label => {
             switch (label) {
@@ -280,19 +282,32 @@ const ChannelsView = React.memo(({
     }, [spectraWorker, imgDims, core, part])
 
     useEffect(() => {
-        // Read image data from mineral channels once on part change.
-        const imgData: StringMap<ImageData | null> = {}
-        for (const [mineral, img] of Object.entries(mineralMaps)) {
-            imgData[mineral] = getImageData(img)
+        const initAbundanceData = (): void => {
+            // Only read image data once on part change
+            if (imgDataSentRef.current) { return }
+
+            // Read image data from mineral channels on part change.
+            const imgData: StringMap<ImageData | null> = {}
+            for (const [mineral, img] of Object.entries(mineralMaps)) {
+                imgData[mineral] = getImageData(img)
+            }
+
+            // Send image data to worker to read on hover, preventing canvas
+            // reads on the main thread.
+            abundanceWorker?.postMessage({
+                type: 'init',
+                imgData,
+                imgWidth: imgDims[0]
+            })
+
+            imgDataSentRef.current = true
         }
 
-        // Send image data to worker to read on hover, preventing canvas
-        // reads on the main thread.
-        abundanceWorker?.postMessage({
-            type: 'init',
-            imgData,
-            imgWidth: imgDims[0]
-        })
+        const channelsWrap = channelsRef.current
+        channelsWrap?.addEventListener('mouseenter', initAbundanceData)
+        return () => {
+            channelsWrap?.removeEventListener('mouseenter', initAbundanceData)
+        }
     }, [abundanceWorker, imgDims, mineralMaps])
 
     useEffect(() => {
