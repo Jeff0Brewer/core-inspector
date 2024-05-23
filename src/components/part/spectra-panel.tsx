@@ -37,9 +37,9 @@ type CoreWavelengths = Array<number>
 type LibrarySpectra = StringMap<Array<Point>>
 
 type SpectraPanelProps = {
-    selectedSpectrum: Array<number> | null,
-    spectrumPosition: [number, number],
-    maxMineral: string
+    selectedSpectrum?: Array<number> | null,
+    spectrumPosition?: [number, number],
+    maxMineral?: string
 }
 
 const SpectraPanel = React.memo((
@@ -75,9 +75,8 @@ const SpectraPanel = React.memo((
     }, [])
 
     useEffect(() => {
-        const libraryMineral = MINERAL_LIB_MAP[maxMineral]
-        if (libraryMineral) {
-            setLibraryMineral(libraryMineral)
+        if (maxMineral && MINERAL_LIB_MAP[maxMineral]) {
+            setLibraryMineral(MINERAL_LIB_MAP[maxMineral])
         }
     }, [maxMineral])
 
@@ -123,8 +122,8 @@ const SpectraPanel = React.memo((
                 </button>
                 <div className={styles.topBar}>
                     <div className={styles.positionLabel}>
-                        <p>X <span>{spectrumPosition[0]}px</span></p>
-                        <p>Y <span>{spectrumPosition[1]}px</span></p>
+                        <p>X <span>{spectrumPosition?.[0] || 0}px</span></p>
+                        <p>Y <span>{spectrumPosition?.[1] || 0}px</span></p>
                     </div>
                     <div className={styles.downloads}>
                         <button onClick={() => downloadCsv(selectedData)}>
