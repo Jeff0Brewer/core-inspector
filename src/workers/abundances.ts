@@ -9,10 +9,12 @@ onmessage = ({ data }): void => {
         const minerals = Object.keys(imgData)
         pixels = {}
         minerals.forEach(mineral => {
-            const data = imgData[mineral]
-            pixels[mineral] = data !== null ? imageDataToMonochromeBytes(data) : null
+            pixels[mineral] = imageDataToMonochromeBytes(imgData[mineral])
         })
         width = data.imgWidth
+    } else if (data.type === 'hydration') {
+        const imgData: ImageData = data.imgData
+        pixels.hydration = imageDataToMonochromeBytes(imgData)
     } else if (data.type === 'mousePosition') {
         const { x, y } = data
         const rowIndex = Math.round(x)
@@ -28,7 +30,9 @@ onmessage = ({ data }): void => {
     }
 }
 
-function imageDataToMonochromeBytes (imageData: ImageData): Uint8Array {
+function imageDataToMonochromeBytes (imageData: ImageData | null): Uint8Array | null {
+    if (imageData === null) { return null }
+
     const { data } = imageData
     const bytes = new Uint8Array(data.length / 4)
     for (let i = 0; i < bytes.length; i++) {

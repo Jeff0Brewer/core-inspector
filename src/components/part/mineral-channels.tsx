@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, React
 import { BiCross } from 'react-icons/bi'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
+import { loadImageAsync } from '../../lib/load'
 import { StringMap, getImageData, getCssColor } from '../../lib/util'
 import { getRgbPath, getHydrationPath } from '../../lib/path'
 import { isToggleable, getBlendColor } from '../../vis/mineral-blend'
@@ -197,17 +198,21 @@ const ChannelsView = React.memo(({
     setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<StringMap<string | HTMLCanvasElement>>({})
-    const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
-    const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
     const [hoverInfoVisible, setHoverInfoVisible] = useState<boolean>(false)
-    const imgDataSentRef = useRef<boolean>(false)
     const channelsRef = useRef<HTMLDivElement>(null)
     const mousePosRef = useRef<[number, number] | null>(null)
     const { depths } = useCoreMetadata()
 
+    const [spectraWorker, setSpectraWorker] = useState<Worker | null>(null)
+
+    const [abundanceWorker, setAbundanceWorker] = useState<Worker | null>(null)
+    const abundancesSentRef = useRef<boolean>(false)
+    const hydrationSentRef = useRef<boolean>(false)
+
     useEffect(() => {
         const sources: StringMap<string | HTMLCanvasElement> = {}
-        imgDataSentRef.current = false
+        abundancesSentRef.current = false
+        hydrationSentRef.current = false
 
         extraChannels.forEach(label => {
             switch (label) {
@@ -280,8 +285,8 @@ const ChannelsView = React.memo(({
 
     useEffect(() => {
         const initAbundanceData = (): void => {
-            // Only read image data once on part change
-            if (imgDataSentRef.current) { return }
+            // Ensure abundance data is only read once on part change.
+            if (abundancesSentRef.current) { return }
 
             // Read image data from mineral channels on part change.
             const imgData: StringMap<ImageData | null> = {}
@@ -297,7 +302,7 @@ const ChannelsView = React.memo(({
                 imgWidth: imgDims[0]
             })
 
-            imgDataSentRef.current = true
+            abundancesSentRef.current = true
         }
 
         // Read / send image data only on mouse enter into channels to prevent expensive
@@ -308,6 +313,34 @@ const ChannelsView = React.memo(({
             channelsWrap?.removeEventListener('mouseenter', initAbundanceData)
         }
     }, [abundanceWorker, imgDims, mineralMaps])
+
+    useEffect(() => {
+        const initHydrationData = async (): Promise<void> => {
+            // Ensure hydration img data is only read once on part change.
+            if (hydrationSentRef.current) { return }
+
+            const path = sources[HYDRATION_LABEL]
+            if (typeof path !== 'string') { return }
+
+            const img = await loadImageAsync(path)
+            const imgData = getImageData(img)
+
+            abundanceWorker?.postMessage({
+                type: 'hydration',
+                imgData
+            })
+
+            hydrationSentRef.current = true
+        }
+
+        // Read / send image data only on mouse enter into channels to prevent expensive
+        // read operations when navigating between parts without hovering channels.
+        const channelsWrap = channelsRef.current
+        channelsWrap?.addEventListener('mouseenter', initHydrationData)
+        return () => {
+            channelsWrap?.removeEventListener('mouseenter', initHydrationData)
+        }
+    }, [abundanceWorker, sources])
 
     useEffect(() => {
         const updateHoverInfo = (): void => {
