@@ -53,6 +53,11 @@ const BlendMenu = React.memo((
     // setup keyboard shortcuts
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
+            // Don't trigger shortcuts if input element is focused.
+            if (document.activeElement?.tagName.toLowerCase() === 'input') {
+                return
+            }
+
             if (e.key === 'b') {
                 setMonochrome(!monochrome)
                 return
