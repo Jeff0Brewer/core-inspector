@@ -270,12 +270,13 @@ const ScaleColumn = React.memo(({
                 height: `${windowBottom - windowTop}px`
             })
         }
-        updateFinalWindow()
 
         const requestIdRef: ObjectRef<number> = { current: -1 }
         const animateFinalWindow = (): void => {
             animateForDuration(updateFinalWindow, requestIdRef, 200)
         }
+
+        animateFinalWindow()
 
         const zoomSlider = zoomSliderRef.current
         window.addEventListener('wheel', animateFinalWindow)
