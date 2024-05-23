@@ -12,7 +12,7 @@ import InfoHeader from '../../components/part/info-header'
 import BlendMenu from '../../components/blend-menu'
 import MineralChannels from '../../components/part/mineral-channels'
 import CorePanel, { RepresentationSettings, ScrollDepth } from '../../components/part/core-panel'
-import SpectraPanel, { SpectraPanelProps } from '../../components/part/spectra-panel'
+import SpectraPanel, { SpectrumInfo } from '../../components/part/spectra-panel'
 import {
     LineRepresentation,
     RectRepresentation,
@@ -40,7 +40,7 @@ const PartView = React.memo((
 ): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
-    const [selectedSpectrum, setSelectedSpectrum] = useState<SpectraPanelProps>({})
+    const [selectedSpectrum, setSelectedSpectrum] = useState<SpectrumInfo>({})
     const [corePanelOpen, setCorePanelOpen] = useState<boolean>(true)
     const [blendMenuOpen, setBlendMenuOpen] = useState<boolean>(false)
 
@@ -171,7 +171,10 @@ const PartView = React.memo((
                 scrollDepthRef={scrollDepthRef}
                 zoomSliderRef={zoomSliderRef}
             />
-            <SpectraPanel { ...selectedSpectrum } />
+            <SpectraPanel
+                part={part}
+                { ...selectedSpectrum }
+            />
             <div className={styles.blendWrap}>
                 <button
                     className={styles.blendToggle}

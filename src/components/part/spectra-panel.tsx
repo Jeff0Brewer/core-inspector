@@ -36,14 +36,18 @@ type Point = { x: number, y: number }
 type CoreWavelengths = Array<number>
 type LibrarySpectra = StringMap<Array<Point>>
 
-type SpectraPanelProps = {
+type SpectrumInfo = {
     selectedSpectrum?: Array<number> | null,
     spectrumPosition?: [number, number],
     maxMineral?: string
 }
 
+type SpectraPanelProps = SpectrumInfo & {
+    part: string
+}
+
 const SpectraPanel = React.memo((
-    { selectedSpectrum, spectrumPosition, maxMineral }: SpectraPanelProps
+    { part, selectedSpectrum, spectrumPosition, maxMineral }: SpectraPanelProps
 ): ReactElement => {
     const [coreWavelengths, setCoreWavelengths] = useState<CoreWavelengths | null>(null)
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra | null>(null)
@@ -56,7 +60,12 @@ const SpectraPanel = React.memo((
     const [open, setOpen] = useState<boolean>(false)
     const render = useCollapseRender(open)
 
-    // open spectra panel on spectrum change
+    // Close panel on part change.
+    useEffect(() => {
+        setOpen(false)
+    }, [part])
+
+    // Open spectra panel on selected spectrum change.
     useEffect(() => {
         setOpen(!!selectedSpectrum?.length)
     }, [selectedSpectrum])
@@ -228,30 +237,30 @@ function getLibraryData (selected: Array<Point>, library: Array<Point>): Array<P
         return []
     }
 
-    // interpolate library spectra values share same wavelength (x) as selected spectrum
+    // Interpolate library spectra values share same wavelength (x) as selected spectrum.
     const interpolated: Array<Point> = []
     let libInd = 1
     for (let i = 0; i < selected.length; i++) {
-        // get wavelength to align to from selected spectra
+        // Get wavelength to align to from selected spectra.
         const wavelength = selected[i].x
 
-        // increment index in original library data until
-        // wavelength is between index and index - 1
+        // Increment index in original library data until
+        // wavelength is between index and index - 1.
         while (libInd + 1 < library.length && library[libInd].x < wavelength) {
             libInd++
         }
 
-        // calculate how far curr wavelength is between library wavelengths
+        // Calculate how far curr wavelength is between library wavelengths.
         const t = (wavelength - library[libInd - 1].x) / (library[libInd].x - library[libInd - 1].x)
 
-        // interpolate library data to align with selected wavelength
+        // Interpolate library data to align with selected wavelength.
         interpolated.push({
             x: wavelength,
             y: lerp(library[libInd - 1].y, library[libInd].y, t)
         })
     }
 
-    // normalize reflectance values to align with selected spectrum
+    // Normalize reflectance values to align with selected spectrum.
     let selectedAvg = 0
     for (let i = 0; i < selected.length; i++) {
         selectedAvg += selected[i].y
@@ -554,5 +563,5 @@ function excludeFirstLastTick (
         : value
 }
 
-export type { SpectraPanelProps }
+export type { SpectrumInfo }
 export default SpectraPanel
