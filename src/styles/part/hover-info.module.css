@@ -55,10 +55,6 @@
     font-size: 0.4rem;
 }
 
-.hydration {
-    background-color: #336490;
-}
-
 .abundance-bar > .hydration-label {
     width: 16px;
 }
@@ -66,7 +62,7 @@
 .spectrum {
     position: relative;
     width: 100%;
-    height: 40px;
+    height: 70px;
 }
 
 .spectrum svg {
