@@ -72,6 +72,13 @@ function HoverInfo ({
             className={`${styles.hoverInfo} ${visible && styles.visible}`}
         >
             <div className={styles.abundances}>
+                <div className={styles.abundanceBar} key={'hydration'}>
+                    <div
+                        className={styles.abundance}
+                        style={{ height: `${(abundances?.hydration || 0) * 80}%` }}
+                    ></div>
+                    <p className={styles.hydrationLabel}>h2o</p>
+                </div>
                 {mineralChannels.map(mineral =>
                     <div className={styles.abundanceBar} key={mineral}>
                         <div
