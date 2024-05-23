@@ -14,7 +14,7 @@ import LoadIcon from '../../components/generic/load-icon'
 import AbundanceWorker from '../../workers/abundances?worker'
 import SpectraWorker from '../../workers/spectra?worker'
 import { ScrollDepth } from '../../components/part/core-panel'
-import { SpectraPanelProps } from '../../components/part/spectra-panel'
+import { SpectrumInfo } from '../../components/part/spectra-panel'
 import styles from '../../styles/part/mineral-channels.module.css'
 
 const VISUAL_LABEL = 'false color'
@@ -37,7 +37,7 @@ type MineralChannelsProps = {
     part: string,
     minerals: Array<string>,
     mineralMaps: StringMap<HTMLImageElement | null>,
-    setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    setSelectedSpectrum: (s: SpectrumInfo) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>,
     zoomSliderRef: RefObject<HTMLInputElement>
 }
@@ -189,7 +189,7 @@ type ChannelsViewProps = {
     imgDims: [number, number],
     viewDims: [number, number],
     viewGap: number,
-    setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    setSelectedSpectrum: (s: SpectrumInfo) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>
 }
 
@@ -282,6 +282,8 @@ const ChannelsView = React.memo(({
     }, [spectraWorker, imgDims, core, part])
 
     useEffect(() => {
+        if (!abundanceWorker || !Object.keys(mineralMaps).length) { return }
+
         const initAbundanceData = async (): Promise<void> => {
             // Ensure abundance data is only read once on part change.
             if (abundancesSentRef.current) { return }
@@ -299,7 +301,7 @@ const ChannelsView = React.memo(({
 
             // Send image data to worker to read on hover, preventing canvas
             // reads on the main thread.
-            abundanceWorker?.postMessage({
+            abundanceWorker.postMessage({
                 type: 'init',
                 imgData,
                 imgWidth: imgDims[0]

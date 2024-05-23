@@ -12,9 +12,6 @@ onmessage = ({ data }): void => {
             pixels[mineral] = imageDataToMonochromeBytes(imgData[mineral])
         })
         width = data.imgWidth
-    } else if (data.type === 'hydration') {
-        const imgData: ImageData = data.imgData
-        pixels.hydration = imageDataToMonochromeBytes(imgData)
     } else if (data.type === 'mousePosition') {
         const { x, y } = data
         const rowIndex = Math.round(x)
