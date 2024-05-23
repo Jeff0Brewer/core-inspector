@@ -1,7 +1,8 @@
 import {
     Chart, ChartData, ChartOptions,
     Plugin, Tooltip, Filler, Tick,
-    LinearScale, LineElement, PointElement
+    LinearScale, LineElement, PointElement,
+    TooltipCallbacks
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import React, { ReactElement, useState, useEffect } from 'react'
@@ -109,8 +110,8 @@ const SpectraPanel = React.memo((
         const deltaData = getDeltaData(selectedData, libraryData)
         // TODO: find a better way to plot dashed axis
         const deltaAxis: Array<Point> = [
-            { x: deltaData[0].x, y: 0 },
-            { x: deltaData[deltaData.length - 1].x, y: 0 }
+            { x: deltaData[0].x, y: 1 },
+            { x: deltaData[deltaData.length - 1].x, y: 1 }
         ]
         setDeltaPlotData({
             datasets: [
@@ -159,7 +160,7 @@ const SpectraPanel = React.memo((
                         </p>
                         <Dropdown
                             items={Object.keys(librarySpectra || {})}
-                            selected={`∆ ${libraryMineral}`}
+                            selected={libraryMineral}
                             setSelected={setLibraryMineral}
                             customStyles={spectraDropdownStyles}
                         />
@@ -295,7 +296,7 @@ function getDeltaData (selected: Array<Point>, library: Array<Point>): Array<Poi
         }
         delta.push({
             x: selected[i].x,
-            y: selected[i].y / library[i].y - 1.0
+            y: selected[i].y / library[i].y
         })
     }
     return delta
@@ -327,6 +328,32 @@ const DATASET_OPTIONS = {
     }
 }
 
+const TOOLTIP_OPTIONS = {
+    mode: 'nearest',
+    position: 'nearest',
+    intersect: true,
+    usePointStyle: true,
+    cornerRadius: 3,
+    boxPadding: 5,
+    backgroundColor: 'rgba(50, 50, 50, 0.8)',
+    padding: 5,
+    titleFont: {
+        size: 10,
+        weight: 'normal'
+    },
+    bodyFont: {
+        size: 10,
+        weight: 'normal'
+    },
+    callbacks: {
+        title: (items) => {
+            const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
+            return `${wavelength} nm`
+        }
+    // Bully the type since chart.js doesn't have optional properties in tooltip config.
+    } as TooltipCallbacks<'line'>
+} as const
+
 const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -337,40 +364,12 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
             hitRadius: 30
         }
     },
-    plugins: {
-        tooltip: {
-            mode: 'nearest',
-            position: 'nearest',
-            intersect: true,
-            usePointStyle: true,
-            cornerRadius: 3,
-            boxPadding: 5,
-            backgroundColor: 'rgba(50, 50, 50, 0.8)',
-            padding: 5,
-            titleFont: {
-                size: 10,
-                weight: 'normal'
-            },
-            bodyFont: {
-                size: 10,
-                weight: 'normal'
-            },
-            callbacks: {
-                title: (items) => {
-                    const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
-                    return `${wavelength} nm`
-                }
-            }
-
-        }
-    },
+    plugins: { tooltip: TOOLTIP_OPTIONS },
     scales: {
         x: {
             type: 'linear',
             bounds: 'data',
-            border: {
-                color: '#fff'
-            },
+            border: { color: '#fff' },
             grid: {
                 tickColor: '#ccc',
                 drawOnChartArea: false
@@ -400,9 +399,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
         y: {
             type: 'linear',
             bounds: 'ticks',
-            border: {
-                color: '#fff'
-            },
+            border: { color: '#fff' },
             grid: {
                 tickColor: '#ccc',
                 drawOnChartArea: false
@@ -434,35 +431,7 @@ const MAIN_PLOT_OPTIONS: ChartOptions<'line'> = {
 const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: {
-        tooltip: {
-            mode: 'nearest',
-            position: 'nearest',
-            intersect: true,
-            backgroundColor: 'rgba(50, 50, 50, 0.8)',
-            displayColors: false,
-            padding: 5,
-            titleFont: {
-                size: 10,
-                weight: 'normal'
-            },
-            bodyFont: {
-                size: 10,
-                weight: 'normal'
-            },
-            callbacks: {
-                title: (items) => {
-                    const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
-                    return `${wavelength} nm`
-                },
-                label: (item) => {
-                    const deltaValue = parseFloat(item.formattedValue).toFixed(3)
-                    return `${deltaValue} ∆`
-                }
-            }
-
-        }
-    },
+    plugins: { tooltip: TOOLTIP_OPTIONS },
     elements: {
         point: {
             radius: 0,
@@ -474,12 +443,8 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
         x: {
             type: 'linear',
             bounds: 'data',
-            border: {
-                display: false
-            },
-            position: {
-                y: 0
-            },
+            border: { display: false },
+            position: { y: 1 },
             grid: {
                 tickColor: '#ccc',
                 tickLength: 20,
@@ -502,40 +467,20 @@ const DELTA_PLOT_OPTIONS: ChartOptions<'line'> = {
         y: {
             type: 'linear',
             bounds: 'ticks',
-            min: -2,
-            max: 2,
+            min: -1,
+            max: 3,
             title: {
                 display: true,
-                text: '∆ REFLECTANCE',
-                padding: {
-                    bottom: 15
-                },
+                text: ['REFLECTANCE', 'RATIO'],
+                padding: { bottom: 17 },
                 font: {
                     size: 12,
                     weight: 200
                 }
             },
-            ticks: {
-                display: true,
-                font: {
-                    size: 10,
-                    weight: 150
-                },
-                minRotation: 90,
-                maxRotation: 90,
-                callback: (value, _index, _values) => {
-                    if (value === '0' || value === 0) {
-                        return '∆'
-                    }
-                    return undefined
-                }
-            },
-            border: {
-                display: false
-            },
-            grid: {
-                display: false
-            }
+            ticks: { display: false },
+            border: { display: false },
+            grid: { display: false }
         }
     }
 }
