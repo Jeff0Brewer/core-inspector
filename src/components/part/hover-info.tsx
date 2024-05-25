@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, ReactElement } from 'react'
 import { usePopupPosition } from '../../hooks/popup-position'
-import { SpectraPanelProps } from '../../components/part/spectra-panel'
+import { SpectrumInfo } from '../../components/part/spectra-panel'
 import { StringMap } from '../../lib/util'
 import styles from '../../styles/part/hover-info.module.css'
 
@@ -9,7 +9,7 @@ type HoverInfoProps = {
     mineralChannels: Array<string>,
     abundanceWorker: Worker | null,
     spectrumWorker: Worker | null,
-    setSelectedSpectrum: (s: SpectraPanelProps) => void,
+    setSelectedSpectrum: (s: SpectrumInfo) => void,
 }
 
 function HoverInfo ({
