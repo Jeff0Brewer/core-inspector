@@ -1,4 +1,5 @@
 import React, { useState, useRef, ReactElement } from 'react'
+import { useIdContext } from '../../hooks/id-context'
 import { useBlendState, useBlending } from '../../hooks/blend-context'
 import { isToggleable, BlendParams } from '../../vis/mineral-blend'
 import { getCssColor } from '../../lib/util'
@@ -8,14 +9,14 @@ import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/mineral-controls.module.css'
 
 type MineralControlsProps = {
-    vis: CoreRenderer | null,
-   minerals: Array<string>
+    vis: CoreRenderer | null
 }
 
 const MineralControls = React.memo((
-    { vis, minerals }: MineralControlsProps
+    { vis }: MineralControlsProps
 ): ReactElement => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false)
+    const { minerals } = useIdContext()
     const {
         magnitudes,
         visibilities,
@@ -126,7 +127,7 @@ const MineralControls = React.memo((
                     <img src={BlendIcon} />
                 </button>
             </div>
-            <BlendMenu open={menuOpen} minerals={minerals} />
+            <BlendMenu open={menuOpen} />
         </div>
     )
 })

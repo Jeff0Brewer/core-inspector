@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, ReactElement } from 'react'
 import { useRendererDrop } from '../../hooks/renderer-drop'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
+import { useIdContext } from '../../hooks/id-context'
 import { loadImageAsync } from '../../lib/load'
 import { getCorePath } from '../../lib/path'
 import { notNull } from '../../lib/util'
@@ -13,21 +14,13 @@ import HoverInfo from '../../components/core/hover-info'
 import PanScrollbar from '../../components/core/pan-scrollbar'
 import styles from '../../styles/core/layout.module.css'
 
-type CoreViewProps = {
-    cores: Array<string>,
-    minerals: Array<string>,
-    core: string,
-    setCore: (c: string) => void,
-    setPart: (p: string) => void
-}
-
-const CoreView = React.memo((
-    { cores, minerals, core, setCore, setPart }: CoreViewProps
-): ReactElement => {
+const CoreView = React.memo((): ReactElement => {
     const [vis, setVis] = useState<CoreRenderer | null>(null)
     const [loadError, setLoadError] = useState<boolean>(false)
     const frameIdRef = useRef<number>(-1)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    const { core, minerals, setPart } = useIdContext()
     const { partIds, tiles, metadataLoaded } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
@@ -113,18 +106,13 @@ const CoreView = React.memo((
     return <>
         <LoadIcon loading={!vis && !loadError} showDelayMs={0} />
         { !loadError && <>
-            <VisSettings
-                vis={vis}
-                cores={cores}
-                core={core}
-                setCore={setCore}
-            />
-            <ViewControls vis={vis} />
             <canvas
                 ref={canvasRef}
                 className={`${styles.visCanvas} ${!!vis && styles.visible}`}
             ></canvas>
-            <MineralControls vis={vis} minerals={minerals} />
+            <VisSettings vis={vis} />
+            <ViewControls vis={vis} />
+            <MineralControls vis={vis} />
             <HoverInfo vis={vis} />
             <PanScrollbar vis={vis} />
         </> }

@@ -11,6 +11,7 @@ import { StringMap, lerp, downloadText } from '../../lib/util'
 import { fetchJson } from '../../lib/load'
 import Dropdown from '../../components/generic/dropdown'
 import DownloadIcon from '../../assets/download-icon.svg'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
@@ -37,18 +38,14 @@ type Point = { x: number, y: number }
 type CoreWavelengths = Array<number>
 type LibrarySpectra = StringMap<Array<Point>>
 
-type SpectrumInfo = {
+type SpectraPanelProps = {
     selectedSpectrum?: Array<number> | null,
     spectrumPosition?: [number, number],
     maxMineral?: string
 }
 
-type SpectraPanelProps = SpectrumInfo & {
-    part: string
-}
-
 const SpectraPanel = React.memo((
-    { part, selectedSpectrum, spectrumPosition, maxMineral }: SpectraPanelProps
+    { selectedSpectrum, spectrumPosition, maxMineral }: SpectraPanelProps
 ): ReactElement => {
     const [coreWavelengths, setCoreWavelengths] = useState<CoreWavelengths | null>(null)
     const [librarySpectra, setLibrarySpectra] = useState<LibrarySpectra | null>(null)
@@ -60,6 +57,7 @@ const SpectraPanel = React.memo((
 
     const [open, setOpen] = useState<boolean>(false)
     const render = useCollapseRender(open)
+    const { part } = usePartIdContext()
 
     // Close panel on part change.
     useEffect(() => {
@@ -508,5 +506,6 @@ function excludeFirstLastTick (
         : value
 }
 
+type SpectrumInfo = SpectraPanelProps
 export type { SpectrumInfo }
 export default SpectraPanel

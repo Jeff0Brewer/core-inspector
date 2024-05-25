@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, ReactElement, RefObject, MutableRefObject } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, ReactElement, RefObject, MutableRefObject } from 'react'
 import { PiArrowsVerticalLight } from 'react-icons/pi'
 import { useLastState } from '../../hooks/last-state'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import { usePopupPosition } from '../../hooks/popup-position'
@@ -36,21 +37,20 @@ type ScrollDepth = {
 
 type CorePanelProps = {
     vis: PartRenderer | null,
-    part: string,
     representations: RepresentationSettings,
-    setPart: (p: string | null) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>,
     zoomSliderRef: RefObject<HTMLInputElement>,
     open: boolean
 }
 
 const CorePanel = React.memo(({
-    vis, part, representations, setPart, open, scrollDepthRef, zoomSliderRef
+    vis, representations, open, scrollDepthRef, zoomSliderRef
 }: CorePanelProps): ReactElement => {
     const [columns, setColumns] = useState<Array<CoreColumn>>([])
     const [hoveredPart, setHoveredPart] = useState<string | null>(null)
     const columnsRef = useRef<HTMLDivElement>(null)
 
+    const { part } = usePartIdContext()
     const { depths, topDepth: minDepth, bottomDepth: maxDepth } = useCoreMetadata()
     const render = useCollapseRender(open)
 
@@ -111,11 +111,6 @@ const CorePanel = React.memo(({
         }
     }, [part, representations, depths, minDepth, maxDepth])
 
-    const navigateToPart = useCallback((part: string | null): void => {
-        setPart(part)
-        setHoveredPart(null)
-    }, [setPart])
-
     return <>
         <div className={styles.topLabels}>
             { render && columns.map((column, i) =>
@@ -127,10 +122,8 @@ const CorePanel = React.memo(({
             { render && columns.map((_, i) =>
                 <ScaleColumn
                     vis={vis}
-                    part={part}
                     columns={columns}
                     index={i}
-                    setPart={navigateToPart}
                     setHoveredPart={setHoveredPart}
                     scrollDepthRef={scrollDepthRef}
                     zoomSliderRef={zoomSliderRef}
@@ -152,17 +145,15 @@ const CorePanel = React.memo(({
 
 type ScaleColumnProps = {
     vis: PartRenderer | null,
-    part: string,
     columns: Array<CoreColumn>,
     index: number,
-    setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>,
     zoomSliderRef: RefObject<HTMLInputElement>,
 }
 
 const ScaleColumn = React.memo(({
-    vis, part, columns, index, setPart, setHoveredPart, scrollDepthRef, zoomSliderRef
+    vis, columns, index, setHoveredPart, scrollDepthRef, zoomSliderRef
 }: ScaleColumnProps): ReactElement => {
     const [visibleParts, setVisibleParts] = useState<Array<string>>([])
     const [partCenter, setPartCenter] = useState<number>(0)
@@ -172,8 +163,9 @@ const ScaleColumn = React.memo(({
     const partRef = useRef<HTMLDivElement>(null)
     const columnRef = useRef<HTMLDivElement>(null)
     const windowRef = useRef<HTMLDivElement>(null)
-    const lastPart = useLastState(part)
+    const { part } = usePartIdContext()
     const { partIds, depths } = useCoreMetadata()
+    const lastPart = useLastState(part)
 
     const column = columns[index]
     const RepresentationElement = column.element
@@ -304,11 +296,9 @@ const ScaleColumn = React.memo(({
             <div className={styles.representation} style={representationStyle}>
                 <RepresentationElement
                     vis={vis}
-                    part={part}
                     parts={visibleParts}
                     column={column}
                     widthM={PART_WIDTH_M}
-                    setPart={setPart}
                     setHoveredPart={setHoveredPart}
                     setCenter={setPartCenter}
                     setCenterWindow={setPartCenterWindow}
