@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { getCoreId, getPartId } from '../../lib/path'
+import { getPartId } from '../../lib/path'
 import Logo from '../../components/logo'
 import styles from '../../styles/part/info-header.module.css'
 
@@ -16,7 +16,7 @@ const PartInfoHeader = React.memo((): ReactElement => {
                 <p>
                     core
                     <span>
-                        {getCoreId(core)}
+                        {core}
                     </span>
                 </p>
                 <p>

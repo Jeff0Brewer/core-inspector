@@ -1,7 +1,11 @@
 import { useState, ReactElement, ReactNode } from 'react'
 import IdContext from '../hooks/id-context'
 
-const CORES = ['gt1', 'gt2', 'gt3']
+const CORES = [
+    'GT1A',
+    'GT2A',
+    'GT3A'
+]
 
 const MINERALS = [
     'chlorite',
