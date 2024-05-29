@@ -103,24 +103,26 @@ const CoreView = React.memo((): ReactElement => {
         }
     }, [vis, setPart])
 
-    return <>
-        <LoadIcon loading={!vis && !loadError} showDelayMs={0} />
-        { !loadError && <>
-            <canvas
-                ref={canvasRef}
-                className={`${styles.visCanvas} ${!!vis && styles.visible}`}
-            ></canvas>
-            <VisSettings vis={vis} />
-            <ViewControls vis={vis} />
-            <MineralControls vis={vis} />
-            <HoverInfo vis={vis} />
-            <PanScrollbar vis={vis} />
-        </> }
-        { loadError &&
-            <p className={styles.dataMissing}>
-                data missing
-            </p> }
-    </>
+    return (
+        <div className={styles.coreView}>
+            <LoadIcon loading={!vis && !loadError} showDelayMs={0} />
+            { !loadError && <>
+                <canvas
+                    ref={canvasRef}
+                    className={`${styles.visCanvas} ${!!vis && styles.visible}`}
+                ></canvas>
+                <VisSettings vis={vis} />
+                <ViewControls vis={vis} />
+                <MineralControls vis={vis} />
+                <HoverInfo vis={vis} />
+                <PanScrollbar vis={vis} />
+            </> }
+            { loadError &&
+                <p className={styles.dataMissing}>
+                    data missing
+                </p> }
+        </div>
+    )
 })
 
 export default CoreView

@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useRef } from 'react'
 
 type IdContextProps<PartType> = {
     core: string,
@@ -20,11 +20,23 @@ const useIdContext = (): IdContextProps<string | null> => {
 }
 
 const usePartIdContext = (): IdContextProps<string> => {
-    const context = useIdContext()
-    if (context.part === null) {
-        throw new Error('No part selected for part view')
+    const context = useContext(IdContext)
+    const validPartRef = useRef<string | null>(null)
+
+    if (context === null) {
+        throw new Error('usePartIdContext must be called from a child of IdProvider')
     }
-    return context as IdContextProps<string>
+
+    const part = context.part || validPartRef.current
+    validPartRef.current = part
+    if (part === null) {
+        throw new Error('usePartIdContext must be called after a part has been selected')
+    }
+
+    const partContext = { ...context }
+    partContext.part = part
+
+    return partContext as IdContextProps<string>
 }
 
 export default IdContext

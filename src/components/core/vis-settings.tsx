@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactElement } from 'react'
+import React, { useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { padZeros, formatFloat } from '../../lib/util'
