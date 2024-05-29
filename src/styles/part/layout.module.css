@@ -7,7 +7,7 @@
 
     display: grid;
     grid-template-columns: 70px var(--core-panel-width, 0) 1fr;
-    grid-template-rows: 40px 30px 1fr 32px;
+    grid-template-rows: 40px 30px 1fr 37px;
     grid-template-areas:
         "top-left top-left top-right"
         "label-punch label-punch label-main"

@@ -8,21 +8,24 @@
 
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 30px 1fr 32px;
+    grid-template-rows: 30px 1fr 30px;
     grid-template-areas:
         "top-label"
         "channels"
         "bottom-label";
-
-    /* hide default scrollbars */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
 }
 
 .content::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    height: 7px;
+}
+
+.content::-webkit-scrollbar-track {
+    background-color: #2b2b2b;
+}
+
+.content::-webkit-scrollbar-thumb {
+    position: relative;
+    background-color: #606060;
 }
 
 .top-labels, .bottom-labels, .channels {
