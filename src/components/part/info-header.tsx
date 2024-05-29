@@ -3,6 +3,7 @@ import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { getPartId } from '../../lib/path'
 import Logo from '../../components/logo'
+import DownloadLink from '../../components/generic/download-link'
 import styles from '../../styles/part/info-header.module.css'
 
 const PartInfoHeader = React.memo((): ReactElement => {
@@ -13,12 +14,15 @@ const PartInfoHeader = React.memo((): ReactElement => {
         <div className={styles.header}>
             <Logo />
             <div className={styles.partInfo}>
-                <p>
-                    core
-                    <span>
-                        {core}
-                    </span>
-                </p>
+                <div className={styles.coreWrap}>
+                    <DownloadLink />
+                    <p>
+                        core
+                        <span>
+                            {core}
+                        </span>
+                    </p>
+                </div>
                 <p>
                     section
                     <span>

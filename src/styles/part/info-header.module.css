@@ -31,3 +31,9 @@
 .lowercase {
     text-transform: lowercase;
 }
+
+.core-wrap {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
