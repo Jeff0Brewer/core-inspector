@@ -450,7 +450,7 @@ const MineralChannel = React.memo((
 
     return (
         <div className={styles.channel} onClick={onClick}>
-            <div ref={channelRef} className={`${!loadError && customClass}`}>
+            <div ref={channelRef} className={customClass}>
                 { typeof source !== 'string' &&
                     <CanvasRenderer
                         canvas={source}
