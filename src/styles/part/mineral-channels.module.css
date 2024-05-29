@@ -139,6 +139,7 @@
     width: fit-content;
     min-width: 100%;
     overflow-y: scroll;
+    background-color: #202020;
 
     /* hide default scrollbars */
     scrollbar-width: none;
@@ -156,7 +157,6 @@
     display: flex;
     background-image: url('../../assets/ruler-bg.svg');
     background-repeat: infinite;
-    background-color: #202020;
 
     transition: opacity 300ms ease 200ms;
     opacity: 1;
