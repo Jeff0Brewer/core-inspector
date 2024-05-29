@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, ReactElement, ReactNode } from 'react'
 import { vec3 } from 'gl-matrix'
+import { useIdContext } from '../hooks/id-context'
 import { StringMap } from '../lib/util'
 import { fetchJson } from '../lib/load'
 import { BlendMode, BlendParams } from '../vis/mineral-blend'
@@ -24,13 +25,13 @@ function colorsToPalettes (colorsList: Array<GenericColors>): Array<GenericPalet
 }
 
 type BlendProviderProps = {
-    minerals: Array<string>,
     children: ReactNode
 }
 
 function BlendProvider (
-    { minerals, children }: BlendProviderProps
+    { children }: BlendProviderProps
 ): ReactElement {
+    const { minerals } = useIdContext()
     const [magnitudes, setMagnitudes] = useState<StringMap<number>>(
         Object.fromEntries(minerals.map(mineral => [mineral, 1]))
     )

@@ -112,6 +112,9 @@
 
     /* TODO: fix size value */
     min-width: 390px;
+    animation: fade-in 300ms ease 300ms;
+    animation-fill-mode: forwards;
+    opacity: 0;
 }
 
 .column {
@@ -209,4 +212,13 @@
 
 .tooltip-visible {
     opacity: 1;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

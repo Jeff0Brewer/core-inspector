@@ -1,15 +1,12 @@
 import React, { ReactElement } from 'react'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
-import { getCoreId, getPartId } from '../../lib/path'
+import { getPartId } from '../../lib/path'
 import Logo from '../../components/logo'
 import styles from '../../styles/part/info-header.module.css'
 
-type PartInfoHeaderProps = {
-    core: string,
-    part: string
-}
-
-const PartInfoHeader = React.memo(({ core, part }: PartInfoHeaderProps): ReactElement => {
+const PartInfoHeader = React.memo((): ReactElement => {
+    const { core, part } = usePartIdContext()
     const { depths } = useCoreMetadata()
 
     return (
@@ -19,7 +16,7 @@ const PartInfoHeader = React.memo(({ core, part }: PartInfoHeaderProps): ReactEl
                 <p>
                     core
                     <span>
-                        {getCoreId(core)}
+                        {core}
                     </span>
                 </p>
                 <p>

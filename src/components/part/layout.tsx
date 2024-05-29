@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, ReactElement } from 'react'
 import { PiCaretLeftBold } from 'react-icons/pi'
 import { useBlending } from '../../hooks/blend-context'
 import { useRendererDrop } from '../../hooks/renderer-drop'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { loadImageAsync } from '../../lib/load'
 import { StringMap, notNull } from '../../lib/util'
@@ -28,16 +29,7 @@ const CORE_PANEL_REPRESENTATIONS: RepresentationSettings = [
     { element: ChannelPunchcardRepresentation, largeWidth: true }
 ]
 
-type PartViewProps = {
-    part: string,
-    core: string,
-    minerals: Array<string>,
-    setPart: (p: string | null) => void
-}
-
-const PartView = React.memo((
-    { part, core, minerals, setPart }: PartViewProps
-): ReactElement => {
+const PartView = React.memo((): ReactElement => {
     const [vis, setVis] = useState<PartRenderer | null>(null)
     const [mineralMaps, setMineralMaps] = useState<StringMap<HTMLImageElement | null>>({})
     const [selectedSpectrum, setSelectedSpectrum] = useState<SpectrumInfo>({})
@@ -48,6 +40,7 @@ const PartView = React.memo((
     const zoomSliderRef = useRef<HTMLInputElement>(null)
     const scrollDepthRef = useRef<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
 
+    const { core, minerals, part, setPart } = usePartIdContext()
     const { partIds, tiles } = useCoreMetadata()
 
     // Ensures vis gl resources are freed when renderer changes.
@@ -144,7 +137,7 @@ const PartView = React.memo((
                     <PiCaretLeftBold />
                 </button>
             </div>
-            <InfoHeader core={core} part={part} />
+            <InfoHeader />
             <button
                 className={styles.corePanelToggle}
                 onClick={() => setCorePanelOpen(!corePanelOpen)}
@@ -155,26 +148,18 @@ const PartView = React.memo((
             <CorePanel
                 open={corePanelOpen}
                 vis={vis}
-                part={part}
                 representations={CORE_PANEL_REPRESENTATIONS}
-                setPart={setPart}
                 scrollDepthRef={scrollDepthRef}
                 zoomSliderRef={zoomSliderRef}
             />
             <MineralChannels
                 vis={vis}
-                core={core}
-                part={part}
-                minerals={minerals}
                 mineralMaps={mineralMaps}
                 setSelectedSpectrum={setSelectedSpectrum}
                 scrollDepthRef={scrollDepthRef}
                 zoomSliderRef={zoomSliderRef}
             />
-            <SpectraPanel
-                part={part}
-                { ...selectedSpectrum }
-            />
+            <SpectraPanel { ...selectedSpectrum } />
             <div className={styles.blendWrap}>
                 <button
                     className={styles.blendToggle}
@@ -183,7 +168,7 @@ const PartView = React.memo((
                 >
                     <img src={BlendIcon} />
                 </button>
-                <BlendMenu open={blendMenuOpen} minerals={minerals} />
+                <BlendMenu open={blendMenuOpen} />
             </div>
         </div>
     )

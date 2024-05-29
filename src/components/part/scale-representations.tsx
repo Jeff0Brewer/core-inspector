@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, ReactElement, MemoExoticComponent, RefObject } from 'react'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { get2dContext, lerp, StringMap } from '../../lib/util'
@@ -10,13 +11,11 @@ import styles from '../../styles/part/scale-representations.module.css'
 
 type ScaleRepresentationProps = {
     vis: PartRenderer | null,
-    part: string,
     parts: Array<string>,
     column: CoreColumn,
     widthM: number,
     setCenter: (c: number) => void,
     setCenterWindow: (c: number) => void,
-    setPart: (p: string | null) => void,
     setHoveredPart: (p: string | null) => void,
     partRef: RefObject<HTMLDivElement>
 }
@@ -24,10 +23,11 @@ type ScaleRepresentationProps = {
 type RepresentationElement = MemoExoticComponent<(p: ScaleRepresentationProps) => ReactElement>
 
 const LineRepresentation = React.memo((
-    { part, setCenter, setCenterWindow, setPart, setHoveredPart }: ScaleRepresentationProps
+    { setCenter, setCenterWindow, setHoveredPart }: ScaleRepresentationProps
 ): ReactElement => {
     const lineRef = useRef<HTMLDivElement>(null)
     const hoverRef = useRef<HTMLDivElement>(null)
+    const { part, setPart } = usePartIdContext()
     const { partIds, topDepth, bottomDepth, depths } = useCoreMetadata()
 
     // Calculate positioning parameters from depth values. Don't need to reference
@@ -72,6 +72,7 @@ const LineRepresentation = React.memo((
         const part = getHoveredPart(e)
         if (part) {
             setPart(part)
+            setHoveredPart(null)
         }
     }
 
@@ -89,12 +90,13 @@ const LineRepresentation = React.memo((
 })
 
 const RectRepresentation = React.memo(({
-    part, parts, column, widthM, setCenter, setPart, setHoveredPart, setCenterWindow, partRef
+    parts, column, widthM, setCenter, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
-    const { depths } = useCoreMetadata()
     const wrapRef = useRef<HTMLDivElement>(null)
+    const { part, setPart } = usePartIdContext()
+    const { depths } = useCoreMetadata()
 
     const { mToPx, gap } = column
     usePartRepresentationPositioning(
@@ -119,9 +121,12 @@ const RectRepresentation = React.memo(({
                     <div
                         {...refProp}
                         className={styles.rect}
-                        onClick={() => setPart(id)}
                         onMouseEnter={() => setHoveredPart(id)}
                         onMouseLeave={() => setHoveredPart(null)}
+                        onClick={() => {
+                            setPart(id)
+                            setHoveredPart(null)
+                        }}
                         style={{
                             width: `${widthM * mToPx}px`,
                             height: `${heightM * mToPx}px`
@@ -149,16 +154,17 @@ const DEFAULT_CANVAS_SPACER: ReactElement = (
 )
 
 const CanvasRepresentation = React.memo(({
-    part, parts, column, canvasCtxs, widthM,
-    setCenter, setPart, setHoveredPart, setCenterWindow, partRef,
+    parts, column, canvasCtxs, widthM,
+    setCenter, setHoveredPart, setCenterWindow, partRef,
     widthScale = 1, canvasSpacer = DEFAULT_CANVAS_SPACER, customRender = DEFAULT_CANVAS_RENDER
 }: CanvasRepresentationProps): ReactElement => {
     const [paddingTop, setPaddingTop] = useState<number>(0)
     const [paddingBottom, setPaddingBottom] = useState<number>(0)
     const wrapRef = useRef<HTMLDivElement>(null)
-    const { depths } = useCoreMetadata()
 
     const { mToPx, gap } = column
+    const { part, setPart } = usePartIdContext()
+    const { depths } = useCoreMetadata()
     usePartRepresentationPositioning(
         part, parts, column,
         setCenter, setCenterWindow, setPaddingTop, setPaddingBottom
@@ -185,9 +191,12 @@ const CanvasRepresentation = React.memo(({
                         <div
                             ref={ id === part ? partRef : null }
                             className={styles.canvas}
-                            onClick={() => setPart(id)}
                             onMouseEnter={() => setHoveredPart(id)}
                             onMouseLeave={() => setHoveredPart(null)}
+                            onClick={() => {
+                                setPart(id)
+                                setHoveredPart(null)
+                            }}
                         >
                             { customRender(
                                 canvasCtxs[id]
@@ -208,8 +217,8 @@ const CanvasRepresentation = React.memo(({
 })
 
 const PunchcardRepresentation = React.memo(({
-    vis, part, parts, column, widthM,
-    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
+    vis, parts, column, widthM,
+    setCenter, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const canvasCtxs = usePartCanvasCtxs(parts)
     const blending = useBlendState()
@@ -227,7 +236,6 @@ const PunchcardRepresentation = React.memo(({
     return (
         <CanvasRepresentation
             vis={vis}
-            part={part}
             parts={parts}
             column={column}
             partRef={partRef}
@@ -235,15 +243,14 @@ const PunchcardRepresentation = React.memo(({
             widthM={widthM}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
-            setPart={setPart}
             setHoveredPart={setHoveredPart}
         />
     )
 })
 
 const ChannelPunchcardRepresentation = React.memo(({
-    vis, part, parts, widthM, column,
-    setCenter, setPart, setHoveredPart, setCenterWindow, partRef
+    vis, parts, widthM, column,
+    setCenter, setHoveredPart, setCenterWindow, partRef
 }: ScaleRepresentationProps): ReactElement => {
     const canvasCtxs = usePartCanvasCtxs(parts)
     const WIDTH_SCALE = 2
@@ -261,7 +268,6 @@ const ChannelPunchcardRepresentation = React.memo(({
     return (
         <CanvasRepresentation
             vis={vis}
-            part={part}
             parts={parts}
             column={column}
             canvasCtxs={canvasCtxs}
@@ -269,7 +275,6 @@ const ChannelPunchcardRepresentation = React.memo(({
             partRef={partRef}
             setCenter={setCenter}
             setCenterWindow={setCenterWindow}
-            setPart={setPart}
             setHoveredPart={setHoveredPart}
             widthScale={WIDTH_SCALE}
             canvasSpacer={

@@ -3,6 +3,7 @@ import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
 import { getCssColor, formatPercent, parsePercent, StringMap } from '../lib/util'
+import { useIdContext } from '../hooks/id-context'
 import { useBlendState } from '../hooks/blend-context'
 import { useCollapseRender } from '../hooks/collapse-render'
 import { GenericPalette } from '../components/blend-provider'
@@ -16,13 +17,13 @@ import mineralSliderStyles from '../styles/custom/mineral-slider.module.css'
 import paramSliderStyles from '../styles/custom/param-slider.module.css'
 
 type BlendMenuProps = {
-    open: boolean,
-    minerals: Array<string>
+    open: boolean
 }
 
 const BlendMenu = React.memo((
-    { open, minerals }: BlendMenuProps
+    { open }: BlendMenuProps
 ): ReactElement => {
+    const { minerals } = useIdContext()
     const render = useCollapseRender(open)
     const {
         palette, setPalette,

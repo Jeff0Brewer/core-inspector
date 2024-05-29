@@ -1,16 +1,16 @@
 import { useState, useEffect, ReactElement, ReactNode } from 'react'
 import { CoreMetadata, DepthMetadata, HydrationMetadata, TileTextureMetadata } from '../lib/metadata'
+import { useIdContext } from '../hooks/id-context'
 import { getCorePath } from '../lib/path'
 import { fetchJson } from '../lib/load'
 import CoreMetadataContext from '../hooks/core-metadata-context'
 
 type CoreMetadataProviderProps = {
-    core: string,
     children: ReactNode
 }
 
 function CoreMetadataProvider (
-    { core, children }: CoreMetadataProviderProps
+    { children }: CoreMetadataProviderProps
 ): ReactElement {
     const [numSection, setNumSection] = useState<number | null>(null)
     const [topDepth, setTopDepth] = useState<number | null>(null)
@@ -20,6 +20,7 @@ function CoreMetadataProvider (
     const [hydrations, setHydrations] = useState<HydrationMetadata | null>(null)
     const [tiles, setTiles] = useState<TileTextureMetadata | null>(null)
     const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false)
+    const { core } = useIdContext()
 
     useEffect(() => {
         const getData = async (): Promise<void> => {

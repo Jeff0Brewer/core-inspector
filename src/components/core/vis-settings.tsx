@@ -1,8 +1,10 @@
-import React, { useState, useEffect, ReactElement } from 'react'
+import React, { useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import { padZeros, formatFloat } from '../../lib/util'
 import CoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../../vis/core'
+import { useCoreParamsContext } from '../../hooks/core-params-context'
+import { useIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import ToggleSelect from '../../components/generic/toggle-select'
 import Dropdown from '../../components/generic/dropdown'
@@ -13,18 +15,18 @@ import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
 type VisSettingsProps = {
-    vis: CoreRenderer | null,
-    cores: Array<string>,
-    core: string,
-    setCore: (c: string) => void,
+    vis: CoreRenderer | null
 }
 
 const VisSettings = React.memo((
-    { vis, cores, core, setCore }: VisSettingsProps
+    { vis }: VisSettingsProps
 ): ReactElement => {
-    const [calibration, setCalibration] = useState<CalibrationOption>('show')
-    const [shape, setShape] = useState<CoreShape>('column')
-    const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
+    const {
+        calibration, setCalibration,
+        shape, setShape,
+        viewMode, setViewMode
+    } = useCoreParamsContext()
+    const { core, cores, setCore } = useIdContext()
     const { numSection, topDepth, bottomDepth } = useCoreMetadata()
 
     useEffect(() => {

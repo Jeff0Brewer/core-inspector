@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { PiArrowsHorizontalBold } from 'react-icons/pi'
 import { IoSearch } from 'react-icons/io5'
+import { useCoreParamsContext } from '../../hooks/core-params-context'
 import VerticalSlider from '../../components/generic/vertical-slider'
 import CoreRenderer from '../../vis/core'
 import styles from '../../styles/core/view-sliders.module.css'
@@ -13,7 +14,7 @@ const ViewControls = React.memo((
     { vis }: ViewControlsProps
 ): ReactElement => {
     const [zoom, setZoom] = useState<number>(0.5)
-    const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const { spacing, setSpacing } = useCoreParamsContext()
 
     useEffect(() => {
         if (!vis) { return }

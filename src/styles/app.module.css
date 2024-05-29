@@ -3,11 +3,18 @@
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    display: grid;
-    grid-template-rows: 55px 1fr 32px;
-    grid-template-columns: 1fr;
-    grid-template-areas:
-        "top-bar"
-        "content"
-        "bottom-bar";
+}
+
+.core-wrap, .part-wrap {
+    transition: opacity var(--transition-param);
+}
+
+.app[data-view="core"] .core-wrap,
+.app[data-view="part"] .part-wrap {
+    opacity: 1;
+}
+
+.app[data-view="part"] .core-wrap,
+.app[data-view="core"] .part-wrap {
+    opacity: 0;
 }

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, ReactElement, MutableRefObject, RefObject } from 'react'
 import { BiCross } from 'react-icons/bi'
+import { usePartIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
 import { useBlendState } from '../../hooks/blend-context'
 import { loadImageAsync } from '../../lib/load'
@@ -33,9 +34,6 @@ type ChannelLabelsProps = {
 
 type MineralChannelsProps = {
     vis: PartRenderer | null,
-    core: string,
-    part: string,
-    minerals: Array<string>,
     mineralMaps: StringMap<HTMLImageElement | null>,
     setSelectedSpectrum: (s: SpectrumInfo) => void,
     scrollDepthRef: MutableRefObject<ScrollDepth>,
@@ -43,8 +41,7 @@ type MineralChannelsProps = {
 }
 
 const MineralChannels = React.memo(({
-    vis, core, part, minerals, mineralMaps,
-    setSelectedSpectrum, scrollDepthRef, zoomSliderRef
+    vis, mineralMaps, setSelectedSpectrum, scrollDepthRef, zoomSliderRef
 }: MineralChannelsProps): ReactElement => {
     const [loading, setLoading] = useState<boolean>(true)
     const [zoom, setZoom] = useState<number>(0.25)
@@ -52,6 +49,7 @@ const MineralChannels = React.memo(({
     const [imgDims, setImgDims] = useState<[number, number]>([320, 3000])
     const [viewDims, setViewDims] = useState<[number, number]>([0, 0])
     const [viewGap, setViewGap] = useState<number>(0)
+    const { part, minerals } = usePartIdContext()
 
     useEffect(() => {
         setLoading(true)
@@ -104,8 +102,6 @@ const MineralChannels = React.memo(({
             <ChannelTopLabels {...labelProps} />
             <ChannelsView
                 loading={loading}
-                core={core}
-                part={part}
                 vis={vis}
                 extraChannels={EXTRA_CHANNELS}
                 mineralChannels={minerals}
@@ -180,8 +176,6 @@ const ChannelBottomLabels = React.memo(({
 
 type ChannelsViewProps = {
     loading: boolean,
-    core: string,
-    part: string,
     vis: PartRenderer | null,
     extraChannels: Array<string>,
     mineralChannels: Array<string>,
@@ -194,7 +188,7 @@ type ChannelsViewProps = {
 }
 
 const ChannelsView = React.memo(({
-    loading, core, part, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
+    loading, vis, extraChannels, mineralChannels, mineralMaps, imgDims, viewDims, viewGap,
     setSelectedSpectrum, scrollDepthRef
 }: ChannelsViewProps): ReactElement => {
     const [sources, setSources] = useState<StringMap<string | HTMLCanvasElement>>({})
@@ -206,6 +200,8 @@ const ChannelsView = React.memo(({
 
     const channelsRef = useRef<HTMLDivElement>(null)
     const mousePosRef = useRef<[number, number] | null>(null)
+
+    const { core, part } = usePartIdContext()
     const { depths } = useCoreMetadata()
 
     useEffect(() => {
