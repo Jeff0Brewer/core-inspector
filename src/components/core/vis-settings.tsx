@@ -75,14 +75,16 @@ const VisSettings = React.memo((
                 </div>
             </div>
             <div className={styles.info}>
-                <DownloadLink />
-                <p>core</p>
-                <Dropdown
-                    items={cores}
-                    selected={core}
-                    setSelected={setCore}
-                    customStyles={coreDropdownStyles}
-                />
+                <div className={styles.coreWrap}>
+                    <DownloadLink />
+                    <p>core</p>
+                    <Dropdown
+                        items={cores}
+                        selected={core}
+                        setSelected={setCore}
+                        customStyles={coreDropdownStyles}
+                    />
+                </div>
                 { numSection && <p>
                     sections
                     <span>{padZeros(1)} - {padZeros(numSection)}</span>

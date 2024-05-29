@@ -28,6 +28,7 @@
 
 .info {
     display: flex;
+    gap: 20px;
     align-items: center;
     height: 25px;
 
@@ -36,14 +37,23 @@
     text-transform: uppercase;
 }
 
-.info > p {
+.core-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.core-wrap > p {
+    margin-right: -5px;
+}
+
+.info > p, .core-wrap > p {
     color: var(--color4);
-    margin-left: 10px;
 }
 
 .info > p > span {
     color: #fff;
-    margin-left: 5px;
+    margin-left: 8px;
     text-transform: lowercase;
 }
 
