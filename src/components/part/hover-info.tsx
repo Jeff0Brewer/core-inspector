@@ -92,6 +92,10 @@ function HoverInfo ({
             <div className={styles.spectrum}>
                 { Array.isArray(spectrum) &&
                     <SvgPlot data={spectrum} /> }
+                <div className={styles.spectrumLabel}>
+                    <p>900 nm</p>
+                    <p>2600 nm</p>
+                </div>
                 { spectrum === null &&
                     <p className={styles.dataMissing}>
                         data missing
