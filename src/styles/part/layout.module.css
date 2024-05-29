@@ -77,10 +77,12 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    height: 44px;
+    height: 37px;
 }
 
 .blend-toggle {
+    position: relative;
+    top: -4px;
     display: grid;
     place-content: center;
     height: 20px;
