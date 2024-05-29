@@ -11,6 +11,7 @@ import Dropdown from '../../components/generic/dropdown'
 import CalibrationOnIcon from '../../assets/caps-on-icon.svg'
 import CalibrationOffIcon from '../../assets/caps-off-icon.svg'
 import Logo from '../../components/logo'
+import DownloadLink from '../../components/generic/download-link'
 import styles from '../../styles/core/vis-settings.module.css'
 import coreDropdownStyles from '../../styles/custom/core-dropdown.module.css'
 
@@ -74,6 +75,7 @@ const VisSettings = React.memo((
                 </div>
             </div>
             <div className={styles.info}>
+                <DownloadLink />
                 <p>core</p>
                 <Dropdown
                     items={cores}
@@ -97,8 +99,8 @@ const VisSettings = React.memo((
 })
 
 const ICONS = {
-    calibrationOn: <img src={CalibrationOnIcon} style={{ height: '27px' }}/>,
-    calibrationOff: <img src={CalibrationOffIcon} style={{ height: '27px' }}/>,
+    calibrationOn: <img src={CalibrationOnIcon} style={{ height: '27px' }} />,
+    calibrationOff: <img src={CalibrationOffIcon} style={{ height: '27px' }} />,
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
     downscaled: <div className={styles.downscaledIcon}></div>,

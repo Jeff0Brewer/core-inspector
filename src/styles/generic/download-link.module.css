@@ -1,0 +1,10 @@
+.download {
+    display: grid;
+    place-content: center;
+    opacity: 1;
+    transition: opacity var(--transition-param);
+}
+
+.download:hover {
+    opacity: 0.7;
+}
