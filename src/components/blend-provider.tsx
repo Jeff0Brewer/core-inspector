@@ -7,17 +7,35 @@ import { BlendMode, BlendParams } from '../vis/mineral-blend'
 import BlendContext from '../hooks/blend-context'
 
 type UnlabelledColors = Array<vec3>
+
 type LabelledColors = { [mineral: string]: vec3 }
+
 type GenericColors = LabelledColors | UnlabelledColors
 
-type LabelledPalette = { type: 'labelled', colors: LabelledColors }
-type UnlabelledPalette = { type: 'unlabelled', colors: UnlabelledColors }
+type LabelledPalette = {
+    type: 'labelled',
+    colors: LabelledColors
+}
+
+type UnlabelledPalette = {
+    type: 'unlabelled',
+    colors: UnlabelledColors,
+    order: Array<string>
+}
+
 type GenericPalette = LabelledPalette | UnlabelledPalette
 
-function colorsToPalettes (colorsList: Array<GenericColors>): Array<GenericPalette> {
+function colorsToPalettes (
+    colorsList: Array<GenericColors>,
+    minerals: Array<string>
+): Array<GenericPalette> {
     return colorsList.map(colors => {
         if (Array.isArray(colors)) {
-            return { type: 'unlabelled', colors }
+            return {
+                type: 'unlabelled',
+                colors,
+                order: minerals.slice(0, colors.length)
+            }
         } else {
             return { type: 'labelled', colors }
         }
@@ -38,7 +56,7 @@ function BlendProvider (
     const [visibilities, setVisibilities] = useState<StringMap<boolean>>(
         Object.fromEntries(minerals.map(mineral => [mineral, true]))
     )
-    const [palette, setPalette] = useState<GenericPalette>({ type: 'unlabelled', colors: [] })
+    const [palette, setPalette] = useState<GenericPalette>({ type: 'labelled', colors: {} })
     const [saturation, setSaturation] = useState<number>(1)
     const [threshold, setThreshold] = useState<number>(0)
     const [mode, setMode] = useState<BlendMode>('additive')
@@ -53,13 +71,13 @@ function BlendProvider (
             )
 
             if (colors) {
-                const palettes = colorsToPalettes(colors)
+                const palettes = colorsToPalettes(colors, minerals)
                 setPalettes(palettes)
                 setPalette(palettes[0])
             }
         }
         getPalettes()
-    }, [])
+    }, [minerals])
 
     const setBlendParams = useCallback((params: BlendParams) => {
         setMagnitudes(params.magnitudes)
