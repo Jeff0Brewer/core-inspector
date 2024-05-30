@@ -139,11 +139,29 @@ const ChannelTopLabels = React.memo(({
 const ChannelBottomLabels = React.memo(({
     extraChannels, mineralChannels, width, gap
 }: ChannelLabelsProps): ReactElement => {
-    const { setVisibilities, visibilities, palette, monochrome } = useBlendState()
+    const { setVisibilities, visibilities, palette, setPalette, monochrome } = useBlendState()
 
+    // sets visiblility for single index, used in mineral sliders
     const toggleVisible = (mineral: string): void => {
-        visibilities[mineral] = !visibilities[mineral]
+        const v = !visibilities[mineral]
+        visibilities[mineral] = v
         setVisibilities({ ...visibilities })
+
+        if (palette.type === 'unlabelled') {
+            if (v) {
+                const color = palette.unassigned.pop()
+                if (color) {
+                    palette.colors[mineral] = color
+                }
+            } else {
+                const color = palette.colors[mineral]
+                if (color) {
+                    palette.unassigned.push(color)
+                    delete palette.colors[mineral]
+                }
+            }
+            setPalette({ ...palette })
+        }
     }
 
     return (

@@ -81,7 +81,9 @@ const MineralControls = React.memo((
         }
     }
 
-    const paletteColors = Object.values(palette.colors)
+    const paletteColors = palette.type === 'labelled'
+        ? Object.values(palette.colors)
+        : [...palette.colorSet]
     paletteColors.push(...Array(minerals.length - paletteColors.length).fill(null))
 
     return (

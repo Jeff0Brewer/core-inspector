@@ -19,8 +19,9 @@ type LabelledPalette = {
 
 type UnlabelledPalette = {
     type: 'unlabelled',
-    colors: UnlabelledColors,
-    order: Array<string>
+    colors: LabelledColors,
+    unassigned: UnlabelledColors,
+    colorSet: UnlabelledColors
 }
 
 type GenericPalette = LabelledPalette | UnlabelledPalette
@@ -31,10 +32,15 @@ function colorsToPalettes (
 ): Array<GenericPalette> {
     return colorsList.map(colors => {
         if (Array.isArray(colors)) {
+            const colorMap: LabelledColors = {}
+            colors.forEach((color, i) => {
+                colorMap[minerals[i]] = color
+            })
             return {
                 type: 'unlabelled',
-                colors,
-                order: minerals.slice(0, colors.length)
+                colors: colorMap,
+                unassigned: [],
+                colorSet: colors
             }
         } else {
             return { type: 'labelled', colors }
@@ -73,7 +79,15 @@ function BlendProvider (
             if (colors) {
                 const palettes = colorsToPalettes(colors, minerals)
                 setPalettes(palettes)
-                setPalette(palettes[0])
+
+                const palette = palettes[0]
+                setPalette(palette)
+
+                const visibilities: StringMap<boolean> = {}
+                minerals.forEach(mineral => {
+                    visibilities[mineral] = mineral in palette.colors
+                })
+                setVisibilities(visibilities)
             }
         }
         getPalettes()

@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect } from 'react'
+import React, { ReactElement, useEffect, useCallback } from 'react'
 import { vec3 } from 'gl-matrix'
 import { MdRemoveRedEye, MdOutlineRefresh } from 'react-icons/md'
 import { IoCaretDownSharp } from 'react-icons/io5'
@@ -36,21 +36,6 @@ const BlendMenu = React.memo((
         palettes
     } = useBlendState()
 
-    // update visibilities to match newly selected palette on change
-    useEffect(() => {
-        const visibilities: StringMap<boolean> = {}
-        if (palette.type === 'labelled') {
-            minerals.forEach(mineral => {
-                visibilities[mineral] = mineral in palette.colors
-            })
-        } else {
-            minerals.forEach((mineral, i) => {
-                visibilities[mineral] = i < palette.colors.length
-            })
-        }
-        setVisibilities(visibilities)
-    }, [palette, minerals, setVisibilities])
-
     // setup keyboard shortcuts
     useEffect(() => {
         const keydown = (e: KeyboardEvent): void => {
@@ -76,6 +61,16 @@ const BlendMenu = React.memo((
         }
     }, [monochrome, visibilities, minerals, setMonochrome, setVisibilities])
 
+    // update visibilities on change to new palette
+    const changePalette = useCallback((palette: GenericPalette) => {
+        const visibilities: StringMap<boolean> = {}
+        minerals.forEach(mineral => {
+            visibilities[mineral] = mineral in palette.colors
+        })
+        setVisibilities(visibilities)
+        setPalette(palette)
+    }, [minerals, setVisibilities, setPalette])
+
     // sets magnitude for single index, used in mineral sliders
     const getMagnitudeSetter = (mineral: string): ((m: number) => void) => {
         return (m: number) => {
@@ -89,6 +84,21 @@ const BlendMenu = React.memo((
     // sets visiblility for single index, used in mineral sliders
     const getVisibilitySetter = (mineral: string): ((v: boolean) => void) => {
         return (v: boolean) => {
+            if (palette.type === 'unlabelled') {
+                if (v) {
+                    const color = palette.unassigned.pop()
+                    if (color) {
+                        palette.colors[mineral] = color
+                    }
+                } else {
+                    const color = palette.colors[mineral]
+                    if (color) {
+                        palette.unassigned.push(color)
+                        delete palette.colors[mineral]
+                    }
+                }
+                setPalette({ ...palette })
+            }
             visibilities[mineral] = v
             setVisibilities({ ...visibilities })
         }
@@ -107,7 +117,7 @@ const BlendMenu = React.memo((
                     <Dropdown
                         items={palettes.filter(p => p.type === 'labelled')}
                         selected={palette.type === 'labelled' ? palette : null}
-                        setSelected={setPalette}
+                        setSelected={changePalette}
                         Element={ColorPaletteItem}
                         customStyles={paletteDropdownStyles}
                     />
@@ -117,7 +127,7 @@ const BlendMenu = React.memo((
                     <Dropdown
                         items={palettes.filter(p => p.type === 'unlabelled')}
                         selected={palette.type === 'unlabelled' ? palette : null}
-                        setSelected={setPalette}
+                        setSelected={changePalette}
                         Element={ColorPaletteItem}
                         customStyles={paletteDropdownStyles}
                     />
@@ -314,9 +324,13 @@ type ColorPaletteItemProps = {
 }
 
 function ColorPaletteItem ({ item }: ColorPaletteItemProps): ReactElement {
+    const colors = item.type === 'labelled'
+        ? item.colors
+        : item.colorSet
+
     return (
         <div className={styles.palette}>
-            { Object.entries(item.colors).map(([mineral, color], i) =>
+            { Object.entries(colors).map(([mineral, color], i) =>
                 <ColorSwatch
                     mineral={item.type === 'labelled' ? mineral : null}
                     color={color}

@@ -154,12 +154,10 @@ function isToggleable (
     if (palette.type === 'labelled') {
         return mineral in palette.colors
     } else {
-        const numVisible = Object.values(visibilities).filter(v => v).length
-        return numVisible < palette.colors.length
+        return mineral in palette.colors || palette.unassigned.length > 0
     }
 }
 
-// TODO: simplify
 // maps colors to minerals based on blend params
 function getBlendColor (
     palette: GenericPalette,
@@ -173,15 +171,7 @@ function getBlendColor (
     if (monochrome && Object.values(visibilities).filter(v => v).length === 1) {
         return [1, 1, 1]
     }
-    if (palette.type === 'labelled') {
-        return palette.colors[mineral] || null
-    }
-
-    const colorIndex = palette.order.indexOf(mineral)
-    if (colorIndex === -1) {
-        return null
-    }
-    return palette.colors[colorIndex]
+    return palette.colors[mineral] || null
 }
 
 export default MineralBlender
