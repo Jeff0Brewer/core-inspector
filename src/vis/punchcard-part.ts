@@ -19,6 +19,7 @@ class PunchcardPartRenderer {
 
     constructor (gl: GlContext) {
         this.program = new GlProgram(gl, vertSource, fragSource)
+        this.program.bind(gl)
 
         this.buffer = new GlBuffer(gl)
         this.buffer.addAttribute(gl, this.program, 'position', POS_FPV, STRIDE, 0)
