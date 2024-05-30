@@ -176,9 +176,12 @@ function getBlendColor (
     if (palette.type === 'labelled') {
         return palette.colors[mineral] || null
     }
-    const mineralIndex = Object.keys(visibilities).indexOf(mineral)
-    const priorNumVisible = Object.values(visibilities).slice(0, mineralIndex).filter(v => v).length
-    return palette.colors[priorNumVisible] || null
+
+    const colorIndex = palette.order.indexOf(mineral)
+    if (colorIndex === -1) {
+        return null
+    }
+    return palette.colors[colorIndex]
 }
 
 export default MineralBlender
