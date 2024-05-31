@@ -52,7 +52,8 @@ type UiState = {
     setZoom?: (z: number) => void,
     setHovered?: (h: string | null) => void,
     setPan?: (t: number) => void,
-    setPanWidth?: (w: number) => void
+    setPanWidth?: (w: number) => void,
+    setSpiralOrder?: (o: CoreSpiralOrder) => void
 }
 
 class CoreRenderer {
@@ -74,6 +75,8 @@ class CoreRenderer {
 
     targetShape: CoreShape
     shapeT: number
+
+    spiralOrder: CoreSpiralOrder
 
     camera: Camera2D
     proj: mat4
@@ -238,6 +241,11 @@ class CoreRenderer {
         this.genVerts()
         this.camera.setMode(s)
         this.uiState.setShape?.(s)
+    }
+
+    setSpiralOrder (o: CoreSpiralOrder): void {
+        this.spiralOrder = o
+        this.uiState.setSpiralOrder?.(o)
     }
 
     setViewMode (m: CoreViewMode): void {

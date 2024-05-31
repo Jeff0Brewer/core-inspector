@@ -1,8 +1,8 @@
 import React, { useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
+import CoreRenderer, { CoreViewMode, CoreShape, CoreSpiralOrder, CalibrationOption } from '../../vis/core'
 import { padZeros, formatFloat } from '../../lib/util'
-import CoreRenderer, { CoreViewMode, CoreShape, CalibrationOption } from '../../vis/core'
 import { useCoreParamsContext } from '../../hooks/core-params-context'
 import { useIdContext } from '../../hooks/id-context'
 import { useCoreMetadata } from '../../hooks/core-metadata-context'
@@ -25,7 +25,8 @@ const VisSettings = React.memo((
     const {
         calibration, setCalibration,
         shape, setShape,
-        viewMode, setViewMode
+        viewMode, setViewMode,
+        spiralOrder, setSpiralOrder
     } = useCoreParamsContext()
     const { core, cores, setCore } = useIdContext()
     const { numSection, topDepth, bottomDepth } = useCoreMetadata()
@@ -35,10 +36,12 @@ const VisSettings = React.memo((
         vis.uiState.setCalibration = setCalibration
         vis.uiState.setShape = setShape
         vis.uiState.setViewMode = setViewMode
+        vis.uiState.setSpiralOrder = setSpiralOrder
 
         vis.initCalibration(calibration)
         vis.setShape(shape)
         vis.setViewMode(viewMode)
+        vis.setSpiralOrder(spiralOrder)
 
         // don't include state vars in dependency array
         // since only want to reset state when vis re-initialized
@@ -58,6 +61,16 @@ const VisSettings = React.memo((
                         item1={{ value: 'spiral', icon: ICONS.spiral }}
                         label={'layout'}
                     />
+                    <div className={`${styles.orderWrap} ${shape === 'spiral' && styles.orderVisible}`}>
+                        { shape === 'spiral' &&
+                            <ToggleSelect<CoreSpiralOrder>
+                                currValue={spiralOrder}
+                                setValue={o => vis?.setSpiralOrder(o)}
+                                item0={{ value: 'out', icon: <p>o</p> }}
+                                item1={{ value: 'in', icon: <p>i</p> }}
+                                label={'order'}
+                            /> }
+                    </div>
                     <ToggleSelect<CoreViewMode>
                         currValue={viewMode}
                         setValue={v => vis?.setViewMode(v)}
