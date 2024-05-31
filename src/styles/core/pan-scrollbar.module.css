@@ -14,6 +14,7 @@
 
 .track-hidden {
     opacity: 0;
+    pointer-events: none;
 }
 
 /* add transitions + delay to width / left to persist last state during animation */
