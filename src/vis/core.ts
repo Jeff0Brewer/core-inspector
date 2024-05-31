@@ -388,8 +388,6 @@ class CoreRenderer {
         // because vertices may not have been generated yet
         if (this.viewMode === 'punchcard' && Math.round(this.shapeT) !== this.shapeT) {
             const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
-            // this is mega slow, generates vertices for all visualization elements,
-            // but still < 16ms and this edge case happens very rarely so fine for now
             const { punchPositions } = getCorePositions(
                 this.metadata,
                 this.spacing,
@@ -400,6 +398,25 @@ class CoreRenderer {
                 this.targetSpiralOrder
             )
             this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
+        }
+
+        if (this.viewMode === 'punchcard' && Math.round(this.spiralOrderT) !== this.spiralOrderT) {
+            const otherOrder = this.targetSpiralOrder === 'out' ? 'in' : 'out'
+            const { downPositions, punchPositions, accentPositions } = getCorePositions(
+                this.metadata,
+                this.spacing,
+                viewportBounds,
+                this.targetShape,
+                this.viewMode,
+                ease(this.calibrationT),
+                otherOrder
+            )
+
+            this.spiralOrderVerts[otherOrder] = {
+                punchcard: punchPositions,
+                downscaled: downPositions,
+                accentLines: accentPositions
+            }
         }
     }
 
