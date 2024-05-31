@@ -62,13 +62,14 @@ const VisSettings = React.memo((
                         label={'layout'}
                     />
                     <div className={`${styles.orderWrap} ${shape === 'spiral' && styles.orderVisible}`}>
-                        <ToggleSelect<CoreSpiralOrder>
-                            currValue={spiralOrder}
-                            setValue={o => vis?.setSpiralOrder(o)}
-                            item0={{ value: 'out', icon: <p>o</p> }}
-                            item1={{ value: 'in', icon: <p>i</p> }}
-                            label={'order'}
-                        />
+                        { shape === 'spiral' &&
+                            <ToggleSelect<CoreSpiralOrder>
+                                currValue={spiralOrder}
+                                setValue={o => vis?.setSpiralOrder(o)}
+                                item0={{ value: 'out', icon: <p>o</p> }}
+                                item1={{ value: 'in', icon: <p>i</p> }}
+                                label={'order'}
+                            /> }
                     </div>
                     <ToggleSelect<CoreViewMode>
                         currValue={viewMode}

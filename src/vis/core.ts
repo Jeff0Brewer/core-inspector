@@ -105,6 +105,8 @@ class CoreRenderer {
         this.targetCalibration = 'show'
         this.calibrationT = CALIBRATION_OPTIONS[this.targetCalibration]
 
+        this.spiralOrder = 'out'
+
         this.metadata = metadata
         this.uiState = uiState
         this.mousePos = [0, 0]
@@ -125,7 +127,7 @@ class CoreRenderer {
         this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
         this.punchcardBlender = new MineralBlender(this.gl, punchcardMaps, minerals)
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, this.calibrationT)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, this.calibrationT, this.spiralOrder)
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
             this.metadata,
             this.spacing,
@@ -245,6 +247,7 @@ class CoreRenderer {
 
     setSpiralOrder (o: CoreSpiralOrder): void {
         this.spiralOrder = o
+        this.genTexCoords()
         this.uiState.setSpiralOrder?.(o)
     }
 
@@ -290,7 +293,7 @@ class CoreRenderer {
     }
 
     genTexCoords (): void {
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, ease(this.calibrationT))
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, ease(this.calibrationT), this.spiralOrder)
         this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
         this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
     }
