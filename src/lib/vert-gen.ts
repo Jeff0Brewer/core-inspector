@@ -94,6 +94,7 @@ const getCorePositions = (
     if (shape === 'spiral' && spiralOrder === 'in') {
         punchOffset = punchPositions.length - 1
         downOffset = downPositions.length
+        accentOffset = accentPositions.length
     }
 
     // get variables needed for positioning inside loop
@@ -138,14 +139,25 @@ const getCorePositions = (
                 spiralOrder
             )
 
-            accentOffset = addAccentLineSpiralPositions(
-                accentPositions,
-                accentOffset,
-                radius,
-                angle,
-                tileRadius,
-                tileAngle
-            )
+            if (spiralOrder === 'in') {
+                accentOffset = addAccentLineSpiralPositionsRev(
+                    accentPositions,
+                    accentOffset,
+                    radius,
+                    angle,
+                    tileRadius,
+                    tileAngle
+                )
+            } else {
+                accentOffset = addAccentLineSpiralPositions(
+                    accentPositions,
+                    accentOffset,
+                    radius,
+                    angle,
+                    tileRadius,
+                    tileAngle
+                )
+            }
 
             if (viewMode === 'punchcard') {
                 punchOffset = addPunchcardSpiralPositions(
@@ -670,6 +682,105 @@ const addAccentLineColumnPositions = (
     out[offset++] = currColumnY - tileHeight - LINE_WIDTH
 
     offset = endLine(out, offset, POS_FPV)
+
+    return offset
+}
+
+// copies first vertex in line segment to hide continuation from last segment
+const startLineRev = (
+    out: Float32Array,
+    offset: number,
+    values: Float32Array
+): number => {
+    out.set(values, offset - values.length)
+    out.set(values, offset - 2 * values.length)
+    return offset - 2 * values.length
+}
+
+// copies last vertex in line segment to hide continuation to next segment
+const endLineRev = (
+    out: Float32Array,
+    offset: number,
+    floatPerVertex: number
+): number => {
+    for (let i = 0; i < floatPerVertex; i++) {
+        out[--offset] = out[offset + floatPerVertex]
+    }
+    return offset
+}
+
+// generates lines along side and bottom of spiral tile given
+// layout params from full core generator
+const addAccentLineSpiralPositionsRev = (
+    out: Float32Array,
+    offset: number,
+    currRadius: number,
+    currAngle: number,
+    tileRadius: number,
+    tileAngle: number
+): number => {
+    const angleInc = tileAngle / ROW_PER_TILE
+    const radiusInc = tileRadius / ROW_PER_TILE
+
+    const angle = currAngle
+    const radius = currRadius
+    const tangentX = -Math.sin(angle) * LINE_WIDTH
+    const tangentY = Math.cos(angle) * LINE_WIDTH
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const innerRadius = radius + TILE_WIDTH * 0.5
+    const outerRadius = radius - TILE_WIDTH * 0.5
+
+    // add vertices for line along bottom of tile
+    offset = startLineRev(
+        out,
+        offset,
+        new Float32Array([
+            cos * innerRadius,
+            sin * innerRadius
+        ])
+    )
+    out[--offset] = sin * innerRadius - tangentY
+    out[--offset] = cos * innerRadius - tangentX
+
+    out[--offset] = sin * outerRadius
+    out[--offset] = cos * outerRadius
+
+    out[--offset] = sin * outerRadius - tangentY
+    out[--offset] = cos * outerRadius - tangentX
+
+    offset = endLineRev(out, offset, POS_FPV)
+
+    // add vertices for line along side of tile.
+    // set first position here to duplicate first vertex and
+    // hide any continuation from prior segment in triangle strip
+    offset = startLineRev(
+        out,
+        offset,
+        new Float32Array([
+            Math.cos(angle) * radius,
+            Math.sin(angle) * radius
+        ])
+    )
+    out[--offset] = Math.sin(angle) * (radius - LINE_WIDTH)
+    out[--offset] = Math.cos(angle) * (radius - LINE_WIDTH)
+
+    // add remaining vertices along side of tile
+    for (let i = 1; i <= ROW_PER_TILE; i++) {
+        const angle = currAngle + angleInc * i
+        const radius = currRadius + radiusInc * i - TILE_WIDTH * 0.5
+
+        const cos = Math.cos(angle)
+        const sin = Math.sin(angle)
+
+        out[--offset] = sin * radius
+        out[--offset] = cos * radius
+
+        out[--offset] = sin * (radius - LINE_WIDTH)
+        out[--offset] = cos * (radius - LINE_WIDTH)
+    }
+
+    offset = endLineRev(out, offset, POS_FPV)
 
     return offset
 }
