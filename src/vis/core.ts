@@ -271,10 +271,11 @@ class CoreRenderer {
 
         if (this.spiralOrderVerts.in && this.spiralOrderVerts.out) {
             const { in: inVerts, out: outVerts } = this.spiralOrderVerts
+            const easedT = ease(this.spiralOrderT)
             this.spiralOrderVerts[this.targetSpiralOrder] = {
-                punchcard: lerpArr(outVerts.punchcard, inVerts.punchcard, this.spiralOrderT),
-                downscaled: lerpArr(outVerts.downscaled, inVerts.downscaled, this.spiralOrderT),
-                accentLines: lerpArr(outVerts.accentLines, inVerts.accentLines, this.spiralOrderT)
+                punchcard: lerpArr(outVerts.punchcard, inVerts.punchcard, easedT),
+                downscaled: lerpArr(outVerts.downscaled, inVerts.downscaled, easedT),
+                accentLines: lerpArr(outVerts.accentLines, inVerts.accentLines, easedT)
             }
         }
 
