@@ -12,7 +12,7 @@ function getPartId (part: string): string {
 }
 
 function getCorePath (core: string, root: string = '.'): string {
-    return `${root}/${DATA_DIR}/summaries/${core}`
+    return `${root}/${DATA_DIR}/combined/${core}`
 }
 
 function getPartPath (core: string, part: string, root: string = '.'): string {
