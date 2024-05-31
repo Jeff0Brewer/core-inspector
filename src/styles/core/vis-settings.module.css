@@ -65,14 +65,20 @@
 }
 
 .order-wrap {
+    opacity: 0;
     margin: 0 -15px 0 -15px;
     width: 0;
+    height: 100%;
     transition:
+        opacity var(--transition-param),
         margin var(--transition-param),
         width var(--transition-param);
+    pointer-events: none;
 }
 
 .order-visible {
+    opacity: 1;
     margin: 0;
     width: 64px;
+    pointer-events: auto;
 }
