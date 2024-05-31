@@ -10,6 +10,8 @@ import ToggleSelect from '../../components/generic/toggle-select'
 import Dropdown from '../../components/generic/dropdown'
 import CalibrationOnIcon from '../../assets/caps-on-icon.svg'
 import CalibrationOffIcon from '../../assets/caps-off-icon.svg'
+import OrderOutIcon from '../../assets/order-out-icon.svg'
+import OrderInIcon from '../../assets/order-in-icon.svg'
 import Logo from '../../components/logo'
 import DownloadLink from '../../components/generic/download-link'
 import styles from '../../styles/core/vis-settings.module.css'
@@ -66,8 +68,8 @@ const VisSettings = React.memo((
                             <ToggleSelect<CoreSpiralOrder>
                                 currValue={spiralOrder}
                                 setValue={o => vis?.setSpiralOrder(o)}
-                                item0={{ value: 'out', icon: <p>o</p> }}
-                                item1={{ value: 'in', icon: <p>i</p> }}
+                                item0={{ value: 'out', icon: ICONS.orderOut }}
+                                item1={{ value: 'in', icon: ICONS.orderIn }}
                                 label={'order'}
                             /> }
                     </div>
@@ -116,6 +118,8 @@ const VisSettings = React.memo((
 const ICONS = {
     calibrationOn: <img src={CalibrationOnIcon} style={{ height: '27px' }} />,
     calibrationOff: <img src={CalibrationOffIcon} style={{ height: '27px' }} />,
+    orderOut: <img src={OrderOutIcon} style={{ height: '30px' }} />,
+    orderIn: <img src={OrderInIcon} style={{ height: '30px' }} />,
     column: <RxColumns style={{ fontSize: '20px' }} />,
     spiral: <PiSpiralLight style={{ fontSize: '25px' }} />,
     downscaled: <div className={styles.downscaledIcon}></div>,
