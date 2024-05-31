@@ -76,7 +76,8 @@ const getCorePositions = (
     viewportBounds: BoundRect,
     shape: CoreShape,
     viewMode: CoreViewMode,
-    calibrationT: number
+    calibrationT: number,
+    spiralOrder: CoreSpiralOrder
 ): {
     downPositions: Float32Array,
     punchPositions: Float32Array,
@@ -90,6 +91,10 @@ const getCorePositions = (
     let punchOffset = 0
     let downOffset = 0
     let accentOffset = 0
+    if (shape === 'spiral' && spiralOrder === 'in') {
+        punchOffset = punchPositions.length - 1
+        downOffset = downPositions.length
+    }
 
     // get variables needed for positioning inside loop
     const horizontalSpacing = spacing[0] * TILE_WIDTH
@@ -107,7 +112,8 @@ const getCorePositions = (
     for (let i = 0; i < metadata.numTiles; i++) {
         // calculate tile layout using downscaled tile dimensions as source of truth
         // for all vis elements, ensuring alignment
-        let { height, width } = metadata.downTiles[i]
+        const tileIndex = spiralOrder === 'out' ? i : metadata.numTiles - 1 - i
+        let { height, width } = metadata.downTiles[tileIndex]
         height -= CALIBRATION_HEIGHT_DOWN * calibrationT
         const tileHeight = 2 * TILE_WIDTH * (height / width)
         const tileAngle = tileHeight / radius
@@ -128,7 +134,8 @@ const getCorePositions = (
                 radius,
                 angle,
                 tileRadius,
-                tileAngle
+                tileAngle,
+                spiralOrder
             )
 
             accentOffset = addAccentLineSpiralPositions(
@@ -149,7 +156,8 @@ const getCorePositions = (
                     tileRadius,
                     tileAngle,
                     metadata.punchNumRows[i],
-                    calibrationT
+                    calibrationT,
+                    spiralOrder
                 )
             }
         } else {
@@ -225,7 +233,8 @@ const addDownscaledAttrib = (
     out: Float32Array,
     offset: number,
     getRowAttrib: (i: number, inner: Float32Array, outer: Float32Array) => void,
-    floatsPerVertex: number
+    floatsPerVertex: number,
+    spiralOrder: CoreSpiralOrder = 'out'
 ): number => {
     // use static references to get intermediate values from closure
     // to prevent excessive object creation / gc
@@ -234,23 +243,42 @@ const addDownscaledAttrib = (
     const nextInner = new Float32Array(floatsPerVertex)
     const nextOuter = new Float32Array(floatsPerVertex)
 
-    // lays out attributes for two triangles per row
-    for (let i = 0; i < ROW_PER_TILE; i++) {
-        // only need 4 unique values per row, but 6 vertices,
-        // so store values in intermediate buffers and copy
-        // into main buffer in correct order
-        getRowAttrib(i, inner, outer)
-        getRowAttrib(i + 1, nextInner, nextOuter)
+    if (spiralOrder === 'out') {
+        for (let i = 0; i < ROW_PER_TILE; i++) {
+            // only need 4 unique values per row, but 6 vertices,
+            // so store values in intermediate buffers and copy
+            // into main buffer in correct order
+            getRowAttrib(i, inner, outer)
+            getRowAttrib(i + 1, nextInner, nextOuter)
 
-        out.set(inner, offset)
-        out.set(outer, offset + floatsPerVertex)
-        out.set(nextOuter, offset + floatsPerVertex * 2)
+            out.set(inner, offset)
+            out.set(outer, offset + floatsPerVertex)
+            out.set(nextOuter, offset + floatsPerVertex * 2)
 
-        out.set(nextOuter, offset + floatsPerVertex * 3)
-        out.set(nextInner, offset + floatsPerVertex * 4)
-        out.set(inner, offset + floatsPerVertex * 5)
+            out.set(nextOuter, offset + floatsPerVertex * 3)
+            out.set(nextInner, offset + floatsPerVertex * 4)
+            out.set(inner, offset + floatsPerVertex * 5)
 
-        offset += floatsPerVertex * 6
+            offset += floatsPerVertex * 6
+        }
+    } else {
+        for (let i = 0; i < ROW_PER_TILE; i++) {
+            // only need 4 unique values per row, but 6 vertices,
+            // so store values in intermediate buffers and copy
+            // into main buffer in correct order
+            getRowAttrib(i, inner, outer)
+            getRowAttrib(i + 1, nextInner, nextOuter)
+
+            out.set(nextOuter, offset - floatsPerVertex * 1)
+            out.set(outer, offset - floatsPerVertex * 2)
+            out.set(inner, offset - floatsPerVertex * 3)
+
+            out.set(inner, offset - floatsPerVertex * 4)
+            out.set(nextInner, offset - floatsPerVertex * 5)
+            out.set(nextOuter, offset - floatsPerVertex * 6)
+
+            offset -= floatsPerVertex * 6
+        }
     }
 
     return offset
@@ -292,7 +320,8 @@ const addDownscaledSpiralPositions = (
     currRadius: number,
     currAngle: number,
     tileRadius: number,
-    tileAngle: number
+    tileAngle: number,
+    spiralOrder: CoreSpiralOrder
 ): number => {
     const angleInc = tileAngle / ROW_PER_TILE
     const radiusInc = tileRadius / ROW_PER_TILE
@@ -317,7 +346,7 @@ const addDownscaledSpiralPositions = (
         outer[1] = sin * outerRadius
     }
 
-    return addDownscaledAttrib(out, offset, getRowSpiralPositions, POS_FPV)
+    return addDownscaledAttrib(out, offset, getRowSpiralPositions, POS_FPV, spiralOrder)
 }
 
 // get column positions for a single downscaled tile
@@ -400,7 +429,8 @@ const addPunchcardSpiralPositions = (
     tileRadius: number,
     tileAngle: number,
     numRows: number,
-    calibrationT: number
+    calibrationT: number,
+    spiralOrder: CoreSpiralOrder
 ): number => {
     numRows -= Math.round(CALIBRATION_POINT_HEIGHT * calibrationT)
 
@@ -413,20 +443,38 @@ const addPunchcardSpiralPositions = (
     // move to edge of tile but again offset inwards to center in tile bounds
     const startRadius = currRadius + TILE_WIDTH * 0.5 - acrossInc * 0.5
 
-    for (let i = 0; i < numRows; i++) {
-        const radius = startRadius + radiusInc * i
-        const angle = startAngle + angleInc * i
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
+    if (spiralOrder === 'out') {
+        for (let i = 0; i <= numRows - 1; i++) {
+            const radius = startRadius + radiusInc * i
+            const angle = startAngle + angleInc * i
+            const cos = Math.cos(angle)
+            const sin = Math.sin(angle)
 
-        out[offset++] = cos * radius
-        out[offset++] = sin * radius
+            out[offset++] = cos * radius
+            out[offset++] = sin * radius
 
-        out[offset++] = cos * (radius - acrossInc)
-        out[offset++] = sin * (radius - acrossInc)
+            out[offset++] = cos * (radius - acrossInc)
+            out[offset++] = sin * (radius - acrossInc)
 
-        out[offset++] = cos * (radius - 2 * acrossInc)
-        out[offset++] = sin * (radius - 2 * acrossInc)
+            out[offset++] = cos * (radius - 2 * acrossInc)
+            out[offset++] = sin * (radius - 2 * acrossInc)
+        }
+    } else {
+        for (let i = numRows - 1; i >= 0; i--) {
+            const radius = startRadius + radiusInc * i
+            const angle = startAngle + angleInc * i
+            const cos = Math.cos(angle)
+            const sin = Math.sin(angle)
+
+            out[offset--] = cos * radius
+            out[offset--] = sin * radius
+
+            out[offset--] = cos * (radius - acrossInc)
+            out[offset--] = sin * (radius - acrossInc)
+
+            out[offset--] = cos * (radius - 2 * acrossInc)
+            out[offset--] = sin * (radius - 2 * acrossInc)
+        }
     }
 
     return offset
@@ -477,14 +525,22 @@ const addPunchcardColumnPositions = (
  */
 
 // copies first vertex in line segment to hide continuation from last segment
-const startLine = (out: Float32Array, offset: number, values: Float32Array): number => {
+const startLine = (
+    out: Float32Array,
+    offset: number,
+    values: Float32Array
+): number => {
     out.set(values, offset)
     out.set(values, offset + values.length)
     return offset + 2 * values.length
 }
 
 // copies last vertex in line segment to hide continuation to next segment
-const endLine = (out: Float32Array, offset: number, floatPerVertex: number): number => {
+const endLine = (
+    out: Float32Array,
+    offset: number,
+    floatPerVertex: number
+): number => {
     for (let i = 0; i < floatPerVertex; i++, offset++) {
         out[offset] = out[offset - floatPerVertex]
     }
@@ -510,10 +566,14 @@ const addAccentLineSpiralPositions = (
     // add vertices for line along side of tile.
     // set first position here to duplicate first vertex and
     // hide any continuation from prior segment in triangle strip
-    offset = startLine(out, offset, new Float32Array([
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius
-    ]))
+    offset = startLine(
+        out,
+        offset,
+        new Float32Array([
+            Math.cos(angle) * radius,
+            Math.sin(angle) * radius
+        ])
+    )
     out[offset++] = Math.cos(angle) * (radius + LINE_WIDTH)
     out[offset++] = Math.sin(angle) * (radius + LINE_WIDTH)
 
@@ -544,10 +604,14 @@ const addAccentLineSpiralPositions = (
     const outerRadius = radius - TILE_WIDTH * 0.5
 
     // add vertices for line along bottom of tile
-    offset = startLine(out, offset, new Float32Array([
-        cos * innerRadius,
-        sin * innerRadius
-    ]))
+    offset = startLine(
+        out,
+        offset,
+        new Float32Array([
+            cos * innerRadius,
+            sin * innerRadius
+        ])
+    )
     out[offset++] = cos * innerRadius + tangentX
     out[offset++] = sin * innerRadius + tangentY
 

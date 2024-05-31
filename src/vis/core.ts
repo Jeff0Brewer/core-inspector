@@ -136,7 +136,8 @@ class CoreRenderer {
             // always punchcard view mode to ensure punchcard vertices are
             // initialized regardless of initial view mode
             'punchcard',
-            this.calibrationT
+            this.calibrationT,
+            this.spiralOrder
         )
 
         this.downscaledCore = new DownscaledCoreRenderer(
@@ -247,6 +248,7 @@ class CoreRenderer {
 
     setSpiralOrder (o: CoreSpiralOrder): void {
         this.spiralOrder = o
+        this.genVerts()
         this.uiState.setSpiralOrder?.(o)
     }
 
@@ -309,7 +311,8 @@ class CoreRenderer {
             viewportBounds,
             this.targetShape,
             this.viewMode,
-            ease(this.calibrationT)
+            ease(this.calibrationT),
+            this.spiralOrder
         )
 
         this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
@@ -336,7 +339,8 @@ class CoreRenderer {
                 viewportBounds,
                 otherShape,
                 this.viewMode,
-                ease(this.calibrationT)
+                ease(this.calibrationT),
+                this.spiralOrder
             )
             this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
         }
