@@ -3,18 +3,18 @@
     height: 100%;
     display: flex;
     justify-content: flex-end;
-    min-width: 460px;
+    min-width: 465px;
 }
 
 .top-labels {
     grid-area: label-punch;
-    padding-right: 30px;
+    padding-right: 35px;
 }
 
 .bottom-labels {
     grid-area: bottom-punch;
     gap: 60px;
-    padding-right: 60px;
+    padding-right: 65px;
     color: #909090;
     transition: color var(--transition-param);
 }
@@ -111,7 +111,7 @@
     overflow: hidden;
 
     /* TODO: fix size value */
-    min-width: 390px;
+    min-width: 395px;
     animation: fade-in 300ms ease 300ms;
     animation-fill-mode: forwards;
     opacity: 0;
@@ -126,7 +126,7 @@
 }
 
 .large-width {
-    width: 60px;
+    width: 65px;
 }
 
 .column-content {

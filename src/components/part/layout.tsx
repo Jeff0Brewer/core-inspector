@@ -118,7 +118,7 @@ const PartView = React.memo((): ReactElement => {
 
     // to set css vars in tsx, must cast as React.CSSProperties
     const gridParams = {
-        '--core-panel-width': corePanelOpen ? '390px' : '0'
+        '--core-panel-width': corePanelOpen ? '395px' : '0'
     } as React.CSSProperties
 
     return (
