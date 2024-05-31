@@ -112,7 +112,7 @@ const getCorePositions = (
     for (let i = 0; i < metadata.numTiles; i++) {
         // calculate tile layout using downscaled tile dimensions as source of truth
         // for all vis elements, ensuring alignment
-        const tileIndex = spiralOrder === 'out' ? i : metadata.numTiles - 1 - i
+        const tileIndex = shape === 'spiral' && spiralOrder === 'in' ? metadata.numTiles - 1 - i : i
         let { height, width } = metadata.downTiles[tileIndex]
         height -= CALIBRATION_HEIGHT_DOWN * calibrationT
         const tileHeight = 2 * TILE_WIDTH * (height / width)
@@ -155,7 +155,7 @@ const getCorePositions = (
                     angle,
                     tileRadius,
                     tileAngle,
-                    metadata.punchNumRows[i],
+                    metadata.punchNumRows[tileIndex],
                     calibrationT,
                     spiralOrder
                 )
@@ -184,7 +184,7 @@ const getCorePositions = (
                     columnX,
                     columnY,
                     tileHeight,
-                    metadata.punchNumRows[i],
+                    metadata.punchNumRows[tileIndex],
                     calibrationT
                 )
             }
@@ -438,10 +438,9 @@ const addPunchcardSpiralPositions = (
     const radiusInc = tileRadius / numRows
     const acrossInc = TILE_WIDTH / VERT_PER_ROW_POINT
 
-    // offset by 0.5 spacing to center points in tile bounds
-    const startAngle = currAngle + angleInc * 0.5
     // move to edge of tile but again offset inwards to center in tile bounds
     const startRadius = currRadius + TILE_WIDTH * 0.5 - acrossInc * 0.5
+    const startAngle = currAngle + angleInc * 0.5
 
     if (spiralOrder === 'out') {
         for (let i = 0; i <= numRows - 1; i++) {
@@ -460,20 +459,20 @@ const addPunchcardSpiralPositions = (
             out[offset++] = sin * (radius - 2 * acrossInc)
         }
     } else {
-        for (let i = numRows - 1; i >= 0; i--) {
+        for (let i = 0; i <= numRows - 1; i++) {
             const radius = startRadius + radiusInc * i
             const angle = startAngle + angleInc * i
             const cos = Math.cos(angle)
             const sin = Math.sin(angle)
 
-            out[offset--] = cos * radius
             out[offset--] = sin * radius
+            out[offset--] = cos * radius
 
-            out[offset--] = cos * (radius - acrossInc)
             out[offset--] = sin * (radius - acrossInc)
+            out[offset--] = cos * (radius - acrossInc)
 
-            out[offset--] = cos * (radius - 2 * acrossInc)
             out[offset--] = sin * (radius - 2 * acrossInc)
+            out[offset--] = cos * (radius - 2 * acrossInc)
         }
     }
 
