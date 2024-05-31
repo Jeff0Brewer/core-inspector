@@ -1,4 +1,4 @@
-import React, { useEffect, ReactElement } from 'react'
+import React, { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
 import CoreRenderer, { CoreViewMode, CoreShape, CoreSpiralOrder, CalibrationOption } from '../../vis/core'
@@ -32,6 +32,8 @@ const VisSettings = React.memo((
     } = useCoreParamsContext()
     const { core, cores, setCore } = useIdContext()
     const { numSection, topDepth, bottomDepth } = useCoreMetadata()
+    const [sectionRange, setSectionRange] = useState<string>('')
+    const [depthRange, setDepthRange] = useState<string>('')
 
     useEffect(() => {
         if (!vis) { return }
@@ -50,6 +52,18 @@ const VisSettings = React.memo((
         //
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vis])
+
+    useEffect(() => {
+        if (numSection !== null) {
+            setSectionRange(`${padZeros(1)} - ${padZeros(numSection)}`)
+        }
+    }, [numSection])
+
+    useEffect(() => {
+        if (topDepth !== null && bottomDepth !== null) {
+            setDepthRange(`${formatFloat(topDepth)}m - ${formatFloat(bottomDepth)}m`)
+        }
+    }, [topDepth, bottomDepth])
 
     return (
         <div className={styles.settings}>
@@ -100,16 +114,8 @@ const VisSettings = React.memo((
                         customStyles={coreDropdownStyles}
                     />
                 </div>
-                { numSection && <p>
-                    sections
-                    <span>{padZeros(1)} - {padZeros(numSection)}</span>
-                </p> }
-                { (topDepth !== null && bottomDepth !== null) && <p>
-                    depth
-                    <span>
-                        {formatFloat(topDepth)}m - {formatFloat(bottomDepth)}m
-                    </span>
-                </p> }
+                <p>sections<span>{sectionRange}</span></p>
+                <p>depth<span>{depthRange}</span></p>
             </div>
         </div>
     )
