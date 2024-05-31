@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import { CoreShape, CoreViewMode, CalibrationOption } from '../vis/core'
+import { CoreShape, CoreViewMode, CoreSpiralOrder, CalibrationOption } from '../vis/core'
 
 type CoreParamsContextProps = {
     shape: CoreShape,
@@ -9,7 +9,9 @@ type CoreParamsContextProps = {
     calibration: CalibrationOption,
     setCalibration: (c: CalibrationOption) => void,
     spacing: [number, number],
-    setSpacing: (s: [number, number]) => void
+    setSpacing: (s: [number, number]) => void,
+    spiralOrder: CoreSpiralOrder,
+    setSpiralOrder: (o: CoreSpiralOrder) => void
 }
 
 const CoreParamsContext = createContext<CoreParamsContextProps | null>(null)

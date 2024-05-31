@@ -1,5 +1,5 @@
 import { useState, ReactElement, ReactNode } from 'react'
-import { CoreShape, CoreViewMode, CalibrationOption } from '../vis/core'
+import { CoreShape, CoreViewMode, CoreSpiralOrder, CalibrationOption } from '../vis/core'
 import CoreParamsContext from '../hooks/core-params-context'
 
 type CoreParamsProviderProps = {
@@ -13,6 +13,7 @@ function CoreParamsProvider (
     const [shape, setShape] = useState<CoreShape>('column')
     const [viewMode, setViewMode] = useState<CoreViewMode>('downscaled')
     const [spacing, setSpacing] = useState<[number, number]>([0.5, 0.5])
+    const [spiralOrder, setSpiralOrder] = useState<CoreSpiralOrder>('out')
 
     return (
         <CoreParamsContext.Provider value={{
@@ -23,7 +24,9 @@ function CoreParamsProvider (
             viewMode,
             setViewMode,
             spacing,
-            setSpacing
+            setSpacing,
+            spiralOrder,
+            setSpiralOrder
         }}>
             {children}
         </CoreParamsContext.Provider>
