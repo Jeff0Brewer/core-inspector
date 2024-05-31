@@ -63,3 +63,16 @@
     background-color: #fff;
     border-radius: 1px;
 }
+
+.order-wrap {
+    margin: 0 -15px 0 -15px;
+    width: 0;
+    transition:
+        margin var(--transition-param),
+        width var(--transition-param);
+}
+
+.order-visible {
+    margin: 0;
+    width: 64px;
+}

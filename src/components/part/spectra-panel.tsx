@@ -73,8 +73,8 @@ const SpectraPanel = React.memo((
     useEffect(() => {
         const getSpectraMetadata = async (): Promise<void> => {
             const [coreWavelengths, librarySpectra] = await Promise.all([
-                fetchJson<CoreWavelengths>('./data-processed/temp/core-spectra-wavelengths.json'),
-                fetchJson<LibrarySpectra>('./data-processed/temp/library-spectra.json')
+                fetchJson<CoreWavelengths>('./data-processed/summaries/core-spectra-wavelengths.json'),
+                fetchJson<LibrarySpectra>('./data-processed/summaries/library-spectra.json')
             ])
             setCoreWavelengths(coreWavelengths)
             setLibrarySpectra(librarySpectra)

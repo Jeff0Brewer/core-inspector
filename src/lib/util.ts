@@ -4,6 +4,14 @@ function lerp (a: number, b: number, t: number): number {
     return a + (b - a) * t
 }
 
+function lerpArr (a: Float32Array, b: Float32Array, t: number): Float32Array {
+    const out = new Float32Array(a.length)
+    for (let i = 0; i < a.length; i++) {
+        out[i] = lerp(a[i], b[i], t)
+    }
+    return out
+}
+
 function ease (t: number): number {
     const t2 = t * t
     return t2 / (2 * (t2 - t) + 1)
@@ -171,6 +179,7 @@ function animateForDuration (
 
 export {
     lerp,
+    lerpArr,
     ease,
     clamp,
     mapBounds,

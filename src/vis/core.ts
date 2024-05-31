@@ -1,5 +1,5 @@
 import { mat4, vec2 } from 'gl-matrix'
-import { BoundRect, clamp, ease } from '../lib/util'
+import { BoundRect, clamp, ease, lerpArr } from '../lib/util'
 import { initGl, GlContext } from '../lib/gl-wrap'
 import { TileTextureMetadata } from '../lib/metadata'
 import MineralBlender, { BlendParams } from '../vis/mineral-blend'
@@ -18,6 +18,18 @@ const CORE_SHAPES = { column: 0, spiral: 1 } as const
 type CoreShape = keyof typeof CORE_SHAPES
 
 type CoreViewMode = 'punchcard' | 'downscaled'
+
+const SPIRAL_ORDERS = { out: 0, in: 1 } as const
+type CoreSpiralOrder = keyof typeof SPIRAL_ORDERS
+type SpiralVerts = {
+    punchcard: Float32Array,
+    downscaled: Float32Array,
+    accentLines: Float32Array
+}
+type CoreSpiralOrderVerts = {
+    in: SpiralVerts | null,
+    out: SpiralVerts | null
+}
 
 const TRANSFORM_SPEED = 1
 const VIEWPORT_PADDING: [number, number] = [0.9, 0.85]
@@ -50,7 +62,8 @@ type UiState = {
     setZoom?: (z: number) => void,
     setHovered?: (h: string | null) => void,
     setPan?: (t: number) => void,
-    setPanWidth?: (w: number) => void
+    setPanWidth?: (w: number) => void,
+    setSpiralOrder?: (o: CoreSpiralOrder) => void
 }
 
 class CoreRenderer {
@@ -72,6 +85,10 @@ class CoreRenderer {
 
     targetShape: CoreShape
     shapeT: number
+
+    targetSpiralOrder: CoreSpiralOrder
+    spiralOrderT: number
+    spiralOrderVerts: CoreSpiralOrderVerts
 
     camera: Camera2D
     proj: mat4
@@ -99,6 +116,10 @@ class CoreRenderer {
 
         this.targetCalibration = 'show'
         this.calibrationT = CALIBRATION_OPTIONS[this.targetCalibration]
+
+        this.targetSpiralOrder = 'out'
+        this.spiralOrderT = SPIRAL_ORDERS[this.targetSpiralOrder]
+        this.spiralOrderVerts = { out: null, in: null }
 
         this.metadata = metadata
         this.uiState = uiState
@@ -129,8 +150,15 @@ class CoreRenderer {
             // always punchcard view mode to ensure punchcard vertices are
             // initialized regardless of initial view mode
             'punchcard',
-            this.calibrationT
+            this.calibrationT,
+            this.targetSpiralOrder
         )
+
+        this.spiralOrderVerts[this.targetSpiralOrder] = {
+            punchcard: punchPositions,
+            downscaled: downPositions,
+            accentLines: accentPositions
+        }
 
         this.downscaledCore = new DownscaledCoreRenderer(
             this.gl,
@@ -238,6 +266,41 @@ class CoreRenderer {
         this.uiState.setShape?.(s)
     }
 
+    setSpiralOrder (o: CoreSpiralOrder): void {
+        if (o === this.targetSpiralOrder) { return }
+
+        if (this.spiralOrderVerts.in && this.spiralOrderVerts.out) {
+            const { in: inVerts, out: outVerts } = this.spiralOrderVerts
+            const easedT = ease(this.spiralOrderT)
+            this.spiralOrderVerts[this.targetSpiralOrder] = {
+                punchcard: lerpArr(outVerts.punchcard, inVerts.punchcard, easedT),
+                downscaled: lerpArr(outVerts.downscaled, inVerts.downscaled, easedT),
+                accentLines: lerpArr(outVerts.accentLines, inVerts.accentLines, easedT)
+            }
+        }
+
+        this.spiralOrderT = SPIRAL_ORDERS[this.targetSpiralOrder]
+        this.targetSpiralOrder = o
+
+        const { downPositions, punchPositions, accentPositions } = getCorePositions(
+            this.metadata,
+            this.spacing,
+            this.getViewportBounds(),
+            this.targetShape,
+            this.viewMode,
+            this.calibrationT,
+            this.targetSpiralOrder
+        )
+
+        this.spiralOrderVerts[this.targetSpiralOrder] = {
+            punchcard: punchPositions,
+            downscaled: downPositions,
+            accentLines: accentPositions
+        }
+
+        this.uiState.setSpiralOrder?.(o)
+    }
+
     setViewMode (m: CoreViewMode): void {
         this.viewMode = m
         // since downscaled verts used in stencil / hover regardless of view mode
@@ -297,13 +360,22 @@ class CoreRenderer {
             viewportBounds,
             this.targetShape,
             this.viewMode,
-            ease(this.calibrationT)
+            ease(this.calibrationT),
+            this.targetSpiralOrder
         )
 
         this.downscaledCore.setPositions(this.gl, downPositions, this.targetShape)
         this.stencilCore.setPositions(this.gl, downPositions)
         this.hoverHighlight.setPositions(downPositions)
         this.accentLines.setPositions(this.gl, accentPositions, this.targetShape)
+
+        if (this.targetShape === 'spiral') {
+            this.spiralOrderVerts[this.targetSpiralOrder] = {
+                punchcard: punchPositions,
+                downscaled: downPositions,
+                accentLines: accentPositions
+            }
+        }
 
         // punchcard vertices only generated if currently in punchcard view
         if (this.viewMode === 'punchcard') {
@@ -316,17 +388,35 @@ class CoreRenderer {
         // because vertices may not have been generated yet
         if (this.viewMode === 'punchcard' && Math.round(this.shapeT) !== this.shapeT) {
             const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
-            // this is mega slow, generates vertices for all visualization elements,
-            // but still < 16ms and this edge case happens very rarely so fine for now
             const { punchPositions } = getCorePositions(
                 this.metadata,
                 this.spacing,
                 viewportBounds,
                 otherShape,
                 this.viewMode,
-                ease(this.calibrationT)
+                ease(this.calibrationT),
+                this.targetSpiralOrder
             )
             this.punchcardCore.setPositions(this.gl, punchPositions, otherShape)
+        }
+
+        if (this.viewMode === 'punchcard' && Math.round(this.spiralOrderT) !== this.spiralOrderT) {
+            const otherOrder = this.targetSpiralOrder === 'out' ? 'in' : 'out'
+            const { downPositions, punchPositions, accentPositions } = getCorePositions(
+                this.metadata,
+                this.spacing,
+                viewportBounds,
+                this.targetShape,
+                this.viewMode,
+                ease(this.calibrationT),
+                otherOrder
+            )
+
+            this.spiralOrderVerts[otherOrder] = {
+                punchcard: punchPositions,
+                downscaled: downPositions,
+                accentLines: accentPositions
+            }
         }
     }
 
@@ -411,6 +501,47 @@ class CoreRenderer {
         }
     }
 
+    animateCalibration (elapsed: number): void {
+        this.calibrationT += Math.sign(CALIBRATION_OPTIONS[this.targetCalibration] - this.calibrationT) * TRANSFORM_SPEED * elapsed
+        this.calibrationT = clamp(this.calibrationT, 0, 1)
+
+        if (this.calibrationT !== 0 && this.calibrationT !== 1) {
+            this.genTexCoords()
+            this.genVerts()
+        }
+    }
+
+    animateSpiralOrder (elapsed: number): void {
+        if (this.targetShape !== 'spiral') { return }
+
+        this.spiralOrderT += Math.sign(SPIRAL_ORDERS[this.targetSpiralOrder] - this.spiralOrderT) * TRANSFORM_SPEED * elapsed
+        this.spiralOrderT = clamp(this.spiralOrderT, 0, 1)
+
+        if (this.spiralOrderT !== 0 && this.spiralOrderT !== 1) {
+            const { in: inVerts, out: outVerts } = this.spiralOrderVerts
+            const easedT = ease(this.spiralOrderT)
+            if (!inVerts || !outVerts) {
+                throw new Error('Spiral order uninitialized')
+            }
+            const downLerped = lerpArr(outVerts.downscaled, inVerts.downscaled, easedT)
+            this.downscaledCore.setPositions(this.gl, downLerped, this.targetShape)
+            this.stencilCore.setPositions(this.gl, downLerped)
+            this.hoverHighlight.setPositions(downLerped)
+
+            this.punchcardCore.setPositions(
+                this.gl,
+                lerpArr(outVerts.punchcard, inVerts.punchcard, easedT),
+                this.targetShape
+            )
+
+            this.accentLines.setPositions(
+                this.gl,
+                lerpArr(outVerts.accentLines, inVerts.accentLines, easedT),
+                this.targetShape
+            )
+        }
+    }
+
     draw (elapsed: number): void {
         if (this.dropped) { return }
 
@@ -427,13 +558,8 @@ class CoreRenderer {
         this.shapeT = clamp(this.shapeT, 0, 1)
         const easedShapeT = ease(this.shapeT)
 
-        this.calibrationT += Math.sign(CALIBRATION_OPTIONS[this.targetCalibration] - this.calibrationT) * TRANSFORM_SPEED * elapsed
-        this.calibrationT = clamp(this.calibrationT, 0, 1)
-
-        if (this.calibrationT !== 0 && this.calibrationT !== 1) {
-            this.genTexCoords()
-            this.genVerts()
-        }
+        this.animateCalibration(elapsed)
+        this.animateSpiralOrder(elapsed)
 
         if (this.viewMode === 'downscaled') {
             this.downscaledCore.draw(
@@ -483,5 +609,6 @@ export type {
     UiState,
     CoreShape,
     CoreViewMode,
-    CalibrationOption
+    CalibrationOption,
+    CoreSpiralOrder
 }
