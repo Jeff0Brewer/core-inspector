@@ -15,6 +15,7 @@ import { usePartIdContext } from '../../hooks/id-context'
 import { useCollapseRender } from '../../hooks/collapse-render'
 import styles from '../../styles/part/spectra-panel.module.css'
 import spectraDropdownStyles from '../../styles/custom/spectra-dropdown.module.css'
+import { DATA_DIR } from '../../lib/path'
 
 Chart.register(LinearScale, LineElement, PointElement, Filler, Tooltip)
 Chart.defaults.color = '#ccc'
@@ -73,8 +74,8 @@ const SpectraPanel = React.memo((
     useEffect(() => {
         const getSpectraMetadata = async (): Promise<void> => {
             const [coreWavelengths, librarySpectra] = await Promise.all([
-                fetchJson<CoreWavelengths>('./data-processed/combined/core-spectra-wavelengths.json'),
-                fetchJson<LibrarySpectra>('./data-processed/combined/library-spectra.json')
+                fetchJson<CoreWavelengths>(`./${DATA_DIR}/combined/core-spectra-wavelengths.json`),
+                fetchJson<LibrarySpectra>(`./${DATA_DIR}/combined/library-spectra.json`)
             ])
             setCoreWavelengths(coreWavelengths)
             setLibrarySpectra(librarySpectra)
@@ -121,7 +122,7 @@ const SpectraPanel = React.memo((
 
     return (
         <div className={`${styles.spectraPanelWrap} ${open && styles.panelOpen}`}>
-            { render && <div className={styles.spectraPanel}>
+            {render && <div className={styles.spectraPanel}>
                 <button
                     className={styles.collapseButton}
                     onClick={() => setOpen(false)}
@@ -140,13 +141,13 @@ const SpectraPanel = React.memo((
                         </button>
                     </div>
                 </div>
-                { selectedSpectrum !== null && <>
+                {selectedSpectrum !== null && <>
                     <div className={styles.mainPlot}>
-                        { mainPlotData && <Line
+                        {mainPlotData && <Line
                             data={mainPlotData}
                             options={MAIN_PLOT_OPTIONS}
                             plugins={[chartBgColorPlugin]}
-                        /> }
+                        />}
                     </div>
                     <div className={styles.librarySelect}>
                         <p className={styles.dropdownLabel}>
@@ -160,14 +161,14 @@ const SpectraPanel = React.memo((
                         />
                     </div>
                     <div className={styles.deltaPlot}>
-                        { deltaPlotData && <Line
+                        {deltaPlotData && <Line
                             data={deltaPlotData}
                             options={DELTA_PLOT_OPTIONS}
                             plugins={[chartBgColorPlugin]}
-                        /> }
+                        />}
                     </div>
-                </> }
-            </div> }
+                </>}
+            </div>}
         </div>
     )
 })
@@ -316,7 +317,7 @@ const TOOLTIP_OPTIONS = {
             const wavelength = parseFloat(items[0].label.replace(',', '')).toFixed(1)
             return `${wavelength} nm`
         }
-    // Bully the type since chart.js doesn't have optional properties in tooltip config.
+        // Bully the type since chart.js doesn't have optional properties in tooltip config.
     } as TooltipCallbacks<'line'>
 } as const
 

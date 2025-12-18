@@ -5,6 +5,7 @@ import { StringMap } from '../lib/util'
 import { fetchJson } from '../lib/load'
 import { BlendMode, BlendParams } from '../vis/mineral-blend'
 import BlendContext from '../hooks/blend-context'
+import { DATA_DIR } from '../lib/path'
 
 type UnlabelledColors = Array<vec3>
 
@@ -73,7 +74,7 @@ function BlendProvider (
     useEffect(() => {
         const getPalettes = async (): Promise<void> => {
             const colors = await fetchJson<Array<GenericColors>>(
-                './data-processed/combined/color-presets.json'
+                `./${DATA_DIR}/combined/color-presets.json`
             )
 
             if (colors) {
