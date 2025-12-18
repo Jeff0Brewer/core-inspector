@@ -81,5 +81,6 @@ export {
     getSpectraSlicesId,
     getRgbPath,
     getHydrationPath,
-    getAbundancePaths
+    getAbundancePaths,
+    DATA_DIR
 }
