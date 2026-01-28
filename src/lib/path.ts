@@ -2,7 +2,7 @@ import { StringMap, padZeros } from '../lib/util'
 
 const DATA_DIR = 'data-processed'
 
-const ABUNDANCE_EXTENSION = 'factor_1to001.abundance.global.png'
+const ABUNDANCE_EXTENSION = 'abundance.global.png'
 
 function getPartId (part: string): string {
     const [section, piece] = part.split('_').map(s => parseInt(s))
