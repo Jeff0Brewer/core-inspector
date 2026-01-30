@@ -2,7 +2,9 @@ import { useState, ReactElement, ReactNode } from 'react'
 import IdContext from '../hooks/id-context'
 
 const CORES = [
-    'BA1A'
+    'BA1A',
+    'BA3A',
+    'BA4A'
 ]
 
 const MINERALS = [
@@ -21,7 +23,7 @@ type IdProviderProps = {
     children: ReactNode
 }
 
-function IdProvider(
+function IdProvider (
     { children }: IdProviderProps
 ): ReactElement {
     const [core, setCore] = useState<string>(CORES[0])
