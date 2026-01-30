@@ -8,15 +8,15 @@ const CORES = [
 ]
 
 const MINERALS = [
+    'fe_oxides',
+    'brucite',
     'chlorite',
     'epidote',
-    'prehnite',
-    'zeolite',
-    'amphibole',
-    'pyroxene',
-    'gypsum',
-    'carbonate',
-    'kaolinite-montmorillinite'
+    'hcp',
+    'hydroandradite_hydrogrossular',
+    'lcp',
+    'serpentine',
+    'xonotlite'
 ]
 
 type IdProviderProps = {
