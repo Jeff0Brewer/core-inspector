@@ -23,7 +23,7 @@ class AccentLineRenderer {
         gl: GlContext,
         positions: Float32Array,
         currentShape: CoreShape,
-        metadata: TileTextureMetadata
+        downTiles: TileTextureMetadata
     ) {
         this.numVertex = positions.length / POS_FPV
 
@@ -42,7 +42,7 @@ class AccentLineRenderer {
         this.columnPosBuffer.addAttribute(gl, this.program, 'columnPos', POS_FPV, POS_FPV, 0)
 
         this.lineLengthBuffer = new GlBuffer(gl)
-        this.lineLengthBuffer.setData(gl, getLineLengths(metadata, this.numVertex))
+        this.lineLengthBuffer.setData(gl, getLineLengths(downTiles, this.numVertex))
         this.lineLengthBuffer.addAttribute(gl, this.program, 'lineLength', LEN_FPV, LEN_FPV, 0)
 
         const projLoc = this.program.getUniformLocation(gl, 'proj')
@@ -90,17 +90,15 @@ class AccentLineRenderer {
 // length doesn't need to start at 0, since only the delta between
 // fragments in shader is important.
 const getLineLengths = (
-    metadata: TileTextureMetadata,
+    downTiles: TileTextureMetadata,
     numVertex: number
 ): Float32Array => {
     const out = new Float32Array(numVertex * LEN_FPV)
     let offset = 0
 
-    const tileRects = metadata.downTiles
-
-    for (const { height } of tileRects) {
+    for (const { height } of downTiles.tiles) {
         // use representative length for accent lines along side of tile
-        const heightInc = height / ROW_PER_TILE * SIDE_DOT_DENSITY
+        const heightInc = (height / downTiles.dimensions[1]) / ROW_PER_TILE * SIDE_DOT_DENSITY
 
         offset = startLine(out, offset, new Float32Array([0]))
         out[offset++] = 0

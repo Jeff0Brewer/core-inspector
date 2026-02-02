@@ -2,7 +2,6 @@ import { mat4, vec2 } from 'gl-matrix'
 import { GlContext, GlProgram, GlBuffer, GlTextureFramebuffer } from '../lib/gl-wrap'
 import { bytesToHex } from '../lib/util'
 import { POS_FPV } from '../lib/vert-gen'
-import { TileTextureMetadata } from '../lib/metadata'
 import vertSource from '../shaders/stencil-vert.glsl?raw'
 import fragSource from '../shaders/stencil-frag.glsl?raw'
 
@@ -30,14 +29,14 @@ class StencilCoreRenderer {
     constructor (
         gl: GlContext,
         positions: Float32Array,
-        metadata: TileTextureMetadata,
+        numTiles: number,
         ids: Array<string>
     ) {
         this.lastMousePos = [-1, -1]
 
         this.numVertex = positions.length / POS_FPV
         // assume same number of vertices for each tile
-        const vertPerTile = this.numVertex / metadata.numTiles
+        const vertPerTile = this.numVertex / numTiles
 
         // placeholder dimensions for framebuffer so init can happen before canvas resized
         this.textureAttachment = gl.TEXTURE16
@@ -50,7 +49,7 @@ class StencilCoreRenderer {
         this.positionBuffer.setData(gl, positions)
         this.positionBuffer.addAttribute(gl, this.program, 'position', POS_FPV, POS_FPV, 0)
 
-        const { colors, map } = getStencilColors(metadata, ids, vertPerTile)
+        const { colors, map } = getStencilColors(numTiles, ids, vertPerTile)
         this.colorIdMap = map
         this.colorBuffer = new GlBuffer(gl)
         this.colorBuffer.setData(gl, colors)
@@ -137,7 +136,7 @@ class StencilCoreRenderer {
 // get unique color for each tile id, return buffer for rendering colors
 // and map for converting rendered color to original id
 const getStencilColors = (
-    metadata: TileTextureMetadata,
+    numTiles: number,
     ids: Array<string>,
     vertPerTile: number
 ): {
@@ -145,7 +144,7 @@ const getStencilColors = (
     map: ColorIdMap
 } => {
     const map: ColorIdMap = {}
-    const colors = new Uint8Array(metadata.numTiles * vertPerTile * COL_FPV)
+    const colors = new Uint8Array(numTiles * vertPerTile * COL_FPV)
     let offset = 0
 
     for (let i = 0; i < ids.length; i++) {

@@ -18,7 +18,10 @@ function CoreMetadataProvider (
     const [partIds, setPartIds] = useState<Array<string> | null>(null)
     const [depths, setDepths] = useState<DepthMetadata | null>(null)
     const [hydrations, setHydrations] = useState<HydrationMetadata | null>(null)
-    const [tiles, setTiles] = useState<TileTextureMetadata | null>(null)
+
+    const [downTiles, setDownTiles] = useState<TileTextureMetadata | null>(null)
+    const [punchTiles, setPunchTiles] = useState<TileTextureMetadata | null>(null)
+
     const [metadataLoaded, setMetadataLoaded] = useState<boolean>(false)
     const { core } = useIdContext()
 
@@ -26,11 +29,12 @@ function CoreMetadataProvider (
         const getData = async (): Promise<void> => {
             const corePath = getCorePath(core)
 
-            const [coreData, depths, hydrations, tiles] = await Promise.all([
+            const [coreData, depths, hydrations, downTiles, punchTiles] = await Promise.all([
                 fetchJson<CoreMetadata>(`${corePath}/core-metadata.json`),
                 fetchJson<DepthMetadata>(`${corePath}/depth-metadata.json`),
                 fetchJson<HydrationMetadata>(`${corePath}/hydration-metadata.json`),
-                fetchJson<TileTextureMetadata>(`${corePath}/tile-metadata.json`)
+                fetchJson<TileTextureMetadata>(`${corePath}/downscaled/metadata.json`),
+                fetchJson<TileTextureMetadata>(`${corePath}/punchcard/metadata.json`)
             ])
             if (coreData !== null) {
                 const { numSection, topDepth, bottomDepth, partIds } = coreData
@@ -41,7 +45,8 @@ function CoreMetadataProvider (
             }
             setDepths(depths)
             setHydrations(hydrations)
-            setTiles(tiles)
+            setDownTiles(downTiles)
+            setPunchTiles(punchTiles)
             setMetadataLoaded(true)
         }
 
@@ -53,7 +58,8 @@ function CoreMetadataProvider (
         setPartIds(null)
         setDepths(null)
         setHydrations(null)
-        setTiles(null)
+        setDownTiles(null)
+        setPunchTiles(null)
 
         getData()
     }, [core])
@@ -65,7 +71,8 @@ function CoreMetadataProvider (
         depths,
         hydrations,
         partIds,
-        tiles,
+        downTiles,
+        punchTiles,
         metadataLoaded
     }
 

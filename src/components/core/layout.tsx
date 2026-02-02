@@ -21,7 +21,7 @@ const CoreView = React.memo((): ReactElement => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
 
     const { core, minerals, setPart } = useIdContext()
-    const { partIds, tiles, metadataLoaded } = useCoreMetadata()
+    const { partIds, downTiles, punchTiles, metadataLoaded } = useCoreMetadata()
 
     // ensures vis gl resources are freed when renderer changes
     useRendererDrop(vis)
@@ -31,7 +31,7 @@ const CoreView = React.memo((): ReactElement => {
         setLoadError(false)
 
         if (!metadataLoaded) { return }
-        if (!tiles || !partIds) {
+        if (!downTiles || !punchTiles || !partIds) {
             setLoadError(true)
             return
         }
@@ -70,7 +70,8 @@ const CoreView = React.memo((): ReactElement => {
                     canvas,
                     loadedMineralImgs,
                     loadedPunchcardImgs,
-                    tiles,
+                    downTiles,
+                    punchTiles,
                     partIds,
                     minerals
                 )
@@ -78,7 +79,7 @@ const CoreView = React.memo((): ReactElement => {
         }
 
         initCoreRenderer(canvasRef.current)
-    }, [core, minerals, partIds, tiles, metadataLoaded])
+    }, [core, minerals, partIds, downTiles, punchTiles, metadataLoaded])
 
     useEffect(() => {
         if (!vis) { return }
@@ -106,7 +107,7 @@ const CoreView = React.memo((): ReactElement => {
     return (
         <div className={styles.coreView}>
             <LoadIcon loading={!vis && !loadError} showDelayMs={0} />
-            { !loadError && <>
+            {!loadError && <>
                 <canvas
                     ref={canvasRef}
                     className={`${styles.visCanvas} ${!!vis && styles.visible}`}
@@ -116,11 +117,11 @@ const CoreView = React.memo((): ReactElement => {
                 <MineralControls vis={vis} />
                 <HoverInfo vis={vis} />
                 <PanScrollbar vis={vis} />
-            </> }
-            { loadError &&
+            </>}
+            {loadError &&
                 <p className={styles.dataMissing}>
                     data missing
-                </p> }
+                </p>}
         </div>
     )
 })

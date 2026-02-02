@@ -24,13 +24,10 @@ type TileRect = {
 }
 
 type TileTextureMetadata = {
-    downTiles: Array<TileRect>,
-    punchTiles: Array<TileRect>,
-    downDims: [number, number],
-    punchDims: [number, number],
+    dimensions: [number, number],
     numTiles: number,
-    punchNumRows: Array<number>,
-    punchTotalRows: number
+    totalHeight: number,
+    tiles: Array<TileRect>
 }
 
 export type {

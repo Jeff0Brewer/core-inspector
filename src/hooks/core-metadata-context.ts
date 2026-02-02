@@ -8,7 +8,8 @@ type CoreMetadataContextProps = {
     partIds: Array<string> | null,
     depths: DepthMetadata | null,
     hydrations: HydrationMetadata | null,
-    tiles: TileTextureMetadata | null,
+    downTiles: TileTextureMetadata | null,
+    punchTiles: TileTextureMetadata | null,
     metadataLoaded: boolean
 }
 

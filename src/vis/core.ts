@@ -76,7 +76,8 @@ class CoreRenderer {
     stencilCore: StencilCoreRenderer
     hoverHighlight: HoverHighlightRenderer
     accentLines: AccentLineRenderer
-    metadata: TileTextureMetadata
+    downTiles: TileTextureMetadata
+    punchTiles: TileTextureMetadata
     spacing: [number, number]
     viewMode: CoreViewMode
 
@@ -102,7 +103,8 @@ class CoreRenderer {
         canvas: HTMLCanvasElement,
         mineralMaps: Array<HTMLImageElement>,
         punchcardMaps: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata,
+        downTiles: TileTextureMetadata,
+        punchTiles: TileTextureMetadata,
         ids: Array<string>,
         minerals: Array<string>,
         uiState: UiState = {}
@@ -121,7 +123,8 @@ class CoreRenderer {
         this.spiralOrderT = SPIRAL_ORDERS[this.targetSpiralOrder]
         this.spiralOrderVerts = { out: null, in: null }
 
-        this.metadata = metadata
+        this.downTiles = downTiles
+        this.punchTiles = punchTiles
         this.uiState = uiState
         this.mousePos = [0, 0]
         this.dropped = false
@@ -141,9 +144,10 @@ class CoreRenderer {
         this.mineralBlender = new MineralBlender(this.gl, mineralMaps, minerals)
         this.punchcardBlender = new MineralBlender(this.gl, punchcardMaps, minerals)
 
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, this.calibrationT)
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.downTiles, this.punchTiles, this.calibrationT)
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
-            this.metadata,
+            this.downTiles,
+            this.punchTiles,
             this.spacing,
             this.getViewportBounds(),
             this.targetShape,
@@ -177,14 +181,14 @@ class CoreRenderer {
         this.stencilCore = new StencilCoreRenderer(
             this.gl,
             downPositions,
-            this.metadata,
+            this.downTiles.numTiles,
             this.ids
         )
 
         this.hoverHighlight = new HoverHighlightRenderer(
             this.gl,
             downPositions,
-            this.metadata,
+            this.downTiles.numTiles,
             this.ids
         )
 
@@ -192,7 +196,7 @@ class CoreRenderer {
             this.gl,
             accentPositions,
             this.targetShape,
-            this.metadata
+            this.downTiles
         )
 
         // init canvas size, gl viewport, proj matrix
@@ -283,7 +287,8 @@ class CoreRenderer {
         this.targetSpiralOrder = o
 
         const { downPositions, punchPositions, accentPositions } = getCorePositions(
-            this.metadata,
+            this.downTiles,
+            this.punchTiles,
             this.spacing,
             this.getViewportBounds(),
             this.targetShape,
@@ -343,7 +348,7 @@ class CoreRenderer {
     }
 
     genTexCoords (): void {
-        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.metadata, ease(this.calibrationT))
+        const { downTexCoords, punchTexCoords } = getCoreTexCoords(this.downTiles, this.punchTiles, ease(this.calibrationT))
         this.downscaledCore.texCoordBuffer.setData(this.gl, downTexCoords)
         this.punchcardCore.texCoordBuffer.setData(this.gl, punchTexCoords)
     }
@@ -355,7 +360,8 @@ class CoreRenderer {
     genVerts (): void {
         const viewportBounds = this.getViewportBounds()
         const { downPositions, punchPositions, accentPositions, vertexBounds } = getCorePositions(
-            this.metadata,
+            this.downTiles,
+            this.punchTiles,
             this.spacing,
             viewportBounds,
             this.targetShape,
@@ -389,7 +395,8 @@ class CoreRenderer {
         if (this.viewMode === 'punchcard' && Math.round(this.shapeT) !== this.shapeT) {
             const otherShape = this.targetShape === 'column' ? 'spiral' : 'column'
             const { punchPositions } = getCorePositions(
-                this.metadata,
+                this.downTiles,
+                this.punchTiles,
                 this.spacing,
                 viewportBounds,
                 otherShape,
@@ -403,7 +410,8 @@ class CoreRenderer {
         if (this.viewMode === 'punchcard' && Math.round(this.spiralOrderT) !== this.spiralOrderT) {
             const otherOrder = this.targetSpiralOrder === 'out' ? 'in' : 'out'
             const { downPositions, punchPositions, accentPositions } = getCorePositions(
-                this.metadata,
+                this.downTiles,
+                this.punchTiles,
                 this.spacing,
                 viewportBounds,
                 this.targetShape,
