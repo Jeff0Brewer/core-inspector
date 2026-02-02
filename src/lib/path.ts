@@ -2,22 +2,20 @@ import { StringMap, padZeros } from '../lib/util'
 
 const DATA_DIR = 'data-processed'
 
-const ABUNDANCE_EXTENSION = 'abundance.global.png'
-
 function getPartId (part: string): string {
     const [section, piece] = part.split('_').map(s => parseInt(s))
-    const sectionId = padZeros(section, 4) + 'Z'
+    const sectionId = padZeros(section, 4)
     const pieceId = padZeros(piece, 3)
     return `${sectionId}_${pieceId}`
 }
 
 function getCorePath (core: string, root: string = '.'): string {
-    return `${root}/${DATA_DIR}/combined/${core}`
+    return `${root}/${DATA_DIR}/${core}`
 }
 
 function getPartPath (core: string, part: string, root: string = '.'): string {
     const [sectionId, pieceId] = getPartId(part).split('_')
-    return `${root}/${DATA_DIR}/${core}/${sectionId}/${pieceId}`
+    return `${root}/${DATA_DIR}/${core}/fullscale/${sectionId}/${pieceId}`
 }
 
 function getSpectraBasePath (
@@ -52,8 +50,7 @@ function getRgbPath (core: string, part: string, root: string = '.'): string {
 
 function getHydrationPath (core: string, part: string, root: string = '.'): string {
     const partPath = getPartPath(core, part, root)
-    const partId = getPartId(part)
-    return `${partPath}/hydration/${core}_${partId}_hydration.png`
+    return `${partPath}/hydration/abundance.png`
 }
 
 function getAbundancePaths (
@@ -63,12 +60,11 @@ function getAbundancePaths (
     root: string = '.'
 ): StringMap<string> {
     const partPath = getPartPath(core, part, root)
-    const partId = getPartId(part)
 
     const paths: StringMap<string> = {}
     minerals.forEach((mineral, i) => {
         const mineralId = padZeros(i, 2)
-        paths[mineral] = `${partPath}/${mineralId}/${core}_${partId}_${mineralId}.${ABUNDANCE_EXTENSION}`
+        paths[mineral] = `${partPath}/${mineralId}/abundance.png`
     })
     return paths
 }
