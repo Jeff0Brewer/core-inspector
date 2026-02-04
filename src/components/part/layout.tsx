@@ -41,7 +41,7 @@ const PartView = React.memo((): ReactElement => {
     const scrollDepthRef = useRef<ScrollDepth>({ topDepth: 0, bottomDepth: 0 })
 
     const { core, minerals, part, setPart } = usePartIdContext()
-    const { partIds, tiles } = useCoreMetadata()
+    const { partIds, punchTiles } = useCoreMetadata()
 
     // Ensures vis gl resources are freed when renderer changes.
     useRendererDrop(vis)
@@ -51,7 +51,7 @@ const PartView = React.memo((): ReactElement => {
 
     useEffect(() => {
         const initVis = async (): Promise<void> => {
-            if (!partIds || !tiles) { return }
+            if (!partIds || !punchTiles) { return }
             const corePath = getCorePath(core)
 
             const punchcardPaths: StringMap<string> = {}
@@ -69,7 +69,7 @@ const PartView = React.memo((): ReactElement => {
                     new PartRenderer(
                         minerals,
                         loadedPunchcardMaps,
-                        tiles,
+                        punchTiles,
                         partIds
                     )
                 )
@@ -77,7 +77,7 @@ const PartView = React.memo((): ReactElement => {
         }
 
         initVis()
-    }, [core, minerals, partIds, tiles])
+    }, [core, minerals, partIds, punchTiles])
 
     useEffect(() => {
         const getMineralChannels = async (): Promise<void> => {
@@ -128,9 +128,7 @@ const PartView = React.memo((): ReactElement => {
                     className={styles.closeButton}
                     onClick={() => setPart(null)}
                 >
-                    <p className={`${
-                        styles.closeLabel} ${
-                        !corePanelOpen && styles.closeLabelHidden
+                    <p className={`${styles.closeLabel} ${!corePanelOpen && styles.closeLabelHidden
                     }`}>
                         back to global view
                     </p>
@@ -159,7 +157,7 @@ const PartView = React.memo((): ReactElement => {
                 scrollDepthRef={scrollDepthRef}
                 zoomSliderRef={zoomSliderRef}
             />
-            <SpectraPanel { ...selectedSpectrum } />
+            <SpectraPanel {...selectedSpectrum} />
             <div className={styles.blendWrap}>
                 <button
                     className={styles.blendToggle}

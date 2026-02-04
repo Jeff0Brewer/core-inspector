@@ -22,17 +22,17 @@ class PartRenderer {
     partMinerals: MineralBlender | null
     coreMinerals: MineralBlender
     punchcardPart: PunchcardPartRenderer
-    tileMetadata: TileTextureMetadata
+    punchTiles: TileTextureMetadata
     ids: Array<string>
     dropped: boolean
 
     constructor (
         minerals: Array<string>,
         coreMinerals: Array<HTMLImageElement>,
-        metadata: TileTextureMetadata,
+        punchTiles: TileTextureMetadata,
         ids: Array<string>
     ) {
-        this.tileMetadata = metadata
+        this.punchTiles = punchTiles
         this.ids = ids
 
         this.canvas = document.createElement('canvas')
@@ -95,7 +95,7 @@ class PartRenderer {
         if (this.dropped) { return }
         this.punchcardPart.getPunchcard(
             this.gl,
-            this.tileMetadata,
+            this.punchTiles,
             this.ids,
             part,
             this.coreMinerals,
@@ -113,7 +113,7 @@ class PartRenderer {
         if (this.dropped) { return }
         this.punchcardPart.getChannelPunchcard(
             this.gl,
-            this.tileMetadata,
+            this.punchTiles,
             this.ids,
             part,
             this.coreMinerals,

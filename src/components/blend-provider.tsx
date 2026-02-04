@@ -74,7 +74,7 @@ function BlendProvider (
     useEffect(() => {
         const getPalettes = async (): Promise<void> => {
             const colors = await fetchJson<Array<GenericColors>>(
-                `./${DATA_DIR}/combined/color-presets.json`
+                `./${DATA_DIR}/color-presets.json`
             )
 
             if (colors) {

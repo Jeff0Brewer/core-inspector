@@ -39,7 +39,7 @@ class PunchcardPartRenderer {
 
     getChannelPunchcard (
         gl: GlContext,
-        metadata: TileTextureMetadata,
+        punchTiles: TileTextureMetadata,
         ids: Array<string>,
         part: string,
         minerals: MineralBlender,
@@ -48,7 +48,7 @@ class PunchcardPartRenderer {
         widthScale: number
     ): void {
         const partInd = ids.indexOf(part)
-        const tile = metadata.punchTiles[partInd]
+        const tile = punchTiles.tiles[partInd]
         const tileAspect = (2 * tile.height / tile.width)
 
         const numColumns = minerals.sources.length
@@ -61,9 +61,9 @@ class PunchcardPartRenderer {
         const yStart = -1 + yInc * 0.5
         const xStart = -1 + xInc * 0.5
 
-        const tyInc = tile.height / numRows
-        const tyStart = tile.top + tyInc * 0.5
-        const tx = tile.left + tile.width * 0.5
+        const tyInc = (tile.height / punchTiles.dimensions[1]) / numRows
+        const tyStart = (tile.top / punchTiles.dimensions[1]) + tyInc * 0.5
+        const tx = (tile.left + tile.width) / punchTiles.dimensions[0] * 0.5
 
         const columnVerts = []
         for (let i = 0; i < numRows; i++) {
@@ -104,7 +104,7 @@ class PunchcardPartRenderer {
 
     getPunchcard (
         gl: GlContext,
-        metadata: TileTextureMetadata,
+        punchTiles: TileTextureMetadata,
         ids: Array<string>,
         part: string,
         minerals: MineralBlender,
@@ -112,11 +112,11 @@ class PunchcardPartRenderer {
         width: number
     ): void {
         const partInd = ids.indexOf(part)
-        const tile = metadata.punchTiles[partInd]
+        const tile = punchTiles.tiles[partInd]
 
         // temp
         const pointPerRow = 3
-        const numRows = metadata.punchNumRows[partInd]
+        const numRows = punchTiles.tiles[partInd].height
         width = Math.round(width)
         const height = 2 * Math.round(width * tile.height / tile.width)
 
@@ -129,10 +129,10 @@ class PunchcardPartRenderer {
         const xStart = -1 + xInc * 0.5
         const yStart = -1 + yInc * 0.5
 
-        const txInc = tile.width / pointPerRow
-        const tyInc = tile.height / numRows
-        const txStart = tile.left + txInc * 0.5
-        const tyStart = tile.top + tyInc * 0.5
+        const txInc = (tile.width / punchTiles.dimensions[0]) / pointPerRow
+        const tyInc = (tile.height / punchTiles.dimensions[1]) / numRows
+        const txStart = (tile.left / punchTiles.dimensions[0]) + txInc * 0.5
+        const tyStart = (tile.top / punchTiles.dimensions[1]) + tyInc * 0.5
 
         for (let i = 0; i < numRows; i++) {
             for (let j = 0; j < pointPerRow; j++) {
