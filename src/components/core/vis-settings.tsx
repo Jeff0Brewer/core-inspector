@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ReactElement } from 'react'
 import { PiSpiralLight } from 'react-icons/pi'
 import { RxDragHandleDots1, RxColumns } from 'react-icons/rx'
-import CoreRenderer, { CoreViewMode, CoreShape, CoreSpiralOrder, CalibrationOption } from '../../vis/core'
+import CoreRenderer, { CoreViewMode, CoreShape, CoreSpiralOrder } from '../../vis/core'
 import { padZeros, formatFloat } from '../../lib/util'
 import { useCoreParamsContext } from '../../hooks/core-params-context'
 import { useIdContext } from '../../hooks/id-context'
