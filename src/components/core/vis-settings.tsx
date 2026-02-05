@@ -78,14 +78,14 @@ const VisSettings = React.memo((
                         label={'layout'}
                     />
                     <div className={`${styles.orderWrap} ${shape === 'spiral' && styles.orderVisible}`}>
-                        { shape === 'spiral' &&
+                        {shape === 'spiral' &&
                             <ToggleSelect<CoreSpiralOrder>
                                 currValue={spiralOrder}
                                 setValue={o => vis?.setSpiralOrder(o)}
                                 item0={{ value: 'out', icon: ICONS.orderOut }}
                                 item1={{ value: 'in', icon: ICONS.orderIn }}
                                 label={'order'}
-                            /> }
+                            />}
                     </div>
                     <ToggleSelect<CoreViewMode>
                         currValue={viewMode}
@@ -93,13 +93,6 @@ const VisSettings = React.memo((
                         item0={{ value: 'downscaled', icon: ICONS.downscaled }}
                         item1={{ value: 'punchcard', icon: ICONS.punchcard }}
                         label={'view'}
-                    />
-                    <ToggleSelect<CalibrationOption>
-                        currValue={calibration}
-                        setValue={c => vis?.setCalibration(c)}
-                        item0={{ value: 'show', icon: ICONS.calibrationOn }}
-                        item1={{ value: 'remove', icon: ICONS.calibrationOff }}
-                        label={'caps'}
                     />
                 </div>
             </div>
