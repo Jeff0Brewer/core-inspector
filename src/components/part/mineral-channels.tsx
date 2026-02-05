@@ -57,7 +57,7 @@ const MineralChannels = React.memo(({
 
     useEffect(() => {
         const imgs = Object.values(mineralMaps)
-        for (let i = 0; i < imgs.length; i++) {
+        for (let i = imgs.length - 1; i >= 0; i--) {
             const img = imgs[i]
             if (img !== null) {
                 setImgDims([img.width, img.height])
@@ -112,7 +112,7 @@ const MineralChannels = React.memo(({
                 setSelectedSpectrum={setSelectedSpectrum}
                 scrollDepthRef={scrollDepthRef}
             />
-            <ChannelBottomLabels {...labelProps } />
+            <ChannelBottomLabels {...labelProps} />
         </div>
     </>
 })
@@ -122,16 +122,16 @@ const ChannelTopLabels = React.memo(({
 }: ChannelLabelsProps): ReactElement => {
     return (
         <div className={styles.topLabels} style={{ gap }}>
-            { extraChannels.map((label, i) =>
+            {extraChannels.map((label, i) =>
                 <p className={styles.topLabel} style={{ width }} key={i}>
                     [{label}]
                 </p>
-            ) }
-            { mineralChannels.map((mineral, i) =>
+            )}
+            {mineralChannels.map((mineral, i) =>
                 <p className={styles.topLabel} style={{ width }} key={i}>
                     {mineral}
                 </p>
-            ) }
+            )}
         </div>
     )
 })
@@ -166,14 +166,14 @@ const ChannelBottomLabels = React.memo(({
 
     return (
         <div className={styles.bottomLabels} style={{ gap }}>
-            { extraChannels.map((label, i) =>
+            {extraChannels.map((label, i) =>
                 <div className={styles.bottomLabel} style={{ width }} key={i}>
                     <button className={styles.toggleButton}>
                         {label}
                     </button>
                 </div>
-            ) }
-            { mineralChannels.map((mineral, i) => {
+            )}
+            {mineralChannels.map((mineral, i) => {
                 const blendColor = getCssColor(getBlendColor(palette, visibilities, monochrome, mineral))
                 const toggleable = isToggleable(mineral, palette, visibilities)
                 return (
@@ -187,7 +187,7 @@ const ChannelBottomLabels = React.memo(({
                         </button>
                     </div>
                 )
-            }) }
+            })}
         </div>
     )
 })
@@ -383,7 +383,7 @@ const ChannelsView = React.memo(({
                 style={{ gap: `${viewGap}px` }}
                 key={'channels'}
             >
-                { Object.entries(sources).map(([label, source]) =>
+                {Object.entries(sources).map(([label, source]) =>
                     <MineralChannel
                         source={source}
                         width={`${viewDims[0]}px`}
@@ -393,7 +393,7 @@ const ChannelsView = React.memo(({
                         customClass={label === HYDRATION_LABEL ? styles.blueColorized : ''}
                         key={label}
                     />
-                ) }
+                )}
                 <HoverInfo
                     visible={hoverInfoVisible}
                     mineralChannels={mineralChannels}
@@ -469,26 +469,26 @@ const MineralChannel = React.memo((
     return (
         <div className={styles.channel} onClick={onClick}>
             <div ref={channelRef} className={customClass}>
-                { typeof source !== 'string' &&
+                {typeof source !== 'string' &&
                     <CanvasRenderer
                         canvas={source}
                         width={width}
                         height={height}
-                    /> }
-                { !loadError && typeof source === 'string' &&
-                     <img
-                         src={source}
-                         style={{ width, height }}
-                         draggable={false}
-                         onError={() => setLoadError(true)}
-                     /> }
-                { loadError &&
+                    />}
+                {!loadError && typeof source === 'string' &&
+                    <img
+                        src={source}
+                        style={{ width, height }}
+                        draggable={false}
+                        onError={() => setLoadError(true)}
+                    />}
+                {loadError &&
                     <p
                         className={styles.dataMissing}
                         style={{ width, height }}
                     >
                         data missing
-                    </p> }
+                    </p>}
             </div>
             <div className={styles.ghostCursor} ref={cursorRef}>
                 {ICONS.cursor}
