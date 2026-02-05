@@ -1,5 +1,5 @@
 import { BoundRect } from '../lib/util'
-import { TileTextureMetadata, TileRect } from '../lib/metadata'
+import { TileTextureMetadata } from '../lib/metadata'
 import { CoreShape, CoreViewMode, CoreSpiralOrder } from '../vis/core'
 
 // number of floats per vertex for position / tex coord attributes
