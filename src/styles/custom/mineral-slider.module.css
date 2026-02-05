@@ -1,6 +1,6 @@
 .wrap {
     position: relative;
-    width: 300px;
+    width: 350px;
     height: 22px;
     transition: opacity var(--transition-param);
 }
