@@ -44,8 +44,7 @@ function getSpectraSlicesId (
 
 function getRgbPath (core: string, part: string, root: string = '.'): string {
     const partPath = getPartPath(core, part, root)
-    const partId = getPartId(part)
-    return `${partPath}/rgb/${core}_${partId}_rgb.png`
+    return `${partPath}/rgb/rgb.jpg`
 }
 
 function getHydrationPath (core: string, part: string, root: string = '.'): string {
